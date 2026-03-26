@@ -1,0 +1,187 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+
+const modules = [
+  {
+    id: 'crm',
+    icon: '📈',
+    title: 'CRM Inteligente',
+    tagline: 'De lead a cliente en piloto automático.',
+    description: 'Pipeline visual con drag & drop, scoring de leads con IA, y seguimiento automatizado que convierte prospectos en clientes 24/7.',
+    features: [
+      { name: 'Pipeline visual', detail: 'Arrastra y suelta deals entre etapas personalizables' },
+      { name: 'Lead scoring con IA', detail: 'Prioriza automáticamente los leads con mayor probabilidad de cierre' },
+      { name: 'Seguimiento automático', detail: 'Emails y recordatorios que se disparan solos según reglas' },
+      { name: 'Historial 360°', detail: 'Cada interacción, compra y ticket en un solo perfil' },
+      { name: 'Importación masiva', detail: 'Sube tus contactos desde CSV, Excel o tu CRM actual' },
+      { name: 'Reportes de conversión', detail: 'Visualiza tu funnel completo y dónde se pierden los deals' },
+    ],
+    gradient: 'from-blue-500 to-indigo-600',
+  },
+  {
+    id: 'facturacion',
+    icon: '🧾',
+    title: 'Facturación SAT 4.0',
+    tagline: 'Factura en 3 clics. Válida ante el SAT.',
+    description: 'Emite CFDI 4.0, complementos de pago, notas de crédito y cancelaciones desde el mismo panel donde gestionas tus pedidos.',
+    features: [
+      { name: 'CFDI 4.0 timbrado', detail: 'Comprobantes fiscales válidos generados al instante' },
+      { name: 'Complementos de pago', detail: 'Genera complementos cuando recibes pagos parciales o diferidos' },
+      { name: 'Notas de crédito', detail: 'Aplica descuentos y ajustes con documentos fiscales válidos' },
+      { name: 'Facturación masiva', detail: 'Genera cientos de facturas por lote en minutos' },
+      { name: 'Catálogos SAT actualizados', detail: 'Productos, servicios y códigos siempre al día' },
+      { name: 'Exportación contable', detail: 'Reportes listos para enviar a tu contador' },
+    ],
+    gradient: 'from-brand-cyan to-blue-500',
+  },
+  {
+    id: 'logistica',
+    icon: '📦',
+    title: 'Guías de Envío Premium',
+    tagline: 'Las mejores tarifas. Un solo panel.',
+    description: 'Genera guías de DHL, FedEx, Estafeta, Redpack y más con tarifas preferenciales negociadas por volumen. Rastrea todo desde un lugar.',
+    features: [
+      { name: 'Multi-paquetería', detail: 'DHL, FedEx, Estafeta, Redpack, J&T y más' },
+      { name: 'Tarifas preferenciales', detail: 'Hasta 60% de descuento vs tarifas de ventanilla' },
+      { name: 'Generación masiva', detail: 'Crea docenas de guías en un clic' },
+      { name: 'Rastreo centralizado', detail: 'Sigue todos los envíos en tiempo real desde un panel' },
+      { name: 'Reglas automáticas', detail: 'Asigna paquetería por peso, zona o costo automáticamente' },
+      { name: 'Etiquetas listas', detail: 'Imprime etiquetas directamente desde la plataforma' },
+    ],
+    gradient: 'from-brand-teal to-emerald-600',
+  },
+  {
+    id: 'ads',
+    icon: '🤖',
+    title: 'Ads con IA',
+    tagline: 'Campañas que se optimizan solas.',
+    description: 'Lanza campañas en Meta Ads y Google Ads con optimización automática de presupuesto, audiencias inteligentes y reportes de ROAS en tiempo real.',
+    features: [
+      { name: 'Meta Ads + Google Ads', detail: 'Ambas plataformas desde un solo lugar' },
+      { name: 'Optimización con IA', detail: 'El presupuesto se redistribuye automáticamente hacia lo que funciona' },
+      { name: 'Audiencias del CRM', detail: 'Crea audiencias basadas en tus propios datos de clientes' },
+      { name: 'Reportes ROAS', detail: 'Ve el retorno real de cada peso invertido' },
+      { name: 'A/B testing', detail: 'Prueba creativos y copies automáticamente' },
+      { name: 'Remarketing dinámico', detail: 'Muestra productos vistos a quienes no compraron' },
+    ],
+    gradient: 'from-purple-500 to-pink-500',
+  },
+  {
+    id: 'email',
+    icon: '📧',
+    title: 'Email Marketing',
+    tagline: 'Emails que venden mientras duermes.',
+    description: 'Secuencias de bienvenida, recuperación de carrito abandonado, nurturing y fidelización que se ejecutan en automático.',
+    features: [
+      { name: 'Flujos automatizados', detail: 'Bienvenida, nurturing, post-compra y reactivación' },
+      { name: 'Carrito abandonado', detail: 'Recupera ventas perdidas automáticamente' },
+      { name: 'Templates profesionales', detail: 'Diseños responsive listos para personalizar' },
+      { name: 'Segmentación avanzada', detail: 'Envía el mensaje correcto a la persona correcta' },
+      { name: 'A/B testing', detail: 'Prueba subjects, horarios y contenido' },
+      { name: 'Métricas completas', detail: 'Apertura, clics, conversiones y revenue por email' },
+    ],
+    gradient: 'from-orange-500 to-red-500',
+  },
+  {
+    id: 'pedidos',
+    icon: '🛒',
+    title: 'Gestión de Pedidos',
+    tagline: 'Todas tus ventas en un solo lugar.',
+    description: 'Consolida pedidos de Shopify, WooCommerce y Mercado Libre en un flujo maestro con estatus en tiempo real e inventario sincronizado.',
+    features: [
+      { name: 'Multi-canal unificado', detail: 'Shopify + WooCommerce + Mercado Libre en un panel' },
+      { name: 'Estatus en tiempo real', detail: 'Desde pedido recibido hasta entregado' },
+      { name: 'Inventario sincronizado', detail: 'Stock actualizado en todos tus canales de venta' },
+      { name: 'Notificaciones al cliente', detail: 'Email y WhatsApp automáticos en cada cambio de status' },
+      { name: 'Reglas de fulfillment', detail: 'Asigna bodega, paquetería y prioridad automáticamente' },
+      { name: 'Exportación de datos', detail: 'CSV, Excel y conexión API para tu BI' },
+    ],
+    gradient: 'from-brand-primary to-slate-700',
+  },
+];
+---
+
+<Layout title="Módulos — SkyBrandMX | CRM, Facturación, Envíos, Ads, Email y Pedidos">
+  <Navbar />
+  <main>
+    <!-- Hero -->
+    <section class="pt-36 pb-20 bg-gradient-to-b from-slate-900 via-brand-dark to-slate-900 text-white">
+      <div class="max-w-5xl mx-auto px-6 text-center">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-orange/10 border border-brand-orange/20 text-brand-orange text-xs font-bold mb-8">
+          Módulos
+        </div>
+        <h1 class="text-4xl md:text-7xl font-black tracking-tighter mb-6">
+          6 herramientas. <span class="text-brand-orange">1 plataforma.</span>
+        </h1>
+        <p class="text-lg md:text-xl text-slate-400 font-medium max-w-2xl mx-auto mb-10">
+          Cada módulo funciona de forma independiente o en conjunto. Tú decides cómo armar tu stack operativo.
+        </p>
+        <!-- Quick nav -->
+        <div class="flex flex-wrap justify-center gap-2">
+          {modules.map((m) => (
+            <a href={`#${m.id}`} class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white text-sm font-bold hover:bg-white/10 transition-colors">
+              {m.icon} {m.title}
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- Modules Detail -->
+    <section class="py-20 bg-slate-50">
+      <div class="max-w-6xl mx-auto px-6 space-y-16">
+        {modules.map((mod) => (
+          <div id={mod.id} class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-lg scroll-mt-24">
+            <div class={`bg-gradient-to-r ${mod.gradient} p-8 md:p-10`}>
+              <div class="flex items-center gap-4 mb-3">
+                <span class="text-4xl">{mod.icon}</span>
+                <div>
+                  <h2 class="text-2xl md:text-3xl font-black text-white">{mod.title}</h2>
+                  <p class="text-white/80 font-bold text-sm">{mod.tagline}</p>
+                </div>
+              </div>
+              <p class="text-white/70 font-medium max-w-2xl mt-4">{mod.description}</p>
+            </div>
+            <div class="p-8 md:p-10">
+              <h3 class="text-sm font-black text-slate-400 uppercase tracking-wider mb-6">Funcionalidades incluidas</h3>
+              <div class="grid md:grid-cols-2 gap-4">
+                {mod.features.map((f) => (
+                  <div class="flex items-start gap-3 p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
+                    <svg class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <div>
+                      <p class="text-sm font-black text-slate-800">{f.name}</p>
+                      <p class="text-xs text-slate-500 font-medium mt-0.5">{f.detail}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="py-20 bg-gradient-to-r from-brand-primary to-slate-800">
+      <div class="max-w-3xl mx-auto px-6 text-center">
+        <h2 class="text-3xl md:text-5xl font-black text-white mb-6 tracking-tight">
+          Elige los módulos que necesitas.
+        </h2>
+        <p class="text-lg text-slate-300 mb-8">Todos incluidos en un solo plan, o selecciona solo los que quieras.</p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="/precios" class="px-8 py-4 bg-brand-teal text-slate-900 rounded-xl font-black hover:-translate-y-0.5 transition-all">
+            Ver planes y precios
+          </a>
+          <a href="/#contacto" class="px-8 py-4 bg-white/10 text-white border border-white/20 rounded-xl font-black hover:bg-white/20 transition-all">
+            Agendar demo
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</Layout>
