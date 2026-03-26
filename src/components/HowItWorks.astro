@@ -1,0 +1,339 @@
+---
+const sectors = [
+  {
+    id: 'pyme',
+    label: 'PYME',
+    subtitle: '1 – 20 empleados',
+    emoji: '🏪',
+    accentColor: 'brand-teal',
+    gradientFrom: 'from-brand-teal/10',
+    gradientTo: 'to-emerald-50',
+    borderColor: 'border-brand-teal/20',
+    badgeColor: 'bg-brand-teal/10 text-brand-teal',
+    problems: [
+      {
+        icon: '😵',
+        title: 'Todo manual y desordenado',
+        desc: 'Facturas en Excel, pedidos por WhatsApp, inventario en una libreta. Pierdes horas todos los días.',
+      },
+      {
+        icon: '💸',
+        title: 'Gastas sin saber en qué',
+        desc: 'Pagas publicidad en Meta o Google sin saber qué campaña te genera ventas reales.',
+      },
+      {
+        icon: '😤',
+        title: 'Clientes insatisfechos',
+        desc: 'Entregas tarde, no das seguimiento, y pierdes clientes que no vuelven.',
+      },
+    ],
+    solutions: [
+      {
+        icon: '⚡',
+        title: 'Automatiza desde día 1',
+        desc: 'Conecta tu tienda, factura automáticamente con el SAT y envía guías de paquetería en 2 clics.',
+      },
+      {
+        icon: '📊',
+        title: 'Cada peso bien invertido',
+        desc: 'Dashboard en tiempo real: mira qué campaña genera ventas y deja de tirar dinero.',
+      },
+      {
+        icon: '🤝',
+        title: 'Seguimiento automático',
+        desc: 'CRM integrado con WhatsApp y email. Tus clientes se sienten atendidos sin que hagas nada.',
+      },
+    ],
+  },
+  {
+    id: 'mediana',
+    label: 'Mediana Empresa',
+    subtitle: '20 – 200 empleados',
+    emoji: '🏢',
+    accentColor: 'brand-cyan',
+    gradientFrom: 'from-brand-cyan/10',
+    gradientTo: 'to-blue-50',
+    borderColor: 'border-brand-cyan/20',
+    badgeColor: 'bg-brand-cyan/10 text-brand-primary',
+    problems: [
+      {
+        icon: '🔌',
+        title: '10 herramientas desconectadas',
+        desc: 'CRM por un lado, facturación por otro, ads en otra plataforma. Tu equipo pierde tiempo copiando datos.',
+      },
+      {
+        icon: '🤷',
+        title: 'Sin visibilidad real',
+        desc: 'No tienes un dashboard unificado. Reportes semanales que llegan tarde y con datos inconsistentes.',
+      },
+      {
+        icon: '🐌',
+        title: 'Operación lenta',
+        desc: 'Procesos de 5 pasos que deberían ser de 1. La logística y facturación son cuellos de botella.',
+      },
+    ],
+    solutions: [
+      {
+        icon: '🔗',
+        title: 'Todo en una sola plataforma',
+        desc: 'CRM + Facturación + Logística + Ads + Email Marketing. Un solo login, datos sincronizados.',
+      },
+      {
+        icon: '📈',
+        title: 'Datos en tiempo real',
+        desc: 'Dashboards que tu equipo directivo puede ver al instante. Métricas de ventas, marketing y operación.',
+      },
+      {
+        icon: '🚀',
+        title: 'Flujos automatizados',
+        desc: 'De lead → venta → factura → envío en automático. Tu equipo se enfoca en crecer, no en procesos.',
+      },
+    ],
+  },
+  {
+    id: 'grande',
+    label: 'Gran Empresa',
+    subtitle: '200+ empleados',
+    emoji: '🏛️',
+    accentColor: 'brand-primary',
+    gradientFrom: 'from-brand-primary/10',
+    gradientTo: 'to-slate-50',
+    borderColor: 'border-brand-primary/20',
+    badgeColor: 'bg-brand-primary/10 text-brand-primary',
+    problems: [
+      {
+        icon: '🏗️',
+        title: 'Infraestructura fragmentada',
+        desc: 'ERPs legacy, múltiples proveedores, integraciones que se rompen. Cada departamento usa herramientas diferentes.',
+      },
+      {
+        icon: '📉',
+        title: 'CAC fuera de control',
+        desc: 'Inviertes millones en marketing pero no puedes atribuir conversiones ni optimizar por canal.',
+      },
+      {
+        icon: '⏰',
+        title: 'Time-to-market muy largo',
+        desc: 'Lanzar una campaña o entrar a un nuevo canal de ventas toma semanas de integración técnica.',
+      },
+    ],
+    solutions: [
+      {
+        icon: '🧩',
+        title: 'APIs & integraciones enterprise',
+        desc: 'Conecta SkyBrand con tu ERP, SAP o sistema interno vía API. Webhooks y flujos personalizados.',
+      },
+      {
+        icon: '🎯',
+        title: 'Atribución multi-canal con IA',
+        desc: 'Optimización automática de presupuesto entre Google, Meta, TikTok y marketplaces con IA predictiva.',
+      },
+      {
+        icon: '⚡',
+        title: 'Go-to-market en días',
+        desc: 'Lanza nuevos canales de venta, campañas omnicanal y flujos logísticos sin meses de desarrollo.',
+      },
+    ],
+  },
+];
+---
+
+<section class="py-32 bg-slate-50 relative overflow-hidden" id="como-funciona">
+  <!-- Background decoration -->
+  <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-teal via-brand-cyan to-brand-primary"></div>
+
+  <div class="max-w-7xl mx-auto px-6">
+    <!-- Header -->
+    <div class="text-center max-w-3xl mx-auto mb-10">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-teal/5 border border-brand-teal/10 text-brand-teal text-xs font-bold mb-8">
+        Problema → Solución
+      </div>
+      <h2 class="text-4xl md:text-6xl font-black tracking-tighter mb-6 text-slate-900">
+        De caos a control<br />
+        <span class="text-gradient">para cada tipo de empresa.</span>
+      </h2>
+      <p class="text-lg text-slate-500 font-medium max-w-xl mx-auto">
+        No importa tu tamaño. Tenemos la solución exacta para los problemas de tu negocio.
+      </p>
+    </div>
+
+    <!-- Tab navigation -->
+    <div class="flex justify-center mb-16">
+      <div class="inline-flex bg-white rounded-2xl p-1.5 shadow-sm border border-slate-100 gap-1" id="sector-tabs">
+        {sectors.map((sector, i) => (
+          <button
+            class={`sector-tab px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${i === 0 ? 'active' : ''}`}
+            data-sector={sector.id}
+            data-accent={sector.accentColor}
+          >
+            <span class="mr-2">{sector.emoji}</span>
+            {sector.label}
+            <span class="hidden sm:inline text-[10px] font-semibold ml-2 opacity-50">{sector.subtitle}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <!-- Sector content panels -->
+    {sectors.map((sector, i) => (
+      <div
+        class={`sector-panel ${i === 0 ? 'active' : ''}`}
+        data-panel={sector.id}
+      >
+        <div class="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          <!-- Problems Column -->
+          <div>
+            <div class="flex items-center gap-3 mb-8">
+              <div class="w-10 h-10 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center text-lg">❌</div>
+              <div>
+                <h3 class="text-xl font-black text-slate-900">Sin SkyBrand</h3>
+                <p class="text-sm text-red-400 font-semibold">Los problemas del día a día</p>
+              </div>
+            </div>
+            <div class="space-y-4">
+              {sector.problems.map((problem) => (
+                <div class="problem-card bg-white rounded-2xl p-6 border border-red-100/50 hover:border-red-200 transition-all duration-300 hover:shadow-lg hover:shadow-red-50">
+                  <div class="flex gap-4">
+                    <div class="text-2xl flex-shrink-0 mt-0.5">{problem.icon}</div>
+                    <div>
+                      <h4 class="font-bold text-slate-900 mb-1.5">{problem.title}</h4>
+                      <p class="text-slate-500 text-sm leading-relaxed">{problem.desc}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <!-- Solutions Column -->
+          <div>
+            <div class="flex items-center gap-3 mb-8">
+              <div class={`w-10 h-10 rounded-xl bg-gradient-to-br ${sector.gradientFrom} ${sector.gradientTo} border ${sector.borderColor} flex items-center justify-center text-lg`}>✅</div>
+              <div>
+                <h3 class="text-xl font-black text-slate-900">Con SkyBrand</h3>
+                <p class={`text-sm font-semibold text-${sector.accentColor}`}>La solución automatizada</p>
+              </div>
+            </div>
+            <div class="space-y-4">
+              {sector.solutions.map((solution) => (
+                <div class={`solution-card bg-white rounded-2xl p-6 border ${sector.borderColor} hover:shadow-lg hover:shadow-${sector.accentColor}/5 transition-all duration-300`}>
+                  <div class="flex gap-4">
+                    <div class="text-2xl flex-shrink-0 mt-0.5">{solution.icon}</div>
+                    <div>
+                      <h4 class="font-bold text-slate-900 mb-1.5">{solution.title}</h4>
+                      <p class="text-slate-500 text-sm leading-relaxed">{solution.desc}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom CTA per sector -->
+        <div class="text-center mt-12">
+          <div class={`inline-flex items-center gap-2 px-5 py-2 rounded-full ${sector.badgeColor} text-sm font-bold`}>
+            {sector.emoji} Plan ideal: {sector.id === 'pyme' ? 'Starter o Growth' : sector.id === 'mediana' ? 'Growth o Pro' : 'Enterprise'}
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+</section>
+
+<style>
+  .sector-tab {
+    @apply text-slate-400 bg-transparent;
+  }
+  .sector-tab:hover {
+    @apply text-slate-600 bg-slate-50;
+  }
+  .sector-tab.active {
+    @apply text-white bg-brand-primary shadow-lg shadow-brand-primary/20;
+  }
+
+  .sector-panel {
+    display: none;
+    animation: fadeSlideIn 0.4s ease-out;
+  }
+  .sector-panel.active {
+    display: block;
+  }
+
+  .problem-card {
+    position: relative;
+  }
+  .problem-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 40%;
+    border-radius: 4px;
+    background: linear-gradient(to bottom, #ef4444, #fca5a5);
+    opacity: 0;
+    transition: all 0.3s ease;
+  }
+  .problem-card:hover::before {
+    opacity: 1;
+    height: 60%;
+  }
+
+  .solution-card {
+    position: relative;
+  }
+  .solution-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 40%;
+    border-radius: 4px;
+    background: linear-gradient(to bottom, #2dd4bf, #6fcff5);
+    opacity: 0;
+    transition: all 0.3s ease;
+  }
+  .solution-card:hover::before {
+    opacity: 1;
+    height: 60%;
+  }
+
+  @keyframes fadeSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const tabs = document.querySelectorAll('.sector-tab');
+    const panels = document.querySelectorAll('.sector-panel');
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const sector = tab.getAttribute('data-sector');
+
+        // Update tabs
+        tabs.forEach((t) => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        // Update panels
+        panels.forEach((p) => p.classList.remove('active'));
+        const targetPanel = document.querySelector(`[data-panel="${sector}"]`);
+        if (targetPanel) {
+          targetPanel.classList.add('active');
+        }
+      });
+    });
+  });
+</script>

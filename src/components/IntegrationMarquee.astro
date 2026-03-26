@@ -1,0 +1,173 @@
+---
+// Row 1 integrations with official SVG logos from Simple Icons CDN
+const row1 = [
+  { name: 'Shopify', category: 'E-commerce', color: '#95BF47', icon: 'https://cdn.simpleicons.org/shopify/95BF47' },
+  { name: 'Google Ads', category: 'Publicidad', color: '#4285F4', icon: 'https://cdn.simpleicons.org/googleads/4285F4' },
+  { name: 'Meta', category: 'Publicidad', color: '#0668E1', icon: 'https://cdn.simpleicons.org/meta/0668E1' },
+  { name: 'WhatsApp', category: 'Comunicación', color: '#25D366', icon: 'https://cdn.simpleicons.org/whatsapp/25D366' },
+  { name: 'Stripe', category: 'Pagos', color: '#635BFF', icon: 'https://cdn.simpleicons.org/stripe/635BFF' },
+  { name: 'Mercado Pago', category: 'Pagos', color: '#00B1EA', icon: 'https://cdn.simpleicons.org/mercadopago/00B1EA' },
+  { name: 'Amazon', category: 'E-commerce', color: '#FF9900', icon: 'https://cdn.simpleicons.org/amazon/FF9900' },
+  { name: 'Mailchimp', category: 'Email', color: '#FFE01B', icon: 'https://cdn.simpleicons.org/mailchimp/FFE01B' },
+  { name: 'HubSpot', category: 'CRM', color: '#FF7A59', icon: 'https://cdn.simpleicons.org/hubspot/FF7A59' },
+];
+
+const row2 = [
+  { name: 'DHL', category: 'Logística', color: '#FFCC00', icon: 'https://cdn.simpleicons.org/dhl/D40511' },
+  { name: 'TikTok', category: 'Publicidad', color: '#000000', icon: 'https://cdn.simpleicons.org/tiktok/000000' },
+  { name: 'Gmail', category: 'Comunicación', color: '#EA4335', icon: 'https://cdn.simpleicons.org/gmail/EA4335' },
+  { name: 'Mercado Libre', category: 'E-commerce', color: '#FFE600', icon: 'https://cdn.simpleicons.org/mercadolibre/FFE600' },
+  { name: 'WooCommerce', category: 'E-commerce', color: '#96588A', icon: 'https://cdn.simpleicons.org/woocommerce/96588A' },
+  { name: 'Slack', category: 'Comunicación', color: '#4A154B', icon: 'https://cdn.simpleicons.org/slack/4A154B' },
+  { name: 'Zapier', category: 'Automatización', color: '#FF4A00', icon: 'https://cdn.simpleicons.org/zapier/FF4A00' },
+  { name: 'SAT (CFDI)', category: 'Facturación', color: '#1D6B3F', icon: 'https://cdn.simpleicons.org/gnuicecat/1D6B3F' },
+  { name: 'Instagram', category: 'Redes Sociales', color: '#E4405F', icon: 'https://cdn.simpleicons.org/instagram/E4405F' },
+];
+---
+
+<section class="py-28 bg-gradient-to-b from-white via-slate-50/30 to-white overflow-hidden relative">
+  <div class="max-w-7xl mx-auto px-6 text-center mb-20">
+    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-primary/5 border border-brand-primary/10 text-brand-primary text-xs font-bold mb-6">
+      +50 integraciones disponibles
+    </div>
+    <h2 class="text-3xl md:text-5xl font-black text-brand-dark tracking-tighter mb-4">
+      Se integra a la perfección con el<br class="hidden md:block" />
+      <span class="text-gradient">ecosistema que ya usas</span>
+    </h2>
+    <p class="text-slate-500 font-bold max-w-2xl mx-auto text-lg leading-relaxed">
+      Conecta tus tiendas, paqueterías, pasarelas de pago, CRM y herramientas de marketing en un par de clics.
+    </p>
+  </div>
+
+  <!-- Row 1 - scrolls left -->
+  <div class="relative w-full mb-6">
+    <div class="fade-left"></div>
+    <div class="fade-right"></div>
+    <div class="marquee-wrapper overflow-hidden py-4">
+      <div class="marquee-track marquee-left">
+        {[0, 1].map(() => (
+          <div class="logo-group">
+            {row1.map((item) => (
+              <div class="logo-card group">
+                <div class="logo-icon" style={`background: ${item.color}12; border-color: ${item.color}20;`}>
+                  <img src={item.icon} alt={item.name} width="24" height="24" loading="lazy" class="logo-img" />
+                </div>
+                <div class="logo-info">
+                  <span class="logo-name">{item.name}</span>
+                  <span class="logo-category">{item.category}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2 - scrolls right -->
+  <div class="relative w-full">
+    <div class="fade-left"></div>
+    <div class="fade-right"></div>
+    <div class="marquee-wrapper overflow-hidden py-4">
+      <div class="marquee-track marquee-right">
+        {[0, 1].map(() => (
+          <div class="logo-group">
+            {row2.map((item) => (
+              <div class="logo-card group">
+                <div class="logo-icon" style={`background: ${item.color}12; border-color: ${item.color}20;`}>
+                  <img src={item.icon} alt={item.name} width="24" height="24" loading="lazy" class="logo-img" />
+                </div>
+                <div class="logo-info">
+                  <span class="logo-name">{item.name}</span>
+                  <span class="logo-category">{item.category}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .fade-left {
+    @apply absolute inset-y-0 left-0 w-48 z-20 pointer-events-none;
+    background: linear-gradient(to right, white 0%, transparent 100%);
+  }
+  .fade-right {
+    @apply absolute inset-y-0 right-0 w-48 z-20 pointer-events-none;
+    background: linear-gradient(to left, white 0%, transparent 100%);
+  }
+
+  .marquee-track {
+    display: flex;
+    gap: 1.5rem;
+    width: fit-content;
+  }
+
+  .marquee-left {
+    animation: scrollLeft 60s linear infinite;
+  }
+
+  .marquee-right {
+    animation: scrollRight 70s linear infinite;
+  }
+
+  .marquee-track:hover {
+    animation-play-state: paused;
+  }
+
+  .logo-group {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+  }
+
+  .logo-card {
+    @apply flex items-center gap-4 px-5 py-3.5 bg-white rounded-2xl border border-slate-100 shadow-sm transition-all duration-500 w-max cursor-default;
+    @apply hover:border-brand-primary/15 hover:shadow-xl hover:shadow-brand-primary/5 hover:-translate-y-1;
+  }
+
+  .logo-icon {
+    @apply w-11 h-11 rounded-xl border flex items-center justify-center flex-shrink-0 transition-transform duration-500;
+  }
+
+  .logo-card:hover .logo-icon {
+    @apply scale-110;
+  }
+
+  .logo-img {
+    @apply w-6 h-6 object-contain;
+  }
+
+  .logo-info {
+    @apply flex flex-col;
+  }
+
+  .logo-name {
+    @apply text-sm font-bold text-slate-500 tracking-tight transition-colors duration-500;
+  }
+
+  .logo-card:hover .logo-name {
+    @apply text-brand-dark;
+  }
+
+  .logo-category {
+    @apply text-[10px] font-semibold text-slate-300 uppercase tracking-widest transition-colors duration-500;
+  }
+
+  .logo-card:hover .logo-category {
+    @apply text-brand-teal;
+  }
+
+  @keyframes scrollLeft {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  @keyframes scrollRight {
+    0% { transform: translateX(-50%); }
+    100% { transform: translateX(0); }
+  }
+</style>

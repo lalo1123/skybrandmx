@@ -1,0 +1,161 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+
+const capabilities = [
+  {
+    icon: '📈',
+    title: 'CRM & Ventas',
+    desc: 'Gestiona leads, pipelines y cierra tratos con automatización inteligente.',
+    details: [
+      'Pipeline visual drag & drop con etapas personalizables',
+      'Lead scoring automático basado en comportamiento',
+      'Seguimiento de emails abiertos y clics',
+      'Asignación automática de leads por reglas',
+      'Historial completo de interacciones por contacto',
+      'Integración nativa con tu tienda online',
+    ],
+  },
+  {
+    icon: '🧾',
+    title: 'Facturación SAT 4.0',
+    desc: 'Emite comprobantes CFDI válidos ante el SAT en segundos.',
+    details: [
+      'Timbrado automático CFDI 4.0 validado',
+      'Complementos de pago y notas de crédito',
+      'Facturación masiva por lotes',
+      'Cancelación y sustitución simplificada',
+      'Catálogos SAT actualizados automáticamente',
+      'Reportes fiscales para tu contador',
+    ],
+  },
+  {
+    icon: '📦',
+    title: 'Logística & Envíos',
+    desc: 'Las mejores tarifas de México negociadas por volumen.',
+    details: [
+      'DHL, FedEx, Estafeta, Redpack, J&T desde un solo panel',
+      'Tarifas preferenciales negociadas por volumen',
+      'Generación masiva de guías',
+      'Rastreo centralizado en tiempo real',
+      'Reglas automáticas por peso, zona y costo',
+      'Etiquetas de envío listas para imprimir',
+    ],
+  },
+  {
+    icon: '🤖',
+    title: 'Ads con IA',
+    desc: 'Campañas en Meta y Google optimizadas automáticamente.',
+    details: [
+      'Creación de campañas guiada paso a paso',
+      'Optimización automática de presupuesto con IA',
+      'Audiencias inteligentes basadas en tu CRM',
+      'Reportes de ROAS en tiempo real',
+      'A/B testing automatizado de creativos',
+      'Remarketing dinámico desde tu catálogo',
+    ],
+  },
+  {
+    icon: '📧',
+    title: 'Email Marketing',
+    desc: 'Secuencias automatizadas que se ejecutan solas.',
+    details: [
+      'Flujos de bienvenida, nurturing y fidelización',
+      'Recuperación de carrito abandonado automática',
+      'Templates profesionales editables',
+      'Segmentación avanzada por comportamiento',
+      'A/B testing de subject lines',
+      'Reportes de apertura, clics y conversiones',
+    ],
+  },
+  {
+    icon: '🛒',
+    title: 'Gestión de Pedidos',
+    desc: 'Todas tus ventas consolidadas en un solo flujo.',
+    details: [
+      'Shopify + WooCommerce + Mercado Libre unificados',
+      'Estatus en tiempo real desde pedido hasta entrega',
+      'Inventario sincronizado multi-canal',
+      'Notificaciones automáticas al cliente',
+      'Reglas de fulfillment personalizables',
+      'Exportación de datos para análisis',
+    ],
+  },
+];
+---
+
+<Layout title="Plataforma — SkyBrandMX | Automatización empresarial todo-en-uno">
+  <Navbar />
+  <main>
+    <!-- Hero -->
+    <section class="pt-36 pb-20 bg-gradient-to-b from-slate-900 via-brand-dark to-slate-900 text-white">
+      <div class="max-w-5xl mx-auto px-6 text-center">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-cyan/10 border border-brand-cyan/20 text-brand-cyan text-xs font-bold mb-8">
+          La plataforma
+        </div>
+        <h1 class="text-4xl md:text-7xl font-black tracking-tighter mb-6">
+          Una sola plataforma para <span class="text-brand-cyan">todo tu negocio.</span>
+        </h1>
+        <p class="text-lg md:text-xl text-slate-400 font-medium max-w-2xl mx-auto mb-10">
+          SkyBrandMX reemplaza las 6+ herramientas que usas hoy por un solo panel que conecta ventas, marketing, logística y facturación.
+        </p>
+        <div class="flex flex-wrap justify-center gap-3">
+          <span class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white text-sm font-bold">No-Code</span>
+          <span class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white text-sm font-bold">100% en la nube</span>
+          <span class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white text-sm font-bold">Soporte en español</span>
+          <span class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white text-sm font-bold">Cumple SAT</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Capabilities -->
+    <section class="py-20 bg-white">
+      <div class="max-w-7xl mx-auto px-6">
+        <div class="grid gap-16">
+          {capabilities.map((cap, i) => (
+            <div class={`grid lg:grid-cols-2 gap-12 items-center ${i % 2 === 1 ? 'lg:direction-rtl' : ''}`}>
+              <div class={i % 2 === 1 ? 'lg:order-2' : ''}>
+                <div class="text-4xl mb-4">{cap.icon}</div>
+                <h2 class="text-3xl md:text-4xl font-black tracking-tight text-slate-900 mb-4">{cap.title}</h2>
+                <p class="text-lg text-slate-500 font-medium mb-8">{cap.desc}</p>
+                <ul class="space-y-3">
+                  {cap.details.map((d) => (
+                    <li class="flex items-start gap-3">
+                      <svg class="w-5 h-5 text-brand-teal shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span class="text-sm text-slate-600 font-medium">{d}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div class={`bg-gradient-to-br from-slate-50 to-slate-100 rounded-3xl p-12 flex items-center justify-center ${i % 2 === 1 ? 'lg:order-1' : ''}`}>
+                <div class="text-8xl">{cap.icon}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="py-20 bg-gradient-to-r from-brand-primary to-slate-800">
+      <div class="max-w-3xl mx-auto px-6 text-center">
+        <h2 class="text-3xl md:text-5xl font-black text-white mb-6 tracking-tight">
+          Empieza a automatizar hoy.
+        </h2>
+        <p class="text-lg text-slate-300 mb-8">14 días gratis, sin tarjeta de crédito.</p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="/precios" class="px-8 py-4 bg-brand-teal text-slate-900 rounded-xl font-black hover:-translate-y-0.5 transition-all">
+            Ver planes y precios
+          </a>
+          <a href="/#contacto" class="px-8 py-4 bg-white/10 text-white border border-white/20 rounded-xl font-black hover:bg-white/20 transition-all">
+            Agendar demo
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</Layout>
