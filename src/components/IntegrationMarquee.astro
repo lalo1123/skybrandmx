@@ -1,27 +1,27 @@
 ---
-// Row 1 integrations
+// Row 1 integrations with official SVG logos from Simple Icons CDN
 const row1 = [
-  { name: 'Shopify', category: 'E-commerce', color: '#95BF47' },
-  { name: 'Google Ads', category: 'Publicidad', color: '#4285F4' },
-  { name: 'Meta Ads', category: 'Publicidad', color: '#0668E1' },
-  { name: 'WhatsApp', category: 'Comunicación', color: '#25D366' },
-  { name: 'Stripe', category: 'Pagos', color: '#635BFF' },
-  { name: 'Mercado Pago', category: 'Pagos', color: '#009EE3' },
-  { name: 'Amazon', category: 'E-commerce', color: '#FF9900' },
-  { name: 'Mailchimp', category: 'Email', color: '#FFE01B' },
-  { name: 'HubSpot', category: 'CRM', color: '#FF7A59' },
+  { name: 'Shopify', category: 'E-commerce', color: '#95BF47', icon: 'https://cdn.simpleicons.org/shopify/95BF47' },
+  { name: 'Google Ads', category: 'Publicidad', color: '#4285F4', icon: 'https://cdn.simpleicons.org/googleads/4285F4' },
+  { name: 'Meta', category: 'Publicidad', color: '#0668E1', icon: 'https://cdn.simpleicons.org/meta/0668E1' },
+  { name: 'WhatsApp', category: 'Comunicación', color: '#25D366', icon: 'https://cdn.simpleicons.org/whatsapp/25D366' },
+  { name: 'Stripe', category: 'Pagos', color: '#635BFF', icon: 'https://cdn.simpleicons.org/stripe/635BFF' },
+  { name: 'Mercado Pago', category: 'Pagos', color: '#00B1EA', icon: 'https://cdn.simpleicons.org/mercadopago/00B1EA' },
+  { name: 'Amazon', category: 'E-commerce', color: '#FF9900', icon: 'https://cdn.simpleicons.org/amazon/FF9900' },
+  { name: 'Mailchimp', category: 'Email', color: '#FFE01B', icon: 'https://cdn.simpleicons.org/mailchimp/FFE01B' },
+  { name: 'HubSpot', category: 'CRM', color: '#FF7A59', icon: 'https://cdn.simpleicons.org/hubspot/FF7A59' },
 ];
 
 const row2 = [
-  { name: 'DHL', category: 'Logística', color: '#FFCC00' },
-  { name: 'TikTok Ads', category: 'Publicidad', color: '#000000' },
-  { name: 'Gmail', category: 'Comunicación', color: '#EA4335' },
-  { name: 'Mercado Libre', category: 'E-commerce', color: '#FFE600' },
-  { name: 'WooCommerce', category: 'E-commerce', color: '#96588A' },
-  { name: 'Slack', category: 'Comunicación', color: '#4A154B' },
-  { name: 'Zapier', category: 'Automatización', color: '#FF4A00' },
-  { name: 'SAT (CFDI 4.0)', category: 'Facturación', color: '#1D2A4F' },
-  { name: 'Instagram', category: 'Redes Sociales', color: '#E4405F' },
+  { name: 'DHL', category: 'Logística', color: '#FFCC00', icon: 'https://cdn.simpleicons.org/dhl/D40511' },
+  { name: 'TikTok', category: 'Publicidad', color: '#000000', icon: 'https://cdn.simpleicons.org/tiktok/000000' },
+  { name: 'Gmail', category: 'Comunicación', color: '#EA4335', icon: 'https://cdn.simpleicons.org/gmail/EA4335' },
+  { name: 'Mercado Libre', category: 'E-commerce', color: '#FFE600', icon: 'https://cdn.simpleicons.org/mercadolibre/FFE600' },
+  { name: 'WooCommerce', category: 'E-commerce', color: '#96588A', icon: 'https://cdn.simpleicons.org/woocommerce/96588A' },
+  { name: 'Slack', category: 'Comunicación', color: '#4A154B', icon: 'https://cdn.simpleicons.org/slack/4A154B' },
+  { name: 'Zapier', category: 'Automatización', color: '#FF4A00', icon: 'https://cdn.simpleicons.org/zapier/FF4A00' },
+  { name: 'SAT (CFDI)', category: 'Facturación', color: '#1D6B3F', icon: 'https://cdn.simpleicons.org/gnuicecat/1D6B3F' },
+  { name: 'Instagram', category: 'Redes Sociales', color: '#E4405F', icon: 'https://cdn.simpleicons.org/instagram/E4405F' },
 ];
 ---
 
@@ -49,8 +49,8 @@ const row2 = [
           <div class="logo-group">
             {row1.map((item) => (
               <div class="logo-card group">
-                <div class="logo-icon" style={`background: ${item.color}15; border-color: ${item.color}25;`}>
-                  <span class="logo-letter" style={`color: ${item.color};`}>{item.name.charAt(0)}</span>
+                <div class="logo-icon" style={`background: ${item.color}12; border-color: ${item.color}20;`}>
+                  <img src={item.icon} alt={item.name} width="24" height="24" loading="lazy" class="logo-img" />
                 </div>
                 <div class="logo-info">
                   <span class="logo-name">{item.name}</span>
@@ -74,8 +74,8 @@ const row2 = [
           <div class="logo-group">
             {row2.map((item) => (
               <div class="logo-card group">
-                <div class="logo-icon" style={`background: ${item.color}15; border-color: ${item.color}25;`}>
-                  <span class="logo-letter" style={`color: ${item.color};`}>{item.name.charAt(0)}</span>
+                <div class="logo-icon" style={`background: ${item.color}12; border-color: ${item.color}20;`}>
+                  <img src={item.icon} alt={item.name} width="24" height="24" loading="lazy" class="logo-img" />
                 </div>
                 <div class="logo-info">
                   <span class="logo-name">{item.name}</span>
@@ -107,11 +107,11 @@ const row2 = [
   }
 
   .marquee-left {
-    animation: scrollLeft 80s linear infinite;
+    animation: scrollLeft 60s linear infinite;
   }
 
   .marquee-right {
-    animation: scrollRight 90s linear infinite;
+    animation: scrollRight 70s linear infinite;
   }
 
   .marquee-track:hover {
@@ -130,15 +130,15 @@ const row2 = [
   }
 
   .logo-icon {
-    @apply w-10 h-10 rounded-xl border flex items-center justify-center flex-shrink-0 transition-transform duration-500;
+    @apply w-11 h-11 rounded-xl border flex items-center justify-center flex-shrink-0 transition-transform duration-500;
   }
 
   .logo-card:hover .logo-icon {
     @apply scale-110;
   }
 
-  .logo-letter {
-    @apply text-lg font-black;
+  .logo-img {
+    @apply w-6 h-6 object-contain;
   }
 
   .logo-info {
