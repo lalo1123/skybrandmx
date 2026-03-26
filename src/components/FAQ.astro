@@ -1,0 +1,70 @@
+---
+const faqs = [
+  {
+    question: '¿Necesito ser programador?',
+    answer: 'No. SkyBrandMX es una solución "No-Code" para el usuario final. Nosotros configuramos el motor y tú solo manejas los controles desde un panel intuitivo.',
+  },
+  {
+    question: '¿Es válido ante el SAT?',
+    answer: 'Totalmente. El módulo cumple con CFDI 4.0 y está avalado por PACs oficiales en México, garantizando que cada factura sea legal y segura.',
+  },
+  {
+    question: '¿Cómo mejoran mis tarifas de envío?',
+    answer: 'Al ser una red de cientos de negocios, negociamos volúmenes que una PYME sola no podría. Esas tarifas preferenciales se te pasan directamente a ti.',
+  },
+  {
+    question: '¿Se integra con mi tienda actual?',
+    answer: 'Sí. Si ya tienes Shopify o WooCommerce, instalamos un "puente" que envía toda tu data al panel de SkyBrandMX automáticamente.',
+  },
+];
+---
+
+<section id="faq" class="py-32 max-w-7xl mx-auto px-6 bg-white">
+  <div class="text-center mb-20">
+    <h2 class="text-4xl md:text-6xl font-black tracking-tighter mb-8 text-slate-950">
+      Respuestas <span class="text-gradient">Inmediatas</span>
+    </h2>
+    <p class="text-xl text-slate-600 font-bold">Todo lo que necesitas saber para dar el salto.</p>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-8">
+    {faqs.map((faq, i) => (
+      <div class="glass-card border-slate-100/50 overflow-hidden">
+        <button
+          class="faq-toggle w-full p-10 text-left flex items-center justify-between gap-4 cursor-pointer"
+          data-faq={i}
+        >
+          <h3 class="text-xl font-black text-brand-primary">{faq.question}</h3>
+          <svg class="faq-icon w-5 h-5 text-brand-primary shrink-0 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div class="faq-answer overflow-hidden max-h-0 transition-all duration-300" data-faq-answer={i}>
+          <p class="px-10 pb-10 text-slate-600 leading-relaxed text-sm font-bold">{faq.answer}</p>
+        </div>
+      </div>
+    ))}
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll('.faq-toggle').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const i = btn.getAttribute('data-faq');
+      const answer = document.querySelector(`[data-faq-answer="${i}"]`) as HTMLElement;
+      const icon = btn.querySelector('.faq-icon') as HTMLElement;
+
+      if (!answer || !icon) return;
+
+      const isOpen = answer.style.maxHeight && answer.style.maxHeight !== '0px';
+
+      if (isOpen) {
+        answer.style.maxHeight = '0px';
+        icon.style.transform = 'rotate(0deg)';
+      } else {
+        answer.style.maxHeight = answer.scrollHeight + 'px';
+        icon.style.transform = 'rotate(180deg)';
+      }
+    });
+  });
+</script>

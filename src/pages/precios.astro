@@ -1,0 +1,241 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+
+const whatsappPhone = '5525582310';
+
+const plans = [
+  {
+    id: 'herramientas',
+    name: 'Solo Herramientas',
+    audience: 'Conecta tu tienda y usa lo que necesites',
+    price: '399',
+    period: '/mes',
+    description: 'Accede al panel y conecta tu tienda en línea. Paga solo por las herramientas que uses.',
+    popular: false,
+    gradient: '',
+    color: 'slate',
+    modules: [
+      { name: 'Panel de control', included: true, detail: 'Dashboard con métricas básicas de tu tienda' },
+      { name: 'Conexión de tienda', included: true, detail: 'Shopify, WooCommerce o Mercado Libre' },
+      { name: 'Gestión de pedidos', included: true, detail: 'Visualiza y gestiona pedidos desde un solo lugar' },
+      { name: 'Guías de envío', included: 'addon', detail: 'Desde $65 MXN por guía — DHL, Estafeta, FedEx, Redpack' },
+      { name: 'Facturación SAT', included: 'addon', detail: '$2 MXN por factura — CFDI 4.0 automatizado' },
+      { name: 'Email marketing', included: 'addon', detail: '$0.10 MXN por envío — campañas y automations' },
+      { name: 'CRM', included: false, detail: 'No incluido en este plan' },
+      { name: 'Ads con IA', included: false, detail: 'No incluido en este plan' },
+      { name: 'Reportes avanzados', included: false, detail: 'No incluido en este plan' },
+    ],
+    cta: 'Comenzar ahora',
+    ctaHref: `https://wa.me/${whatsappPhone}?text=${encodeURIComponent('Hola, me interesa el plan Solo Herramientas de SkyBrandMX')}`,
+  },
+  {
+    id: 'starter',
+    name: 'Starter',
+    audience: 'Para PYMES que empiezan a automatizar',
+    price: '899',
+    period: '/mes',
+    description: 'Todo lo esencial para dejar de hacer todo manual. Ideal si vendes en línea y quieres orden.',
+    popular: false,
+    gradient: '',
+    color: 'brand-primary',
+    modules: [
+      { name: 'Panel de control', included: true, detail: 'Dashboard completo con métricas de ventas' },
+      { name: 'Conexión de tienda', included: true, detail: 'Shopify, WooCommerce o Mercado Libre' },
+      { name: 'Gestión de pedidos', included: true, detail: 'Multi-canal con status en tiempo real' },
+      { name: 'CRM', included: true, detail: 'Hasta 500 contactos con historial completo' },
+      { name: 'Facturación SAT', included: true, detail: 'CFDI 4.0 — hasta 50 facturas/mes incluidas' },
+      { name: 'Guías de envío', included: true, detail: 'Tarifa preferencial — DHL, Estafeta, FedEx' },
+      { name: 'Email marketing', included: true, detail: 'Hasta 1,000 envíos/mes con templates' },
+      { name: 'Soporte', included: true, detail: 'WhatsApp en horario de oficina' },
+      { name: '1 usuario incluido', included: true, detail: 'Usuarios adicionales por $99/mes c/u' },
+      { name: 'Ads con IA', included: false, detail: 'Disponible en plan Growth' },
+      { name: 'Reportes avanzados', included: false, detail: 'Disponible en plan Growth' },
+      { name: 'Multi-sucursal', included: false, detail: 'Disponible en plan Enterprise' },
+    ],
+    cta: 'Empieza gratis 14 días',
+    ctaHref: `https://wa.me/${whatsappPhone}?text=${encodeURIComponent('Hola, me interesa el plan Starter de SkyBrandMX. Quiero iniciar mi prueba de 14 días.')}`,
+  },
+  {
+    id: 'growth',
+    name: 'Growth',
+    audience: 'Para empresas en crecimiento',
+    price: '1,999',
+    period: '/mes',
+    description: 'Escala tu operación con automatización avanzada, ads con IA y un CRM sin límites.',
+    popular: true,
+    gradient: 'from-brand-primary to-slate-800',
+    color: 'brand-teal',
+    modules: [
+      { name: 'Panel de control', included: true, detail: 'Dashboard avanzado con analytics y funnel' },
+      { name: 'Conexión de tiendas', included: true, detail: 'Multi-tienda: Shopify + WooCommerce + ML simultáneos' },
+      { name: 'Gestión de pedidos', included: true, detail: 'Multi-canal con automatizaciones y reglas' },
+      { name: 'CRM', included: true, detail: 'Contactos ilimitados con scoring y segmentación' },
+      { name: 'Facturación SAT', included: true, detail: 'CFDI 4.0 ilimitada + notas de crédito + complementos de pago' },
+      { name: 'Guías de envío', included: true, detail: 'Multi-paquetería con reglas automáticas por peso/zona' },
+      { name: 'Email marketing', included: true, detail: '10,000 envíos/mes con automations avanzados' },
+      { name: 'Ads con IA', included: true, detail: 'Meta Ads + Google Ads — optimización automática de presupuesto' },
+      { name: 'Reportes avanzados', included: true, detail: 'Reportes de ventas, ads, logística y financieros' },
+      { name: 'Soporte prioritario', included: true, detail: 'WhatsApp + Email — respuesta en menos de 2 horas' },
+      { name: 'Hasta 5 usuarios', included: true, detail: 'Con roles y permisos personalizados' },
+      { name: 'Multi-sucursal', included: false, detail: 'Disponible en plan Enterprise' },
+      { name: 'API', included: false, detail: 'Disponible en plan Enterprise' },
+    ],
+    cta: 'Empieza gratis 14 días',
+    ctaHref: `https://wa.me/${whatsappPhone}?text=${encodeURIComponent('Hola, me interesa el plan Growth de SkyBrandMX. Quiero iniciar mi prueba de 14 días.')}`,
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    audience: 'Para grandes empresas y operaciones complejas',
+    price: 'Personalizado',
+    period: '',
+    description: 'Solución a la medida con APIs, integraciones custom, SLA dedicado y onboarding premium.',
+    popular: false,
+    gradient: '',
+    color: 'slate',
+    modules: [
+      { name: 'Todo lo de Growth', included: true, detail: 'Todas las funcionalidades del plan Growth incluidas' },
+      { name: 'API completa', included: true, detail: 'REST API documentada para integraciones custom' },
+      { name: 'Usuarios ilimitados', included: true, detail: 'Sin límite de usuarios con SSO empresarial' },
+      { name: 'Multi-sucursal / Multi-bodega', included: true, detail: 'Gestión centralizada de múltiples ubicaciones' },
+      { name: 'Facturación masiva', included: true, detail: 'Facturación batch automatizada por lotes' },
+      { name: 'Ads con presupuesto gestionado', included: true, detail: 'Gestión profesional de tu presupuesto publicitario' },
+      { name: 'Onboarding personalizado', included: true, detail: 'Capacitación dedicada para todo tu equipo' },
+      { name: 'Account manager dedicado', included: true, detail: 'Punto de contacto exclusivo para tu cuenta' },
+      { name: 'SLA 99.99%', included: true, detail: 'Uptime garantizado con penalizaciones contractuales' },
+      { name: 'Integraciones custom', included: true, detail: 'Conectamos con tu ERP, WMS o sistema legacy' },
+      { name: 'Soporte 24/7', included: true, detail: 'Teléfono + WhatsApp + Email — respuesta inmediata' },
+    ],
+    cta: 'Hablar con ventas',
+    ctaHref: `https://wa.me/${whatsappPhone}?text=${encodeURIComponent('Hola, me interesa el plan Enterprise de SkyBrandMX. Me gustaría agendar una llamada.')}`,
+  },
+];
+---
+
+<Layout title="Precios — SkyBrandMX | Planes para PYMES, medianas y grandes empresas">
+  <Navbar />
+  <main>
+    <!-- Hero -->
+    <section class="pt-36 pb-20 bg-gradient-to-b from-slate-900 via-brand-dark to-slate-900 text-white">
+      <div class="max-w-5xl mx-auto px-6 text-center">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-teal/10 border border-brand-teal/20 text-brand-teal text-xs font-bold mb-8">
+          Precios transparentes, sin sorpresas
+        </div>
+        <h1 class="text-4xl md:text-7xl font-black tracking-tighter mb-6">
+          Elige el plan que <span class="text-brand-teal">impulse tu negocio.</span>
+        </h1>
+        <p class="text-lg md:text-xl text-slate-400 font-medium max-w-2xl mx-auto">
+          Desde herramientas individuales hasta una solución enterprise completa. Sin contratos forzosos, cancela cuando quieras.
+        </p>
+      </div>
+    </section>
+
+    <!-- Plans Detail -->
+    <section class="py-20 bg-slate-50">
+      <div class="max-w-7xl mx-auto px-6">
+        <div class="grid gap-10">
+          {plans.map((plan) => (
+            <div id={plan.id} class={`rounded-3xl overflow-hidden transition-all ${
+              plan.popular
+                ? 'ring-2 ring-brand-primary shadow-2xl shadow-brand-primary/10'
+                : 'border border-slate-200 shadow-lg'
+            }`}>
+              {/* Plan Header */}
+              <div class={`p-8 md:p-10 ${
+                plan.popular
+                  ? 'bg-gradient-to-r from-brand-primary to-slate-800 text-white'
+                  : 'bg-white'
+              }`}>
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                  <div>
+                    <div class="flex items-center gap-3 mb-2">
+                      <h2 class={`text-3xl font-black ${plan.popular ? 'text-white' : 'text-slate-900'}`}>{plan.name}</h2>
+                      {plan.popular && (
+                        <span class="px-3 py-1 rounded-full bg-brand-teal text-slate-900 text-xs font-black uppercase">Más popular</span>
+                      )}
+                    </div>
+                    <p class={`text-sm font-bold mb-1 ${plan.popular ? 'text-brand-cyan' : 'text-brand-primary'}`}>{plan.audience}</p>
+                    <p class={`text-sm ${plan.popular ? 'text-slate-300' : 'text-slate-500'}`}>{plan.description}</p>
+                  </div>
+                  <div class="flex flex-col items-start md:items-end gap-3">
+                    {plan.price === 'Personalizado' ? (
+                      <p class={`text-3xl font-black ${plan.popular ? 'text-white' : 'text-slate-900'}`}>Personalizado</p>
+                    ) : (
+                      <div class="flex items-baseline gap-1">
+                        <span class={`text-5xl font-black ${plan.popular ? 'text-white' : 'text-slate-900'}`}>${plan.price}</span>
+                        <span class={`text-lg font-bold ${plan.popular ? 'text-slate-300' : 'text-slate-400'}`}>MXN{plan.period}</span>
+                      </div>
+                    )}
+                    <a
+                      href={plan.ctaHref}
+                      target="_blank"
+                      rel="noopener"
+                      class={`inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-black text-sm transition-all hover:-translate-y-0.5 active:scale-95 ${
+                        plan.popular
+                          ? 'bg-brand-teal text-slate-900 shadow-lg shadow-brand-teal/30'
+                          : 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20'
+                      }`}
+                    >
+                      {plan.cta}
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modules Table */}
+              <div class="bg-white">
+                <div class="grid divide-y divide-slate-100">
+                  {plan.modules.map((mod) => (
+                    <div class="flex items-center gap-4 px-8 md:px-10 py-4 hover:bg-slate-50/50 transition-colors">
+                      <div class="w-6 flex-shrink-0">
+                        {mod.included === true ? (
+                          <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : mod.included === 'addon' ? (
+                          <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v12m6-6H6" />
+                          </svg>
+                        ) : (
+                          <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        )}
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <span class={`text-sm font-bold ${mod.included === false ? 'text-slate-400' : 'text-slate-700'}`}>{mod.name}</span>
+                        {mod.included === 'addon' && (
+                          <span class="ml-2 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-black uppercase">Add-on</span>
+                        )}
+                      </div>
+                      <p class={`text-sm hidden md:block ${mod.included === false ? 'text-slate-300' : 'text-slate-500'}`}>{mod.detail}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <!-- FAQ Pricing -->
+        <div class="mt-20 text-center">
+          <p class="text-slate-500 text-sm font-medium mb-2">Todos los precios en pesos mexicanos + IVA.</p>
+          <p class="text-slate-500 text-sm font-medium mb-8">Planes mensuales incluyen 14 días de prueba gratis.</p>
+          <a
+            href={`https://wa.me/${whatsappPhone}?text=${encodeURIComponent('Hola, tengo una duda sobre los planes de SkyBrandMX')}`}
+            target="_blank"
+            rel="noopener"
+            class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 text-white font-bold text-sm hover:-translate-y-0.5 transition-all shadow-lg shadow-emerald-500/20"
+          >
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            ¿Tienes dudas? Escríbenos por WhatsApp
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</Layout>

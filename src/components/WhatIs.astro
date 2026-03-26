@@ -1,0 +1,51 @@
+---
+const capabilities = [
+  { icon: '📈', title: 'CRM & Ventas', desc: 'Gestiona leads, pipelines y cierra tratos con automatización inteligente.' },
+  { icon: '🧾', title: 'Facturación SAT', desc: 'Emite CFDI 4.0 válidos ante el SAT en segundos, sin errores.' },
+  { icon: '📦', title: 'Logística', desc: 'Genera guías DHL, FedEx y Estafeta con tarifas preferenciales.' },
+  { icon: '🤖', title: 'Ads con IA', desc: 'Campañas automatizadas en Meta y Google optimizadas por IA.' },
+  { icon: '📧', title: 'Email Marketing', desc: 'Secuencias de nurturing, recuperación de carrito y fidelización.' },
+  { icon: '🛒', title: 'Gestión de Pedidos', desc: 'Centraliza Shopify, WooCommerce y Mercado Libre en un solo flujo.' },
+];
+---
+
+<section id="nosotros" class="py-32 bg-white">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="grid lg:grid-cols-2 gap-20 items-center">
+      <!-- Left: Explanation -->
+      <div>
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-primary/5 border border-brand-primary/10 text-brand-primary text-xs font-bold mb-8">
+          La plataforma
+        </div>
+        <h2 class="text-4xl md:text-5xl font-black tracking-tighter mb-8 text-slate-900 leading-tight">
+          Todo lo que necesita tu empresa, <span class="text-gradient">en un solo lugar.</span>
+        </h2>
+        <p class="text-lg text-slate-500 font-medium leading-relaxed mb-8">
+          SkyBrandMX es una plataforma de automatización empresarial diseñada para México. Reemplaza las 6+ herramientas que usas hoy por un solo panel que conecta ventas, marketing, logística y facturación.
+        </p>
+        <p class="text-lg text-slate-500 font-medium leading-relaxed mb-10">
+          Desde la PYME que empieza a vender online hasta la empresa mediana con operaciones complejas: nos adaptamos a tu tamaño y a tu ritmo de crecimiento.
+        </p>
+        <div class="flex flex-wrap gap-3">
+          <span class="px-4 py-2 rounded-full bg-slate-100 text-slate-700 text-sm font-bold">No-Code</span>
+          <span class="px-4 py-2 rounded-full bg-slate-100 text-slate-700 text-sm font-bold">100% en la nube</span>
+          <span class="px-4 py-2 rounded-full bg-slate-100 text-slate-700 text-sm font-bold">Soporte en español</span>
+          <span class="px-4 py-2 rounded-full bg-slate-100 text-slate-700 text-sm font-bold">Cumple SAT</span>
+        </div>
+      </div>
+
+      <!-- Right: Capability grid -->
+      <div class="grid grid-cols-2 gap-5">
+        {capabilities.map((cap) => (
+          <div class="group p-6 rounded-2xl border border-slate-100 bg-white hover:bg-slate-50 hover:border-brand-primary/10 hover:shadow-lg hover:shadow-brand-primary/5 transition-all duration-300">
+            <div class="w-12 h-12 rounded-xl bg-brand-primary/5 flex items-center justify-center text-2xl mb-4 group-hover:bg-brand-primary/10 transition-colors">
+              {cap.icon}
+            </div>
+            <h3 class="text-base font-black text-slate-900 mb-2">{cap.title}</h3>
+            <p class="text-sm text-slate-500 font-medium leading-relaxed">{cap.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>

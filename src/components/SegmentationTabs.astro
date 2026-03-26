@@ -1,0 +1,137 @@
+---
+const tabs = [
+  {
+    id: 'ecommerce',
+    label: 'E-Commerce',
+    icon: '🛍️',
+    title: 'Escala tu tienda online sin caos operativo',
+    description: 'Conecta Shopify, WooCommerce o Mercado Libre. Centraliza pedidos, genera guías de envío con 1 clic y emite facturas automáticamente.',
+    features: [
+      'Sincronización automática de pedidos multi-canal',
+      'Guías de envío DHL, FedEx y Estafeta con tarifas preferenciales',
+      'Facturación SAT 4.0 por cada venta',
+      'Dashboard de métricas de conversión en tiempo real',
+    ],
+  },
+  {
+    id: 'servicios',
+    label: 'Servicios',
+    icon: '💼',
+    title: 'Gestiona clientes y proyectos desde un solo lugar',
+    description: 'CRM visual con pipelines, seguimiento de prospectos, cotizaciones y facturación integrada para freelancers y agencias.',
+    features: [
+      'Pipeline de ventas visual con etapas personalizables',
+      'Cotizaciones profesionales con un clic',
+      'Seguimiento automático de prospectos por email y WhatsApp',
+      'Reportes de facturación y cobranza al instante',
+    ],
+  },
+  {
+    id: 'distribuidores',
+    label: 'Distribuidores',
+    icon: '📦',
+    title: 'Controla inventario, rutas y facturación masiva',
+    description: 'Ideal para mayoristas y distribuidores que necesitan mover volumen con eficiencia, cumplimiento fiscal y trazabilidad total.',
+    features: [
+      'Gestión de inventario multi-bodega',
+      'Facturación masiva SAT 4.0 con complementos de pago',
+      'Logística multi-paquetería con rastreo centralizado',
+      'Catálogo de productos con precios por nivel de cliente',
+    ],
+  },
+];
+---
+
+<section class="py-32 bg-white">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <h2 class="text-4xl md:text-6xl font-black tracking-tighter mb-8 text-brand-dark">
+        Una plataforma, <span class="text-brand-orange">tu modelo de negocio.</span>
+      </h2>
+      <p class="text-xl text-slate-600 font-bold">
+        Sin importar tu giro, SkyBrandMX se adapta a cómo operas.
+      </p>
+    </div>
+
+    <!-- Tab buttons -->
+    <div class="flex justify-center gap-4 mb-16 flex-wrap">
+      {tabs.map((tab, i) => (
+        <button
+          class={`seg-tab px-8 py-4 rounded-2xl font-black text-lg transition-all duration-300 border-2 ${
+            i === 0
+              ? 'bg-brand-primary text-white border-brand-primary shadow-lg shadow-brand-primary/20'
+              : 'bg-white text-slate-600 border-slate-200 hover:border-brand-primary/30'
+          }`}
+          data-tab={tab.id}
+        >
+          <span class="mr-2">{tab.icon}</span>
+          {tab.label}
+        </button>
+      ))}
+    </div>
+
+    <!-- Tab panels -->
+    {tabs.map((tab, i) => (
+      <div
+        class={`seg-panel transition-all duration-500 ${i === 0 ? '' : 'hidden'}`}
+        data-panel={tab.id}
+      >
+        <div class="grid lg:grid-cols-2 gap-16 items-center">
+          <div>
+            <h3 class="text-3xl md:text-4xl font-black text-slate-900 mb-6 tracking-tight leading-tight">
+              {tab.title}
+            </h3>
+            <p class="text-lg text-slate-500 font-semibold mb-10 leading-relaxed">
+              {tab.description}
+            </p>
+            <ul class="space-y-5">
+              {tab.features.map((feat) => (
+                <li class="flex items-start gap-4">
+                  <div class="mt-1 w-6 h-6 rounded-lg bg-brand-secondary/10 flex items-center justify-center shrink-0">
+                    <span class="text-brand-secondary text-sm font-black">✓</span>
+                  </div>
+                  <span class="text-slate-700 font-bold">{feat}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div class="glass-card p-12 bg-gradient-to-br from-slate-50 to-white flex items-center justify-center min-h-[320px]">
+            <div class="text-center">
+              <span class="text-7xl mb-6 block">{tab.icon}</span>
+              <p class="text-brand-primary font-black text-xl">{tab.label}</p>
+              <p class="text-slate-400 text-sm font-bold mt-2">Panel personalizado</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+</section>
+
+<script>
+  const tabBtns = document.querySelectorAll('.seg-tab');
+  const panels = document.querySelectorAll('.seg-panel');
+
+  tabBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const tabId = btn.getAttribute('data-tab');
+
+      // Update buttons
+      tabBtns.forEach((b) => {
+        b.classList.remove('bg-brand-primary', 'text-white', 'border-brand-primary', 'shadow-lg', 'shadow-brand-primary/20');
+        b.classList.add('bg-white', 'text-slate-600', 'border-slate-200');
+      });
+      btn.classList.remove('bg-white', 'text-slate-600', 'border-slate-200');
+      btn.classList.add('bg-brand-primary', 'text-white', 'border-brand-primary', 'shadow-lg', 'shadow-brand-primary/20');
+
+      // Update panels
+      panels.forEach((p) => {
+        if (p.getAttribute('data-panel') === tabId) {
+          p.classList.remove('hidden');
+        } else {
+          p.classList.add('hidden');
+        }
+      });
+    });
+  });
+</script>

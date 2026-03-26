@@ -1,0 +1,165 @@
+---
+const whatsappPhone = '5525582310';
+---
+
+<section id="contacto" class="py-32 bg-white">
+  <div class="max-w-3xl mx-auto px-6">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl md:text-6xl font-black tracking-tighter mb-8 text-brand-dark">
+        Agenda tu <span class="text-gradient">demo gratis</span>
+      </h2>
+      <p class="text-xl text-slate-600 font-bold">
+        Cuéntanos sobre tu negocio y te contactamos por WhatsApp en menos de 24 horas.
+      </p>
+    </div>
+
+    <form id="contact-form" class="glass-card p-10 md:p-14 bg-white space-y-8">
+      <div class="grid md:grid-cols-2 gap-8">
+        <div>
+          <label for="name" class="block text-sm font-black text-slate-700 mb-3 uppercase tracking-wider">Nombre *</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            required
+            placeholder="Tu nombre completo"
+            class="w-full px-6 py-4 rounded-xl border border-slate-200 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
+          />
+        </div>
+        <div>
+          <label for="company" class="block text-sm font-black text-slate-700 mb-3 uppercase tracking-wider">Empresa *</label>
+          <input
+            type="text"
+            id="company"
+            name="company"
+            required
+            placeholder="Nombre de tu empresa"
+            class="w-full px-6 py-4 rounded-xl border border-slate-200 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
+          />
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-8">
+        <div>
+          <label for="email" class="block text-sm font-black text-slate-700 mb-3 uppercase tracking-wider">Email *</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            placeholder="tu@empresa.com"
+            class="w-full px-6 py-4 rounded-xl border border-slate-200 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
+          />
+        </div>
+        <div>
+          <label for="phone" class="block text-sm font-black text-slate-700 mb-3 uppercase tracking-wider">Teléfono</label>
+          <input
+            type="tel"
+            id="phone"
+            name="phone"
+            placeholder="55 1234 5678"
+            class="w-full px-6 py-4 rounded-xl border border-slate-200 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label for="plan" class="block text-sm font-black text-slate-700 mb-3 uppercase tracking-wider">Plan de interés</label>
+        <select
+          id="plan"
+          name="plan"
+          class="w-full px-6 py-4 rounded-xl border border-slate-200 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all bg-white"
+        >
+          <option value="">Selecciona un plan</option>
+          <option value="Solo Herramientas ($399/mes)">Solo Herramientas ($399/mes)</option>
+          <option value="Starter ($899/mes)">Starter ($899/mes)</option>
+          <option value="Growth ($1,999/mes)">Growth ($1,999/mes)</option>
+          <option value="Enterprise (Personalizado)">Enterprise (Personalizado)</option>
+          <option value="No estoy seguro">No estoy seguro, necesito asesoría</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="message" class="block text-sm font-black text-slate-700 mb-3 uppercase tracking-wider">¿Cómo podemos ayudarte?</label>
+        <textarea
+          id="message"
+          name="message"
+          rows="4"
+          placeholder="Cuéntanos sobre tu negocio, qué vendes, cuántos pedidos manejas al mes, y qué necesitas automatizar..."
+          class="w-full px-6 py-4 rounded-xl border border-slate-200 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all resize-none"
+        ></textarea>
+      </div>
+
+      <!-- Success message (hidden by default) -->
+      <div id="form-success" class="hidden p-6 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
+        <svg class="w-10 h-10 text-emerald-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p class="text-emerald-800 font-black text-lg">¡Mensaje enviado!</p>
+        <p class="text-emerald-600 font-medium text-sm mt-1">Te contactaremos por WhatsApp en menos de 24 horas.</p>
+      </div>
+
+      <button
+        type="submit"
+        id="submit-btn"
+        class="btn btn-primary w-full text-lg py-5 flex items-center justify-center gap-3"
+      >
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Enviar y contactar por WhatsApp
+      </button>
+
+      <p class="text-center text-slate-400 text-xs font-bold">
+        Al enviar, aceptas nuestro <a href="/privacidad" class="underline hover:text-brand-primary">aviso de privacidad</a>.
+      </p>
+    </form>
+  </div>
+</section>
+
+<script define:vars={{ whatsappPhone }}>
+  document.getElementById('contact-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const form = e.target;
+    const btn = document.getElementById('submit-btn');
+    const successMsg = document.getElementById('form-success');
+
+    const name = form.querySelector('#name')?.value?.trim() || '';
+    const company = form.querySelector('#company')?.value?.trim() || '';
+    const email = form.querySelector('#email')?.value?.trim() || '';
+    const phone = form.querySelector('#phone')?.value?.trim() || '';
+    const plan = form.querySelector('#plan')?.value || '';
+    const message = form.querySelector('#message')?.value?.trim() || '';
+
+    // Validate required fields
+    if (!name || !company || !email) {
+      return;
+    }
+
+    // Build WhatsApp message
+    let text = `*Solicitud de Demo — SkyBrandMX*\n\n`;
+    text += `*Nombre:* ${name}\n`;
+    text += `*Empresa:* ${company}\n`;
+    text += `*Email:* ${email}\n`;
+    if (phone) text += `*Teléfono:* ${phone}\n`;
+    if (plan) text += `*Plan de interés:* ${plan}\n`;
+    if (message) text += `\n*Mensaje:*\n${message}`;
+
+    const url = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(text)}`;
+
+    // Show success state
+    btn.textContent = '¡Enviado!';
+    btn.classList.add('bg-emerald-500', 'hover:bg-emerald-600');
+    successMsg?.classList.remove('hidden');
+
+    // Open WhatsApp
+    window.open(url, '_blank');
+
+    // Reset after 3 seconds
+    setTimeout(() => {
+      form.reset();
+      btn.innerHTML = `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> Enviar y contactar por WhatsApp`;
+      btn.classList.remove('bg-emerald-500', 'hover:bg-emerald-600');
+      successMsg?.classList.add('hidden');
+    }, 5000);
+  });
+</script>
