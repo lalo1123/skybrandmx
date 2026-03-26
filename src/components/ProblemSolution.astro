@@ -1,0 +1,56 @@
+---
+const problems = [
+  'Un CRM caro por aquí, facturación compleja por allá...',
+  'Pagas más de $2,000 MXN mensuales sumando apps sueltas.',
+  'Pierdes ventas (y clientes) por falta de seguimiento ágil.',
+  'Generar guías de envío requiere copiar y pegar datos manuales.',
+];
+
+const solutions = [
+  'Un solo panel de control unificando toda tu operación.',
+  'Suscripciones transparentes desde $499 MXN al mes.',
+  'CRM con automatización inteligente que vende por ti 24/7.',
+  'Generación de guías de envío multi-paquetería con 1 clic.',
+];
+---
+
+<section id="solucion" class="py-32 bg-slate-50 relative">
+  <div class="max-w-7xl mx-auto px-6 text-center">
+    <h2 class="text-4xl md:text-6xl font-black mb-20 tracking-tighter text-brand-dark leading-tight">
+      ¿Cansado de pagar por <br /><span class="text-brand-orange">6 herramientas</span> que no se hablan?
+    </h2>
+    <div class="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
+      <!-- Problem -->
+      <div class="glass-card p-10 md:p-14 text-left border-slate-200 bg-slate-50/50">
+        <h3 class="text-3xl font-black text-slate-900 mb-8 flex items-center gap-4">
+          <span class="w-12 h-12 rounded-2xl bg-slate-200 flex items-center justify-center text-xl">✕</span>
+          Caos Fragmentado
+        </h3>
+        <ul class="space-y-6 text-slate-600 font-bold">
+          {problems.map((item) => (
+            <li class="flex items-start gap-5">
+              <div class="mt-2 w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></div>
+              <p>{item}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <!-- Solution -->
+      <div class="glass-card p-10 md:p-14 text-left border-brand-secondary/20 bg-brand-secondary/5">
+        <h3 class="text-3xl font-black text-brand-secondary mb-8 flex items-center gap-4">
+          <span class="w-12 h-12 rounded-2xl bg-brand-secondary/10 flex items-center justify-center text-xl">✓</span>
+          La Solución SkyBrand
+        </h3>
+        <ul class="space-y-6 text-slate-600 font-bold">
+          {solutions.map((item) => (
+            <li class="flex items-start gap-5">
+              <div class="mt-2 w-1.5 h-1.5 rounded-full bg-brand-secondary shrink-0"></div>
+              <p>{item}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>

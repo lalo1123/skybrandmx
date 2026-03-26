@@ -1,0 +1,71 @@
+---
+const navLinks = [
+  { href: '#inicio', label: 'INICIO' },
+  { href: '#nosotros', label: 'PLATAFORMA' },
+  { href: '#servicios', label: 'MÓDULOS' },
+  { href: '#pricing', label: 'PRECIOS' },
+  { href: '#clientes', label: 'CLIENTES' },
+  { href: '#contacto', label: 'CONTACTO' },
+];
+---
+
+<nav class="py-4 sticky top-0 z-50 bg-slate-950/80 backdrop-blur-xl border-b border-white/5">
+  <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
+    <a href="/" class="block">
+      <div class="group relative" aria-label="SkybrandMX">
+        <span class="font-black text-xl tracking-tight text-white">
+          SKY<span class="text-brand-cyan">BRAND</span>MX
+        </span>
+      </div>
+    </a>
+
+    <!-- Mobile hamburger -->
+    <button id="mobile-menu-btn" class="md:hidden text-white p-2" aria-label="Abrir menú">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+
+    <!-- Desktop nav -->
+    <div class="hidden md:flex gap-1 items-center">
+      {navLinks.map((link) => (
+        <a
+          href={link.href}
+          class="px-4 py-2 text-[13px] font-bold text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-white/5"
+        >
+          {link.label}
+        </a>
+      ))}
+      <a
+        href="#pricing"
+        class="ml-4 px-6 py-2.5 bg-brand-teal text-slate-900 rounded-xl text-[13px] font-black hover:bg-brand-teal/90 transition-all active:scale-95"
+      >
+        Prueba gratis
+      </a>
+    </div>
+  </div>
+
+  <!-- Mobile nav -->
+  <div id="mobile-menu" class="hidden md:hidden px-6 pt-4 pb-6 space-y-1 border-t border-white/5 mt-4">
+    {navLinks.map((link) => (
+      <a
+        href={link.href}
+        class="block px-4 py-3 text-sm font-bold text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+      >
+        {link.label}
+      </a>
+    ))}
+    <a
+      href="#pricing"
+      class="block mt-4 px-6 py-3 bg-brand-teal text-slate-900 rounded-xl text-sm font-black text-center"
+    >
+      Prueba gratis
+    </a>
+  </div>
+</nav>
+
+<script>
+  const btn = document.getElementById('mobile-menu-btn');
+  const menu = document.getElementById('mobile-menu');
+  btn?.addEventListener('click', () => menu?.classList.toggle('hidden'));
+</script>

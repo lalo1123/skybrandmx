@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .glass-card {
+    @apply rounded-[2rem] border border-slate-100 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.08)] overflow-hidden transition-all duration-500;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center rounded-2xl font-black tracking-tight transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95 text-center;
+  }
+
+  .btn-primary {
+    @apply bg-brand-primary text-white hover:bg-brand-primary/90 shadow-[0_20px_40px_rgba(8,77,110,0.3)];
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-teal to-brand-cyan;
+  }
+}

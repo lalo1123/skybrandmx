@@ -1,0 +1,40 @@
+---
+interface Props {
+  whatsappPhone?: string;
+}
+
+const { whatsappPhone = '5525582310' } = Astro.props;
+---
+
+<section class="py-32 relative overflow-hidden">
+  <!-- Background -->
+  <div class="absolute inset-0 bg-gradient-to-br from-slate-950 via-brand-primary to-slate-900"></div>
+  <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(45,212,191,0.15),transparent_60%)]"></div>
+
+  <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
+    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-brand-cyan text-xs font-bold mb-8">
+      Empieza hoy
+    </div>
+    <h2 class="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter mb-8 leading-tight text-white">
+      Deja de operar a ciegas.
+      <br />
+      <span class="text-gradient">Toma el control.</span>
+    </h2>
+    <p class="text-lg text-slate-400 mb-14 font-medium max-w-2xl mx-auto">
+      Únete a las +150 empresas mexicanas que ya automatizaron su operación con SkyBrandMX. 14 días gratis, sin tarjeta de crédito.
+    </p>
+    <div class="flex flex-col sm:flex-row justify-center gap-5">
+      <a href="#pricing" class="px-10 py-5 bg-brand-teal text-slate-900 rounded-2xl text-lg font-black shadow-[0_20px_50px_rgba(45,212,191,0.3)] hover:bg-brand-teal/90 transition-all transform hover:-translate-y-1 active:scale-95 text-center">
+        Reclamar 14 días gratis
+      </a>
+      <a
+        href={`https://wa.me/${whatsappPhone}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="px-10 py-5 bg-white/5 text-white rounded-2xl text-lg font-black border border-white/10 hover:bg-white/10 backdrop-blur-sm transition-all transform hover:-translate-y-1 active:scale-95 text-center"
+      >
+        Hablar por WhatsApp
+      </a>
+    </div>
+  </div>
+</section>

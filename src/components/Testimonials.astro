@@ -1,0 +1,71 @@
+---
+const testimonials = [
+  {
+    quote: 'Pasamos de usar 5 herramientas diferentes a solo SkyBrand. Ahorramos más de $8,000 MXN al mes y todo está conectado.',
+    name: 'Carolina Medina',
+    role: 'Fundadora',
+    company: 'Lumia Cosmetics',
+    avatar: '👩🏻‍💼',
+    metric: '-60% costos operativos',
+  },
+  {
+    quote: 'La facturación SAT integrada con los pedidos de Shopify nos ahorra 3 horas diarias. Ya no tenemos errores en los CFDI.',
+    name: 'Roberto García',
+    role: 'Director de Operaciones',
+    company: 'DistGourmet MX',
+    avatar: '👨🏽‍💼',
+    metric: '3 hrs/día ahorradas',
+  },
+  {
+    quote: 'Con las guías de envío premium estamos pagando 40% menos que antes. Y el CRM nos ayudó a duplicar nuestros leads.',
+    name: 'Ana Sofía Torres',
+    role: 'CEO',
+    company: 'PetBox México',
+    avatar: '👩🏼‍💻',
+    metric: '2x leads generados',
+  },
+];
+---
+
+<section id="clientes" class="py-32 bg-white">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="text-center max-w-3xl mx-auto mb-20">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/5 border border-purple-500/10 text-purple-600 text-xs font-bold mb-8">
+        Casos de éxito
+      </div>
+      <h2 class="text-4xl md:text-6xl font-black tracking-tighter mb-6 text-slate-900">
+        Empresas que ya <span class="text-gradient">operan diferente.</span>
+      </h2>
+      <p class="text-lg text-slate-500 font-medium">
+        Resultados reales de empresas mexicanas usando SkyBrandMX.
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-8">
+      {testimonials.map((t) => (
+        <div class="group bg-white rounded-3xl p-8 border border-slate-100 hover:border-slate-200 hover:shadow-xl transition-all duration-300">
+          <!-- Metric badge -->
+          <div class="inline-flex px-4 py-2 rounded-full bg-brand-teal/5 border border-brand-teal/10 text-brand-teal text-xs font-black mb-6">
+            {t.metric}
+          </div>
+
+          <!-- Quote -->
+          <p class="text-slate-700 font-medium leading-relaxed mb-8 text-[15px]">
+            "{t.quote}"
+          </p>
+
+          <!-- Author -->
+          <div class="flex items-center gap-4 pt-6 border-t border-slate-50">
+            <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-2xl">
+              {t.avatar}
+            </div>
+            <div>
+              <p class="font-black text-slate-900 text-sm">{t.name}</p>
+              <p class="text-slate-400 text-xs font-bold">{t.role}, {t.company}</p>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
