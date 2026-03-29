@@ -4,7 +4,7 @@ load_dotenv()
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .api import webhooks, inventory, auth, admin, automations, demo, crm
+from .api import webhooks, inventory, auth, admin, automations, demo, crm, crm_inbox
 
 app = FastAPI(
     title="SkyBrandMX SaaS API",
@@ -34,13 +34,14 @@ app.include_router(inventory.router, prefix="/api/v1", tags=["Inventory"])
 app.include_router(automations.router, prefix="/api/v1/automations", tags=["Automations"])
 app.include_router(demo.router, prefix="/api/v1/demo", tags=["Demo"])
 app.include_router(crm.router, prefix="/api/v1/crm", tags=["CRM"])
+app.include_router(crm_inbox.router, prefix="/api/v1/crm", tags=["CRM Inbox"])
 
 @app.on_event("startup")
 async def startup_event():
     from app.core.database import engine, SessionLocal
     from app.models.base import User, Workspace, ApiCredential
     from app.models.automation import AutomationRule, AutomationLog, AutomationStepLog  # noqa: F401
-    from app.models.crm import Contact  # noqa: F401
+    from app.models.crm import Contact, Message, LeadForm, Segment  # noqa: F401
     from sqlmodel import SQLModel
     # Import actions to register them
     import app.engine.actions  # noqa: F401
