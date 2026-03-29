@@ -9,6 +9,7 @@ from ..core.database import get_db
 from ..core.deps import get_current_user
 from ..models.base import User
 from ..models.automation import AutomationRule
+from ..models.crm import Contact
 
 router = APIRouter()
 
@@ -227,6 +228,41 @@ def seed_demo_data(
 
         db.commit()
 
+    # Seed CRM contacts if none exist
+    contacts_created = 0
+    existing_contacts = db.query(Contact).filter(Contact.workspace_id == current_user.workspace_id).count()
+    if existing_contacts == 0:
+        tags_pool = ["lead", "cliente", "vip", "newsletter", "shopify", "mercadolibre", "recurrente", "nuevo"]
+        sources_pool = ["shopify", "mercadolibre", "woocommerce", "manual", "import"]
+        now = datetime.utcnow()
+
+        for cust in DEMO_CUSTOMERS:
+            days_ago = random.randint(1, 90)
+            num_orders = random.randint(0, 12)
+            spent = round(random.uniform(0, 15000), 2) if num_orders > 0 else 0
+            cust_tags = random.sample(tags_pool, random.randint(1, 3))
+
+            contact = Contact(
+                workspace_id=current_user.workspace_id,
+                email=cust["email"],
+                phone=cust["phone"],
+                first_name=cust["name"].split()[0],
+                last_name=" ".join(cust["name"].split()[1:]),
+                company=random.choice([None, f"Empresa de {cust['name'].split()[0]}", None]),
+                state=cust["state"],
+                tags=json.dumps(cust_tags),
+                source=random.choice(sources_pool),
+                total_orders=num_orders,
+                total_spent=spent,
+                last_order_date=(now - timedelta(days=random.randint(1, 30))) if num_orders > 0 else None,
+                notes=json.dumps([{"text": f"Contacto importado desde demo", "date": now.isoformat(), "by": "Sistema"}]),
+                created_at=now - timedelta(days=days_ago),
+            )
+            db.add(contact)
+            contacts_created += 1
+
+        db.commit()
+
     return {
         "success": True,
         "orders": orders,
@@ -234,8 +270,10 @@ def seed_demo_data(
         "customers": DEMO_CUSTOMERS,
         "stats": stats,
         "automation_templates_created": templates,
+        "contacts_created": contacts_created,
         "message": f"Demo data generated: {len(orders)} orders, {len(DEMO_PRODUCTS)} products, {len(DEMO_CUSTOMERS)} customers"
-            + (f", {len(templates)} automation rules created" if templates else ""),
+            + (f", {len(templates)} automation rules created" if templates else "")
+            + (f", {contacts_created} CRM contacts created" if contacts_created else ""),
     }
 
 
