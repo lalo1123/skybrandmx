@@ -1,0 +1,14 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Env&iacute;os">
+  <div class="stat-card animate-in" style="text-align:center;padding:48px 24px;">
+    <div style="width:56px;height:56px;border-radius:16px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+      <svg style="width:28px;height:28px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+    </div>
+    <h3 style="font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:8px;">Env&iacute;os</h3>
+    <p style="font-size:13px;color:var(--text-faint);max-width:400px;margin:0 auto 20px;line-height:1.6;">Conecta paqueter&iacute;as como Estafeta, FedEx, DHL y m&aacute;s. Genera gu&iacute;as autom&aacute;ticamente desde tus pedidos.</p>
+    <a href="/dashboard/configuracion" style="display:inline-block;padding:10px 24px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s;text-decoration:none;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Configurar env&iacute;os</a>
+  </div>
+</DashboardLayout>

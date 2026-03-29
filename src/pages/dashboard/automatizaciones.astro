@@ -1,0 +1,427 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:6100';
+---
+
+<DashboardLayout title="Automatizaciones">
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+    <div>
+      <h2 style="font-size:20px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">Automatizaciones</h2>
+      <p style="font-size:13px;color:var(--text-faint);">Crea reglas que ejecutan acciones cuando ocurren eventos en tu negocio.</p>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="testAutomation()" style="padding:10px 20px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+        <svg style="width:14px;height:14px;display:inline;vertical-align:-2px;margin-right:4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Probar evento
+      </button>
+      <button onclick="openAutomationModal()" style="padding:10px 20px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:800;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.opacity='0.9';this.style.transform='translateY(-1px)'" onmouseout="this.style.opacity='1';this.style.transform='none'">+ Nueva regla</button>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div id="automations-empty" class="stat-card animate-in" style="text-align:center;padding:60px 24px;">
+    <div style="width:64px;height:64px;border-radius:20px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+      <svg style="width:32px;height:32px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+    </div>
+    <h3 style="font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:8px;">Crea tu primera automatizaci&oacute;n</h3>
+    <p style="font-size:13px;color:var(--text-faint);max-width:400px;margin:0 auto 20px;line-height:1.6;">Define reglas para automatizar acciones cuando ocurran ciertos eventos, como enviar un email al recibir un pedido.</p>
+    <button onclick="openAutomationModal()" style="padding:10px 24px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">+ Nueva regla</button>
+  </div>
+
+  <!-- Rules list -->
+  <div id="automations-rules-list" style="display:none;flex-direction:column;gap:12px;margin-bottom:32px;"></div>
+
+  <!-- Logs section -->
+  <div id="automations-logs-section" style="display:none;margin-top:32px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);">Historial de ejecuciones</h3>
+      <button onclick="loadAutomationLogs()" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;font-weight:700;cursor:pointer;">Actualizar</button>
+    </div>
+    <div id="automations-logs-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+
+  <!-- Automation Modal -->
+  <div id="automation-modal" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+    <div style="background:var(--bg-sidebar);border:1px solid var(--border);border-radius:20px;width:100%;max-width:640px;max-height:80vh;overflow-y:auto;padding:32px;position:relative;">
+      <!-- Close -->
+      <button onclick="closeAutomationModal()" style="position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:8px;border:none;background:transparent;cursor:pointer;color:var(--text-muted);display:flex;align-items:center;justify-content:center;" onmouseover="this.style.background='var(--nav-hover)'" onmouseout="this.style.background='transparent'">
+        <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+
+      <!-- Step indicators -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:24px;">
+        <div id="auto-step-1-dot" style="width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;">1</div>
+        <div style="flex:1;height:2px;background:var(--border);border-radius:2px;"><div id="auto-step-bar-1" style="height:100%;width:0%;background:var(--accent);border-radius:2px;transition:width 0.3s;"></div></div>
+        <div id="auto-step-2-dot" style="width:28px;height:28px;border-radius:50%;background:var(--input-bg);border:1px solid var(--border);color:var(--text-faint);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;">2</div>
+        <div style="flex:1;height:2px;background:var(--border);border-radius:2px;"><div id="auto-step-bar-2" style="height:100%;width:0%;background:var(--accent);border-radius:2px;transition:width 0.3s;"></div></div>
+        <div id="auto-step-3-dot" style="width:28px;height:28px;border-radius:50%;background:var(--input-bg);border:1px solid var(--border);color:var(--text-faint);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;">3</div>
+      </div>
+
+      <!-- Step 1: Select trigger -->
+      <div id="auto-step-1">
+        <h3 style="font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">Selecciona un disparador</h3>
+        <p style="font-size:13px;color:var(--text-faint);margin-bottom:20px;">&iquest;Cu&aacute;ndo quieres que se ejecute esta regla?</p>
+        <div id="auto-trigger-list" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
+      </div>
+
+      <!-- Step 2: Add actions -->
+      <div id="auto-step-2" style="display:none;">
+        <h3 style="font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">Agrega acciones</h3>
+        <p style="font-size:13px;color:var(--text-faint);margin-bottom:20px;">&iquest;Qu&eacute; debe hacer esta regla cuando se dispare?</p>
+        <div id="auto-selected-actions" style="margin-bottom:20px;display:flex;flex-direction:column;gap:8px;"></div>
+        <p style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">Acciones disponibles</p>
+        <div id="auto-action-list" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
+        <div style="display:flex;gap:8px;margin-top:20px;">
+          <button onclick="goToAutoStep(1)" style="padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;">Atr&aacute;s</button>
+          <button id="auto-next-step-2" onclick="goToAutoStep(3)" disabled style="padding:10px 20px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:800;cursor:pointer;opacity:0.5;">Siguiente</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Name & save -->
+      <div id="auto-step-3" style="display:none;">
+        <h3 style="font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">Nombra tu regla</h3>
+        <p style="font-size:13px;color:var(--text-faint);margin-bottom:20px;">Dale un nombre descriptivo a esta automatizaci&oacute;n.</p>
+        <div style="margin-bottom:16px;">
+          <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">Nombre de la regla</label>
+          <input id="auto-rule-name" type="text" placeholder="Ej: Enviar email de bienvenida" style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:14px;font-weight:600;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+        </div>
+        <div id="auto-rule-summary" style="padding:16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);margin-bottom:20px;">
+          <p style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;">Resumen</p>
+          <p id="auto-summary-trigger" style="font-size:13px;color:var(--text-secondary);margin-bottom:4px;"></p>
+          <p id="auto-summary-actions" style="font-size:13px;color:var(--text-secondary);"></p>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="goToAutoStep(2)" style="padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;">Atr&aacute;s</button>
+          <button onclick="saveAutomationRule()" style="padding:10px 24px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:800;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Guardar regla</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script define:vars={{ API_URL }}>
+    let _autoCatalog = null;
+    let _autoSelectedTrigger = null;
+    let _autoSelectedActions = [];
+
+    const _autoHeaders = () => ({
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + localStorage.getItem('skybrand_token')
+    });
+
+    const _triggerIcons = {
+      'order.created': '\u{1F6D2}',
+      'order.paid': '\u{1F4B3}',
+      'order.shipped': '\u{1F4E6}',
+      'order.delivered': '\u2705',
+      'order.cancelled': '\u274C',
+      'customer.created': '\u{1F464}',
+      'lead.created': '\u{1F3AF}',
+      'invoice.created': '\u{1F9FE}',
+    };
+
+    const _actionIcons = {
+      'send_email': '\u2709\uFE0F',
+      'send_whatsapp': '\u{1F4AC}',
+      'create_task': '\u{1F4CB}',
+      'update_crm': '\u{1F504}',
+      'webhook': '\u{1F517}',
+      'wait': '\u23F1\uFE0F',
+    };
+
+    async function loadAutomationCatalog() {
+      if (_autoCatalog) return _autoCatalog;
+      try {
+        const res = await fetch(API_URL + '/api/v1/automations/catalog', { headers: _autoHeaders() });
+        if (!res.ok) throw new Error('Error cargando catalogo');
+        _autoCatalog = await res.json();
+        return _autoCatalog;
+      } catch(e) {
+        console.error('loadAutomationCatalog:', e);
+        return null;
+      }
+    }
+
+    async function loadAutomationRules() {
+      try {
+        const res = await fetch(API_URL + '/api/v1/automations/rules', { headers: _autoHeaders() });
+        if (!res.ok) throw new Error('Error cargando reglas');
+        const rules = await res.json();
+        const list = document.getElementById('automations-rules-list');
+        const empty = document.getElementById('automations-empty');
+        const logsSection = document.getElementById('automations-logs-section');
+
+        if (!rules || rules.length === 0) {
+          list.style.display = 'none';
+          empty.style.display = 'block';
+          logsSection.style.display = 'none';
+          return;
+        }
+
+        empty.style.display = 'none';
+        list.style.display = 'flex';
+        logsSection.style.display = 'block';
+
+        list.innerHTML = rules.map(r => `
+          <div class="stat-card" style="padding:16px 20px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
+                <div style="width:40px;height:40px;border-radius:12px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">
+                  ${_triggerIcons[r.trigger_event] || '\u26A1'}
+                </div>
+                <div style="min-width:0;">
+                  <p style="font-size:14px;font-weight:800;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.name}</p>
+                  <p style="font-size:11px;color:var(--text-faint);">Trigger: ${r.trigger_event} \u00B7 ${r.actions ? r.actions.length : 0} acci\u00F3n(es)</p>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                <span style="font-size:10px;font-weight:800;padding:3px 10px;border-radius:999px;${r.active ? 'background:rgba(34,197,94,0.1);color:#22c55e;' : 'background:var(--input-bg);color:var(--text-faint);'}">${r.active ? 'Activa' : 'Inactiva'}</span>
+                <button onclick="toggleRule('${r.id}')" title="${r.active ? 'Desactivar' : 'Activar'}" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+                  <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${r.active ? 'M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z' : 'M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z'}"/></svg>
+                </button>
+                <button onclick="deleteRule('${r.id}')" title="Eliminar" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:all 0.2s;" onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+                  <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+        loadAutomationLogs();
+      } catch(e) {
+        console.error('loadAutomationRules:', e);
+      }
+    }
+
+    async function openAutomationModal() {
+      _autoSelectedTrigger = null;
+      _autoSelectedActions = [];
+      document.getElementById('auto-rule-name').value = '';
+      goToAutoStep(1);
+
+      const modal = document.getElementById('automation-modal');
+      modal.style.display = 'flex';
+
+      const catalog = await loadAutomationCatalog();
+      if (!catalog) return;
+
+      const triggerList = document.getElementById('auto-trigger-list');
+      triggerList.innerHTML = Object.entries(catalog.triggers || {}).map(([key, t]) => `
+        <div onclick="selectTrigger('${key}')" class="stat-card" style="padding:16px;cursor:pointer;text-align:center;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor=this.dataset.selected==='true'?'var(--accent)':'var(--border)'" data-trigger="${key}">
+          <div style="font-size:28px;margin-bottom:8px;">${_triggerIcons[key] || '\u26A1'}</div>
+          <p style="font-size:13px;font-weight:800;color:var(--text-primary);margin-bottom:4px;">${t.label || key}</p>
+          <p style="font-size:11px;color:var(--text-faint);line-height:1.4;">${t.description || ''}</p>
+        </div>
+      `).join('');
+
+      const actionList = document.getElementById('auto-action-list');
+      actionList.innerHTML = Object.entries(catalog.actions || {}).map(([key, a]) => `
+        <div onclick="addAction('${key}')" class="stat-card" style="padding:14px;cursor:pointer;text-align:center;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:24px;margin-bottom:6px;">${_actionIcons[key] || '\u2699\uFE0F'}</div>
+          <p style="font-size:12px;font-weight:800;color:var(--text-primary);">${a.label || key}</p>
+        </div>
+      `).join('');
+    }
+    window.openAutomationModal = openAutomationModal;
+
+    function closeAutomationModal() {
+      document.getElementById('automation-modal').style.display = 'none';
+      _autoSelectedTrigger = null;
+      _autoSelectedActions = [];
+    }
+    window.closeAutomationModal = closeAutomationModal;
+
+    function goToAutoStep(step) {
+      document.getElementById('auto-step-1').style.display = step === 1 ? '' : 'none';
+      document.getElementById('auto-step-2').style.display = step === 2 ? '' : 'none';
+      document.getElementById('auto-step-3').style.display = step === 3 ? '' : 'none';
+
+      for (let i = 1; i <= 3; i++) {
+        const dot = document.getElementById('auto-step-' + i + '-dot');
+        if (i <= step) {
+          dot.style.background = 'var(--accent)'; dot.style.color = '#fff'; dot.style.border = 'none';
+        } else {
+          dot.style.background = 'var(--input-bg)'; dot.style.color = 'var(--text-faint)'; dot.style.border = '1px solid var(--border)';
+        }
+      }
+      document.getElementById('auto-step-bar-1').style.width = step > 1 ? '100%' : '0%';
+      document.getElementById('auto-step-bar-2').style.width = step > 2 ? '100%' : '0%';
+
+      if (step === 3) {
+        const catalog = _autoCatalog || {};
+        const tLabel = (catalog.triggers && catalog.triggers[_autoSelectedTrigger]) ? catalog.triggers[_autoSelectedTrigger].label : _autoSelectedTrigger;
+        document.getElementById('auto-summary-trigger').textContent = 'Cuando: ' + tLabel;
+        const actLabels = _autoSelectedActions.map(a => {
+          const info = catalog.actions && catalog.actions[a.type];
+          return info ? info.label : a.type;
+        });
+        document.getElementById('auto-summary-actions').textContent = 'Acciones: ' + actLabels.join(', ');
+      }
+    }
+    window.goToAutoStep = goToAutoStep;
+
+    window.selectTrigger = function(triggerKey) {
+      _autoSelectedTrigger = triggerKey;
+      document.querySelectorAll('#auto-trigger-list .stat-card').forEach(c => {
+        const isSel = c.dataset.trigger === triggerKey;
+        c.dataset.selected = isSel;
+        c.style.borderColor = isSel ? 'var(--accent)' : 'var(--border)';
+        c.style.background = isSel ? 'var(--accent-bg)' : 'var(--bg-card)';
+      });
+      setTimeout(() => goToAutoStep(2), 300);
+    };
+
+    window.addAction = function(actionType) {
+      _autoSelectedActions.push({ type: actionType, config: {} });
+      _renderSelectedActions();
+    };
+
+    window.removeAction = function(index) {
+      _autoSelectedActions.splice(index, 1);
+      _renderSelectedActions();
+    };
+
+    function _renderSelectedActions() {
+      const catalog = _autoCatalog || {};
+      const container = document.getElementById('auto-selected-actions');
+      const btn = document.getElementById('auto-next-step-2');
+
+      if (_autoSelectedActions.length === 0) {
+        container.innerHTML = '<p style="font-size:12px;color:var(--text-faintest);text-align:center;padding:12px;">Aun no has agregado acciones.</p>';
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        return;
+      }
+
+      btn.disabled = false;
+      btn.style.opacity = '1';
+
+      container.innerHTML = _autoSelectedActions.map((a, i) => {
+        const info = catalog.actions && catalog.actions[a.type];
+        const label = info ? info.label : a.type;
+        return `
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);">
+            <span style="width:22px;height:22px;border-radius:6px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--accent);flex-shrink:0;">${i + 1}</span>
+            <span style="font-size:16px;flex-shrink:0;">${_actionIcons[a.type] || '\u2699\uFE0F'}</span>
+            <span style="font-size:13px;font-weight:700;color:var(--text-primary);flex:1;">${label}</span>
+            <button onclick="removeAction(${i})" style="width:24px;height:24px;border-radius:6px;border:none;background:transparent;cursor:pointer;color:var(--text-faint);display:flex;align-items:center;justify-content:center;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='var(--text-faint)'">
+              <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function saveAutomationRule() {
+      const name = document.getElementById('auto-rule-name').value.trim();
+      if (!name) { alert('Escribe un nombre para la regla.'); return; }
+      if (!_autoSelectedTrigger) { alert('Selecciona un disparador.'); return; }
+      if (_autoSelectedActions.length === 0) { alert('Agrega al menos una accion.'); return; }
+
+      try {
+        const res = await fetch(API_URL + '/api/v1/automations/rules', {
+          method: 'POST',
+          headers: _autoHeaders(),
+          body: JSON.stringify({
+            name: name,
+            trigger_event: _autoSelectedTrigger,
+            actions: _autoSelectedActions
+          })
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Error creando regla');
+        }
+        closeAutomationModal();
+        loadAutomationRules();
+      } catch(e) {
+        alert('Error: ' + e.message);
+      }
+    }
+    window.saveAutomationRule = saveAutomationRule;
+
+    window.toggleRule = async function(id) {
+      try {
+        const res = await fetch(API_URL + '/api/v1/automations/rules/' + id + '/toggle', {
+          method: 'PATCH',
+          headers: _autoHeaders()
+        });
+        if (!res.ok) throw new Error('Error toggling rule');
+        loadAutomationRules();
+      } catch(e) {
+        console.error('toggleRule:', e);
+      }
+    };
+
+    window.deleteRule = async function(id) {
+      if (!confirm('Estas seguro de eliminar esta regla?')) return;
+      try {
+        const res = await fetch(API_URL + '/api/v1/automations/rules/' + id, {
+          method: 'DELETE',
+          headers: _autoHeaders()
+        });
+        if (!res.ok) throw new Error('Error deleting rule');
+        loadAutomationRules();
+      } catch(e) {
+        console.error('deleteRule:', e);
+      }
+    };
+
+    async function loadAutomationLogs() {
+      try {
+        const res = await fetch(API_URL + '/api/v1/automations/logs', { headers: _autoHeaders() });
+        if (!res.ok) throw new Error('Error cargando logs');
+        const logs = await res.json();
+        const container = document.getElementById('automations-logs-list');
+
+        if (!logs || logs.length === 0) {
+          container.innerHTML = '<p style="font-size:12px;color:var(--text-faintest);text-align:center;padding:16px;">Sin ejecuciones recientes.</p>';
+          return;
+        }
+
+        container.innerHTML = logs.slice(0, 20).map(log => {
+          const statusColor = log.status === 'success' ? '#22c55e' : log.status === 'error' ? '#ef4444' : 'var(--text-faint)';
+          const statusLabel = log.status === 'success' ? 'OK' : log.status === 'error' ? 'Error' : log.status;
+          const date = new Date(log.created_at || log.fired_at).toLocaleString('es-MX', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+          return `
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);">
+              <div style="width:8px;height:8px;border-radius:50%;background:${statusColor};flex-shrink:0;"></div>
+              <div style="flex:1;min-width:0;">
+                <p style="font-size:12px;font-weight:700;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${log.rule_name || log.trigger_event || 'Regla'}</p>
+                <p style="font-size:10px;color:var(--text-faintest);">${log.trigger_event || ''} \u00B7 ${log.steps ? log.steps.length + ' pasos' : ''}</p>
+              </div>
+              <span style="font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;background:${log.status === 'success' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)'};color:${statusColor};">${statusLabel}</span>
+              <span style="font-size:10px;color:var(--text-faintest);flex-shrink:0;">${date}</span>
+            </div>
+          `;
+        }).join('');
+      } catch(e) {
+        console.error('loadAutomationLogs:', e);
+      }
+    }
+    window.loadAutomationLogs = loadAutomationLogs;
+
+    async function testAutomation() {
+      try {
+        const res = await fetch(API_URL + '/api/v1/automations/test?event_type=order.created', {
+          method: 'POST',
+          headers: _autoHeaders()
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          alert('Evento de prueba disparado correctamente. ' + (data.rules_matched ? data.rules_matched + ' regla(s) ejecutada(s).' : ''));
+          loadAutomationRules();
+        } else {
+          alert('Error: ' + (data.error || 'No se pudo disparar el evento de prueba.'));
+        }
+      } catch(e) {
+        alert('Error de conexion al probar evento.');
+      }
+    }
+    window.testAutomation = testAutomation;
+
+    // Load on auth
+    window.addEventListener('skybrand:auth', () => { loadAutomationRules(); });
+    if (window._skybrandUser) { loadAutomationRules(); }
+  </script>
+</DashboardLayout>

@@ -1,0 +1,14 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Facturaci&oacute;n">
+  <div class="stat-card animate-in" style="text-align:center;padding:48px 24px;">
+    <div style="width:56px;height:56px;border-radius:16px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+      <svg style="width:28px;height:28px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z"/></svg>
+    </div>
+    <h3 style="font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:8px;">Facturaci&oacute;n</h3>
+    <p style="font-size:13px;color:var(--text-faint);max-width:400px;margin:0 auto 20px;line-height:1.6;">Genera CFDI 4.0, complementos de pago y notas de cr&eacute;dito. Configura tus datos fiscales y certificados del SAT.</p>
+    <a href="/dashboard/configuracion" style="display:inline-block;padding:10px 24px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s;text-decoration:none;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Configurar datos fiscales</a>
+  </div>
+</DashboardLayout>
