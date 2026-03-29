@@ -1,115 +1,196 @@
 ---
 const navLinks = [
-  { href: '/', label: 'INICIO' },
-  { href: '/plataforma', label: 'PLATAFORMA' },
-  { href: '/modulos', label: 'MÓDULOS' },
-  { href: '/precios', label: 'PRECIOS' },
-  { href: '/#contacto', label: 'CONTACTO' },
+  { href: '/', label: 'Inicio' },
+  { href: '/plataforma', label: 'Plataforma' },
+  { href: '/soluciones', label: 'Soluciones' },
+  { href: '/precios', label: 'Precios' },
+  { href: '/#contacto', label: 'Contacto' },
 ];
 ---
 
-<nav class="py-4 sticky top-0 z-50 bg-slate-950/80 backdrop-blur-xl border-b border-white/5">
-  <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
-    <a href="/" class="block group" aria-label="SkyBrandMX">
-      <div class="flex items-center space-x-2">
-        <!-- Rocket logo -->
-        <div class="relative w-10 h-10 flex items-center justify-center logo-fade-in">
-          <div class="absolute inset-0 rounded-full logo-glow"></div>
-          <svg class="h-7 w-7 text-brand-cyan relative" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <g class="rocket-shake">
-              <g stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2L15 6V14C15 14 15 17 12 17C9 17 9 14 9 14V6L12 2Z" />
-                <path d="M9 11L6 14H9V11Z" fill="currentColor" />
-                <path d="M15 11L18 14H15V11Z" fill="currentColor" />
+<nav id="main-nav" class="fixed top-0 left-0 right-0 z-50 transition-all duration-500">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="flex justify-between items-center h-20">
+      <!-- Logo -->
+      <a href="/" class="block group relative z-10" aria-label="SkyBrandMX">
+        <div class="flex items-center space-x-3">
+          <!-- Rocket -->
+          <div class="relative w-11 h-11 flex items-center justify-center">
+            <div class="absolute inset-0 rounded-full logo-glow"></div>
+            <svg class="h-7 w-7 text-brand-cyan relative" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g class="rocket-shake">
+                <g stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2L15 6V14C15 14 15 17 12 17C9 17 9 14 9 14V6L12 2Z" />
+                  <path d="M9 11L6 14H9V11Z" fill="currentColor" />
+                  <path d="M15 11L18 14H15V11Z" fill="currentColor" />
+                </g>
+                <g>
+                  <path d="M9 17C10.5 20 12 22 12 22C12 22 13.5 20 15 17H9Z" fill="#ff6600" class="flame flame-1" />
+                  <path d="M10 17.5C11 19.5 12 21 12 21C12 21 13 19.5 14 17.5H10Z" fill="#ef6f6f" class="flame flame-2" />
+                </g>
               </g>
-              <g>
-                <path d="M9 17C10.5 20 12 22 12 22C12 22 13.5 20 15 17H9Z" fill="#ff6600" class="flame flame-1" />
-                <path d="M10 17.5C11 19.5 12 21 12 21C12 21 13 19.5 14 17.5H10Z" fill="#ef6f6f" class="flame flame-2" />
-              </g>
-            </g>
-          </svg>
-        </div>
-        <!-- Text -->
-        <div class="relative inline-flex flex-col">
-          <div class="font-bold text-2xl tracking-tight flex items-center text-white">
-            <span>SKYBR</span>
-            <span class="bg-gradient-to-br from-[#70D1C6] from-[45%] to-white to-[55%] bg-clip-text text-transparent">A</span>
-            <span class="bg-gradient-to-br from-[#70D1C6] from-[45%] to-white to-[55%] bg-clip-text text-transparent">N</span>
-            <span>DM</span>
-            <span class="bg-gradient-to-br from-[#70D1C6] from-[45%] to-white to-[55%] bg-clip-text text-transparent">X</span>
+            </svg>
           </div>
-          <div class="absolute -bottom-1 left-0 h-[3px] w-[55%] rounded-full bg-gradient-to-r from-[#70D1C6] to-[#105971] opacity-90" style="filter: saturate(1.2);"></div>
+          <!-- Brand text -->
+          <div class="relative inline-flex flex-col">
+            <div class="font-extrabold text-[22px] tracking-tight flex items-center text-white">
+              <span>SKYBR</span>
+              <span class="bg-gradient-to-br from-[#70D1C6] from-[45%] to-white to-[55%] bg-clip-text text-transparent">A</span>
+              <span class="bg-gradient-to-br from-[#70D1C6] from-[45%] to-white to-[55%] bg-clip-text text-transparent">N</span>
+              <span>DM</span>
+              <span class="bg-gradient-to-br from-[#70D1C6] from-[45%] to-white to-[55%] bg-clip-text text-transparent">X</span>
+            </div>
+            <div class="absolute -bottom-1 left-0 h-[2.5px] w-[55%] rounded-full bg-gradient-to-r from-[#70D1C6] to-[#105971] opacity-90" style="filter: saturate(1.2);"></div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Mobile hamburger -->
+      <button id="mobile-menu-btn" class="md:hidden relative z-10 text-white p-2.5 rounded-xl hover:bg-white/10 transition-colors" aria-label="Abrir menú">
+        <svg id="menu-icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+        <svg id="menu-icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      <!-- Desktop nav -->
+      <div class="hidden md:flex items-center gap-1">
+        {navLinks.map((link) => (
+          <a
+            href={link.href}
+            class="nav-link relative px-4 py-2 text-[13px] font-semibold text-slate-300 hover:text-white transition-all duration-200 rounded-lg group"
+          >
+            <span class="relative z-10">{link.label}</span>
+            <div class="absolute inset-0 rounded-lg bg-white/0 group-hover:bg-white/[0.06] transition-all duration-200"></div>
+            <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-brand-teal rounded-full group-hover:w-[60%] transition-all duration-300"></div>
+          </a>
+        ))}
+        <div id="nav-auth-guest" class="ml-3 pl-3 border-l border-white/10 flex items-center gap-2">
+          <a
+            href="/login"
+            class="px-4 py-2 text-[13px] font-semibold text-slate-300 hover:text-white transition-all rounded-lg"
+          >
+            Iniciar sesión
+          </a>
+          <a
+            href="/precios"
+            class="group relative inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold overflow-hidden transition-all duration-300 hover:-translate-y-[1px] active:scale-[0.97]"
+          >
+            <div class="absolute inset-0 bg-gradient-to-r from-brand-teal to-emerald-400 transition-all duration-300"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-emerald-400 to-brand-cyan opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <span class="relative text-slate-900 font-black">Prueba gratis</span>
+            <svg class="relative w-3.5 h-3.5 text-slate-900 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+        <div id="nav-auth-user" class="ml-3 pl-3 border-l border-white/10 hidden">
+          <a
+            href="/dashboard"
+            class="group relative inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold overflow-hidden transition-all duration-300 hover:-translate-y-[1px] active:scale-[0.97]"
+          >
+            <div class="absolute inset-0 bg-gradient-to-r from-brand-teal to-emerald-400 transition-all duration-300"></div>
+            <span class="relative text-slate-900 font-black">Mi Panel</span>
+            <svg class="relative w-3.5 h-3.5 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
         </div>
       </div>
-    </a>
-
-    <!-- Mobile hamburger -->
-    <button id="mobile-menu-btn" class="md:hidden text-white p-2" aria-label="Abrir menú">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-      </svg>
-    </button>
-
-    <!-- Desktop nav -->
-    <div class="hidden md:flex gap-1 items-center">
-      {navLinks.map((link) => (
-        <a
-          href={link.href}
-          class="px-4 py-2 text-[13px] font-bold text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-white/5"
-        >
-          {link.label}
-        </a>
-      ))}
-      <a
-        href="/precios"
-        class="ml-4 px-6 py-2.5 bg-brand-teal text-slate-900 rounded-xl text-[13px] font-black hover:bg-brand-teal/90 transition-all active:scale-95"
-      >
-        Prueba gratis
-      </a>
     </div>
   </div>
 
   <!-- Mobile nav -->
-  <div id="mobile-menu" class="hidden md:hidden px-6 pt-4 pb-6 space-y-1 border-t border-white/5 mt-4">
-    {navLinks.map((link) => (
-      <a
-        href={link.href}
-        class="block px-4 py-3 text-sm font-bold text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-      >
-        {link.label}
-      </a>
-    ))}
-    <a
-      href="/precios"
-      class="block mt-4 px-6 py-3 bg-brand-teal text-slate-900 rounded-xl text-sm font-black text-center"
-    >
-      Prueba gratis
-    </a>
+  <div id="mobile-menu" class="mobile-menu hidden md:hidden">
+    <div class="px-6 pt-2 pb-6 space-y-1">
+      {navLinks.map((link) => (
+        <a
+          href={link.href}
+          class="flex items-center gap-3 px-4 py-3.5 text-sm font-semibold text-slate-300 hover:text-white hover:bg-white/[0.06] rounded-xl transition-all"
+        >
+          <div class="w-1.5 h-1.5 rounded-full bg-brand-teal/50"></div>
+          {link.label}
+        </a>
+      ))}
+      <div id="mobile-auth-guest" class="pt-3 space-y-2">
+        <a
+          href="/login"
+          class="flex items-center justify-center gap-2 px-6 py-3.5 bg-white/5 border border-white/10 text-white rounded-xl text-sm font-bold"
+        >
+          Iniciar sesión
+        </a>
+        <a
+          href="/precios"
+          class="flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-brand-teal to-emerald-400 text-slate-900 rounded-xl text-sm font-black"
+        >
+          Prueba gratis
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+      <div id="mobile-auth-user" class="pt-3 hidden">
+        <a
+          href="/dashboard"
+          class="flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-brand-teal to-emerald-400 text-slate-900 rounded-xl text-sm font-black"
+        >
+          Mi Panel
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+    </div>
   </div>
 </nav>
 
+<!-- Spacer for fixed nav -->
+<div class="h-20"></div>
+
 <style>
-  .logo-fade-in {
-    animation: logo-fade 0.3s ease-out;
+  /* Nav background transitions */
+  #main-nav {
+    background: linear-gradient(to bottom, rgba(2, 6, 23, 0.95), rgba(2, 6, 23, 0.85));
+    backdrop-filter: blur(20px) saturate(1.8);
+    -webkit-backdrop-filter: blur(20px) saturate(1.8);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   }
 
+  #main-nav.scrolled {
+    background: rgba(2, 6, 23, 0.98);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3), 0 0 1px rgba(112, 209, 198, 0.1);
+  }
+
+  /* Mobile menu */
+  .mobile-menu {
+    background: rgba(2, 6, 23, 0.98);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  /* Active nav link */
+  .nav-link.active {
+    color: white;
+  }
+
+  .nav-link.active .absolute:last-child {
+    width: 60%;
+  }
+
+  /* Logo animations */
   .logo-glow {
     animation: pulse-glow 3s ease-in-out infinite;
   }
 
-  @keyframes logo-fade {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
   @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 8px rgba(112, 209, 198, 0.15); }
-    50% { box-shadow: 0 0 16px rgba(112, 209, 198, 0.3); }
+    0%, 100% { box-shadow: 0 0 8px rgba(112, 209, 198, 0.1); }
+    50% { box-shadow: 0 0 20px rgba(112, 209, 198, 0.25); }
   }
 
   .rocket-shake {
     transform-origin: center bottom;
-    animation: shake 2.5s ease-in-out infinite;
+    animation: shake 3s ease-in-out infinite;
   }
 
   @keyframes shake {
@@ -126,13 +207,8 @@ const navLinks = [
     animation: flame-dance 0.4s ease-in-out infinite alternate;
   }
 
-  .flame-1 {
-    animation-delay: 0s;
-  }
-
-  .flame-2 {
-    animation-delay: 0.2s;
-  }
+  .flame-1 { animation-delay: 0s; }
+  .flame-2 { animation-delay: 0.2s; }
 
   @keyframes flame-dance {
     0% { transform: scaleY(0.85) scaleX(0.95); opacity: 0.8; }
@@ -152,7 +228,42 @@ const navLinks = [
 </style>
 
 <script>
+  // Mobile menu toggle
   const btn = document.getElementById('mobile-menu-btn');
   const menu = document.getElementById('mobile-menu');
-  btn?.addEventListener('click', () => menu?.classList.toggle('hidden'));
+  const iconOpen = document.getElementById('menu-icon-open');
+  const iconClose = document.getElementById('menu-icon-close');
+
+  btn?.addEventListener('click', () => {
+    const isHidden = menu?.classList.toggle('hidden');
+    iconOpen?.classList.toggle('hidden', !isHidden);
+    iconClose?.classList.toggle('hidden', isHidden);
+  });
+
+  // Scroll effect
+  const nav = document.getElementById('main-nav');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 20) {
+      nav?.classList.add('scrolled');
+    } else {
+      nav?.classList.remove('scrolled');
+    }
+  });
+
+  // Active link
+  const links = document.querySelectorAll('.nav-link');
+  const currentPath = window.location.pathname;
+  links.forEach(link => {
+    if (link.getAttribute('href') === currentPath) {
+      link.classList.add('active');
+    }
+  });
+
+  // Auth-aware CTA (desktop + mobile)
+  if (localStorage.getItem('skybrand_token')) {
+    document.getElementById('nav-auth-guest')?.classList.add('hidden');
+    document.getElementById('nav-auth-user')?.classList.remove('hidden');
+    document.getElementById('mobile-auth-guest')?.classList.add('hidden');
+    document.getElementById('mobile-auth-user')?.classList.remove('hidden');
+  }
 </script>

@@ -3,155 +3,225 @@ import Layout from '../layouts/Layout.astro';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
 
-const capabilities = [
+const whatsappPhone = '5525582310';
+
+const modules = [
   {
-    icon: '📈',
-    title: 'CRM & Ventas',
-    desc: 'Gestiona leads, pipelines y cierra tratos con automatización inteligente.',
-    details: [
-      'Pipeline visual drag & drop con etapas personalizables',
-      'Lead scoring automático basado en comportamiento',
-      'Seguimiento de emails abiertos y clics',
-      'Asignación automática de leads por reglas',
-      'Historial completo de interacciones por contacto',
-      'Integración nativa con tu tienda online',
-    ],
-  },
-  {
-    icon: '🧾',
-    title: 'Facturación SAT 4.0',
-    desc: 'Emite comprobantes CFDI válidos ante el SAT en segundos.',
-    details: [
-      'Timbrado automático CFDI 4.0 validado',
-      'Complementos de pago y notas de crédito',
-      'Facturación masiva por lotes',
-      'Cancelación y sustitución simplificada',
-      'Catálogos SAT actualizados automáticamente',
-      'Reportes fiscales para tu contador',
-    ],
-  },
-  {
+    id: 'pedidos',
+    name: 'Gestión de Pedidos',
+    tagline: 'Todos tus canales, un solo lugar',
+    description: 'Centraliza pedidos de Shopify, WooCommerce, Mercado Libre y Amazon en un dashboard unificado. Status en tiempo real, reglas automáticas y notificaciones.',
+    features: ['Multi-canal sincronizado', 'Status en tiempo real', 'Reglas automáticas', 'Notificaciones a clientes', 'Historial completo'],
     icon: '📦',
-    title: 'Logística & Envíos',
-    desc: 'Las mejores tarifas de México negociadas por volumen.',
-    details: [
-      'DHL, FedEx, Estafeta, Redpack, J&T desde un solo panel',
-      'Tarifas preferenciales negociadas por volumen',
-      'Generación masiva de guías',
-      'Rastreo centralizado en tiempo real',
-      'Reglas automáticas por peso, zona y costo',
-      'Etiquetas de envío listas para imprimir',
-    ],
+    gradient: 'from-orange-500 to-amber-500',
+    bgLight: 'bg-orange-50',
+    accent: 'text-orange-600',
   },
   {
+    id: 'crm',
+    name: 'CRM',
+    tagline: 'Conoce a cada cliente',
+    description: 'Base de datos de contactos con historial completo de interacciones, compras y comunicaciones. Scoring automático y segmentación inteligente.',
+    features: ['Contactos ilimitados (Growth+)', 'Scoring automático', 'Segmentación inteligente', 'Historial de interacciones', 'Integración con WhatsApp'],
+    icon: '👥',
+    gradient: 'from-blue-500 to-indigo-500',
+    bgLight: 'bg-blue-50',
+    accent: 'text-blue-600',
+  },
+  {
+    id: 'facturacion',
+    name: 'Facturación SAT',
+    tagline: 'CFDI 4.0 automatizado',
+    description: 'Genera facturas automáticamente desde cada pedido. Complementos de pago, notas de crédito y facturación masiva. 100% compatible con el SAT.',
+    features: ['CFDI 4.0 automático', 'Complementos de pago', 'Notas de crédito', 'Facturación masiva', 'Reportes fiscales'],
+    icon: '🧾',
+    gradient: 'from-emerald-500 to-green-500',
+    bgLight: 'bg-emerald-50',
+    accent: 'text-emerald-600',
+  },
+  {
+    id: 'envios',
+    name: 'Guías de Envío',
+    tagline: 'Multi-paquetería, tarifas preferenciales',
+    description: 'Genera guías de DHL, Estafeta, FedEx y Redpack desde el panel. Reglas automáticas por peso, zona y costo. Tracking integrado para tus clientes.',
+    features: ['DHL, Estafeta, FedEx, Redpack', 'Tarifas preferenciales', 'Reglas automáticas', 'Tracking integrado', 'Etiquetas de envío'],
+    icon: '🚚',
+    gradient: 'from-brand-primary to-cyan-500',
+    bgLight: 'bg-sky-50',
+    accent: 'text-brand-primary',
+  },
+  {
+    id: 'ads',
+    name: 'Ads con IA',
+    tagline: 'Publicidad que se optimiza sola',
+    description: 'Conecta tus cuentas de Meta Ads y Google Ads. Nuestra IA optimiza tu presupuesto automáticamente para maximizar conversiones y reducir CPA.',
+    features: ['Meta Ads + Google Ads', 'Optimización automática', 'Reportes de ROAS', 'Audiencias sugeridas', 'A/B testing automático'],
     icon: '🤖',
-    title: 'Ads con IA',
-    desc: 'Campañas en Meta y Google optimizadas automáticamente.',
-    details: [
-      'Creación de campañas guiada paso a paso',
-      'Optimización automática de presupuesto con IA',
-      'Audiencias inteligentes basadas en tu CRM',
-      'Reportes de ROAS en tiempo real',
-      'A/B testing automatizado de creativos',
-      'Remarketing dinámico desde tu catálogo',
-    ],
+    gradient: 'from-purple-500 to-pink-500',
+    bgLight: 'bg-purple-50',
+    accent: 'text-purple-600',
   },
   {
+    id: 'email',
+    name: 'Email Marketing',
+    tagline: 'Campañas que convierten',
+    description: 'Diseña campañas con plantillas profesionales, crea automations basadas en comportamiento y segmenta tu audiencia para envíos personalizados.',
+    features: ['Plantillas drag & drop', 'Automations avanzados', 'Segmentación por comportamiento', 'A/B testing', 'Reportes de apertura/clic'],
     icon: '📧',
-    title: 'Email Marketing',
-    desc: 'Secuencias automatizadas que se ejecutan solas.',
-    details: [
-      'Flujos de bienvenida, nurturing y fidelización',
-      'Recuperación de carrito abandonado automática',
-      'Templates profesionales editables',
-      'Segmentación avanzada por comportamiento',
-      'A/B testing de subject lines',
-      'Reportes de apertura, clics y conversiones',
-    ],
+    gradient: 'from-rose-500 to-red-500',
+    bgLight: 'bg-rose-50',
+    accent: 'text-rose-600',
   },
   {
-    icon: '🛒',
-    title: 'Gestión de Pedidos',
-    desc: 'Todas tus ventas consolidadas en un solo flujo.',
-    details: [
-      'Shopify + WooCommerce + Mercado Libre unificados',
-      'Estatus en tiempo real desde pedido hasta entrega',
-      'Inventario sincronizado multi-canal',
-      'Notificaciones automáticas al cliente',
-      'Reglas de fulfillment personalizables',
-      'Exportación de datos para análisis',
-    ],
+    id: 'reportes',
+    name: 'Reportes y Analytics',
+    tagline: 'Datos para tomar decisiones',
+    description: 'Dashboard unificado con métricas de ventas, ads, logística y finanzas. Reportes automáticos semanales y mensuales para tu equipo.',
+    features: ['Dashboard en tiempo real', 'Métricas multi-canal', 'Reportes automáticos', 'Exportación a Excel/PDF', 'KPIs personalizables'],
+    icon: '📊',
+    gradient: 'from-teal-500 to-emerald-500',
+    bgLight: 'bg-teal-50',
+    accent: 'text-teal-600',
+  },
+  {
+    id: 'integraciones',
+    name: 'Integraciones',
+    tagline: '+50 herramientas conectadas',
+    description: 'Conecta con Shopify, WooCommerce, Mercado Libre, Stripe, Mercado Pago, WhatsApp, Slack, Zapier y más. API REST para integraciones custom.',
+    features: ['Shopify, WooCommerce, ML', 'Stripe, Mercado Pago', 'WhatsApp, Slack, Gmail', 'Zapier (2,000+ apps)', 'API REST documentada'],
+    icon: '🔌',
+    gradient: 'from-slate-600 to-slate-800',
+    bgLight: 'bg-slate-50',
+    accent: 'text-slate-600',
   },
 ];
 ---
 
-<Layout title="Plataforma — SkyBrandMX | Automatización empresarial todo-en-uno">
+<Layout title="Plataforma — SkyBrandMX | CRM, Facturación, Envíos, Ads y Email Marketing">
   <Navbar />
   <main>
     <!-- Hero -->
     <section class="pt-36 pb-20 bg-gradient-to-b from-slate-900 via-brand-dark to-slate-900 text-white">
       <div class="max-w-5xl mx-auto px-6 text-center">
-        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-cyan/10 border border-brand-cyan/20 text-brand-cyan text-xs font-bold mb-8">
-          La plataforma
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-teal/10 border border-brand-teal/20 text-brand-teal text-xs font-bold mb-8">
+          Una plataforma, todo integrado
         </div>
         <h1 class="text-4xl md:text-7xl font-black tracking-tighter mb-6">
-          Una sola plataforma para <span class="text-brand-cyan">todo tu negocio.</span>
+          Todo lo que necesitas <span class="text-brand-teal">en un solo lugar.</span>
         </h1>
-        <p class="text-lg md:text-xl text-slate-400 font-medium max-w-2xl mx-auto mb-10">
-          SkyBrandMX reemplaza las 6+ herramientas que usas hoy por un solo panel que conecta ventas, marketing, logística y facturación.
+        <p class="text-lg md:text-xl text-slate-400 font-medium max-w-2xl mx-auto mb-12">
+          CRM, facturación SAT, guías de envío, ads con IA, email marketing y gestión de pedidos — integrados y automatizados.
         </p>
-        <div class="flex flex-wrap justify-center gap-3">
-          <span class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white text-sm font-bold">No-Code</span>
-          <span class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white text-sm font-bold">100% en la nube</span>
-          <span class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white text-sm font-bold">Soporte en español</span>
-          <span class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white text-sm font-bold">Cumple SAT</span>
-        </div>
-      </div>
-    </section>
 
-    <!-- Capabilities -->
-    <section class="py-20 bg-white">
-      <div class="max-w-7xl mx-auto px-6">
-        <div class="grid gap-16">
-          {capabilities.map((cap, i) => (
-            <div class={`grid lg:grid-cols-2 gap-12 items-center ${i % 2 === 1 ? 'lg:direction-rtl' : ''}`}>
-              <div class={i % 2 === 1 ? 'lg:order-2' : ''}>
-                <div class="text-4xl mb-4">{cap.icon}</div>
-                <h2 class="text-3xl md:text-4xl font-black tracking-tight text-slate-900 mb-4">{cap.title}</h2>
-                <p class="text-lg text-slate-500 font-medium mb-8">{cap.desc}</p>
-                <ul class="space-y-3">
-                  {cap.details.map((d) => (
-                    <li class="flex items-start gap-3">
-                      <svg class="w-5 h-5 text-brand-teal shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span class="text-sm text-slate-600 font-medium">{d}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div class={`bg-gradient-to-br from-slate-50 to-slate-100 rounded-3xl p-12 flex items-center justify-center ${i % 2 === 1 ? 'lg:order-1' : ''}`}>
-                <div class="text-8xl">{cap.icon}</div>
-              </div>
-            </div>
+        <!-- Quick nav -->
+        <div class="flex flex-wrap justify-center gap-2">
+          {modules.map((mod) => (
+            <a href={`#${mod.id}`} class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white transition-all">
+              <span>{mod.icon}</span>
+              {mod.name}
+            </a>
           ))}
         </div>
       </div>
     </section>
 
+    <!-- How it works -->
+    <section class="py-20 bg-white">
+      <div class="max-w-5xl mx-auto px-6 text-center">
+        <h2 class="text-3xl md:text-5xl font-black tracking-tighter mb-6 text-slate-900">¿Cómo funciona?</h2>
+        <p class="text-lg text-slate-500 font-medium mb-16 max-w-2xl mx-auto">Tres pasos para transformar tu operación.</p>
+
+        <div class="grid md:grid-cols-3 gap-8">
+          <div class="relative">
+            <div class="w-16 h-16 rounded-2xl bg-brand-primary/10 flex items-center justify-center mx-auto mb-6">
+              <span class="text-2xl font-black text-brand-primary">1</span>
+            </div>
+            <h3 class="text-lg font-black text-slate-900 mb-2">Conecta tus herramientas</h3>
+            <p class="text-sm text-slate-500">Vincula tu tienda en línea, pasarelas de pago y cuentas de ads en minutos.</p>
+          </div>
+          <div class="relative">
+            <div class="w-16 h-16 rounded-2xl bg-brand-teal/10 flex items-center justify-center mx-auto mb-6">
+              <span class="text-2xl font-black text-brand-teal">2</span>
+            </div>
+            <h3 class="text-lg font-black text-slate-900 mb-2">Configura tu operación</h3>
+            <p class="text-sm text-slate-500">Define reglas de envío, plantillas de facturación y automations de email.</p>
+          </div>
+          <div class="relative">
+            <div class="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto mb-6">
+              <span class="text-2xl font-black text-emerald-500">3</span>
+            </div>
+            <h3 class="text-lg font-black text-slate-900 mb-2">Automatiza y escala</h3>
+            <p class="text-sm text-slate-500">Todo corre automáticamente. Tú te enfocas en crecer tu negocio.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Modules -->
+    {modules.map((mod, idx) => (
+      <section id={mod.id} class={`py-20 ${idx % 2 === 0 ? 'bg-slate-50' : 'bg-white'}`}>
+        <div class="max-w-6xl mx-auto px-6">
+          <div class="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Info */}
+            <div class={idx % 2 !== 0 ? 'lg:order-2' : ''}>
+              <div class={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${mod.bgLight} ${mod.accent} text-xs font-bold mb-4`}>
+                <span>{mod.icon}</span> {mod.tagline}
+              </div>
+              <h2 class="text-3xl md:text-4xl font-black tracking-tighter text-slate-900 mb-4">{mod.name}</h2>
+              <p class="text-slate-500 text-lg leading-relaxed mb-8">{mod.description}</p>
+              <ul class="space-y-3">
+                {mod.features.map((feat) => (
+                  <li class="flex items-center gap-3">
+                    <svg class={`w-5 h-5 ${mod.accent} shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span class="text-sm font-medium text-slate-700">{feat}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Visual card */}
+            <div class={idx % 2 !== 0 ? 'lg:order-1' : ''}>
+              <div class={`rounded-3xl bg-gradient-to-br ${mod.gradient} p-10 md:p-14 text-white shadow-2xl`}>
+                <span class="text-6xl mb-6 block">{mod.icon}</span>
+                <h3 class="text-2xl font-black mb-3">{mod.name}</h3>
+                <p class="text-white/80 text-sm leading-relaxed">{mod.tagline}</p>
+                <div class="mt-8 grid grid-cols-2 gap-4">
+                  {mod.features.slice(0, 4).map((feat) => (
+                    <div class="flex items-center gap-2">
+                      <div class="w-1.5 h-1.5 rounded-full bg-white/60"></div>
+                      <span class="text-xs font-medium text-white/80">{feat}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    ))}
+
     <!-- CTA -->
-    <section class="py-20 bg-gradient-to-r from-brand-primary to-slate-800">
-      <div class="max-w-3xl mx-auto px-6 text-center">
-        <h2 class="text-3xl md:text-5xl font-black text-white mb-6 tracking-tight">
-          Empieza a automatizar hoy.
-        </h2>
-        <p class="text-lg text-slate-300 mb-8">14 días gratis, sin tarjeta de crédito.</p>
+    <section class="py-24 bg-gradient-to-r from-brand-primary to-slate-800 text-white">
+      <div class="max-w-4xl mx-auto px-6 text-center">
+        <h2 class="text-3xl md:text-5xl font-black tracking-tighter mb-6">¿Listo para automatizar tu negocio?</h2>
+        <p class="text-lg text-slate-300 font-medium mb-10">Empieza con una prueba gratis de 14 días. Sin tarjeta de crédito.</p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="/precios" class="px-8 py-4 bg-brand-teal text-slate-900 rounded-xl font-black hover:-translate-y-0.5 transition-all">
-            Ver planes y precios
+          <a
+            href={`https://wa.me/${whatsappPhone}?text=${encodeURIComponent('Hola, me interesa conocer más sobre la plataforma SkyBrandMX')}`}
+            target="_blank"
+            rel="noopener"
+            class="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-brand-teal text-slate-900 font-black text-base hover:-translate-y-0.5 transition-all shadow-lg shadow-brand-teal/20"
+          >
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Hablar con un asesor
           </a>
-          <a href="/#contacto" class="px-8 py-4 bg-white/10 text-white border border-white/20 rounded-xl font-black hover:bg-white/20 transition-all">
-            Agendar demo
+          <a
+            href="/precios"
+            class="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-white/10 border border-white/20 text-white font-bold text-base hover:bg-white/20 transition-all"
+          >
+            Ver precios
           </a>
         </div>
       </div>

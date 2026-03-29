@@ -1,0 +1,1614 @@
+---
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:6100';
+---
+
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <title>Dashboard — SkyBrandMX</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* CSS Variables for theming */
+    :root {
+      --bg-main: #0B1120;
+      --bg-sidebar: #0F172A;
+      --bg-card: rgba(255,255,255,0.02);
+      --bg-card-hover: rgba(255,255,255,0.04);
+      --bg-topbar: rgba(11,17,32,0.8);
+      --border: rgba(255,255,255,0.06);
+      --border-hover: rgba(255,255,255,0.1);
+      --text-primary: #ffffff;
+      --text-secondary: #e2e8f0;
+      --text-muted: #64748b;
+      --text-faint: #475569;
+      --text-faintest: #334155;
+      --accent: #6fcff5;
+      --accent-bg: rgba(111,207,245,0.08);
+      --accent-bg2: rgba(111,207,245,0.15);
+      --accent-gradient-start: #084D6E;
+      --accent-gradient-end: #6fcff5;
+      --scrollbar: rgba(255,255,255,0.1);
+      --nav-hover: rgba(255,255,255,0.04);
+      --input-bg: rgba(255,255,255,0.05);
+    }
+
+    [data-theme="light"] {
+      --bg-main: #f1f5f9;
+      --bg-sidebar: #ffffff;
+      --bg-card: #ffffff;
+      --bg-card-hover: #f8fafc;
+      --bg-topbar: rgba(255,255,255,0.85);
+      --border: #e2e8f0;
+      --border-hover: #cbd5e1;
+      --text-primary: #0f172a;
+      --text-secondary: #1e293b;
+      --text-muted: #64748b;
+      --text-faint: #94a3b8;
+      --text-faintest: #cbd5e1;
+      --accent: #084D6E;
+      --accent-bg: rgba(8,77,110,0.06);
+      --accent-bg2: rgba(8,77,110,0.12);
+      --accent-gradient-start: #084D6E;
+      --accent-gradient-end: #6fcff5;
+      --scrollbar: rgba(0,0,0,0.1);
+      --nav-hover: rgba(0,0,0,0.04);
+      --input-bg: #f1f5f9;
+    }
+
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-main); color: var(--text-secondary); -webkit-font-smoothing: antialiased; transition: background 0.3s, color 0.3s; }
+
+    /* Sidebar */
+    .sidebar { width: 260px; height: 100vh; position: fixed; left: 0; top: 0; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 40; transition: transform 0.3s, background 0.3s; }
+    .sidebar-hidden { transform: translateX(-100%); }
+    .main-content { margin-left: 260px; min-height: 100vh; transition: margin-left 0.3s; }
+    .main-full { margin-left: 0; }
+
+    /* Nav items */
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s; text-decoration: none; }
+    .nav-item:hover { background: var(--nav-hover); color: var(--text-secondary); }
+    .nav-item.active { background: var(--accent-bg); color: var(--accent); }
+    .nav-item.active .nav-icon { color: var(--accent); }
+    .nav-icon { width: 20px; height: 20px; color: var(--text-faint); transition: color 0.2s; }
+    .nav-badge { font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 999px; background: var(--accent-bg2); color: var(--accent); margin-left: auto; }
+
+    /* Cards */
+    .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; transition: all 0.3s; }
+    .stat-card:hover { background: var(--bg-card-hover); border-color: var(--border-hover); transform: translateY(-2px); }
+    .stat-value { font-size: 32px; font-weight: 900; letter-spacing: -0.02em; line-height: 1; }
+    .stat-label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-change { font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 2px; padding: 2px 8px; border-radius: 999px; }
+    .stat-up { background: rgba(34,197,94,0.1); color: #22c55e; }
+    .stat-down { background: rgba(239,68,68,0.1); color: #ef4444; }
+
+    /* Module card */
+    .module-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; }
+    .module-card:hover { background: var(--bg-card-hover); border-color: var(--accent); transform: translateY(-2px); }
+    .module-card.coming-soon { opacity: 0.5; cursor: default; }
+    .module-card.coming-soon:hover { transform: none; border-color: var(--border); }
+    .module-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 16px; }
+
+    /* Activity list */
+    .activity-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+
+    /* Chart placeholder */
+    .chart-bar { border-radius: 6px 6px 0 0; transition: height 0.6s ease; }
+
+    /* Top bar */
+    .topbar { position: sticky; top: 0; z-index: 30; background: var(--bg-topbar); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between; transition: background 0.3s; }
+
+    /* Theme toggle */
+    .theme-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px; border: 1px solid var(--border); background: transparent; cursor: pointer; color: var(--text-muted); transition: all 0.2s; }
+    .theme-btn:hover { background: var(--nav-hover); color: var(--accent); border-color: var(--accent); }
+
+    /* Theme panel */
+    .theme-panel { position: fixed; top: 0; right: -340px; width: 340px; height: 100vh; background: var(--bg-sidebar); border-left: 1px solid var(--border); z-index: 50; transition: right 0.3s; overflow-y: auto; }
+    .theme-panel.open { right: 0; }
+    .theme-panel-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 45; }
+    .theme-panel-overlay.active { display: block; }
+    .color-swatch { width: 36px; height: 36px; border-radius: 10px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; }
+    .color-swatch:hover { transform: scale(1.1); }
+    .color-swatch.selected { border-color: var(--text-primary); box-shadow: 0 0 0 2px var(--bg-main); }
+
+    /* Mobile menu toggle */
+    .mobile-toggle { display: none; }
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main-content { margin-left: 0 !important; }
+      .mobile-toggle { display: flex; }
+      .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 35; }
+      .mobile-overlay.active { display: block; }
+      #section-settings > div:first-child { grid-template-columns: 1fr !important; }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-in { animation: fadeIn 0.4s ease forwards; }
+    .delay-1 { animation-delay: 0.05s; opacity: 0; }
+    .delay-2 { animation-delay: 0.1s; opacity: 0; }
+    .delay-3 { animation-delay: 0.15s; opacity: 0; }
+    .delay-4 { animation-delay: 0.2s; opacity: 0; }
+  </style>
+</head>
+<body>
+  <!-- Loading -->
+  <div id="loading" style="min-height:100vh;display:flex;align-items:center;justify-content:center;">
+    <div style="text-align:center;">
+      <div style="width:32px;height:32px;border:2px solid #6fcff5;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px;"></div>
+      <p style="color:#64748b;font-size:13px;font-weight:600;">Cargando panel...</p>
+    </div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+  </div>
+
+  <!-- Dashboard (hidden until auth) -->
+  <div id="dashboard" style="display:none;">
+    <!-- Mobile overlay -->
+    <div id="mobile-overlay" class="mobile-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <!-- Logo -->
+      <div style="padding:24px 20px 20px;border-bottom:1px solid var(--border);">
+        <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+          <svg style="height:28px;width:28px;color:#6fcff5;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L15 6V14C15 14 15 17 12 17C9 17 9 14 9 14V6L12 2Z"></path>
+              <path d="M9 11L6 14H9V11Z" fill="currentColor"></path>
+              <path d="M15 11L18 14H15V11Z" fill="currentColor"></path>
+            </g>
+            <path d="M9 17C10.5 20 12 22 12 22C12 22 13.5 20 15 17H9Z" fill="#ff6600"></path>
+          </svg>
+          <div>
+            <div style="font-weight:900;font-size:16px;letter-spacing:-0.02em;color:#fff;">SKYBR<span style="color:#6fcff5;">AN</span>DM<span style="color:#6fcff5;">X</span></div>
+            <div style="height:2px;width:55%;border-radius:999px;background:linear-gradient(to right,#6fcff5,#105971);margin-top:2px;"></div>
+          </div>
+        </a>
+      </div>
+
+      <!-- Navigation -->
+      <nav style="flex:1;padding:16px 12px;overflow-y:auto;">
+        <div style="margin-bottom:8px;padding:0 16px;">
+          <p style="font-size:10px;font-weight:800;color:var(--text-faintest);text-transform:uppercase;letter-spacing:0.1em;">Principal</p>
+        </div>
+        <a href="#" class="nav-item active" data-section="overview">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+          Resumen
+        </a>
+
+        <div style="margin:20px 0 8px;padding:0 16px;">
+          <p style="font-size:10px;font-weight:800;color:var(--text-faintest);text-transform:uppercase;letter-spacing:0.1em;">Módulos</p>
+        </div>
+        <a href="#" class="nav-item" data-section="orders">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          Pedidos
+          <span class="nav-badge">12</span>
+        </a>
+        <a href="#" class="nav-item" data-section="crm">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+          CRM
+        </a>
+        <a href="#" class="nav-item" data-section="billing">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
+          Facturación
+        </a>
+        <a href="#" class="nav-item" data-section="shipping">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
+          Envíos
+        </a>
+        <a href="#" class="nav-item" data-section="email">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          Email Marketing
+        </a>
+        <a href="#" class="nav-item" data-section="ads">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+          Ads con IA
+        </a>
+        <a href="#" class="nav-item" data-section="automations">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Automatizaciones
+        </a>
+
+        <div id="admin-nav" style="display:none;">
+          <div style="margin:20px 0 8px;padding:0 16px;">
+            <p style="font-size:10px;font-weight:800;color:var(--text-faintest);text-transform:uppercase;letter-spacing:0.1em;">Admin</p>
+          </div>
+          <a href="/admin" class="nav-item" data-section="users">
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/></svg>
+            Usuarios
+          </a>
+          <a href="#" class="nav-item" data-section="settings">
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Configuración
+          </a>
+        </div>
+      </nav>
+
+      <!-- User section -->
+      <div style="padding:16px 12px;border-top:1px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:12px;padding:8px 12px;">
+          <div id="user-avatar" style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#084D6E,#6fcff5);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#fff;flex-shrink:0;">A</div>
+          <div style="flex:1;min-width:0;">
+            <p id="sidebar-name" style="font-size:13px;font-weight:700;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Admin</p>
+            <p id="sidebar-email" style="font-size:11px;color:var(--text-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">admin@skybrandmx.com</p>
+          </div>
+          <button id="logout-btn" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:none;background:transparent;cursor:pointer;color:#64748b;transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.1)';this.style.color='#ef4444'" onmouseout="this.style.background='transparent';this.style.color='#64748b'" title="Cerrar sesión">
+            <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <div class="main-content" id="main-content">
+      <!-- Top bar -->
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:16px;">
+          <button class="mobile-toggle" id="menu-toggle" onclick="toggleSidebar()" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:transparent;cursor:pointer;color:#94a3b8;">
+            <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+          <div>
+            <h1 id="page-title" style="font-size:18px;font-weight:900;color:var(--text-primary);letter-spacing:-0.02em;">Resumen</h1>
+            <p id="page-date" style="font-size:12px;color:var(--text-faint);font-weight:500;"></p>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <!-- Theme toggle (dark/light) -->
+          <button id="theme-mode-btn" class="theme-btn" title="Cambiar tema">
+            <svg id="icon-sun" style="width:18px;height:18px;display:none;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            <svg id="icon-moon" style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+          </button>
+          <!-- Customize colors -->
+          <button id="theme-panel-btn" class="theme-btn" title="Personalizar colores">
+            <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+          </button>
+          <!-- Notifications -->
+          <button class="theme-btn" title="Notificaciones" style="position:relative;">
+            <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            <div style="position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--accent);border:2px solid var(--bg-main);"></div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Page content container -->
+      <div style="padding:28px 32px;">
+
+        <!-- Onboarding Banner -->
+        <div id="onboarding-banner" style="background:linear-gradient(135deg, #0c2d3f, #0a4060, #084D6E);border-radius:16px;padding:24px 28px;margin-bottom:24px;position:relative;overflow:hidden;border:1px solid rgba(111,207,245,0.15);" class="animate-in delay-1">
+          <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:rgba(111,207,245,0.06);border-radius:50%;"></div>
+          <div style="position:absolute;bottom:-60px;right:60px;width:120px;height:120px;background:rgba(111,207,245,0.04);border-radius:50%;"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div>
+              <h2 style="font-size:18px;font-weight:900;color:#fff;margin-bottom:4px;">Configura tu negocio</h2>
+              <p style="font-size:13px;color:rgba(255,255,255,0.75);">Completa estos pasos para activar tu plataforma</p>
+            </div>
+            <button onclick="dismissOnboarding()" style="background:rgba(255,255,255,0.15);border:none;border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+              <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+            <div onclick="showSection('settings')" style="background:rgba(111,207,245,0.08);border:1px solid rgba(111,207,245,0.15);border-radius:12px;padding:14px 16px;text-align:center;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(111,207,245,0.15)';this.style.borderColor='rgba(111,207,245,0.3)'" onmouseout="this.style.background='rgba(111,207,245,0.08)';this.style.borderColor='rgba(111,207,245,0.15)'">
+              <div style="width:36px;height:36px;border-radius:10px;background:rgba(111,207,245,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+                <svg style="width:18px;height:18px;color:#6fcff5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+              </div>
+              <p style="font-size:12px;font-weight:700;color:#fff;margin-bottom:2px;">Empresa</p>
+              <p style="font-size:10px;color:#6fcff5;">Datos fiscales</p>
+            </div>
+            <div onclick="showSection('orders')" style="background:rgba(111,207,245,0.08);border:1px solid rgba(111,207,245,0.15);border-radius:12px;padding:14px 16px;text-align:center;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(111,207,245,0.15)';this.style.borderColor='rgba(111,207,245,0.3)'" onmouseout="this.style.background='rgba(111,207,245,0.08)';this.style.borderColor='rgba(111,207,245,0.15)'">
+              <div style="width:36px;height:36px;border-radius:10px;background:rgba(111,207,245,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+                <svg style="width:18px;height:18px;color:#6fcff5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+              </div>
+              <p style="font-size:12px;font-weight:700;color:#fff;margin-bottom:2px;">Tienda</p>
+              <p style="font-size:10px;color:#6fcff5;">Productos y catálogo</p>
+            </div>
+            <div onclick="showSection('billing')" style="background:rgba(111,207,245,0.08);border:1px solid rgba(111,207,245,0.15);border-radius:12px;padding:14px 16px;text-align:center;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(111,207,245,0.15)';this.style.borderColor='rgba(111,207,245,0.3)'" onmouseout="this.style.background='rgba(111,207,245,0.08)';this.style.borderColor='rgba(111,207,245,0.15)'">
+              <div style="width:36px;height:36px;border-radius:10px;background:rgba(111,207,245,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+                <svg style="width:18px;height:18px;color:#6fcff5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z"/></svg>
+              </div>
+              <p style="font-size:12px;font-weight:700;color:#fff;margin-bottom:2px;">Facturación</p>
+              <p style="font-size:10px;color:#6fcff5;">CFDI y SAT</p>
+            </div>
+            <div onclick="showSection('shipping')" style="background:rgba(111,207,245,0.08);border:1px solid rgba(111,207,245,0.15);border-radius:12px;padding:14px 16px;text-align:center;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(111,207,245,0.15)';this.style.borderColor='rgba(111,207,245,0.3)'" onmouseout="this.style.background='rgba(111,207,245,0.08)';this.style.borderColor='rgba(111,207,245,0.15)'">
+              <div style="width:36px;height:36px;border-radius:10px;background:rgba(111,207,245,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+                <svg style="width:18px;height:18px;color:#6fcff5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+              </div>
+              <p style="font-size:12px;font-weight:700;color:#fff;margin-bottom:2px;">Envíos</p>
+              <p style="font-size:10px;color:#6fcff5;">Paqueterías</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== SECTION: Overview ===== -->
+        <div id="section-overview" class="dashboard-section" style="display:block;">
+          <div id="demo-banner" class="stat-card" style="margin-bottom:20px;background:linear-gradient(135deg,#0c2d3f,#084D6E);border:1px solid rgba(111,207,245,0.15);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+            <div>
+              <h3 style="font-size:14px;font-weight:800;color:#fff;margin-bottom:4px;">Modo Demo</h3>
+              <p style="font-size:12px;color:rgba(255,255,255,0.6);">Carga datos de prueba para explorar la plataforma</p>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button onclick="loadDemoData()" id="demo-load-btn" style="padding:10px 20px;border-radius:10px;border:none;background:#6fcff5;color:#0f172a;font-size:12px;font-weight:800;cursor:pointer;">Cargar datos demo</button>
+              <button onclick="openSimulator()" style="padding:10px 20px;border-radius:10px;border:1px solid rgba(111,207,245,0.3);background:transparent;color:#6fcff5;font-size:12px;font-weight:700;cursor:pointer;">Simulador de tienda</button>
+            </div>
+          </div>
+          <!-- Stats row -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:28px;" class="animate-in delay-1">
+            <div class="stat-card">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <span class="stat-label">Ingresos</span>
+                <span class="stat-change stat-up">+24.5%</span>
+              </div>
+              <p class="stat-value" style="color:var(--text-primary);">$0</p>
+              <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">vs. mes anterior</p>
+            </div>
+            <div class="stat-card">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <span class="stat-label">Pedidos</span>
+                <span class="stat-change stat-up">+12%</span>
+              </div>
+              <p class="stat-value" style="color:var(--text-primary);">0</p>
+              <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">este mes</p>
+            </div>
+            <div class="stat-card">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <span class="stat-label">Contactos CRM</span>
+                <span class="stat-change stat-up">+31%</span>
+              </div>
+              <p class="stat-value" style="color:var(--text-primary);">1</p>
+              <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">activos</p>
+            </div>
+            <div class="stat-card">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <span class="stat-label">Facturas</span>
+                <span class="stat-change stat-up">+18%</span>
+              </div>
+              <p class="stat-value" style="color:var(--text-primary);">0</p>
+              <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">emitidas este mes</p>
+            </div>
+          </div>
+
+          <!-- Quick actions -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;" class="animate-in delay-2">
+            <div class="stat-card" style="cursor:pointer;transition:border-color 0.2s;" onclick="showSection('orders')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+              <div style="width:40px;height:40px;border-radius:12px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
+                <svg style="width:20px;height:20px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+              </div>
+              <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:4px;">Pedidos</h4>
+              <p style="font-size:12px;color:var(--text-faint);">Gestiona tus ventas</p>
+            </div>
+            <div class="stat-card" style="cursor:pointer;transition:border-color 0.2s;" onclick="showSection('crm')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+              <div style="width:40px;height:40px;border-radius:12px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
+                <svg style="width:20px;height:20px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              </div>
+              <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:4px;">CRM</h4>
+              <p style="font-size:12px;color:var(--text-faint);">Contactos y leads</p>
+            </div>
+            <div class="stat-card" style="cursor:pointer;transition:border-color 0.2s;" onclick="showSection('billing')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+              <div style="width:40px;height:40px;border-radius:12px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
+                <svg style="width:20px;height:20px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z"/></svg>
+              </div>
+              <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:4px;">Facturación</h4>
+              <p style="font-size:12px;color:var(--text-faint);">CFDI y complementos</p>
+            </div>
+            <div class="stat-card" style="cursor:pointer;transition:border-color 0.2s;" onclick="showSection('ads')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+              <div style="width:40px;height:40px;border-radius:12px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
+                <svg style="width:20px;height:20px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+              </div>
+              <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:4px;">Ads con IA</h4>
+              <p style="font-size:12px;color:var(--text-faint);">Meta + Google Ads</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== SECTION: Orders ===== -->
+        <div id="section-orders" class="dashboard-section" style="display:none;">
+          <div class="stat-card animate-in" style="text-align:center;padding:48px 24px;">
+            <div style="width:56px;height:56px;border-radius:16px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+              <svg style="width:28px;height:28px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+            </div>
+            <h3 style="font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:8px;">Pedidos</h3>
+            <p style="font-size:13px;color:var(--text-faint);max-width:400px;margin:0 auto 20px;line-height:1.6;">Aquí verás todos los pedidos de tu tienda. Conecta tu catálogo de productos para empezar a recibir órdenes.</p>
+            <button onclick="showSection('settings')" style="padding:10px 24px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Ir a Configuración</button>
+          </div>
+        </div>
+
+        <!-- ===== SECTION: CRM ===== -->
+        <div id="section-crm" class="dashboard-section" style="display:none;">
+          <div class="stat-card animate-in" style="text-align:center;padding:48px 24px;">
+            <div style="width:56px;height:56px;border-radius:16px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+              <svg style="width:28px;height:28px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <h3 style="font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:8px;">CRM</h3>
+            <p style="font-size:13px;color:var(--text-faint);max-width:400px;margin:0 auto 20px;line-height:1.6;">Administra tus contactos, leads y clientes. Importa tu base de datos o agrega contactos manualmente.</p>
+            <button onclick="showSection('settings')" style="padding:10px 24px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Ir a Configuración</button>
+          </div>
+        </div>
+
+        <!-- ===== SECTION: Billing ===== -->
+        <div id="section-billing" class="dashboard-section" style="display:none;">
+          <div class="stat-card animate-in" style="text-align:center;padding:48px 24px;">
+            <div style="width:56px;height:56px;border-radius:16px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+              <svg style="width:28px;height:28px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z"/></svg>
+            </div>
+            <h3 style="font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:8px;">Facturación</h3>
+            <p style="font-size:13px;color:var(--text-faint);max-width:400px;margin:0 auto 20px;line-height:1.6;">Genera CFDI 4.0, complementos de pago y notas de crédito. Configura tus datos fiscales y certificados del SAT.</p>
+            <button onclick="showSection('settings')" style="padding:10px 24px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Configurar datos fiscales</button>
+          </div>
+        </div>
+
+        <!-- ===== SECTION: Shipping ===== -->
+        <div id="section-shipping" class="dashboard-section" style="display:none;">
+          <div class="stat-card animate-in" style="text-align:center;padding:48px 24px;">
+            <div style="width:56px;height:56px;border-radius:16px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+              <svg style="width:28px;height:28px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+            </div>
+            <h3 style="font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:8px;">Envíos</h3>
+            <p style="font-size:13px;color:var(--text-faint);max-width:400px;margin:0 auto 20px;line-height:1.6;">Conecta paqueterías como Estafeta, FedEx, DHL y más. Genera guías automáticamente desde tus pedidos.</p>
+            <button onclick="showSection('settings')" style="padding:10px 24px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Configurar envíos</button>
+          </div>
+        </div>
+
+        <!-- ===== SECTION: Email ===== -->
+        <div id="section-email" class="dashboard-section" style="display:none;">
+          <div class="stat-card animate-in" style="text-align:center;padding:48px 24px;">
+            <div style="width:56px;height:56px;border-radius:16px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+              <svg style="width:28px;height:28px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            </div>
+            <h3 style="font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:8px;">Email Marketing</h3>
+            <p style="font-size:13px;color:var(--text-faint);max-width:400px;margin:0 auto 20px;line-height:1.6;">Crea campañas de email, automatiza flujos y segmenta tu audiencia con herramientas de IA.</p>
+            <button onclick="showSection('settings')" style="padding:10px 24px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Ir a Configuración</button>
+          </div>
+        </div>
+
+        <!-- ===== SECTION: Ads ===== -->
+        <div id="section-ads" class="dashboard-section" style="display:none;">
+          <div class="stat-card animate-in" style="text-align:center;padding:48px 24px;">
+            <div style="width:56px;height:56px;border-radius:16px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+              <svg style="width:28px;height:28px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+            </div>
+            <h3 style="font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:8px;">Ads con IA</h3>
+            <p style="font-size:13px;color:var(--text-faint);max-width:400px;margin:0 auto 20px;line-height:1.6;">Conecta tus cuentas de Meta Ads y Google Ads. La IA optimizará tus campañas automáticamente.</p>
+            <button onclick="showSection('settings')" style="padding:10px 24px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Conectar cuentas</button>
+          </div>
+        </div>
+
+        <!-- ===== SECTION: Settings ===== -->
+        <div id="section-settings" class="dashboard-section" style="display:none;">
+          <!-- Two column layout -->
+          <div style="display:grid;grid-template-columns:320px 1fr;gap:20px;">
+            <!-- Left: Profile card -->
+            <div>
+              <div class="stat-card animate-in" style="text-align:center;padding:32px 24px;">
+                <!-- Logo -->
+                <div id="company-logo-preview" style="width:100px;height:100px;border-radius:20px;background:linear-gradient(135deg,var(--accent-gradient-start),var(--accent-gradient-end));display:flex;align-items:center;justify-content:center;margin:0 auto 16px;overflow:hidden;cursor:pointer;transition:all 0.3s;position:relative;box-shadow:0 8px 32px rgba(0,0,0,0.2);" onclick="document.getElementById('logo-upload').click()" onmouseover="this.querySelector('.logo-overlay').style.opacity='1'" onmouseout="this.querySelector('.logo-overlay').style.opacity='0'">
+                  <span id="company-logo-initials" style="font-size:36px;font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.2);">S</span>
+                  <img id="company-logo-img" src="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;" />
+                  <div class="logo-overlay" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;opacity:0;transition:opacity 0.2s;border-radius:20px;">
+                    <svg style="width:20px;height:20px;color:#fff;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <span style="font-size:10px;font-weight:700;color:#fff;">Cambiar</span>
+                  </div>
+                  <input type="file" id="logo-upload" accept="image/*" style="display:none;" />
+                </div>
+                <h3 id="profile-company-name" style="font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">Mi empresa</h3>
+                <p id="profile-email" style="font-size:12px;color:var(--text-faint);margin-bottom:16px;">serratos@skybrandmx.com</p>
+                <div style="display:flex;gap:8px;justify-content:center;">
+                  <button onclick="document.getElementById('logo-upload').click()" style="padding:8px 16px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">Subir logo</button>
+                  <button id="remove-logo-btn" onclick="removeLogo()" style="display:none;padding:8px 16px;border-radius:10px;border:1px solid rgba(239,68,68,0.3);background:transparent;color:#ef4444;font-size:11px;font-weight:700;cursor:pointer;">Quitar</button>
+                </div>
+                <!-- Plan badge -->
+                <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
+                  <div style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                    <div style="width:8px;height:8px;border-radius:50%;background:#22c55e;"></div>
+                    <span style="font-size:12px;font-weight:700;color:var(--text-secondary);">Plan Growth</span>
+                  </div>
+                  <p style="font-size:11px;color:var(--text-faintest);margin-top:4px;">$1,999 MXN/mes</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Forms -->
+            <div>
+              <!-- Company info -->
+              <div class="stat-card animate-in" style="margin-bottom:20px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+                  <div style="width:32px;height:32px;border-radius:10px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;">
+                    <svg style="width:16px;height:16px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                  </div>
+                  <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);">Datos de empresa</h3>
+                </div>
+                <div style="display:grid;gap:16px;">
+                  <div>
+                    <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">Nombre de la empresa</label>
+                    <input id="settings-company-name" type="text" placeholder="Ej: SkyBrandMX S.A. de C.V." style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-weight:600;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div>
+                      <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">RFC</label>
+                      <input id="settings-rfc" type="text" placeholder="XAXX010101000" style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-weight:600;text-transform:uppercase;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+                    </div>
+                    <div>
+                      <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">Régimen fiscal</label>
+                      <select style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--bg-sidebar);color:var(--text-primary);font-size:13px;font-weight:600;-webkit-appearance:none;appearance:none;background-image:url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2364748b%22 stroke-width=%222%22%3E%3Cpath d=%22M6 9l6 6 6-6%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 16px center;padding-right:40px;cursor:pointer;">
+                        <option value="">Seleccionar...</option>
+                        <option>601 - General de Ley</option>
+                        <option>612 - Personas Físicas con Act. Empresarial</option>
+                        <option>621 - Incorporación Fiscal</option>
+                        <option>626 - Simplificado de Confianza</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div>
+                      <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">Teléfono</label>
+                      <input type="tel" placeholder="+52 55 1234 5678" style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-weight:600;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+                    </div>
+                    <div>
+                      <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">Sitio web</label>
+                      <input type="url" placeholder="https://tuempresa.com" style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-weight:600;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+                    </div>
+                  </div>
+                  <div>
+                    <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">Dirección fiscal</label>
+                    <input type="text" placeholder="Calle, Número, Colonia, CP, Ciudad, Estado" style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-weight:600;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+                  </div>
+                  <div style="display:flex;gap:10px;">
+                    <button style="padding:12px 28px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:800;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.opacity='0.9';this.style.transform='translateY(-1px)'" onmouseout="this.style.opacity='1';this.style.transform='none'">Guardar cambios</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Personal Account -->
+              <div class="stat-card animate-in" style="margin-bottom:20px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+                  <div style="width:32px;height:32px;border-radius:10px;background:rgba(168,85,247,0.1);display:flex;align-items:center;justify-content:center;">
+                    <svg style="width:16px;height:16px;color:#a855f7;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                  </div>
+                  <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);">Mi cuenta</h3>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                  <div>
+                    <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">Nombre completo</label>
+                    <input id="settings-name" type="text" placeholder="Tu nombre" style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-weight:600;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+                  </div>
+                  <div>
+                    <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">Email</label>
+                    <input id="settings-email" type="email" disabled style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-muted);font-size:13px;font-weight:600;cursor:not-allowed;opacity:0.6;" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Integrations -->
+          <div class="stat-card animate-in" style="margin-bottom:20px;">
+            <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);margin-bottom:16px;">Integraciones</h3>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <div style="width:36px;height:36px;border-radius:10px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;">
+                    <svg style="width:18px;height:18px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                  </div>
+                  <div>
+                    <p style="font-size:13px;font-weight:700;color:var(--text-primary);">Shopify / WooCommerce</p>
+                    <p style="font-size:11px;color:var(--text-faint);">Sincroniza productos y pedidos</p>
+                  </div>
+                </div>
+                <span style="font-size:11px;font-weight:700;color:var(--text-faintest);background:var(--input-bg);border:1px solid var(--border);padding:4px 10px;border-radius:6px;">Próximamente</span>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <div style="width:36px;height:36px;border-radius:10px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;">
+                    <svg style="width:18px;height:18px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z"/></svg>
+                  </div>
+                  <div>
+                    <p style="font-size:13px;font-weight:700;color:var(--text-primary);">Facturama / SAT</p>
+                    <p style="font-size:11px;color:var(--text-faint);">Facturación electrónica CFDI 4.0</p>
+                  </div>
+                </div>
+                <span style="font-size:11px;font-weight:700;color:var(--text-faintest);background:var(--input-bg);border:1px solid var(--border);padding:4px 10px;border-radius:6px;">Próximamente</span>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <div style="width:36px;height:36px;border-radius:10px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;">
+                    <svg style="width:18px;height:18px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                  </div>
+                  <div>
+                    <p style="font-size:13px;font-weight:700;color:var(--text-primary);">Estafeta / FedEx / DHL</p>
+                    <p style="font-size:11px;color:var(--text-faint);">Guías y rastreo automático</p>
+                  </div>
+                </div>
+                <span style="font-size:11px;font-weight:700;color:var(--text-faintest);background:var(--input-bg);border:1px solid var(--border);padding:4px 10px;border-radius:6px;">Próximamente</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Appearance -->
+          <div class="stat-card animate-in" style="margin-bottom:20px;">
+            <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);margin-bottom:16px;">Apariencia</h3>
+            <div style="display:flex;flex-direction:column;gap:16px;">
+              <!-- Theme mode -->
+              <div>
+                <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:8px;">Modo</label>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                  <button id="setting-mode-dark" onclick="setThemeMode('dark')" style="padding:14px;border-radius:12px;border:2px solid var(--accent);background:var(--input-bg);cursor:pointer;text-align:center;transition:all 0.2s;">
+                    <svg style="width:20px;height:20px;color:var(--text-muted);margin:0 auto 4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                    <p style="font-size:12px;font-weight:700;color:var(--text-secondary);">Oscuro</p>
+                  </button>
+                  <button id="setting-mode-light" onclick="setThemeMode('light')" style="padding:14px;border-radius:12px;border:2px solid var(--border);background:var(--input-bg);cursor:pointer;text-align:center;transition:all 0.2s;">
+                    <svg style="width:20px;height:20px;color:var(--text-muted);margin:0 auto 4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    <p style="font-size:12px;font-weight:700;color:var(--text-secondary);">Claro</p>
+                  </button>
+                </div>
+              </div>
+              <!-- Accent color -->
+              <div>
+                <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:8px;">Color del tema</label>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+                  <button class="color-swatch selected" style="background:#6fcff5;width:36px;height:36px;border-radius:10px;border:2px solid transparent;cursor:pointer;" onclick="setAccentColor('#6fcff5','#084D6E')"></button>
+                  <button class="color-swatch" style="background:#22c55e;width:36px;height:36px;border-radius:10px;border:2px solid transparent;cursor:pointer;" onclick="setAccentColor('#22c55e','#166534')"></button>
+                  <button class="color-swatch" style="background:#3b82f6;width:36px;height:36px;border-radius:10px;border:2px solid transparent;cursor:pointer;" onclick="setAccentColor('#3b82f6','#1e40af')"></button>
+                  <button class="color-swatch" style="background:#8b5cf6;width:36px;height:36px;border-radius:10px;border:2px solid transparent;cursor:pointer;" onclick="setAccentColor('#8b5cf6','#5b21b6')"></button>
+                  <button class="color-swatch" style="background:#ec4899;width:36px;height:36px;border-radius:10px;border:2px solid transparent;cursor:pointer;" onclick="setAccentColor('#ec4899','#9d174d')"></button>
+                  <button class="color-swatch" style="background:#f97316;width:36px;height:36px;border-radius:10px;border:2px solid transparent;cursor:pointer;" onclick="setAccentColor('#f97316','#9a3412')"></button>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <input type="color" id="settings-custom-color" value="#6fcff5" style="width:40px;height:40px;border:none;border-radius:8px;cursor:pointer;background:transparent;padding:0;" />
+                  <input type="text" id="settings-custom-hex" value="#6fcff5" placeholder="#hex" style="flex:1;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-family:monospace;" />
+                  <button onclick="const h=document.getElementById('settings-custom-hex').value;if(/^#[0-9a-fA-F]{6}$/.test(h))setAccentColor(h,h);" style="padding:10px 16px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:800;cursor:pointer;">Aplicar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subscription -->
+          <div class="stat-card animate-in" style="margin-bottom:20px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+              <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);">Suscripción</h3>
+              <span style="font-size:11px;font-weight:800;color:#22c55e;background:rgba(34,197,94,0.1);padding:4px 12px;border-radius:999px;">Activa</span>
+            </div>
+            <div style="padding:16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);margin-bottom:16px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <div>
+                  <p style="font-size:14px;font-weight:800;color:var(--text-primary);">Plan Growth</p>
+                  <p style="font-size:12px;color:var(--text-faint);">Facturación mensual</p>
+                </div>
+                <p style="font-size:24px;font-weight:900;color:var(--text-primary);">$1,999<span style="font-size:12px;font-weight:600;color:var(--text-faint);">/mes</span></p>
+              </div>
+              <div style="height:4px;border-radius:999px;background:var(--border);overflow:hidden;">
+                <div style="height:100%;width:45%;border-radius:999px;background:var(--accent);"></div>
+              </div>
+              <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">15 de 30 días del ciclo actual. Próximo cobro: 15 abril 2026</p>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button style="padding:10px 20px;border-radius:10px;border:1px solid var(--accent);background:transparent;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;">Cambiar plan</button>
+              <button style="padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;">Ver facturas</button>
+            </div>
+          </div>
+
+          <!-- Security -->
+          <div class="stat-card animate-in" style="margin-bottom:20px;">
+            <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);margin-bottom:16px;">Seguridad</h3>
+            <div style="display:grid;gap:14px;">
+              <div>
+                <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">Contraseña actual</label>
+                <input type="password" placeholder="••••••••" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;" />
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div>
+                  <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">Nueva contraseña</label>
+                  <input type="password" placeholder="Mínimo 8 caracteres" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;" />
+                </div>
+                <div>
+                  <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">Confirmar nueva contraseña</label>
+                  <input type="password" placeholder="Repite la contraseña" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;" />
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);">
+                <div>
+                  <p style="font-size:13px;font-weight:700;color:var(--text-primary);">Autenticación 2FA</p>
+                  <p style="font-size:11px;color:var(--text-faint);">Código por email al iniciar sesión</p>
+                </div>
+                <span style="font-size:11px;font-weight:800;color:#22c55e;background:rgba(34,197,94,0.1);padding:4px 10px;border-radius:6px;">Activo</span>
+              </div>
+              <button style="padding:12px 20px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:800;cursor:pointer;width:fit-content;">Actualizar contraseña</button>
+            </div>
+          </div>
+
+          <!-- Danger zone -->
+          <div class="stat-card animate-in" style="border-color:rgba(239,68,68,0.2);">
+            <h3 style="font-size:16px;font-weight:900;color:#ef4444;margin-bottom:8px;">Zona de peligro</h3>
+            <p style="font-size:12px;color:var(--text-faint);margin-bottom:16px;">Estas acciones son irreversibles. Ten cuidado.</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button onclick="localStorage.removeItem('skybrand_token');window.location.href='/login';" style="padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;">Cerrar sesión</button>
+              <button style="padding:10px 20px;border-radius:10px;border:1px solid #ef4444;background:transparent;color:#ef4444;font-size:12px;font-weight:700;cursor:pointer;" onclick="if(confirm('¿Estás seguro que quieres eliminar tu cuenta? Esta acción no se puede deshacer.'))alert('Funcionalidad en desarrollo. Contacta a soporte.')">Eliminar mi cuenta</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== SECTION: Automations ===== -->
+        <div id="section-automations" class="dashboard-section" style="display:none;">
+          <!-- Header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+            <div>
+              <h2 style="font-size:20px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">Automatizaciones</h2>
+              <p style="font-size:13px;color:var(--text-faint);">Crea reglas que ejecutan acciones cuando ocurren eventos en tu negocio.</p>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button onclick="testAutomation()" style="padding:10px 20px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+                <svg style="width:14px;height:14px;display:inline;vertical-align:-2px;margin-right:4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Probar evento
+              </button>
+              <button onclick="openAutomationModal()" style="padding:10px 20px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:800;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.opacity='0.9';this.style.transform='translateY(-1px)'" onmouseout="this.style.opacity='1';this.style.transform='none'">+ Nueva regla</button>
+            </div>
+          </div>
+
+          <!-- Empty state -->
+          <div id="automations-empty" class="stat-card animate-in" style="text-align:center;padding:60px 24px;">
+            <div style="width:64px;height:64px;border-radius:20px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+              <svg style="width:32px;height:32px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <h3 style="font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:8px;">Crea tu primera automatización</h3>
+            <p style="font-size:13px;color:var(--text-faint);max-width:400px;margin:0 auto 20px;line-height:1.6;">Define reglas para automatizar acciones cuando ocurran ciertos eventos, como enviar un email al recibir un pedido.</p>
+            <button onclick="openAutomationModal()" style="padding:10px 24px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">+ Nueva regla</button>
+          </div>
+
+          <!-- Rules list -->
+          <div id="automations-rules-list" style="display:none;flex-direction:column;gap:12px;margin-bottom:32px;"></div>
+
+          <!-- Logs section -->
+          <div id="automations-logs-section" style="display:none;margin-top:32px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+              <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);">Historial de ejecuciones</h3>
+              <button onclick="loadAutomationLogs()" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;font-weight:700;cursor:pointer;">Actualizar</button>
+            </div>
+            <div id="automations-logs-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+          </div>
+        </div>
+
+        <!-- Automation Modal -->
+        <div id="automation-modal" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;">
+          <div style="background:var(--bg-sidebar);border:1px solid var(--border);border-radius:20px;width:100%;max-width:640px;max-height:80vh;overflow-y:auto;padding:32px;position:relative;">
+            <!-- Close -->
+            <button onclick="closeAutomationModal()" style="position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:8px;border:none;background:transparent;cursor:pointer;color:var(--text-muted);display:flex;align-items:center;justify-content:center;" onmouseover="this.style.background='var(--nav-hover)'" onmouseout="this.style.background='transparent'">
+              <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+
+            <!-- Step indicators -->
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:24px;">
+              <div id="auto-step-1-dot" style="width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;">1</div>
+              <div style="flex:1;height:2px;background:var(--border);border-radius:2px;"><div id="auto-step-bar-1" style="height:100%;width:0%;background:var(--accent);border-radius:2px;transition:width 0.3s;"></div></div>
+              <div id="auto-step-2-dot" style="width:28px;height:28px;border-radius:50%;background:var(--input-bg);border:1px solid var(--border);color:var(--text-faint);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;">2</div>
+              <div style="flex:1;height:2px;background:var(--border);border-radius:2px;"><div id="auto-step-bar-2" style="height:100%;width:0%;background:var(--accent);border-radius:2px;transition:width 0.3s;"></div></div>
+              <div id="auto-step-3-dot" style="width:28px;height:28px;border-radius:50%;background:var(--input-bg);border:1px solid var(--border);color:var(--text-faint);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;">3</div>
+            </div>
+
+            <!-- Step 1: Select trigger -->
+            <div id="auto-step-1" style="">
+              <h3 style="font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">Selecciona un disparador</h3>
+              <p style="font-size:13px;color:var(--text-faint);margin-bottom:20px;">¿Cuándo quieres que se ejecute esta regla?</p>
+              <div id="auto-trigger-list" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
+            </div>
+
+            <!-- Step 2: Add actions -->
+            <div id="auto-step-2" style="display:none;">
+              <h3 style="font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">Agrega acciones</h3>
+              <p style="font-size:13px;color:var(--text-faint);margin-bottom:20px;">¿Qué debe hacer esta regla cuando se dispare?</p>
+              <div id="auto-selected-actions" style="margin-bottom:20px;display:flex;flex-direction:column;gap:8px;"></div>
+              <p style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">Acciones disponibles</p>
+              <div id="auto-action-list" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
+              <div style="display:flex;gap:8px;margin-top:20px;">
+                <button onclick="goToAutoStep(1)" style="padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;">Atrás</button>
+                <button id="auto-next-step-2" onclick="goToAutoStep(3)" disabled style="padding:10px 20px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:800;cursor:pointer;opacity:0.5;">Siguiente</button>
+              </div>
+            </div>
+
+            <!-- Step 3: Name & save -->
+            <div id="auto-step-3" style="display:none;">
+              <h3 style="font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">Nombra tu regla</h3>
+              <p style="font-size:13px;color:var(--text-faint);margin-bottom:20px;">Dale un nombre descriptivo a esta automatización.</p>
+              <div style="margin-bottom:16px;">
+                <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">Nombre de la regla</label>
+                <input id="auto-rule-name" type="text" placeholder="Ej: Enviar email de bienvenida" style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:14px;font-weight:600;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+              </div>
+              <div id="auto-rule-summary" style="padding:16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);margin-bottom:20px;">
+                <p style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;">Resumen</p>
+                <p id="auto-summary-trigger" style="font-size:13px;color:var(--text-secondary);margin-bottom:4px;"></p>
+                <p id="auto-summary-actions" style="font-size:13px;color:var(--text-secondary);"></p>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button onclick="goToAutoStep(2)" style="padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;">Atrás</button>
+                <button onclick="saveAutomationRule()" style="padding:10px 24px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:800;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Guardar regla</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Theme customization panel -->
+  <div id="theme-panel-overlay" class="theme-panel-overlay" onclick="closeThemePanel()"></div>
+  <div id="theme-panel" class="theme-panel">
+    <div style="padding:24px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+        <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);">Personalizar</h3>
+        <button onclick="closeThemePanel()" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:none;background:transparent;cursor:pointer;color:var(--text-muted);">
+          <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Mode -->
+      <div style="margin-bottom:28px;">
+        <p style="font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">Modo</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button id="mode-dark" onclick="setThemeMode('dark')" style="padding:12px;border-radius:12px;border:2px solid var(--border);background:var(--bg-card);cursor:pointer;transition:all 0.2s;text-align:center;">
+            <svg style="width:24px;height:24px;color:var(--text-muted);margin:0 auto 6px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+            <p style="font-size:12px;font-weight:700;color:var(--text-secondary);">Oscuro</p>
+          </button>
+          <button id="mode-light" onclick="setThemeMode('light')" style="padding:12px;border-radius:12px;border:2px solid var(--border);background:var(--bg-card);cursor:pointer;transition:all 0.2s;text-align:center;">
+            <svg style="width:24px;height:24px;color:var(--text-muted);margin:0 auto 6px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            <p style="font-size:12px;font-weight:700;color:var(--text-secondary);">Claro</p>
+          </button>
+        </div>
+      </div>
+
+      <!-- Accent color -->
+      <div style="margin-bottom:28px;">
+        <p style="font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">Color de acento</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <button class="color-swatch" style="background:#6fcff5;" onclick="setAccentColor('#6fcff5','#084D6E')" title="Cyan (default)"></button>
+          <button class="color-swatch" style="background:#22c55e;" onclick="setAccentColor('#22c55e','#166534')" title="Verde"></button>
+          <button class="color-swatch" style="background:#3b82f6;" onclick="setAccentColor('#3b82f6','#1e40af')" title="Azul"></button>
+          <button class="color-swatch" style="background:#8b5cf6;" onclick="setAccentColor('#8b5cf6','#5b21b6')" title="Morado"></button>
+          <button class="color-swatch" style="background:#ec4899;" onclick="setAccentColor('#ec4899','#9d174d')" title="Rosa"></button>
+          <button class="color-swatch" style="background:#f97316;" onclick="setAccentColor('#f97316','#9a3412')" title="Naranja"></button>
+          <button class="color-swatch" style="background:#eab308;" onclick="setAccentColor('#eab308','#854d0e')" title="Amarillo"></button>
+          <button class="color-swatch" style="background:#ef4444;" onclick="setAccentColor('#ef4444','#991b1b')" title="Rojo"></button>
+        </div>
+      </div>
+
+      <!-- Custom brand color -->
+      <div style="margin-bottom:28px;">
+        <p style="font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">Color personalizado de tu marca</p>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="color" id="custom-color" value="#6fcff5" style="width:44px;height:44px;border:none;border-radius:10px;cursor:pointer;background:transparent;padding:0;" />
+          <div style="flex:1;">
+            <input type="text" id="custom-color-hex" value="#6fcff5" placeholder="#hex" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-weight:600;font-family:monospace;" />
+          </div>
+          <button onclick="applyCustomColor()" style="padding:10px 16px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:800;cursor:pointer;">Aplicar</button>
+        </div>
+      </div>
+
+      <!-- Reset -->
+      <button onclick="resetTheme()" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+        Restaurar valores predeterminados
+      </button>
+    </div>
+  </div>
+
+  <script define:vars={{ API_URL }}>
+    // ===== THEME SYSTEM =====
+    function loadTheme() {
+      const mode = localStorage.getItem('skybrand_theme_mode') || 'dark';
+      const accent = localStorage.getItem('skybrand_accent') || '#6fcff5';
+      const accentDark = localStorage.getItem('skybrand_accent_dark') || '#084D6E';
+      setThemeMode(mode, false);
+      if (accent !== '#6fcff5') setAccentColor(accent, accentDark, false);
+    }
+
+    window.setThemeMode = function(mode, save = true) {
+      document.documentElement.setAttribute('data-theme', mode);
+      const sun = document.getElementById('icon-sun');
+      const moon = document.getElementById('icon-moon');
+      const modeDark = document.getElementById('mode-dark');
+      const modeLight = document.getElementById('mode-light');
+      if (mode === 'light') {
+        sun.style.display = 'block'; moon.style.display = 'none';
+        if (modeDark) { modeDark.style.borderColor = 'var(--border)'; modeLight.style.borderColor = 'var(--accent)'; }
+      } else {
+        sun.style.display = 'none'; moon.style.display = 'block';
+        if (modeDark) { modeDark.style.borderColor = 'var(--accent)'; modeLight.style.borderColor = 'var(--border)'; }
+      }
+      if (save) localStorage.setItem('skybrand_theme_mode', mode);
+    };
+
+    window.setAccentColor = function(color, darkColor, save = true) {
+      const r = document.documentElement;
+      r.style.setProperty('--accent', color);
+      r.style.setProperty('--accent-bg', color + '14');
+      r.style.setProperty('--accent-bg2', color + '26');
+      r.style.setProperty('--accent-gradient-start', darkColor || color);
+      r.style.setProperty('--accent-gradient-end', color);
+      // Update swatches
+      document.querySelectorAll('.color-swatch').forEach(s => {
+        s.classList.toggle('selected', s.style.background === color || s.style.backgroundColor === color);
+      });
+      if (save) {
+        localStorage.setItem('skybrand_accent', color);
+        localStorage.setItem('skybrand_accent_dark', darkColor || color);
+      }
+    };
+
+    window.applyCustomColor = function() {
+      const hex = document.getElementById('custom-color-hex')?.value || document.getElementById('custom-color')?.value;
+      if (hex && /^#[0-9a-fA-F]{6}$/.test(hex)) {
+        setAccentColor(hex, hex);
+      }
+    };
+
+    document.getElementById('custom-color')?.addEventListener('input', (e) => {
+      document.getElementById('custom-color-hex').value = e.target.value;
+    });
+    document.getElementById('custom-color-hex')?.addEventListener('change', (e) => {
+      if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) {
+        document.getElementById('custom-color').value = e.target.value;
+      }
+    });
+    // Logo upload preview
+    document.getElementById('logo-upload')?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 2 * 1024 * 1024) { alert('El archivo es muy grande. Máximo 2MB.'); return; }
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = document.getElementById('company-logo-img');
+        const initials = document.getElementById('company-logo-initials');
+        const removeBtn = document.getElementById('remove-logo-btn');
+        img.src = ev.target.result;
+        img.style.display = 'block';
+        initials.style.display = 'none';
+        removeBtn.style.display = 'inline-block';
+        localStorage.setItem('skybrand_company_logo', ev.target.result);
+      };
+      reader.readAsDataURL(file);
+    });
+    window.removeLogo = function() {
+      document.getElementById('company-logo-img').style.display = 'none';
+      document.getElementById('company-logo-initials').style.display = 'block';
+      document.getElementById('remove-logo-btn').style.display = 'none';
+      document.getElementById('logo-upload').value = '';
+      localStorage.removeItem('skybrand_company_logo');
+    };
+    // Load saved logo
+    const savedLogo = localStorage.getItem('skybrand_company_logo');
+    if (savedLogo) {
+      const img = document.getElementById('company-logo-img');
+      if (img) { img.src = savedLogo; img.style.display = 'block'; }
+      const initials = document.getElementById('company-logo-initials');
+      if (initials) initials.style.display = 'none';
+      const removeBtn = document.getElementById('remove-logo-btn');
+      if (removeBtn) removeBtn.style.display = 'inline-block';
+    }
+
+    // Sync settings page color picker too
+    document.getElementById('settings-custom-color')?.addEventListener('input', (e) => {
+      document.getElementById('settings-custom-hex').value = e.target.value;
+    });
+
+    window.resetTheme = function() {
+      localStorage.removeItem('skybrand_theme_mode');
+      localStorage.removeItem('skybrand_accent');
+      localStorage.removeItem('skybrand_accent_dark');
+      document.documentElement.removeAttribute('data-theme');
+      document.documentElement.style.removeProperty('--accent');
+      document.documentElement.style.removeProperty('--accent-bg');
+      document.documentElement.style.removeProperty('--accent-bg2');
+      document.documentElement.style.removeProperty('--accent-gradient-start');
+      document.documentElement.style.removeProperty('--accent-gradient-end');
+      setThemeMode('dark', false);
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+    };
+
+    // Theme panel toggle
+    document.getElementById('theme-panel-btn')?.addEventListener('click', () => {
+      document.getElementById('theme-panel')?.classList.add('open');
+      document.getElementById('theme-panel-overlay')?.classList.add('active');
+    });
+    window.closeThemePanel = function() {
+      document.getElementById('theme-panel')?.classList.remove('open');
+      document.getElementById('theme-panel-overlay')?.classList.remove('active');
+    };
+
+    // Theme mode quick toggle
+    document.getElementById('theme-mode-btn')?.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      setThemeMode(current === 'light' ? 'dark' : 'light');
+    });
+
+    // Load saved theme
+    loadTheme();
+
+    // Set date
+    const dateEl = document.getElementById('page-date');
+    if (dateEl) {
+      dateEl.textContent = new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    // Mobile sidebar
+    window.toggleSidebar = function() {
+      document.getElementById('sidebar')?.classList.toggle('open');
+      document.getElementById('mobile-overlay')?.classList.toggle('active');
+    };
+
+    // Auth check
+    const token = localStorage.getItem('skybrand_token');
+    if (!token) {
+      window.location.href = '/login';
+    } else {
+      fetch(`${API_URL}/api/v1/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      })
+        .then(res => {
+          if (!res.ok) throw new Error('Unauthorized');
+          return res.json();
+        })
+        .then(user => {
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('dashboard').style.display = 'block';
+
+          const name = user.full_name || user.email.split('@')[0];
+          const initials = name.charAt(0).toUpperCase();
+
+          document.getElementById('sidebar-name').textContent = name;
+          document.getElementById('sidebar-email').textContent = user.email;
+          document.getElementById('user-avatar').textContent = initials;
+
+          // Fill settings inputs
+          const settingsName = document.getElementById('settings-name');
+          const settingsEmail = document.getElementById('settings-email');
+          if (settingsName) settingsName.value = user.full_name || '';
+          if (settingsEmail) settingsEmail.value = user.email || '';
+
+          if (user.is_admin) {
+            document.getElementById('admin-nav').style.display = 'block';
+          }
+        })
+        .catch(() => {
+          localStorage.removeItem('skybrand_token');
+          window.location.href = '/login';
+        });
+    }
+
+    // Logout
+    document.getElementById('logout-btn')?.addEventListener('click', () => {
+      localStorage.removeItem('skybrand_token');
+      window.location.href = '/login';
+    });
+
+    // ===== SECTION NAVIGATION =====
+    window.showSection = function(sectionName) {
+      // Hide all sections
+      document.querySelectorAll('.dashboard-section').forEach(s => {
+        s.style.display = 'none';
+      });
+      // Show target section
+      const target = document.getElementById('section-' + sectionName);
+      if (target) {
+        target.style.display = 'block';
+      }
+      // Update nav active state
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      const navItem = document.querySelector(`.nav-item[data-section="${sectionName}"]`);
+      if (navItem) {
+        navItem.classList.add('active');
+        document.getElementById('page-title').textContent = navItem.textContent.trim();
+      }
+      // Close mobile sidebar
+      document.getElementById('sidebar')?.classList.remove('open');
+      document.getElementById('mobile-overlay')?.classList.remove('active');
+    };
+
+    // ===== ONBOARDING =====
+    window.dismissOnboarding = function() {
+      const banner = document.getElementById('onboarding-banner');
+      if (banner) {
+        banner.style.transition = 'opacity 0.3s, transform 0.3s';
+        banner.style.opacity = '0';
+        banner.style.transform = 'translateY(-10px)';
+        setTimeout(() => { banner.style.display = 'none'; }, 300);
+      }
+      localStorage.setItem('skybrand_onboarding_dismissed', 'true');
+    };
+
+    // Check if onboarding was dismissed
+    if (localStorage.getItem('skybrand_onboarding_dismissed') === 'true') {
+      const banner = document.getElementById('onboarding-banner');
+      if (banner) banner.style.display = 'none';
+    }
+
+    // Nav click handler
+    document.querySelectorAll('.nav-item[data-section]').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const section = item.getAttribute('data-section');
+        if (section === 'users') return; // Let admin link navigate normally
+        showSection(section);
+      });
+    });
+
+    // ===== AUTOMATIONS =====
+    let _autoCatalog = null;
+    let _autoSelectedTrigger = null;
+    let _autoSelectedActions = [];
+
+    const _autoHeaders = () => ({
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + localStorage.getItem('skybrand_token')
+    });
+
+    const _triggerIcons = {
+      'order.created': '🛒',
+      'order.paid': '💳',
+      'order.shipped': '📦',
+      'order.delivered': '✅',
+      'order.cancelled': '❌',
+      'customer.created': '👤',
+      'lead.created': '🎯',
+      'invoice.created': '🧾',
+    };
+
+    const _actionIcons = {
+      'send_email': '✉️',
+      'send_whatsapp': '💬',
+      'create_task': '📋',
+      'update_crm': '🔄',
+      'webhook': '🔗',
+      'wait': '⏱️',
+    };
+
+    async function loadAutomationCatalog() {
+      if (_autoCatalog) return _autoCatalog;
+      try {
+        const res = await fetch(API_URL + '/api/v1/automations/catalog', { headers: _autoHeaders() });
+        if (!res.ok) throw new Error('Error cargando catálogo');
+        _autoCatalog = await res.json();
+        return _autoCatalog;
+      } catch(e) {
+        console.error('loadAutomationCatalog:', e);
+        return null;
+      }
+    }
+
+    async function loadAutomationRules() {
+      try {
+        const res = await fetch(API_URL + '/api/v1/automations/rules', { headers: _autoHeaders() });
+        if (!res.ok) throw new Error('Error cargando reglas');
+        const rules = await res.json();
+        const list = document.getElementById('automations-rules-list');
+        const empty = document.getElementById('automations-empty');
+        const logsSection = document.getElementById('automations-logs-section');
+
+        if (!rules || rules.length === 0) {
+          list.style.display = 'none';
+          empty.style.display = 'block';
+          logsSection.style.display = 'none';
+          return;
+        }
+
+        empty.style.display = 'none';
+        list.style.display = 'flex';
+        logsSection.style.display = 'block';
+
+        list.innerHTML = rules.map(r => `
+          <div class="stat-card" style="padding:16px 20px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
+                <div style="width:40px;height:40px;border-radius:12px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">
+                  ${_triggerIcons[r.trigger_event] || '⚡'}
+                </div>
+                <div style="min-width:0;">
+                  <p style="font-size:14px;font-weight:800;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.name}</p>
+                  <p style="font-size:11px;color:var(--text-faint);">Trigger: ${r.trigger_event} · ${r.actions ? r.actions.length : 0} acción(es)</p>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                <span style="font-size:10px;font-weight:800;padding:3px 10px;border-radius:999px;${r.active ? 'background:rgba(34,197,94,0.1);color:#22c55e;' : 'background:var(--input-bg);color:var(--text-faint);'}">${r.active ? 'Activa' : 'Inactiva'}</span>
+                <button onclick="toggleRule('${r.id}')" title="${r.active ? 'Desactivar' : 'Activar'}" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+                  <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${r.active ? 'M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z' : 'M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z'}"/></svg>
+                </button>
+                <button onclick="deleteRule('${r.id}')" title="Eliminar" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:all 0.2s;" onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+                  <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+        loadAutomationLogs();
+      } catch(e) {
+        console.error('loadAutomationRules:', e);
+      }
+    }
+
+    async function openAutomationModal() {
+      _autoSelectedTrigger = null;
+      _autoSelectedActions = [];
+      document.getElementById('auto-rule-name').value = '';
+      goToAutoStep(1);
+
+      const modal = document.getElementById('automation-modal');
+      modal.style.display = 'flex';
+
+      const catalog = await loadAutomationCatalog();
+      if (!catalog) return;
+
+      // Render triggers
+      const triggerList = document.getElementById('auto-trigger-list');
+      triggerList.innerHTML = Object.entries(catalog.triggers || {}).map(([key, t]) => `
+        <div onclick="selectTrigger('${key}')" class="stat-card" style="padding:16px;cursor:pointer;text-align:center;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor=this.dataset.selected==='true'?'var(--accent)':'var(--border)'" data-trigger="${key}">
+          <div style="font-size:28px;margin-bottom:8px;">${_triggerIcons[key] || '⚡'}</div>
+          <p style="font-size:13px;font-weight:800;color:var(--text-primary);margin-bottom:4px;">${t.label || key}</p>
+          <p style="font-size:11px;color:var(--text-faint);line-height:1.4;">${t.description || ''}</p>
+        </div>
+      `).join('');
+
+      // Render actions
+      const actionList = document.getElementById('auto-action-list');
+      actionList.innerHTML = Object.entries(catalog.actions || {}).map(([key, a]) => `
+        <div onclick="addAction('${key}')" class="stat-card" style="padding:14px;cursor:pointer;text-align:center;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:24px;margin-bottom:6px;">${_actionIcons[key] || '⚙️'}</div>
+          <p style="font-size:12px;font-weight:800;color:var(--text-primary);">${a.label || key}</p>
+        </div>
+      `).join('');
+    }
+
+    function closeAutomationModal() {
+      document.getElementById('automation-modal').style.display = 'none';
+      _autoSelectedTrigger = null;
+      _autoSelectedActions = [];
+    }
+
+    function goToAutoStep(step) {
+      document.getElementById('auto-step-1').style.display = step === 1 ? '' : 'none';
+      document.getElementById('auto-step-2').style.display = step === 2 ? '' : 'none';
+      document.getElementById('auto-step-3').style.display = step === 3 ? '' : 'none';
+
+      // Update step dots
+      for (let i = 1; i <= 3; i++) {
+        const dot = document.getElementById('auto-step-' + i + '-dot');
+        if (i < step) {
+          dot.style.background = 'var(--accent)'; dot.style.color = '#fff'; dot.style.border = 'none';
+        } else if (i === step) {
+          dot.style.background = 'var(--accent)'; dot.style.color = '#fff'; dot.style.border = 'none';
+        } else {
+          dot.style.background = 'var(--input-bg)'; dot.style.color = 'var(--text-faint)'; dot.style.border = '1px solid var(--border)';
+        }
+      }
+      // Update progress bars
+      document.getElementById('auto-step-bar-1').style.width = step > 1 ? '100%' : '0%';
+      document.getElementById('auto-step-bar-2').style.width = step > 2 ? '100%' : '0%';
+
+      // Step 3 summary
+      if (step === 3) {
+        const catalog = _autoCatalog || {};
+        const tLabel = (catalog.triggers && catalog.triggers[_autoSelectedTrigger]) ? catalog.triggers[_autoSelectedTrigger].label : _autoSelectedTrigger;
+        document.getElementById('auto-summary-trigger').textContent = 'Cuando: ' + tLabel;
+        const actLabels = _autoSelectedActions.map(a => {
+          const info = catalog.actions && catalog.actions[a.type];
+          return info ? info.label : a.type;
+        });
+        document.getElementById('auto-summary-actions').textContent = 'Acciones: ' + actLabels.join(', ');
+      }
+    }
+
+    window.selectTrigger = function(triggerKey) {
+      _autoSelectedTrigger = triggerKey;
+      // Highlight selected
+      document.querySelectorAll('#auto-trigger-list .stat-card').forEach(c => {
+        const isSel = c.dataset.trigger === triggerKey;
+        c.dataset.selected = isSel;
+        c.style.borderColor = isSel ? 'var(--accent)' : 'var(--border)';
+        c.style.background = isSel ? 'var(--accent-bg)' : 'var(--bg-card)';
+      });
+      // Auto-advance to step 2
+      setTimeout(() => goToAutoStep(2), 300);
+    };
+
+    window.addAction = function(actionType) {
+      _autoSelectedActions.push({ type: actionType, config: {} });
+      _renderSelectedActions();
+    };
+
+    window.removeAction = function(index) {
+      _autoSelectedActions.splice(index, 1);
+      _renderSelectedActions();
+    };
+
+    function _renderSelectedActions() {
+      const catalog = _autoCatalog || {};
+      const container = document.getElementById('auto-selected-actions');
+      const btn = document.getElementById('auto-next-step-2');
+
+      if (_autoSelectedActions.length === 0) {
+        container.innerHTML = '<p style="font-size:12px;color:var(--text-faintest);text-align:center;padding:12px;">Aún no has agregado acciones.</p>';
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        return;
+      }
+
+      btn.disabled = false;
+      btn.style.opacity = '1';
+
+      container.innerHTML = _autoSelectedActions.map((a, i) => {
+        const info = catalog.actions && catalog.actions[a.type];
+        const label = info ? info.label : a.type;
+        return `
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);">
+            <span style="width:22px;height:22px;border-radius:6px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--accent);flex-shrink:0;">${i + 1}</span>
+            <span style="font-size:16px;flex-shrink:0;">${_actionIcons[a.type] || '⚙️'}</span>
+            <span style="font-size:13px;font-weight:700;color:var(--text-primary);flex:1;">${label}</span>
+            <button onclick="removeAction(${i})" style="width:24px;height:24px;border-radius:6px;border:none;background:transparent;cursor:pointer;color:var(--text-faint);display:flex;align-items:center;justify-content:center;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='var(--text-faint)'">
+              <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function saveAutomationRule() {
+      const name = document.getElementById('auto-rule-name').value.trim();
+      if (!name) { alert('Escribe un nombre para la regla.'); return; }
+      if (!_autoSelectedTrigger) { alert('Selecciona un disparador.'); return; }
+      if (_autoSelectedActions.length === 0) { alert('Agrega al menos una acción.'); return; }
+
+      try {
+        const res = await fetch(API_URL + '/api/v1/automations/rules', {
+          method: 'POST',
+          headers: _autoHeaders(),
+          body: JSON.stringify({
+            name: name,
+            trigger_event: _autoSelectedTrigger,
+            actions: _autoSelectedActions
+          })
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Error creando regla');
+        }
+        closeAutomationModal();
+        loadAutomationRules();
+      } catch(e) {
+        alert('Error: ' + e.message);
+      }
+    }
+    window.saveAutomationRule = saveAutomationRule;
+
+    window.toggleRule = async function(id) {
+      try {
+        const res = await fetch(API_URL + '/api/v1/automations/rules/' + id + '/toggle', {
+          method: 'PATCH',
+          headers: _autoHeaders()
+        });
+        if (!res.ok) throw new Error('Error toggling rule');
+        loadAutomationRules();
+      } catch(e) {
+        console.error('toggleRule:', e);
+      }
+    };
+
+    window.deleteRule = async function(id) {
+      if (!confirm('¿Estás seguro de eliminar esta regla?')) return;
+      try {
+        const res = await fetch(API_URL + '/api/v1/automations/rules/' + id, {
+          method: 'DELETE',
+          headers: _autoHeaders()
+        });
+        if (!res.ok) throw new Error('Error deleting rule');
+        loadAutomationRules();
+      } catch(e) {
+        console.error('deleteRule:', e);
+      }
+    };
+
+    async function loadAutomationLogs() {
+      try {
+        const res = await fetch(API_URL + '/api/v1/automations/logs', { headers: _autoHeaders() });
+        if (!res.ok) throw new Error('Error cargando logs');
+        const logs = await res.json();
+        const container = document.getElementById('automations-logs-list');
+
+        if (!logs || logs.length === 0) {
+          container.innerHTML = '<p style="font-size:12px;color:var(--text-faintest);text-align:center;padding:16px;">Sin ejecuciones recientes.</p>';
+          return;
+        }
+
+        container.innerHTML = logs.slice(0, 20).map(log => {
+          const statusColor = log.status === 'success' ? '#22c55e' : log.status === 'error' ? '#ef4444' : 'var(--text-faint)';
+          const statusLabel = log.status === 'success' ? 'OK' : log.status === 'error' ? 'Error' : log.status;
+          const date = new Date(log.created_at || log.fired_at).toLocaleString('es-MX', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+          return `
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);">
+              <div style="width:8px;height:8px;border-radius:50%;background:${statusColor};flex-shrink:0;"></div>
+              <div style="flex:1;min-width:0;">
+                <p style="font-size:12px;font-weight:700;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${log.rule_name || log.trigger_event || 'Regla'}</p>
+                <p style="font-size:10px;color:var(--text-faintest);">${log.trigger_event || ''} · ${log.steps ? log.steps.length + ' pasos' : ''}</p>
+              </div>
+              <span style="font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;background:${log.status === 'success' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)'};color:${statusColor};">${statusLabel}</span>
+              <span style="font-size:10px;color:var(--text-faintest);flex-shrink:0;">${date}</span>
+            </div>
+          `;
+        }).join('');
+      } catch(e) {
+        console.error('loadAutomationLogs:', e);
+      }
+    }
+
+    async function testAutomation() {
+      try {
+        const res = await fetch(API_URL + '/api/v1/automations/test?event_type=order.created', {
+          method: 'POST',
+          headers: _autoHeaders()
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          alert('Evento de prueba disparado correctamente. ' + (data.rules_matched ? data.rules_matched + ' regla(s) ejecutada(s).' : ''));
+          loadAutomationRules();
+        } else {
+          alert('Error: ' + (data.error || 'No se pudo disparar el evento de prueba.'));
+        }
+      } catch(e) {
+        alert('Error de conexión al probar evento.');
+      }
+    }
+    window.testAutomation = testAutomation;
+
+    // Hook into showSection to load automations data when section is shown
+    const _origShowSection = window.showSection;
+    window.showSection = function(sectionName) {
+      _origShowSection(sectionName);
+      if (sectionName === 'automations') {
+        loadAutomationRules();
+      }
+    };
+
+    // ===== DEMO & SIMULATOR =====
+    let demoData = null;
+
+    async function loadDemoData() {
+      const btn = document.getElementById('demo-load-btn');
+      btn.textContent = 'Cargando...';
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${API_URL}/api/v1/demo/seed`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('skybrand_token')}` },
+        });
+        demoData = await res.json();
+        if (demoData.success) {
+          // Update stats in overview
+          const s = demoData.stats;
+          const statValues = document.querySelectorAll('#section-overview .stat-value');
+          if (statValues[0]) statValues[0].textContent = '$' + s.revenue.toLocaleString();
+          if (statValues[1]) statValues[1].textContent = s.orders;
+          if (statValues[2]) statValues[2].textContent = s.customers;
+          if (statValues[3]) statValues[3].textContent = s.invoices;
+
+          btn.textContent = '\u2713 Datos cargados';
+          btn.style.background = '#22c55e';
+
+          // Reload automation rules if they were created
+          if (typeof loadAutomationRules === 'function') loadAutomationRules();
+        }
+      } catch(e) {
+        btn.textContent = 'Error - Reintentar';
+        btn.style.background = '#ef4444';
+      }
+      setTimeout(() => {
+        btn.textContent = 'Cargar datos demo';
+        btn.style.background = '#6fcff5';
+        btn.disabled = false;
+      }, 3000);
+    }
+
+    function openSimulator() {
+      document.getElementById('simulator-modal')?.remove();
+      const events = [
+        {type: 'order.created', icon: '\u{1F4E6}', label: 'Nuevo pedido', desc: 'Simula que entra un pedido de Shopify'},
+        {type: 'order.paid', icon: '\u2705', label: 'Pedido pagado', desc: 'Simula confirmaci\u00F3n de pago'},
+        {type: 'order.shipped', icon: '\u{1F69A}', label: 'Pedido enviado', desc: 'Simula que el pedido sale del almac\u00E9n'},
+        {type: 'order.delivered', icon: '\u{1F4EC}', label: 'Pedido entregado', desc: 'Simula entrega al cliente'},
+        {type: 'order.cancelled', icon: '\u274C', label: 'Pedido cancelado', desc: 'Simula cancelaci\u00F3n de pedido'},
+        {type: 'cart.abandoned', icon: '\u{1F6D2}', label: 'Carrito abandonado', desc: 'Simula que un cliente deja productos en el carrito'},
+        {type: 'payment.failed', icon: '\u{1F6AB}', label: 'Pago fallido', desc: 'Simula un pago rechazado'},
+        {type: 'inventory.low', icon: '\u{1F4C9}', label: 'Stock bajo', desc: 'Simula alerta de inventario bajo'},
+        {type: 'customer.created', icon: '\u{1F464}', label: 'Nuevo cliente', desc: 'Simula registro de cliente'},
+      ];
+
+      const modal = document.createElement('div');
+      modal.id = 'simulator-modal';
+      modal.style.cssText = 'position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px;';
+      modal.innerHTML = `
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);" onclick="document.getElementById('simulator-modal')?.remove()"></div>
+        <div style="position:relative;width:100%;max-width:600px;max-height:80vh;overflow-y:auto;background:var(--bg-sidebar);border:1px solid var(--border);border-radius:20px;padding:28px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+            <div>
+              <h2 style="font-size:18px;font-weight:900;color:var(--text-primary);">Simulador de Tienda</h2>
+              <p style="font-size:12px;color:var(--text-faint);">Simula eventos reales y ve c\u00F3mo responden tus automatizaciones</p>
+            </div>
+            <button onclick="document.getElementById('simulator-modal')?.remove()" style="width:32px;height:32px;border-radius:8px;border:none;background:transparent;cursor:pointer;color:var(--text-muted);display:flex;align-items:center;justify-content:center;">
+              <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div id="simulator-events" style="display:grid;gap:8px;">
+            ${events.map(e => `
+              <button onclick="simulateEvent('${e.type}', this)" style="display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:var(--bg-card);cursor:pointer;text-align:left;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+                <span style="font-size:24px;flex-shrink:0;">${e.icon}</span>
+                <div style="flex:1;min-width:0;">
+                  <p style="font-size:13px;font-weight:700;color:var(--text-primary);">${e.label}</p>
+                  <p style="font-size:11px;color:var(--text-faint);">${e.desc}</p>
+                </div>
+                <div class="sim-status" style="font-size:11px;font-weight:700;color:var(--text-faintest);">Simular \u2192</div>
+              </button>
+            `).join('')}
+          </div>
+          <div id="simulator-result" style="display:none;margin-top:16px;padding:16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+
+    async function simulateEvent(eventType, btn) {
+      const statusEl = btn.querySelector('.sim-status');
+      statusEl.textContent = 'Simulando...';
+      statusEl.style.color = 'var(--accent)';
+
+      try {
+        const res = await fetch(`${API_URL}/api/v1/demo/simulate/${eventType}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('skybrand_token')}` },
+        });
+        const data = await res.json();
+
+        if (data.rules_triggered > 0) {
+          statusEl.textContent = `\u2713 ${data.rules_triggered} regla(s)`;
+          statusEl.style.color = '#22c55e';
+        } else {
+          statusEl.textContent = 'Sin reglas';
+          statusEl.style.color = '#f97316';
+        }
+
+        // Show result
+        const resultEl = document.getElementById('simulator-result');
+        if (resultEl) {
+          resultEl.style.display = 'block';
+          let html = `<p style="font-size:13px;font-weight:800;color:var(--text-primary);margin-bottom:8px;">Resultado: ${eventType}</p>`;
+          html += `<p style="font-size:12px;color:var(--text-faint);margin-bottom:8px;">Cliente: ${data.event_data.customer_name || 'N/A'} | ${data.rules_triggered} regla(s) ejecutada(s)</p>`;
+
+          if (data.automation_results && data.automation_results.length > 0) {
+            for (const r of data.automation_results) {
+              html += `<div style="margin-top:8px;padding:10px;border-radius:8px;background:var(--bg-card);border:1px solid var(--border);">`;
+              html += `<p style="font-size:12px;font-weight:700;color:var(--text-primary);">${r.rule_name} <span style="color:${r.status === 'success' ? '#22c55e' : '#ef4444'}">(${r.status})</span></p>`;
+              for (const s of r.steps) {
+                const icon = s.status === 'success' ? '\u2705' : s.status === 'skipped' ? '\u23ED\uFE0F' : '\u274C';
+                html += `<p style="font-size:11px;color:var(--text-faint);margin-top:4px;">${icon} ${s.action}: ${s.status}</p>`;
+              }
+              html += `</div>`;
+            }
+          } else {
+            html += `<p style="font-size:12px;color:#f97316;">No hay reglas configuradas para este evento. Crea una en Automatizaciones.</p>`;
+          }
+          resultEl.innerHTML = html;
+        }
+      } catch(e) {
+        statusEl.textContent = 'Error';
+        statusEl.style.color = '#ef4444';
+      }
+
+      setTimeout(() => {
+        statusEl.textContent = 'Simular \u2192';
+        statusEl.style.color = 'var(--text-faintest)';
+      }, 5000);
+    }
+  </script>
+</body>
+</html>

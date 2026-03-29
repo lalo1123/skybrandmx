@@ -1,0 +1,40 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+  </head>
+  <body class="bg-[#020617] text-white antialiased min-h-screen flex items-center justify-center">
+    <div class="w-full max-w-md px-6 py-12">
+      <!-- Logo -->
+      <a href="/" class="flex items-center justify-center gap-3 mb-10">
+        <svg class="h-8 w-8 text-brand-teal" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L15 6V14C15 14 15 17 12 17C9 17 9 14 9 14V6L12 2Z" />
+            <path d="M9 11L6 14H9V11Z" fill="currentColor" />
+            <path d="M15 11L18 14H15V11Z" fill="currentColor" />
+          </g>
+          <path d="M9 17C10.5 20 12 22 12 22C12 22 13.5 20 15 17H9Z" fill="#ff6600" />
+        </svg>
+        <span class="text-2xl font-extrabold tracking-tight text-white">
+          SKYBR<span class="text-brand-teal">AN</span>DM<span class="text-brand-teal">X</span>
+        </span>
+      </a>
+
+      <!-- Content -->
+      <slot />
+    </div>
+  </body>
+</html>

@@ -7,20 +7,20 @@ const row1 = [
   { name: 'WhatsApp', category: 'Comunicación', color: '#25D366', icon: 'https://cdn.simpleicons.org/whatsapp/25D366' },
   { name: 'Stripe', category: 'Pagos', color: '#635BFF', icon: 'https://cdn.simpleicons.org/stripe/635BFF' },
   { name: 'Mercado Pago', category: 'Pagos', color: '#00B1EA', icon: 'https://cdn.simpleicons.org/mercadopago/00B1EA' },
-  { name: 'Amazon', category: 'E-commerce', color: '#FF9900', icon: 'https://cdn.simpleicons.org/amazon/FF9900' },
+  { name: 'Amazon', category: 'E-commerce', color: '#FF9900', icon: 'https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg' },
   { name: 'Mailchimp', category: 'Email', color: '#FFE01B', icon: 'https://cdn.simpleicons.org/mailchimp/FFE01B' },
   { name: 'HubSpot', category: 'CRM', color: '#FF7A59', icon: 'https://cdn.simpleicons.org/hubspot/FF7A59' },
 ];
 
 const row2 = [
   { name: 'DHL', category: 'Logística', color: '#FFCC00', icon: 'https://cdn.simpleicons.org/dhl/D40511' },
-  { name: 'TikTok', category: 'Publicidad', color: '#000000', icon: 'https://cdn.simpleicons.org/tiktok/000000' },
+  { name: 'TikTok', category: 'Publicidad', color: '#69C9D0', icon: 'https://cdn.simpleicons.org/tiktok/000000' },
   { name: 'Gmail', category: 'Comunicación', color: '#EA4335', icon: 'https://cdn.simpleicons.org/gmail/EA4335' },
-  { name: 'Mercado Libre', category: 'E-commerce', color: '#FFE600', icon: 'https://cdn.simpleicons.org/mercadolibre/FFE600' },
+  { name: 'Mercado Libre', category: 'E-commerce', color: '#FFE600', icon: 'https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/6.6.92/mercadolibre/logo_large_25years@2x.png' },
   { name: 'WooCommerce', category: 'E-commerce', color: '#96588A', icon: 'https://cdn.simpleicons.org/woocommerce/96588A' },
   { name: 'Slack', category: 'Comunicación', color: '#4A154B', icon: 'https://cdn.simpleicons.org/slack/4A154B' },
   { name: 'Zapier', category: 'Automatización', color: '#FF4A00', icon: 'https://cdn.simpleicons.org/zapier/FF4A00' },
-  { name: 'SAT (CFDI)', category: 'Facturación', color: '#1D6B3F', icon: 'https://cdn.simpleicons.org/gnuicecat/1D6B3F' },
+  { name: 'Facturación SAT', category: 'Facturación', color: '#9C1A33', icon: 'https://cdn.simpleicons.org/government/9C1A33' },
   { name: 'Instagram', category: 'Redes Sociales', color: '#E4405F', icon: 'https://cdn.simpleicons.org/instagram/E4405F' },
 ];
 ---
@@ -50,7 +50,8 @@ const row2 = [
             {row1.map((item) => (
               <div class="logo-card group">
                 <div class="logo-icon" style={`background: ${item.color}12; border-color: ${item.color}20;`}>
-                  <img src={item.icon} alt={item.name} width="24" height="24" loading="lazy" class="logo-img" />
+                  <img src={item.icon} alt={item.name} width="24" height="24" loading="lazy" class="logo-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+                  <span class="text-xs font-black hidden items-center justify-center" style={`color: ${item.color}; display: none;`}>{item.name.substring(0, 3).toUpperCase()}</span>
                 </div>
                 <div class="logo-info">
                   <span class="logo-name">{item.name}</span>
@@ -75,7 +76,8 @@ const row2 = [
             {row2.map((item) => (
               <div class="logo-card group">
                 <div class="logo-icon" style={`background: ${item.color}12; border-color: ${item.color}20;`}>
-                  <img src={item.icon} alt={item.name} width="24" height="24" loading="lazy" class="logo-img" />
+                  <img src={item.icon} alt={item.name} width="24" height="24" loading="lazy" class="logo-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+                  <span class="text-xs font-black hidden items-center justify-center" style={`color: ${item.color}; display: none;`}>{item.name.substring(0, 3).toUpperCase()}</span>
                 </div>
                 <div class="logo-info">
                   <span class="logo-name">{item.name}</span>

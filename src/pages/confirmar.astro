@@ -1,0 +1,138 @@
+---
+import AuthLayout from '../layouts/AuthLayout.astro';
+
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:6100';
+---
+
+<AuthLayout title="Confirmar cuenta — SkyBrandMX">
+  <div class="glass-card p-8 md:p-10 bg-slate-900/50 border border-white/5">
+    <!-- Set password form -->
+    <div id="form-section">
+      <h1 class="text-2xl font-black mb-2">Establece tu contraseña</h1>
+      <p class="text-slate-400 text-sm mb-8">Crea una contraseña segura para activar tu cuenta.</p>
+
+      <form id="confirm-form" class="space-y-5">
+        <div>
+          <label for="password" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Contraseña</label>
+          <input
+            type="password"
+            id="password"
+            required
+            minlength="8"
+            placeholder="Mínimo 8 caracteres"
+            class="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-white/10 text-white font-medium placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-teal/30 focus:border-brand-teal transition-all"
+          />
+        </div>
+        <div>
+          <label for="confirm-password" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Confirmar contraseña</label>
+          <input
+            type="password"
+            id="confirm-password"
+            required
+            minlength="8"
+            placeholder="Repite tu contraseña"
+            class="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-white/10 text-white font-medium placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-teal/30 focus:border-brand-teal transition-all"
+          />
+        </div>
+        <div id="error" class="hidden text-red-400 text-sm font-medium p-3 rounded-lg bg-red-500/10 border border-red-500/20"></div>
+        <button type="submit" id="btn" class="w-full py-3.5 rounded-xl bg-brand-teal text-slate-900 font-black text-sm hover:-translate-y-0.5 transition-all active:scale-[0.98]">
+          Activar cuenta
+        </button>
+      </form>
+    </div>
+
+    <!-- Success -->
+    <div id="success-section" class="hidden text-center">
+      <div class="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6">
+        <svg class="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+      <h1 class="text-2xl font-black mb-2">Cuenta activada</h1>
+      <p class="text-slate-400 text-sm mb-8">Tu cuenta está lista. Ya puedes iniciar sesión.</p>
+      <a href="/login" class="inline-block w-full py-3.5 rounded-xl bg-brand-teal text-slate-900 font-black text-sm text-center hover:-translate-y-0.5 transition-all">
+        Iniciar sesión
+      </a>
+    </div>
+
+    <!-- Error: no token -->
+    <div id="no-token-section" class="hidden text-center">
+      <div class="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-6">
+        <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </div>
+      <h1 class="text-2xl font-black mb-2">Enlace inválido</h1>
+      <p class="text-slate-400 text-sm mb-8">Este enlace de confirmación no es válido o ha expirado. Contacta a tu administrador.</p>
+      <a href="/" class="inline-block w-full py-3.5 rounded-xl bg-slate-800 text-white font-black text-sm text-center border border-white/10 hover:-translate-y-0.5 transition-all">
+        Volver al inicio
+      </a>
+    </div>
+  </div>
+</AuthLayout>
+
+<script define:vars={{ API_URL }}>
+  const formSection = document.getElementById('form-section');
+  const successSection = document.getElementById('success-section');
+  const noTokenSection = document.getElementById('no-token-section');
+  const confirmForm = document.getElementById('confirm-form');
+  const errorEl = document.getElementById('error');
+  const btn = document.getElementById('btn');
+
+  // Get token from URL
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+
+  if (!token) {
+    formSection.classList.add('hidden');
+    noTokenSection.classList.remove('hidden');
+  }
+
+  confirmForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorEl.classList.add('hidden');
+
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+
+    if (password !== confirmPassword) {
+      errorEl.textContent = 'Las contraseñas no coinciden.';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+
+    if (password.length < 8) {
+      errorEl.textContent = 'La contraseña debe tener al menos 8 caracteres.';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+
+    btn.textContent = 'Activando...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(`${API_URL}/api/v1/auth/confirm-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        errorEl.textContent = data.detail || 'Error al confirmar.';
+        errorEl.classList.remove('hidden');
+        btn.textContent = 'Activar cuenta';
+        btn.disabled = false;
+        return;
+      }
+
+      formSection.classList.add('hidden');
+      successSection.classList.remove('hidden');
+    } catch (err) {
+      errorEl.textContent = 'Error de conexión con el servidor.';
+      errorEl.classList.remove('hidden');
+      btn.textContent = 'Activar cuenta';
+      btn.disabled = false;
+    }
+  });
+</script>

@@ -1,0 +1,275 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+
+const whatsappPhone = '5525582310';
+
+const segments = [
+  {
+    id: 'pymes',
+    label: 'PYMES',
+    tagline: 'De 1 a 10 empleados',
+    headline: 'Deja de hacer todo manual.',
+    subheadline: 'Automatiza pedidos, facturación y envíos desde el día uno.',
+    description: 'Si eres emprendedor o tienes un negocio pequeño, sabes lo que es facturar a mano, copiar guías de envío en Excel, y perder leads porque no tienes un CRM. SkyBrandMX centraliza todo para que tú te enfoques en vender.',
+    identifier: {
+      title: '¿Eres una PYME?',
+      checks: [
+        'Vendes en Shopify, Mercado Libre o WooCommerce',
+        'Tienes de 1 a 10 empleados',
+        'Facturas menos de 100 CFDIs al mes',
+        'Manejas envíos manualmente o con pocas guías',
+        'No tienes un CRM formal (usas WhatsApp o Excel)',
+        'Tu presupuesto de marketing es limitado',
+      ],
+    },
+    pain: [
+      { problem: 'Facturas a mano en el portal del SAT', solution: 'Facturación automática desde cada pedido — CFDI 4.0 en un clic' },
+      { problem: 'Copias números de guía uno por uno', solution: 'Genera guías de DHL, Estafeta y FedEx desde el panel' },
+      { problem: 'Pierdes leads porque no les das seguimiento', solution: 'CRM integrado con historial de cada contacto' },
+      { problem: 'No sabes cuánto vendes realmente', solution: 'Dashboard en tiempo real con ingresos, pedidos y envíos' },
+    ],
+    modules: [
+      { name: 'Gestión de Pedidos', desc: 'Centraliza pedidos de todas tus tiendas en un solo lugar', icon: '📦' },
+      { name: 'Facturación SAT', desc: 'CFDI 4.0 automático desde cada venta — hasta 50/mes incluidas', icon: '🧾' },
+      { name: 'Guías de Envío', desc: 'Tarifas preferenciales con las principales paqueterías', icon: '🚚' },
+      { name: 'CRM Básico', desc: 'Hasta 500 contactos con historial completo', icon: '👥' },
+      { name: 'Email Marketing', desc: '1,000 envíos/mes con plantillas profesionales', icon: '📧' },
+      { name: 'Dashboard', desc: 'Métricas de ventas, envíos y leads en tiempo real', icon: '📊' },
+    ],
+    plan: 'Starter',
+    planPrice: '$899 MXN/mes',
+    gradient: 'from-emerald-500 to-teal-600',
+    bgLight: 'bg-emerald-50',
+    accent: 'text-emerald-600',
+    accentBg: 'bg-emerald-500',
+    border: 'border-emerald-200',
+  },
+  {
+    id: 'medianas',
+    label: 'Medianas Empresas',
+    tagline: 'De 10 a 50 empleados',
+    headline: 'Escala sin perder el control.',
+    subheadline: 'Automatización avanzada, ads con IA y un CRM sin límites.',
+    description: 'Tu negocio creció pero tus herramientas no. Tienes varios canales de venta, un equipo que necesita acceso, y la competencia te obliga a ser más eficiente con tu presupuesto de marketing. SkyBrandMX te da las herramientas enterprise a un precio que sí puedes pagar.',
+    identifier: {
+      title: '¿Eres una mediana empresa?',
+      checks: [
+        'Vendes en múltiples canales (tienda online + marketplaces)',
+        'Tienes de 10 a 50 empleados',
+        'Facturas más de 100 CFDIs al mes',
+        'Manejas envíos con más de una paquetería',
+        'Inviertes en publicidad digital (Meta Ads, Google Ads)',
+        'Necesitas reportes para tomar decisiones',
+        'Tu equipo necesita acceso con roles diferenciados',
+      ],
+    },
+    pain: [
+      { problem: 'Tienes datos en 5 plataformas diferentes', solution: 'Un solo dashboard con datos de ventas, ads, logística y finanzas' },
+      { problem: 'Tu presupuesto de ads no rinde', solution: 'IA que optimiza tu presupuesto en Meta y Google automáticamente' },
+      { problem: 'No sabes qué canal te genera más', solution: 'Reportes avanzados con atribución multi-canal' },
+      { problem: 'Tu equipo no tiene visibilidad', solution: 'Hasta 5 usuarios con roles y permisos personalizados' },
+    ],
+    modules: [
+      { name: 'Multi-Canal', desc: 'Shopify + WooCommerce + Mercado Libre simultáneo', icon: '🏪' },
+      { name: 'CRM Ilimitado', desc: 'Contactos ilimitados con scoring y segmentación', icon: '👥' },
+      { name: 'Ads con IA', desc: 'Meta Ads + Google Ads con optimización automática', icon: '🤖' },
+      { name: 'Facturación Ilimitada', desc: 'CFDI 4.0 sin límite + notas de crédito + complementos', icon: '🧾' },
+      { name: 'Multi-Paquetería', desc: 'Reglas automáticas por peso, zona y costo', icon: '🚚' },
+      { name: 'Email Avanzado', desc: '10,000 envíos/mes con automations y segmentación', icon: '📧' },
+      { name: 'Reportes', desc: 'Analytics de ventas, ads, logística y financieros', icon: '📊' },
+      { name: 'Equipo', desc: 'Hasta 5 usuarios con roles y permisos', icon: '🔐' },
+    ],
+    plan: 'Growth',
+    planPrice: '$1,999 MXN/mes',
+    gradient: 'from-brand-primary to-cyan-600',
+    bgLight: 'bg-sky-50',
+    accent: 'text-brand-primary',
+    accentBg: 'bg-brand-primary',
+    border: 'border-sky-200',
+  },
+  {
+    id: 'grandes',
+    label: 'Grandes Empresas',
+    tagline: 'Más de 50 empleados',
+    headline: 'Infraestructura a tu medida.',
+    subheadline: 'APIs, integraciones custom, multi-sucursal y SLA dedicado.',
+    description: 'Necesitas una solución que se adapte a tu operación, no al revés. Tienes múltiples sucursales, un ERP que hay que conectar, y un equipo grande que necesita herramientas enterprise. SkyBrandMX se integra con tu stack actual y te da el control centralizado que necesitas.',
+    identifier: {
+      title: '¿Eres una gran empresa?',
+      checks: [
+        'Tienes más de 50 empleados',
+        'Operas desde múltiples sucursales o bodegas',
+        'Necesitas conectar con un ERP o sistema legacy',
+        'Requieres facturación masiva automatizada',
+        'Tu equipo de marketing maneja presupuestos grandes',
+        'Necesitas SLA garantizado y soporte dedicado',
+        'Requieres API para integraciones custom',
+        'Cumplimiento y seguridad son prioridad',
+      ],
+    },
+    pain: [
+      { problem: 'Tu ERP no se conecta con nada', solution: 'API REST completa + integraciones custom con tu stack' },
+      { problem: 'Cada sucursal maneja todo diferente', solution: 'Multi-sucursal / multi-bodega con gestión centralizada' },
+      { problem: 'Facturar en lote es un dolor', solution: 'Facturación masiva automatizada por lotes' },
+      { problem: 'Si se cae el sistema, pierdes dinero', solution: 'SLA 99.99% con account manager dedicado' },
+    ],
+    modules: [
+      { name: 'Todo de Growth', desc: 'Todas las funcionalidades del plan Growth incluidas', icon: '✅' },
+      { name: 'API Completa', desc: 'REST API documentada para integraciones custom', icon: '🔌' },
+      { name: 'Multi-Sucursal', desc: 'Gestión centralizada de múltiples ubicaciones', icon: '🏢' },
+      { name: 'Facturación Masiva', desc: 'Facturación batch automatizada por lotes', icon: '🧾' },
+      { name: 'Usuarios Ilimitados', desc: 'Sin límite con SSO empresarial', icon: '👥' },
+      { name: 'Onboarding Premium', desc: 'Capacitación dedicada para todo tu equipo', icon: '🎓' },
+      { name: 'Account Manager', desc: 'Punto de contacto exclusivo para tu cuenta', icon: '🤝' },
+      { name: 'SLA 99.99%', desc: 'Uptime garantizado con soporte 24/7', icon: '🛡️' },
+    ],
+    plan: 'Enterprise',
+    planPrice: 'Personalizado',
+    gradient: 'from-slate-700 to-slate-900',
+    bgLight: 'bg-slate-50',
+    accent: 'text-slate-700',
+    accentBg: 'bg-slate-800',
+    border: 'border-slate-200',
+  },
+];
+---
+
+<Layout title="Soluciones — SkyBrandMX | Para PYMES, Medianas y Grandes Empresas">
+  <Navbar />
+  <main>
+    <!-- Hero -->
+    <section class="pt-36 pb-20 bg-gradient-to-b from-slate-900 via-brand-dark to-slate-900 text-white">
+      <div class="max-w-5xl mx-auto px-6 text-center">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-teal/10 border border-brand-teal/20 text-brand-teal text-xs font-bold mb-8">
+          Soluciones por tamaño de empresa
+        </div>
+        <h1 class="text-4xl md:text-7xl font-black tracking-tighter mb-6">
+          La solución correcta para <span class="text-brand-teal">tu etapa.</span>
+        </h1>
+        <p class="text-lg md:text-xl text-slate-400 font-medium max-w-2xl mx-auto mb-12">
+          No importa si empiezas o si ya tienes una operación compleja. SkyBrandMX se adapta a ti.
+        </p>
+
+        <!-- Segment selector -->
+        <div class="inline-flex flex-wrap justify-center gap-3">
+          {segments.map((seg) => (
+            <a
+              href={`#${seg.id}`}
+              class={`px-6 py-3 rounded-xl font-bold text-sm transition-all hover:-translate-y-0.5 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white`}
+            >
+              {seg.label}
+              <span class="block text-[10px] text-slate-400 font-medium mt-0.5">{seg.tagline}</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- Segments -->
+    {segments.map((seg, idx) => (
+      <section id={seg.id} class={`py-24 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}`}>
+        <div class="max-w-7xl mx-auto px-6">
+
+          {/* Header */}
+          <div class="max-w-3xl mb-16">
+            <div class={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full ${seg.bgLight} ${seg.accent} text-xs font-bold mb-6 border ${seg.border}`}>
+              {seg.label} · {seg.tagline}
+            </div>
+            <h2 class="text-4xl md:text-6xl font-black tracking-tighter mb-4 text-slate-900">
+              {seg.headline}
+            </h2>
+            <p class={`text-xl font-bold ${seg.accent} mb-4`}>{seg.subheadline}</p>
+            <p class="text-slate-500 text-lg leading-relaxed">{seg.description}</p>
+          </div>
+
+          {/* Identifier */}
+          <div class={`rounded-2xl ${seg.bgLight} border ${seg.border} p-8 md:p-10 mb-16`}>
+            <h3 class="text-xl font-black text-slate-900 mb-6">{seg.identifier.title}</h3>
+            <div class="grid md:grid-cols-2 gap-3">
+              {seg.identifier.checks.map((check) => (
+                <div class="flex items-start gap-3">
+                  <svg class={`w-5 h-5 shrink-0 mt-0.5 ${seg.accent}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span class="text-sm font-medium text-slate-600">{check}</span>
+                </div>
+              ))}
+            </div>
+            <p class="text-xs text-slate-400 font-medium mt-6">Si te identificas con 3 o más de estos puntos, esta solución es para ti.</p>
+          </div>
+
+          {/* Problem → Solution */}
+          <div class="mb-16">
+            <h3 class="text-2xl font-black text-slate-900 mb-8">Tu problema → nuestra solución</h3>
+            <div class="grid md:grid-cols-2 gap-5">
+              {seg.pain.map((item) => (
+                <div class="group rounded-2xl bg-white border border-slate-100 p-6 shadow-sm hover:shadow-xl hover:border-slate-200 transition-all duration-300">
+                  <div class="flex items-start gap-4 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </div>
+                    <p class="text-sm font-bold text-slate-400 line-through">{item.problem}</p>
+                  </div>
+                  <div class="flex items-start gap-4">
+                    <div class={`w-8 h-8 rounded-lg ${seg.bgLight} flex items-center justify-center flex-shrink-0`}>
+                      <svg class={`w-4 h-4 ${seg.accent}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <p class="text-sm font-bold text-slate-900">{item.solution}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Modules */}
+          <div class="mb-16">
+            <h3 class="text-2xl font-black text-slate-900 mb-8">Lo que incluye tu plan</h3>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {seg.modules.map((mod) => (
+                <div class="rounded-2xl bg-white border border-slate-100 p-6 hover:shadow-lg hover:border-slate-200 transition-all duration-300">
+                  <span class="text-2xl mb-3 block">{mod.icon}</span>
+                  <h4 class="text-sm font-black text-slate-900 mb-1">{mod.name}</h4>
+                  <p class="text-xs text-slate-500 leading-relaxed">{mod.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div class={`rounded-2xl bg-gradient-to-r ${seg.gradient} p-8 md:p-12 text-white flex flex-col md:flex-row items-center justify-between gap-6`}>
+            <div>
+              <p class="text-sm font-bold text-white/70 mb-1">Plan recomendado</p>
+              <h3 class="text-3xl font-black mb-1">{seg.plan}</h3>
+              <p class="text-lg font-bold text-white/90">{seg.planPrice}</p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3">
+              <a
+                href={`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(`Hola, soy ${seg.label.toLowerCase()} y me interesa el plan ${seg.plan} de SkyBrandMX`)}`}
+                target="_blank"
+                rel="noopener"
+                class="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-white text-slate-900 font-black text-sm hover:-translate-y-0.5 transition-all shadow-lg"
+              >
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                Contactar por WhatsApp
+              </a>
+              <a
+                href={`/precios#${seg.plan.toLowerCase()}`}
+                class="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-white/10 border border-white/20 text-white font-bold text-sm hover:bg-white/20 transition-all"
+              >
+                Ver plan detallado
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </section>
+    ))}
+  </main>
+  <Footer />
+</Layout>
