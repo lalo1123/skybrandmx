@@ -24,6 +24,10 @@ class Contact(SQLModel, table=True):
     address: Optional[str] = None
     zip_code: Optional[str] = None
 
+    # Pipeline
+    pipeline_stage: str = Field(default="lead", index=True)  # lead, prospecto, negociacion, cliente, perdido
+    deal_value: float = Field(default=0.0)
+
     # Metadata
     tags: Optional[str] = None          # JSON array: ["vip", "lead"]
     notes: Optional[str] = None         # JSON array: [{"text":"...", "date":"...", "by":"..."}]

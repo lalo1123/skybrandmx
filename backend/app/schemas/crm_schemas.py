@@ -16,6 +16,8 @@ class ContactCreate(BaseModel):
     zip_code: Optional[str] = None
     tags: Optional[list[str]] = None
     source: str = "manual"
+    pipeline_stage: str = "lead"
+    deal_value: float = 0.0
 
 
 class ContactUpdate(BaseModel):
@@ -30,6 +32,8 @@ class ContactUpdate(BaseModel):
     zip_code: Optional[str] = None
     tags: Optional[list[str]] = None
     is_active: Optional[bool] = None
+    pipeline_stage: Optional[str] = None
+    deal_value: Optional[float] = None
 
 
 class ContactResponse(BaseModel):
@@ -47,6 +51,8 @@ class ContactResponse(BaseModel):
     tags: Optional[str]
     notes: Optional[str]
     source: str
+    pipeline_stage: str
+    deal_value: float
     total_orders: int
     total_spent: float
     last_order_date: Optional[datetime]

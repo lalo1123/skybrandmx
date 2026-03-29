@@ -268,6 +268,64 @@ def list_tags(
     return [{"tag": t, "count": c} for t, c in tag_counter.most_common(50)]
 
 
+# ===== PIPELINE =====
+
+@router.get("/pipeline")
+def get_pipeline(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Get contacts grouped by pipeline stage."""
+    stages = ["lead", "prospecto", "negociacion", "cliente", "perdido"]
+    result = {}
+    for stage in stages:
+        contacts = (
+            db.query(Contact)
+            .filter(Contact.workspace_id == current_user.workspace_id, Contact.pipeline_stage == stage)
+            .order_by(Contact.updated_at.desc())
+            .all()
+        )
+        result[stage] = [ContactResponse.model_validate(c) for c in contacts]
+    return result
+
+
+@router.patch("/contacts/{contact_id}/stage")
+def update_stage(
+    contact_id: int,
+    stage: str = Query(..., description="New pipeline stage"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Move a contact to a different pipeline stage."""
+    valid_stages = ["lead", "prospecto", "negociacion", "cliente", "perdido"]
+    if stage not in valid_stages:
+        raise HTTPException(400, f"Stage inválido. Opciones: {valid_stages}")
+
+    contact = db.query(Contact).filter(
+        Contact.id == contact_id,
+        Contact.workspace_id == current_user.workspace_id,
+    ).first()
+    if not contact:
+        raise HTTPException(404, "Contacto no encontrado")
+
+    contact.pipeline_stage = stage
+    contact.updated_at = datetime.utcnow()
+
+    # Add note about stage change
+    notes = json.loads(contact.notes) if contact.notes else []
+    stage_labels = {"lead": "Lead", "prospecto": "Prospecto", "negociacion": "Negociación", "cliente": "Cliente", "perdido": "Perdido"}
+    notes.insert(0, {
+        "text": f"Movido a etapa: {stage_labels.get(stage, stage)}",
+        "date": datetime.utcnow().isoformat(),
+        "by": "Sistema",
+    })
+    contact.notes = json.dumps(notes)
+
+    db.commit()
+    db.refresh(contact)
+    return {"ok": True, "contact_id": contact_id, "new_stage": stage}
+
+
 # ===== IMPORT CSV =====
 
 @router.post("/contacts/import")
