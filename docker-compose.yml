@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  landing-page:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: skybrandmx-landing
+    restart: always
+    ports:
+      - "80:80"
+    networks:
+      - skybrand-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  skybrand-network:
+    driver: bridge
