@@ -31,6 +31,8 @@ const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:6100';
     <button id="crm-tab-activity" class="crm-tab" onclick="switchCRMTab('activity')" style="padding:10px 20px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;">Actividad</button>
     <button id="crm-tab-forms" class="crm-tab" onclick="switchCRMTab('forms')" style="padding:10px 20px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;">Formularios</button>
     <button id="crm-tab-segments" class="crm-tab" onclick="switchCRMTab('segments')" style="padding:10px 20px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;">Segmentos</button>
+    <button id="crm-tab-tasks" class="crm-tab" onclick="switchCRMTab('tasks')" style="padding:10px 20px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;">Tareas</button>
+    <button id="crm-tab-duplicates" class="crm-tab" onclick="switchCRMTab('duplicates')" style="padding:10px 20px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;">Duplicados</button>
   </div>
 
   <!-- Tab: Contacts -->
@@ -199,6 +201,36 @@ const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:6100';
     </div>
   </div>
 
+  <!-- Tab: Tareas -->
+  <div id="crm-panel-tasks" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <h3 style="font-size:15px;font-weight:800;color:var(--text-primary);margin:0;">Tareas y recordatorios</h3>
+        <span style="font-size:11px;color:var(--text-faint);">(Te ayudan a no olvidar dar seguimiento a tus clientes)</span>
+      </div>
+      <button onclick="crmAddTask()" style="padding:10px 20px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Nueva tarea
+      </button>
+    </div>
+    <div id="crm-tasks-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+  </div>
+
+  <!-- Tab: Duplicados -->
+  <div id="crm-panel-duplicates" style="display:none;">
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;background:var(--accent-bg);border:1px solid rgba(111,207,245,0.15);margin-bottom:16px;">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Revisamos tu lista de contactos para encontrar posibles duplicados. Así mantienes tu base limpia y no envías emails repetidos.</p>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+      <button onclick="crmScanDuplicates()" style="padding:10px 20px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        Buscar duplicados
+      </button>
+    </div>
+    <div id="crm-duplicates-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+  </div>
+
   <!-- Add/Edit Contact Modal -->
   <div id="crm-contact-modal" style="display:none;position:fixed;inset:0;z-index:60;align-items:center;justify-content:center;padding:20px;">
     <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);" onclick="closeCRMModal('crm-contact-modal')"></div>
@@ -327,14 +359,15 @@ const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:6100';
         activeTab.style.borderBottomColor = 'var(--accent)';
         activeTab.classList.add('active');
       }
-      document.getElementById('crm-panel-contacts').style.display = tab === 'contacts' ? '' : 'none';
-      document.getElementById('crm-panel-pipeline').style.display = tab === 'pipeline' ? '' : 'none';
-      document.getElementById('crm-panel-activity').style.display = tab === 'activity' ? '' : 'none';
-      document.getElementById('crm-panel-forms').style.display = tab === 'forms' ? '' : 'none';
-      document.getElementById('crm-panel-segments').style.display = tab === 'segments' ? '' : 'none';
+      ['contacts','pipeline','activity','forms','segments','tasks','duplicates'].forEach(p => {
+        const el = document.getElementById('crm-panel-' + p);
+        if (el) el.style.display = p === tab ? '' : 'none';
+      });
 
       if (tab === 'pipeline') renderPipeline();
       if (tab === 'activity') loadActivity();
+      if (tab === 'tasks') renderCRMTasks();
+      if (tab === 'duplicates') crmScanDuplicates();
       if (tab === 'forms') loadForms();
       if (tab === 'segments') loadSegments();
     };
@@ -983,6 +1016,89 @@ const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:6100';
         alert(e.message || 'Error al crear segmento.');
       }
     };
+
+    // ═══════ TASKS / TAREAS ═══════
+    const _crmTasks = [
+      { id:1, title:'Llamar a María García para dar seguimiento', contact:'María García López', date:'2026-04-02', time:'10:00', priority:'high', done:false },
+      { id:2, title:'Enviar cotización a Carlos Hernández', contact:'Carlos Hernández Ruiz', date:'2026-04-02', time:'14:00', priority:'medium', done:false },
+      { id:3, title:'Seguimiento post-venta con Ana Sofía', contact:'Ana Sofía Martínez', date:'2026-04-03', time:'11:00', priority:'low', done:false },
+      { id:4, title:'Revisar propuesta para Roberto Juárez', contact:'Roberto Juárez Peña', date:'2026-04-01', time:'09:00', priority:'high', done:true },
+    ];
+
+    const _priorityMap = { high:{l:'Urgente',c:'#ef4444',b:'rgba(239,68,68,0.1)'}, medium:{l:'Normal',c:'#eab308',b:'rgba(234,179,8,0.1)'}, low:{l:'Baja',c:'#22c55e',b:'rgba(34,197,94,0.1)'} };
+
+    window.renderCRMTasks = function() {
+      const el = document.getElementById('crm-tasks-list'); if (!el) return;
+      const pending = _crmTasks.filter(t => !t.done);
+      const completed = _crmTasks.filter(t => t.done);
+
+      el.innerHTML = (pending.length ? pending.map(t => {
+        const p = _priorityMap[t.priority];
+        const isToday = t.date === '2026-04-02';
+        const isOverdue = t.date < '2026-04-02';
+        return `<div class="stat-card" style="padding:16px;display:flex;align-items:center;gap:14px;${isOverdue?'border-color:#ef4444;border-left:3px solid #ef4444;':''}">
+          <button onclick="_crmTasks.find(x=>x.id===${t.id}).done=true;renderCRMTasks();_showToast('Tarea completada')" style="width:24px;height:24px;border-radius:6px;border:2px solid ${p.c};background:transparent;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.background='${p.c}20'" onmouseout="this.style.background='transparent'"></button>
+          <div style="flex:1;">
+            <p style="font-size:13px;font-weight:700;color:var(--text-primary);">${t.title}</p>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+              <span style="font-size:11px;color:var(--text-muted);">👤 ${t.contact}</span>
+              <span style="font-size:11px;color:${isOverdue?'#ef4444':isToday?'var(--accent)':'var(--text-faint)'};">${isOverdue?'⚠ Vencida':isToday?'📅 Hoy':'📅 '+t.date} ${t.time}</span>
+              <span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;color:${p.c};background:${p.b};">${p.l}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('') : '<div style="text-align:center;padding:32px;color:var(--text-faintest);font-size:13px;">No tienes tareas pendientes</div>')
+      + (completed.length ? `<div style="margin-top:16px;"><p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;margin-bottom:8px;">Completadas</p>${completed.map(t => `<div style="display:flex;align-items:center;gap:14px;padding:10px 16px;opacity:0.5;"><div style="width:24px;height:24px;border-radius:6px;background:#22c55e;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg style="width:14px;height:14px;color:#fff;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div><p style="font-size:13px;color:var(--text-muted);text-decoration:line-through;">${t.title}</p></div>`).join('')}</div>` : '');
+    };
+
+    window.crmAddTask = function() {
+      const title = prompt('¿Qué necesitas hacer?', 'Llamar a cliente para seguimiento');
+      if (!title) return;
+      const contact = prompt('¿Con qué contacto? (opcional)', '');
+      _crmTasks.unshift({ id: Date.now(), title, contact: contact || 'Sin asignar', date: '2026-04-02', time: '12:00', priority: 'medium', done: false });
+      renderCRMTasks();
+      _showToast('Tarea creada');
+    };
+
+    // ═══════ DUPLICADOS ═══════
+    window.crmScanDuplicates = function() {
+      const el = document.getElementById('crm-duplicates-list'); if (!el) return;
+      // Demo duplicates
+      const duplicates = [
+        { group: [{ name:'María García López', email:'maria@gmail.com', phone:'55 2341 8765' }, { name:'Maria Garcia', email:'maria@gmail.com', phone:'' }], reason:'Mismo email' },
+        { group: [{ name:'Carlos Hernandez', email:'carlos.hr@outlook.com', phone:'33 1567 4321' }, { name:'Carlos Hernández Ruiz', email:'carlos.hernandez@gmail.com', phone:'33 1567 4321' }], reason:'Mismo teléfono' },
+      ];
+
+      if (!duplicates.length) {
+        el.innerHTML = '<div style="text-align:center;padding:32px;"><svg style="width:48px;height:48px;color:#22c55e;margin-bottom:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><p style="font-size:14px;font-weight:700;color:#22c55e;">¡Tu base está limpia!</p><p style="font-size:12px;color:var(--text-muted);margin-top:4px;">No se encontraron contactos duplicados.</p></div>';
+        return;
+      }
+
+      el.innerHTML = `<p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">Encontramos <strong>${duplicates.length} posibles duplicados</strong>. Revisa cada grupo y decide si quieres fusionarlos.</p>` +
+      duplicates.map((d, gi) => `
+        <div class="stat-card" style="padding:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <span style="padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700;color:#f97316;background:rgba(249,115,22,0.1);">${d.reason}</span>
+            <button onclick="_showToast('Contactos fusionados');this.closest('.stat-card').remove()" style="padding:6px 14px;border-radius:8px;border:none;background:#22c55e;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">Fusionar</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            ${d.group.map(c => `<div style="padding:12px;border-radius:8px;background:var(--input-bg);border:1px solid var(--border);">
+              <p style="font-size:13px;font-weight:700;color:var(--text-primary);">${c.name}</p>
+              <p style="font-size:11px;color:var(--text-muted);">${c.email || 'Sin email'}</p>
+              <p style="font-size:11px;color:var(--text-faint);">${c.phone || 'Sin teléfono'}</p>
+            </div>`).join('')}
+          </div>
+        </div>
+      `).join('');
+    };
+
+    function _showToast(msg) {
+      const ex = document.getElementById('crm-toast'); if (ex) ex.remove();
+      const t = document.createElement('div'); t.id = 'crm-toast'; t.textContent = msg;
+      Object.assign(t.style, { position:'fixed', bottom:'24px', right:'24px', background:'#22c55e', color:'#fff', padding:'12px 24px', borderRadius:'10px', fontSize:'13px', fontWeight:'700', zIndex:'9999', boxShadow:'0 4px 20px rgba(0,0,0,0.3)' });
+      document.body.appendChild(t);
+      setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, 3000);
+    }
 
     // Load data on page load
     window.addEventListener('skybrand:auth', () => {

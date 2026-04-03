@@ -213,7 +213,7 @@ const adsExtraPath = 'M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z';
             <path d="M9 17C10.5 20 12 22 12 22C12 22 13.5 20 15 17H9Z" fill="#ff6600"></path>
           </svg>
           <div>
-            <div style="font-weight:900;font-size:16px;letter-spacing:-0.02em;color:#fff;">SKYBR<span style="color:#6fcff5;">AN</span>DM<span style="color:#6fcff5;">X</span></div>
+            <div style="font-weight:900;font-size:16px;letter-spacing:-0.02em;color:var(--text-primary);">SKYBR<span style="color:#6fcff5;">AN</span>DM<span style="color:#6fcff5;">X</span></div>
             <div style="height:2px;width:55%;border-radius:999px;background:linear-gradient(to right,#6fcff5,#105971);margin-top:2px;"></div>
           </div>
         </a>
@@ -482,9 +482,31 @@ const adsExtraPath = 'M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z';
     };
 
     // Auth check
+    function initDashboard(user) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+
+      const name = user.full_name || user.email.split('@')[0];
+      const initials = name.charAt(0).toUpperCase();
+
+      document.getElementById('sidebar-name').textContent = name;
+      document.getElementById('sidebar-email').textContent = user.email;
+      document.getElementById('user-avatar').textContent = initials;
+
+      if (user.is_admin) {
+        document.getElementById('admin-nav').style.display = 'block';
+      }
+
+      window._skybrandUser = user;
+      window.dispatchEvent(new CustomEvent('skybrand:auth', { detail: user }));
+    }
+
     const token = localStorage.getItem('skybrand_token');
     if (!token) {
       window.location.href = '/login';
+    } else if (token === 'demo') {
+      // Demo mode: skip API entirely
+      initDashboard({ full_name: 'Usuario Demo', email: 'demo@skybrandmx.com', is_admin: true });
     } else {
       fetch(`${API_URL}/api/v1/auth/me`, {
         headers: { 'Authorization': `Bearer ${token}` },
@@ -493,25 +515,7 @@ const adsExtraPath = 'M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z';
           if (!res.ok) throw new Error('Unauthorized');
           return res.json();
         })
-        .then(user => {
-          document.getElementById('loading').style.display = 'none';
-          document.getElementById('dashboard').style.display = 'block';
-
-          const name = user.full_name || user.email.split('@')[0];
-          const initials = name.charAt(0).toUpperCase();
-
-          document.getElementById('sidebar-name').textContent = name;
-          document.getElementById('sidebar-email').textContent = user.email;
-          document.getElementById('user-avatar').textContent = initials;
-
-          if (user.is_admin) {
-            document.getElementById('admin-nav').style.display = 'block';
-          }
-
-          // Dispatch a custom event so child pages can use the user data
-          window._skybrandUser = user;
-          window.dispatchEvent(new CustomEvent('skybrand:auth', { detail: user }));
-        })
+        .then(user => initDashboard(user))
         .catch(() => {
           localStorage.removeItem('skybrand_token');
           window.location.href = '/login';

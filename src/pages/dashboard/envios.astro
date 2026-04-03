@@ -1,14 +1,703 @@
 ---
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:6100';
 ---
 
-<DashboardLayout title="Env&iacute;os">
-  <div class="stat-card animate-in" style="text-align:center;padding:48px 24px;">
-    <div style="width:56px;height:56px;border-radius:16px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-      <svg style="width:28px;height:28px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+<DashboardLayout title="Envíos">
+  <!-- Smart Recommendations -->
+  <div id="env-smart-recs" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;"></div>
+
+  <!-- Stats bar -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px;">
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="env-stat-label">Guías generadas</p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="env-stat-total" class="env-stat-val">--</p><span id="env-trend-total" class="env-trend"></span></div>
     </div>
-    <h3 style="font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:8px;">Env&iacute;os</h3>
-    <p style="font-size:13px;color:var(--text-faint);max-width:400px;margin:0 auto 20px;line-height:1.6;">Conecta paqueter&iacute;as como Estafeta, FedEx, DHL y m&aacute;s. Genera gu&iacute;as autom&aacute;ticamente desde tus pedidos.</p>
-    <a href="/dashboard/configuracion" style="display:inline-block;padding:10px 24px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s;text-decoration:none;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Configurar env&iacute;os</a>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="env-stat-label">En tránsito</p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="env-stat-transit" class="env-stat-val" style="color:#8b5cf6;">--</p></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="env-stat-label">Entregadas</p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="env-stat-delivered" class="env-stat-val" style="color:#22c55e;">--</p><span id="env-trend-delivered" class="env-trend"></span></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="env-stat-label">Costo promedio <span class="env-tip" data-tip="Lo que te cuesta en promedio enviar un paquete">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="env-stat-avg" class="env-stat-val" style="color:var(--accent);">--</p><span id="env-trend-avg" class="env-trend"></span></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="env-stat-label">Gasto total mes</p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="env-stat-spent" class="env-stat-val" style="color:#f97316;">--</p><span id="env-trend-spent" class="env-trend"></span></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="env-stat-label">Devoluciones <span class="env-tip" data-tip="Paquetes que fueron devueltos por el cliente o por la paquetería">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="env-stat-returns" class="env-stat-val" style="color:#ef4444;">--</p></div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;overflow-x:auto;">
+    <button id="env-tab-shipments" class="env-tab active" onclick="switchEnvTab('shipments')">Mis guías</button>
+    <button id="env-tab-quote" class="env-tab" onclick="switchEnvTab('quote')">Cotizar envío</button>
+    <button id="env-tab-tracking" class="env-tab" onclick="switchEnvTab('tracking')">Rastrear paquete</button>
+    <button id="env-tab-returns" class="env-tab" onclick="switchEnvTab('returns')">Devoluciones</button>
+    <button id="env-tab-analytics" class="env-tab" onclick="switchEnvTab('analytics')">Analítica</button>
+  </div>
+
+  <!-- ══════════ Tab: Mis guías ══════════ -->
+  <div id="env-panel-shipments">
+    <div id="env-help-shipments" class="env-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Aquí ves todas las guías de envío que has generado. Puedes rastrear cada paquete en tiempo real.</p>
+      <button onclick="envDismissHelp('shipments')" class="env-help-close">&times;</button>
+    </div>
+    <div id="env-toolbar" class="stat-card animate-in" style="padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;position:relative;">
+        <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input id="env-search" type="text" placeholder="Buscar por guía, cliente, destino..." oninput="envFilter()" class="env-input" style="padding-left:38px;"/>
+      </div>
+      <select id="env-filter-carrier" onchange="envFilter()" class="env-input" style="width:auto;cursor:pointer;">
+        <option value="">Todas las paqueterías</option>
+        <option value="DHL">DHL</option>
+        <option value="Estafeta">Estafeta</option>
+        <option value="FedEx">FedEx</option>
+        <option value="Redpack">Redpack</option>
+        <option value="99Min">99 Minutos</option>
+      </select>
+      <select id="env-filter-status" onchange="envFilter()" class="env-input" style="width:auto;cursor:pointer;">
+        <option value="">Todos los estados</option>
+        <option value="created">Creada</option>
+        <option value="picked_up">Recolectada</option>
+        <option value="in_transit">En tránsito</option>
+        <option value="out_for_delivery">En reparto</option>
+        <option value="delivered">Entregada</option>
+        <option value="returned">Devuelta</option>
+      </select>
+      <button onclick="switchEnvTab('quote')" class="env-btn-primary" style="display:flex;align-items:center;gap:6px;padding:10px 20px;">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Nueva guía
+      </button>
+    </div>
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="border-bottom:1px solid var(--border);">
+            <th class="env-th"># Guía</th><th class="env-th">Paquetería</th><th class="env-th">Cliente / Destino</th>
+            <th class="env-th">Estado</th><th class="env-th" style="text-align:right;">Costo</th><th class="env-th">Peso</th>
+            <th class="env-th">Fecha</th><th class="env-th" style="text-align:center;">Acciones</th>
+          </tr></thead>
+          <tbody id="env-shipments-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Cotizar envío ══════════ -->
+  <div id="env-panel-quote" style="display:none;">
+    <div id="env-help-quote" class="env-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Compara precios de diferentes paqueterías y genera la guía con la mejor opción. Nosotros negociamos las tarifas por ti.</p>
+      <button onclick="envDismissHelp('quote')" class="env-help-close">&times;</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <!-- Left: Form -->
+      <div class="stat-card animate-in" style="padding:24px;">
+        <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);margin-bottom:16px;">Datos del envío</h3>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div><label class="env-label">CP Origen</label><input id="env-q-origin" type="text" value="03100" class="env-input" placeholder="Ej: 03100"/></div>
+            <div><label class="env-label">CP Destino</label><input id="env-q-dest" type="text" class="env-input" placeholder="Ej: 44100"/></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+            <div><label class="env-label">Largo (cm)</label><input id="env-q-largo" type="number" value="30" class="env-input"/></div>
+            <div><label class="env-label">Ancho (cm)</label><input id="env-q-ancho" type="number" value="20" class="env-input"/></div>
+            <div><label class="env-label">Alto (cm)</label><input id="env-q-alto" type="number" value="15" class="env-input"/></div>
+          </div>
+          <div><label class="env-label">Peso real (kg)</label><input id="env-q-peso" type="number" value="2" class="env-input" oninput="envCalcVolumetric()"/></div>
+          <!-- Peso volumétrico auto-calc -->
+          <div id="env-vol-weight" style="padding:10px 14px;border-radius:10px;background:rgba(234,179,8,0.06);border:1px solid rgba(234,179,8,0.15);display:flex;align-items:center;gap:10px;">
+            <svg style="width:16px;height:16px;color:#eab308;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div style="flex:1;">
+              <p style="font-size:11px;color:#eab308;font-weight:700;">Peso volumétrico: <span id="env-vol-val">1.8 kg</span></p>
+              <p style="font-size:10px;color:var(--text-faint);" id="env-vol-msg">Las paqueterías cobran el peso mayor entre real y volumétrico</p>
+            </div>
+          </div>
+          <div><label class="env-label">Contenido</label><input id="env-q-contenido" type="text" class="env-input" placeholder="Ej: Ropa, accesorios"/></div>
+          <!-- Valor declarado + seguro -->
+          <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;">
+            <div><label class="env-label">Valor del paquete (MXN) <span class="env-tip" data-tip="Para calcular el costo del seguro de envío">?</span></label><input id="env-q-valor" type="number" value="0" class="env-input" placeholder="0"/></div>
+            <label style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);cursor:pointer;white-space:nowrap;">
+              <input type="checkbox" id="env-q-seguro" style="accent-color:var(--accent);"/>
+              <span style="font-size:12px;font-weight:600;color:var(--text-secondary);">Agregar seguro</span>
+            </label>
+          </div>
+          <!-- Guías masivas link -->
+          <div style="display:flex;justify-content:flex-end;">
+            <button onclick="openEnvMassModal()" style="padding:6px 14px;border-radius:8px;border:1px dashed var(--border);background:transparent;color:var(--text-faint);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-faint)'">📄 Generar guías masivas (CSV)</button>
+          </div>
+          <button onclick="envCotizar()" class="env-btn-primary" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+            <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+            Cotizar envío
+          </button>
+        </div>
+      </div>
+      <!-- Right: Results -->
+      <div>
+        <div id="env-q-results">
+          <div class="stat-card animate-in" style="padding:40px;text-align:center;">
+            <svg style="width:48px;height:48px;color:var(--text-faintest);margin-bottom:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
+            <p style="font-size:14px;font-weight:700;color:var(--text-muted);">Ingresa los datos y cotiza</p>
+            <p style="font-size:12px;color:var(--text-faint);margin-top:4px;">Comparamos precios de 5+ paqueterías al instante</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Rastrear ══════════ -->
+  <div id="env-panel-tracking" style="display:none;">
+    <div id="env-help-tracking" class="env-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Pega un número de guía para rastrear tu paquete en tiempo real. Funciona con cualquier paquetería.</p>
+      <button onclick="envDismissHelp('tracking')" class="env-help-close">&times;</button>
+    </div>
+    <div class="stat-card animate-in" style="padding:24px;max-width:600px;">
+      <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);margin-bottom:16px;">Rastrear paquete</h3>
+      <div style="display:flex;gap:10px;">
+        <input id="env-track-num" type="text" placeholder="Número de guía (Ej: FDX123456789)" class="env-input" style="flex:1;"/>
+        <button onclick="envTrack()" class="env-btn-primary" style="padding:10px 20px;white-space:nowrap;">Rastrear</button>
+      </div>
+      <div id="env-track-result" style="margin-top:20px;"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Devoluciones envío ══════════ -->
+  <div id="env-panel-returns" style="display:none;">
+    <div id="env-help-returns" class="env-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Genera guías de retorno para que tus clientes te devuelvan productos fácilmente.</p>
+      <button onclick="envDismissHelp('returns')" class="env-help-close">&times;</button>
+    </div>
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="border-bottom:1px solid var(--border);">
+            <th class="env-th"># Guía retorno</th><th class="env-th">Guía original</th><th class="env-th">Cliente</th>
+            <th class="env-th">Paquetería</th><th class="env-th">Estado</th><th class="env-th">Fecha</th>
+          </tr></thead>
+          <tbody id="env-returns-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Analítica ══════════ -->
+  <div id="env-panel-analytics" style="display:none;">
+    <div id="env-help-analytics" class="env-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Analiza tus costos de envío, tiempos de entrega y rendimiento por paquetería.</p>
+      <button onclick="envDismissHelp('analytics')" class="env-help-close">&times;</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:20px;">
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Gasto por paquetería</h4>
+        <div id="env-chart-carriers"></div>
+      </div>
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Tiempo de entrega promedio <span class="env-tip" data-tip="Días que tarda en promedio cada paquetería en entregar">?</span></h4>
+        <div id="env-chart-times"></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Destinos frecuentes</h4>
+        <div id="env-chart-destinations"></div>
+      </div>
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Envíos por mes</h4>
+        <div id="env-chart-monthly" style="height:180px;display:flex;align-items:flex-end;gap:6px;"></div>
+      </div>
+    </div>
+    <!-- Tarifas por estado -->
+    <div class="stat-card animate-in" style="padding:20px;margin-top:20px;">
+      <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:4px;">Tarifas por estado <span class="env-tip" data-tip="Costo promedio de enviar un paquete de 2kg a cada estado de México">?</span></h4>
+      <p style="font-size:11px;color:var(--text-faint);margin-bottom:16px;">Paquete estándar de 2kg desde CDMX. Precios aproximados.</p>
+      <div id="env-tariff-map" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;"></div>
+    </div>
+  </div>
+
+  <!-- Modal: Guías masivas -->
+  <div id="env-modal-mass" class="env-modal-overlay" style="display:none;">
+    <div class="env-modal-box" style="max-width:560px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <h3 style="font-size:17px;font-weight:900;color:var(--text-primary);">Generar guías masivas</h3>
+        <button onclick="document.getElementById('env-modal-mass').style.display='none'" class="env-modal-close">&times;</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <p style="font-size:12px;color:var(--text-muted);line-height:1.5;">Sube un archivo CSV con los datos de envío y generamos todas las guías de una vez. Ideal si tienes muchos pedidos.</p>
+        <div style="border:2px dashed var(--border);border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:all 0.2s;" onclick="document.getElementById('env-mass-file').click()" ondragover="event.preventDefault();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border)'">
+          <svg style="width:32px;height:32px;color:var(--text-faint);margin-bottom:8px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+          <p style="font-size:13px;color:var(--text-muted);font-weight:600;">Arrastra tu archivo CSV aquí</p>
+          <p style="font-size:11px;color:var(--text-faint);margin-top:4px;">o haz clic para seleccionar</p>
+          <input type="file" id="env-mass-file" accept=".csv" style="display:none;" onchange="envMassPreview(this)"/>
+        </div>
+        <div id="env-mass-preview" style="display:none;"></div>
+        <div style="padding:10px;border-radius:8px;background:var(--input-bg);">
+          <p style="font-size:11px;font-weight:700;color:var(--text-faint);margin-bottom:4px;">Formato del CSV:</p>
+          <code style="font-size:10px;color:var(--accent);">nombre,email,telefono,calle,cp_destino,peso_kg,contenido</code>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div><label class="env-label">Paquetería</label><select id="env-mass-carrier" class="env-input" style="cursor:pointer;"><option value="cheapest">La más barata</option><option value="DHL">DHL</option><option value="FedEx">FedEx</option><option value="Estafeta">Estafeta</option></select></div>
+          <div><label class="env-label">CP Origen</label><input id="env-mass-origin" type="text" value="03100" class="env-input"/></div>
+        </div>
+        <button onclick="envMassGenerate()" class="env-btn-primary" style="background:#22c55e;">Generar guías masivas</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Etiqueta preview -->
+  <div id="env-modal-label" class="env-modal-overlay" style="display:none;">
+    <div class="env-modal-box" style="max-width:400px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <h3 style="font-size:17px;font-weight:900;color:var(--text-primary);">Etiqueta de envío</h3>
+        <button onclick="document.getElementById('env-modal-label').style.display='none'" class="env-modal-close">&times;</button>
+      </div>
+      <div id="env-label-preview" style="background:#fff;border:2px solid #000;border-radius:8px;padding:20px;color:#000;font-family:monospace;"></div>
+      <button onclick="showToast('Etiqueta impresa')" class="env-btn-primary" style="margin-top:16px;width:100%;">🖨 Imprimir etiqueta</button>
+    </div>
+  </div>
+
+  <!-- Modal: Notificación preview -->
+  <div id="env-modal-notif" class="env-modal-overlay" style="display:none;">
+    <div class="env-modal-box" style="max-width:420px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <h3 style="font-size:17px;font-weight:900;color:var(--text-primary);">Vista previa de notificación</h3>
+        <button onclick="document.getElementById('env-modal-notif').style.display='none'" class="env-modal-close">&times;</button>
+      </div>
+      <div id="env-notif-preview"></div>
+    </div>
+  </div>
+
+  <!-- Autopilot -->
+  <div class="stat-card animate-in" style="padding:0;margin-top:20px;overflow:hidden;">
+    <button onclick="envToggleSection('env-autopilot-content')" class="env-collapse-header">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,rgba(34,197,94,0.15),rgba(111,207,245,0.15));display:flex;align-items:center;justify-content:center;">
+          <svg style="width:14px;height:14px;color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <div style="text-align:left;"><p style="font-size:13px;font-weight:700;color:var(--text-primary);">Piloto automático de envíos</p><p style="font-size:11px;color:var(--text-faint);">Automatiza generación de guías y notificaciones</p></div>
+      </div>
+      <svg style="width:16px;height:16px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+    </button>
+    <div id="env-autopilot-content" style="display:none;padding:20px;">
+      <div id="env-autopilot-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
+    </div>
+  </div>
+
+  <!-- Modal: Shipment Detail -->
+  <div id="env-modal-detail" class="env-modal-overlay" style="display:none;">
+    <div class="env-modal-box" style="max-width:600px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <h3 id="env-detail-title" style="font-size:17px;font-weight:900;color:var(--text-primary);">Guía #--</h3>
+        <button onclick="document.getElementById('env-modal-detail').style.display='none'" class="env-modal-close">&times;</button>
+      </div>
+      <div id="env-detail-body"></div>
+    </div>
   </div>
 </DashboardLayout>
+
+<style>
+  @keyframes fadeInUp { from { opacity:0;transform:translateY(10px); } to { opacity:1;transform:translateY(0); } }
+  .env-stat-label { font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px; }
+  .env-stat-val { font-size:28px;font-weight:900;color:var(--text-primary); }
+  .env-trend { font-size:11px;font-weight:700; }
+  .env-tab { padding:10px 20px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap; }
+  .env-tab.active { color:var(--accent);border-bottom-color:var(--accent); }
+  .env-th { padding:14px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px; }
+  .env-modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center; }
+  .env-modal-box { background:var(--bg-sidebar);border:1px solid var(--border);border-radius:16px;padding:28px;width:90%;max-height:90vh;overflow-y:auto; }
+  .env-modal-close { width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px; }
+  .env-label { font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:4px;display:block; }
+  .env-input { width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;transition:border-color 0.2s; }
+  .env-input:focus { border-color:var(--accent); }
+  .env-btn-primary { padding:12px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s; }
+  .env-btn-primary:hover { opacity:0.85; }
+  .env-tbl-btn { padding:5px 9px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;transition:all 0.15s; }
+  .env-tbl-btn:hover { border-color:var(--accent);color:var(--accent); }
+  .env-help-banner { display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;background:var(--accent-bg);border:1px solid rgba(111,207,245,0.15);margin-bottom:16px; }
+  .env-help-close { border:none;background:transparent;color:var(--text-faint);cursor:pointer;font-size:16px;padding:0 4px; }
+  .env-tip { display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--input-bg);color:var(--text-faint);font-size:10px;font-weight:800;cursor:help;position:relative;flex-shrink:0; }
+  .env-tip:hover::after { content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--bg-sidebar);border:1px solid var(--border);color:var(--text-secondary);padding:10px 14px;border-radius:10px;font-size:12px;font-weight:500;white-space:normal;width:260px;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.3);line-height:1.5;pointer-events:none; }
+  .env-tip:hover::before { content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--border);z-index:101; }
+  .env-collapse-header { width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border:none;background:transparent;cursor:pointer;transition:background 0.15s; }
+  .env-collapse-header:hover { background:var(--nav-hover); }
+  .env-toggle-wrap { position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0; }
+  .env-toggle-wrap input { opacity:0;width:0;height:0; }
+  .env-toggle-slider { position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:22px;transition:0.3s; }
+  .env-toggle-slider::before { content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s; }
+  .env-toggle-wrap input:checked + .env-toggle-slider { background:var(--toggle-color, #22c55e); }
+  .env-toggle-wrap input:checked + .env-toggle-slider::before { transform:translateX(18px); }
+  .env-quote-card { padding:16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);transition:all 0.2s;cursor:pointer; }
+  .env-quote-card:hover { border-color:var(--accent); }
+  .env-quote-best { border-color:#22c55e;background:rgba(34,197,94,0.04); }
+</style>
+
+<script is:inline>
+// ═══════ DEMO DATA ═══════
+const demoShipments = [
+  { id:1, tracking:'FDX123456789', carrier:'FedEx', client:'María García López', origin:'CDMX (03100)', dest:'Guadalajara (44100)', status:'delivered', cost:185, weight:'1.2 kg', date:'2026-03-25', deliveredDate:'2026-03-28', events:[{date:'2026-03-28 14:30',text:'Entregado',loc:'Guadalajara'},{date:'2026-03-27 09:15',text:'En reparto',loc:'Guadalajara'},{date:'2026-03-26 06:00',text:'En tránsito',loc:'Centro de distribución GDL'},{date:'2026-03-25 18:00',text:'Recolectado',loc:'CDMX'}] },
+  { id:2, tracking:'DHL987654321', carrier:'DHL', client:'Carlos Hernández Ruiz', origin:'CDMX (03100)', dest:'Monterrey (64060)', status:'in_transit', cost:210, weight:'2.5 kg', date:'2026-03-29', events:[{date:'2026-03-30 12:00',text:'En tránsito',loc:'Centro de distribución MTY'},{date:'2026-03-29 16:00',text:'Recolectado',loc:'CDMX'}] },
+  { id:3, tracking:'EST112233445', carrier:'Estafeta', client:'José Miguel Ríos', origin:'CDMX (03100)', dest:'Querétaro (76000)', status:'in_transit', cost:125, weight:'3.8 kg', date:'2026-03-29', events:[{date:'2026-03-30 08:00',text:'En tránsito',loc:'Querétaro'},{date:'2026-03-29 14:00',text:'Recolectado',loc:'CDMX'}] },
+  { id:4, tracking:'FDX998877665', carrier:'FedEx', client:'Ana Sofía Martínez', origin:'CDMX (03100)', dest:'Monterrey (64060)', status:'created', cost:195, weight:'0.8 kg', date:'2026-03-31', events:[{date:'2026-03-31 10:00',text:'Guía creada',loc:'CDMX'}] },
+  { id:5, tracking:'DHL554433221', carrier:'DHL', client:'Lucía Ramírez Torres', origin:'CDMX (03910)', dest:'Puebla (72000)', status:'out_for_delivery', cost:145, weight:'1.5 kg', date:'2026-03-30', events:[{date:'2026-03-31 08:30',text:'En reparto',loc:'Puebla'},{date:'2026-03-31 06:00',text:'En centro de distribución',loc:'Puebla'},{date:'2026-03-30 14:00',text:'Recolectado',loc:'CDMX'}] },
+  { id:6, tracking:'RDK667788990', carrier:'Redpack', client:'Fernando López Castro', origin:'CDMX (03100)', dest:'Cancún (77500)', status:'delivered', cost:265, weight:'4.2 kg', date:'2026-03-24', deliveredDate:'2026-03-28', events:[{date:'2026-03-28 16:00',text:'Entregado',loc:'Cancún'},{date:'2026-03-27 10:00',text:'En reparto',loc:'Cancún'},{date:'2026-03-26 08:00',text:'En tránsito',loc:'Centro Mérida'},{date:'2026-03-24 12:00',text:'Recolectado',loc:'CDMX'}] },
+  { id:7, tracking:'99M445566778', carrier:'99Min', client:'Gabriela Moreno Díaz', origin:'CDMX (06700)', dest:'CDMX (03910)', status:'delivered', cost:89, weight:'0.5 kg', date:'2026-03-31', deliveredDate:'2026-03-31', events:[{date:'2026-03-31 15:00',text:'Entregado',loc:'CDMX Mixcoac'},{date:'2026-03-31 13:30',text:'En reparto',loc:'CDMX'},{date:'2026-03-31 12:00',text:'Recolectado',loc:'CDMX Roma Norte'}] },
+  { id:8, tracking:'EST889900112', carrier:'Estafeta', client:'Diego Sánchez Vega', origin:'CDMX (03100)', dest:'Monterrey (64000)', status:'returned', cost:155, weight:'2.0 kg', date:'2026-03-22', events:[{date:'2026-03-27 10:00',text:'Devuelto a remitente',loc:'CDMX'},{date:'2026-03-26 08:00',text:'Intento de entrega fallido (3er intento)',loc:'Monterrey'},{date:'2026-03-24 09:00',text:'En reparto',loc:'Monterrey'},{date:'2026-03-22 14:00',text:'Recolectado',loc:'CDMX'}] },
+];
+
+const demoReturnLabels = [
+  { id:1, tracking:'RET-FDX001', originalTracking:'FDX123456789', client:'María García López', carrier:'FedEx', status:'picked_up', date:'2026-03-31' },
+  { id:2, tracking:'RET-EST001', originalTracking:'EST889900112', client:'Diego Sánchez Vega', carrier:'Estafeta', status:'delivered', date:'2026-03-29' },
+];
+
+const envAutoFlows = [
+  { id:'autoguide', name:'Generar guía al pagar', desc:'Cuando un pedido se marca como pagado, se genera la guía automáticamente con la paquetería más barata', icon:'📦', color:'#22c55e', active:true },
+  { id:'notify', name:'Notificar envío al cliente', desc:'Envía email y WhatsApp con el número de rastreo al generar la guía', icon:'📲', color:'#6fcff5', active:true },
+  { id:'tracking', name:'Alertas de rastreo', desc:'Notifica al cliente en cada cambio de estado del paquete', icon:'📍', color:'#8b5cf6', active:false },
+  { id:'pickup', name:'Programar recolección', desc:'Agenda recolección automática con la paquetería al crear guía', icon:'🚚', color:'#f97316', active:false },
+  { id:'insurance', name:'Seguro automático +$500', desc:'Agrega seguro de envío automático a paquetes con valor mayor a $500', icon:'🛡', color:'#eab308', active:false },
+  { id:'cheapest', name:'Siempre la más barata', desc:'Elige automáticamente la paquetería más económica disponible', icon:'💰', color:'#ec4899', active:true },
+];
+
+const statusMap = {
+  created:{l:'Creada',c:'#6fcff5',b:'rgba(111,207,245,0.1)'}, picked_up:{l:'Recolectada',c:'#eab308',b:'rgba(234,179,8,0.1)'},
+  in_transit:{l:'En tránsito',c:'#8b5cf6',b:'rgba(139,92,246,0.1)'}, out_for_delivery:{l:'En reparto',c:'#f97316',b:'rgba(249,115,22,0.1)'},
+  delivered:{l:'Entregada',c:'#22c55e',b:'rgba(34,197,94,0.1)'}, returned:{l:'Devuelta',c:'#ef4444',b:'rgba(239,68,68,0.1)'},
+};
+const carrierColors = { DHL:'#FFCC00', FedEx:'#4D148C', Estafeta:'#ED1C24', Redpack:'#E31937', '99Min':'#00C853' };
+
+// ═══════ HELPERS ═══════
+function envDismissHelp(t){document.getElementById('env-help-'+t).style.display='none';localStorage.setItem('env_help_'+t+'_dismissed','1');}
+function envToggleSection(id){const el=document.getElementById(id);el.style.display=el.style.display==='none'?'block':'none';}
+function showToast(msg){const ex=document.getElementById('env-toast');if(ex)ex.remove();const t=document.createElement('div');t.id='env-toast';t.textContent=msg;Object.assign(t.style,{position:'fixed',bottom:'24px',right:'24px',background:'#22c55e',color:'#fff',padding:'12px 24px',borderRadius:'10px',fontSize:'13px',fontWeight:'700',zIndex:'9999',animation:'fadeInUp 0.3s ease',boxShadow:'0 4px 20px rgba(0,0,0,0.3)'});document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(()=>t.remove(),300);},3000);}
+function switchEnvTab(tab){document.querySelectorAll('.env-tab').forEach(t=>t.classList.remove('active'));document.getElementById('env-tab-'+tab).classList.add('active');['shipments','quote','tracking','returns','analytics'].forEach(p=>document.getElementById('env-panel-'+p).style.display=p===tab?'':'none');}
+
+// ═══════ STATS ═══════
+function renderEnvStats(){
+  document.getElementById('env-stat-total').textContent=demoShipments.length;
+  document.getElementById('env-stat-transit').textContent=demoShipments.filter(s=>s.status==='in_transit'||s.status==='out_for_delivery').length;
+  document.getElementById('env-stat-delivered').textContent=demoShipments.filter(s=>s.status==='delivered').length;
+  const costs=demoShipments.map(s=>s.cost);const avg=Math.round(costs.reduce((a,b)=>a+b,0)/costs.length);
+  document.getElementById('env-stat-avg').textContent='$'+avg;
+  document.getElementById('env-stat-spent').textContent='$'+costs.reduce((a,b)=>a+b,0).toLocaleString();
+  document.getElementById('env-stat-returns').textContent=demoShipments.filter(s=>s.status==='returned').length;
+  setT('env-trend-total','+3');setT('env-trend-delivered','+2');setT('env-trend-avg','-$15');setT('env-trend-spent','+12%');
+}
+function setT(id,val){const el=document.getElementById(id);if(!el)return;const up=val.startsWith('+');const color=id.includes('spent')?(up?'#ef4444':'#22c55e'):id.includes('avg')?(up?'#ef4444':'#22c55e'):(up?'#22c55e':'#ef4444');el.innerHTML=`<span style="color:${color};">${up?'▲':'▼'} ${val}</span>`;}
+
+// ═══════ SMART RECS ═══════
+function renderEnvRecs(){
+  const el=document.getElementById('env-smart-recs');if(!el)return;const recs=[];
+  const created=demoShipments.filter(s=>s.status==='created');
+  if(created.length>0)recs.push({icon:'📦',color:'#eab308',title:`${created.length} guía(s) sin recolectar`,desc:'Programa la recolección para que la paquetería pase por ellas.',btn:'Programar',action:"showToast('Recolección programada')"});
+  const outForDel=demoShipments.filter(s=>s.status==='out_for_delivery');
+  if(outForDel.length>0)recs.push({icon:'🚚',color:'#f97316',title:`${outForDel.length} paquete(s) en reparto hoy`,desc:'Tu cliente recibirá su pedido hoy.',btn:'Ver detalle',action:"openEnvDetail(5)"});
+  const returned=demoShipments.filter(s=>s.status==='returned');
+  if(returned.length>0)recs.push({icon:'↩️',color:'#ef4444',title:`${returned.length} paquete devuelto`,desc:'Un envío fue devuelto. Revisa qué pasó.',btn:'Ver',action:"openEnvDetail(8)"});
+  if(!recs.length){el.style.display='none';return;}
+  el.style.display='flex';
+  el.innerHTML=recs.map(r=>`<div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;background:${r.color}08;border:1px solid ${r.color}20;"><span style="font-size:24px;flex-shrink:0;">${r.icon}</span><div style="flex:1;"><p style="font-size:13px;font-weight:700;color:var(--text-primary);">${r.title}</p><p style="font-size:11px;color:var(--text-muted);margin-top:2px;">${r.desc}</p></div><button onclick="${r.action}" style="padding:8px 16px;border-radius:8px;border:none;background:${r.color};color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">${r.btn}</button><button onclick="this.closest('div[style]').remove()" style="border:none;background:transparent;color:var(--text-faint);cursor:pointer;font-size:14px;padding:0 4px;">✕</button></div>`).join('');
+}
+
+// ═══════ SHIPMENTS TABLE ═══════
+function renderShipments(){
+  const tbody=document.getElementById('env-shipments-tbody');let data=[...demoShipments];
+  const search=document.getElementById('env-search').value.toLowerCase();
+  const cf=document.getElementById('env-filter-carrier').value;
+  const sf=document.getElementById('env-filter-status').value;
+  if(search)data=data.filter(s=>s.tracking.toLowerCase().includes(search)||s.client.toLowerCase().includes(search)||s.dest.toLowerCase().includes(search));
+  if(cf)data=data.filter(s=>s.carrier===cf);
+  if(sf)data=data.filter(s=>s.status===sf);
+  if(!data.length){tbody.innerHTML='<tr><td colspan="8" style="padding:40px;text-align:center;color:var(--text-faint);">No se encontraron guías</td></tr>';return;}
+  tbody.innerHTML=data.map(s=>{const st=statusMap[s.status];const cc=carrierColors[s.carrier]||'var(--accent)';return`<tr style="border-bottom:1px solid var(--border);transition:background 0.15s;cursor:pointer;" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background='transparent'" onclick="openEnvDetail(${s.id})">
+    <td style="padding:14px 16px;font-weight:700;color:var(--accent);font-size:12px;font-family:monospace;">${s.tracking}</td>
+    <td style="padding:14px 16px;"><div style="display:flex;align-items:center;gap:6px;"><div style="width:8px;height:8px;border-radius:2px;background:${cc};"></div><span style="font-size:12px;font-weight:600;color:var(--text-primary);">${s.carrier}</span></div></td>
+    <td style="padding:14px 16px;"><p style="font-weight:600;color:var(--text-primary);font-size:12px;">${s.client}</p><p style="font-size:11px;color:var(--text-faint);">${s.dest}</p></td>
+    <td style="padding:14px 16px;"><span style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;color:${st.c};background:${st.b};">${st.l}</span></td>
+    <td style="padding:14px 16px;text-align:right;font-weight:800;color:var(--text-primary);">$${s.cost}</td>
+    <td style="padding:14px 16px;font-size:12px;color:var(--text-muted);">${s.weight}</td>
+    <td style="padding:14px 16px;font-size:12px;color:var(--text-muted);">${s.date}</td>
+    <td style="padding:14px 16px;text-align:center;" onclick="event.stopPropagation()"><div style="display:flex;gap:4px;justify-content:center;"><button onclick="openEnvDetail(${s.id})" class="env-tbl-btn">Ver</button><button onclick="showToast('Etiqueta impresa')" class="env-tbl-btn">🖨</button></div></td>
+  </tr>`;}).join('');
+}
+function envFilter(){renderShipments();}
+
+// ═══════ SHIPMENT DETAIL ═══════
+function openEnvDetail(id){
+  const s=demoShipments.find(x=>x.id===id);if(!s)return;
+  const st=statusMap[s.status];const cc=carrierColors[s.carrier];
+  document.getElementById('env-detail-title').textContent='Guía '+s.tracking;
+  document.getElementById('env-detail-body').innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:14px;border-radius:10px;background:${st.b};border:1px solid ${st.c}30;">
+      <span style="font-size:24px;">${s.status==='delivered'?'✅':s.status==='returned'?'↩️':s.status==='out_for_delivery'?'🚚':'📦'}</span>
+      <div><p style="font-size:14px;font-weight:800;color:${st.c};">${st.l}</p><p style="font-size:12px;color:var(--text-muted);">${s.carrier} · ${s.weight} · $${s.cost} MXN</p></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+      <div><p class="env-label">Origen</p><p style="font-size:13px;color:var(--text-primary);">${s.origin}</p></div>
+      <div><p class="env-label">Destino</p><p style="font-size:13px;color:var(--text-primary);">${s.dest}</p></div>
+      <div><p class="env-label">Cliente</p><p style="font-size:13px;font-weight:700;color:var(--text-primary);">${s.client}</p></div>
+      <div><p class="env-label">Fecha de creación</p><p style="font-size:13px;color:var(--text-primary);">${s.date}</p></div>
+    </div>
+    <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:12px;">Historial de rastreo</h4>
+    <div style="display:flex;flex-direction:column;gap:0;">
+      ${s.events.map((e,i)=>`<div style="display:flex;gap:12px;padding:12px 0;${i<s.events.length-1?'border-bottom:1px solid var(--border);':''}">
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div style="width:10px;height:10px;border-radius:50%;background:${i===0?st.c:'var(--border)'};flex-shrink:0;"></div>
+          ${i<s.events.length-1?'<div style="width:2px;flex:1;background:var(--border);margin-top:4px;"></div>':''}
+        </div>
+        <div><p style="font-size:13px;font-weight:700;color:${i===0?st.c:'var(--text-primary)'};">${e.text}</p><p style="font-size:11px;color:var(--text-faint);">${e.date} · ${e.loc}</p></div>
+      </div>`).join('')}
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button onclick="envShowLabel(${s.id})" class="env-btn-primary" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;">🖨 Ver etiqueta</button>
+      <button onclick="envShowNotif(${s.id})" style="flex:0;padding:12px 16px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-primary);font-size:13px;font-weight:700;cursor:pointer;">📲 Ver notificación</button>
+      <button onclick="navigator.clipboard.writeText('${s.tracking}');showToast('Guía copiada')" style="flex:0;padding:12px 16px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-primary);font-size:13px;font-weight:700;cursor:pointer;">📋 Copiar guía</button>
+    </div>`;
+  document.getElementById('env-modal-detail').style.display='flex';
+}
+
+// ═══════ COTIZADOR ═══════
+function envCotizar(){
+  const dest=document.getElementById('env-q-dest').value;
+  if(!dest){alert('Ingresa el código postal de destino');return;}
+  const peso=parseFloat(document.getElementById('env-q-peso').value)||1;
+  const el=document.getElementById('env-q-results');
+  el.innerHTML='<div class="stat-card animate-in" style="padding:24px;text-align:center;"><p style="color:var(--text-muted);">Cotizando con 5 paqueterías...</p></div>';
+
+  setTimeout(()=>{
+    const base=peso*45;
+    const quotes=[
+      {carrier:'Estafeta',price:Math.round(base*0.85+25),days:'3-5 días',type:'Terrestre',logo:'#ED1C24'},
+      {carrier:'DHL',price:Math.round(base*1.2+40),days:'1-2 días',type:'Express',logo:'#FFCC00'},
+      {carrier:'FedEx',price:Math.round(base*1.1+35),days:'2-3 días',type:'Estándar',logo:'#4D148C'},
+      {carrier:'Redpack',price:Math.round(base*0.9+30),days:'3-4 días',type:'Terrestre',logo:'#E31937'},
+      {carrier:'99 Minutos',price:Math.round(base*0.7+20),days:'Mismo día',type:'Local CDMX',logo:'#00C853'},
+    ].sort((a,b)=>a.price-b.price);
+    const cheapest=quotes[0].carrier;
+
+    el.innerHTML=`<div style="display:flex;flex-direction:column;gap:12px;">${quotes.map(q=>`
+      <div class="env-quote-card ${q.carrier===cheapest?'env-quote-best':''}" onclick="envSelectQuote('${q.carrier}',${q.price})">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:12px;height:12px;border-radius:3px;background:${q.logo};flex-shrink:0;"></div>
+            <div>
+              <p style="font-size:14px;font-weight:800;color:var(--text-primary);">${q.carrier} ${q.carrier===cheapest?'<span style="font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(34,197,94,0.1);color:#22c55e;font-weight:700;margin-left:6px;">Más barata</span>':''}</p>
+              <p style="font-size:11px;color:var(--text-muted);">${q.type} · ${q.days}</p>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <p style="font-size:20px;font-weight:900;color:var(--text-primary);">$${q.price}</p>
+            <p style="font-size:10px;color:var(--text-faint);">MXN + IVA</p>
+          </div>
+        </div>
+      </div>`).join('')}
+      <p style="font-size:11px;color:var(--text-faint);text-align:center;margin-top:4px;">Precios incluyen recolección. Haz clic para generar la guía.</p>
+    </div>`;
+  },800);
+}
+
+function envSelectQuote(carrier,price){
+  demoShipments.unshift({id:Date.now(),tracking:carrier.substring(0,3).toUpperCase()+Date.now().toString().slice(-9),carrier:carrier.replace('99 Minutos','99Min'),client:'(Nueva guía)',origin:document.getElementById('env-q-origin').value,dest:document.getElementById('env-q-dest').value,status:'created',cost:price,weight:document.getElementById('env-q-peso').value+'kg',date:'2026-04-01',events:[{date:'2026-04-01',text:'Guía creada',loc:'CDMX'}]});
+  renderShipments();renderEnvStats();switchEnvTab('shipments');
+  showToast(`Guía generada con ${carrier} por $${price} MXN`);
+}
+
+// ═══════ TRACKING ═══════
+function envTrack(){
+  const num=document.getElementById('env-track-num').value.trim();
+  if(!num){alert('Ingresa un número de guía');return;}
+  const el=document.getElementById('env-track-result');
+  el.innerHTML='<p style="color:var(--text-muted);font-size:13px;padding:16px;">Buscando...</p>';
+
+  setTimeout(()=>{
+    const found=demoShipments.find(s=>s.tracking.toLowerCase()===num.toLowerCase());
+    if(found){
+      const st=statusMap[found.status];
+      el.innerHTML=`
+        <div style="padding:16px;border-radius:10px;border:1px solid ${st.c}30;background:${st.b};margin-bottom:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div><p style="font-size:16px;font-weight:900;color:${st.c};">${st.l}</p><p style="font-size:12px;color:var(--text-muted);">${found.carrier} · ${found.tracking}</p></div>
+            <span style="font-size:28px;">${found.status==='delivered'?'✅':found.status==='returned'?'↩️':'📦'}</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0;">
+          ${found.events.map((e,i)=>`<div style="display:flex;gap:12px;padding:10px 0;${i<found.events.length-1?'border-bottom:1px solid var(--border);':''}"><div style="width:8px;height:8px;border-radius:50%;background:${i===0?st.c:'var(--border)'};margin-top:4px;flex-shrink:0;"></div><div><p style="font-size:13px;font-weight:600;color:var(--text-primary);">${e.text}</p><p style="font-size:11px;color:var(--text-faint);">${e.date} · ${e.loc}</p></div></div>`).join('')}
+        </div>`;
+    } else {
+      el.innerHTML='<div style="padding:20px;text-align:center;border-radius:10px;border:1px solid var(--border);"><p style="font-size:14px;font-weight:700;color:var(--text-muted);">No se encontró la guía</p><p style="font-size:12px;color:var(--text-faint);margin-top:4px;">Verifica el número e intenta de nuevo</p></div>';
+    }
+  },600);
+}
+
+// ═══════ RETURN LABELS ═══════
+function renderReturnLabels(){
+  const tbody=document.getElementById('env-returns-tbody');
+  const rs={created:{l:'Creada',c:'#6fcff5',b:'rgba(111,207,245,0.1)'},picked_up:{l:'Recolectada',c:'#eab308',b:'rgba(234,179,8,0.1)'},in_transit:{l:'En tránsito',c:'#8b5cf6',b:'rgba(139,92,246,0.1)'},delivered:{l:'Recibida',c:'#22c55e',b:'rgba(34,197,94,0.1)'}};
+  tbody.innerHTML=demoReturnLabels.map(r=>{const st=rs[r.status]||rs.created;return`<tr style="border-bottom:1px solid var(--border);">
+    <td style="padding:14px 16px;font-weight:700;color:var(--accent);font-size:12px;font-family:monospace;">${r.tracking}</td>
+    <td style="padding:14px 16px;font-size:12px;color:var(--text-muted);font-family:monospace;">${r.originalTracking}</td>
+    <td style="padding:14px 16px;font-weight:600;color:var(--text-primary);">${r.client}</td>
+    <td style="padding:14px 16px;font-size:12px;color:var(--text-secondary);">${r.carrier}</td>
+    <td style="padding:14px 16px;"><span style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;color:${st.c};background:${st.b};">${st.l}</span></td>
+    <td style="padding:14px 16px;font-size:12px;color:var(--text-muted);">${r.date}</td>
+  </tr>`;}).join('');
+}
+
+// ═══════ ANALYTICS ═══════
+function renderEnvAnalytics(){
+  // By carrier
+  const carriers=[{n:'DHL',c:2,cost:355,color:'#FFCC00'},{n:'FedEx',c:2,cost:380,color:'#4D148C'},{n:'Estafeta',c:2,cost:280,color:'#ED1C24'},{n:'Redpack',c:1,cost:265,color:'#E31937'},{n:'99 Min',c:1,cost:89,color:'#00C853'}];
+  const maxCost=Math.max(...carriers.map(c=>c.cost));
+  document.getElementById('env-chart-carriers').innerHTML=carriers.map(c=>`<div style="display:flex;align-items:center;gap:12px;padding:8px 0;"><div style="display:flex;align-items:center;gap:6px;min-width:80px;"><div style="width:10px;height:10px;border-radius:3px;background:${c.color};"></div><span style="font-size:12px;font-weight:600;color:var(--text-primary);">${c.n}</span></div><div style="flex:1;height:8px;border-radius:4px;background:var(--input-bg);overflow:hidden;"><div style="height:100%;width:${(c.cost/maxCost)*100}%;background:${c.color};border-radius:4px;"></div></div><span style="font-size:12px;font-weight:800;color:var(--text-primary);min-width:60px;text-align:right;">$${c.cost}</span></div>`).join('');
+
+  // Delivery times
+  const times=[{n:'99 Min',days:0.2,color:'#00C853'},{n:'DHL',days:1.8,color:'#FFCC00'},{n:'FedEx',days:2.5,color:'#4D148C'},{n:'Estafeta',days:3.5,color:'#ED1C24'},{n:'Redpack',days:4.0,color:'#E31937'}];
+  document.getElementById('env-chart-times').innerHTML=times.map(t=>`<div style="display:flex;align-items:center;gap:12px;padding:8px 0;"><span style="min-width:70px;font-size:12px;font-weight:600;color:var(--text-primary);">${t.n}</span><div style="flex:1;height:8px;border-radius:4px;background:var(--input-bg);overflow:hidden;"><div style="height:100%;width:${(t.days/4)*100}%;background:${t.color};border-radius:4px;"></div></div><span style="font-size:12px;font-weight:800;color:var(--text-primary);min-width:50px;text-align:right;">${t.days}d</span></div>`).join('');
+
+  // Destinations
+  const dests=[{city:'Guadalajara',pct:22},{city:'Monterrey',pct:28},{city:'CDMX',pct:18},{city:'Puebla',pct:12},{city:'Cancún',pct:10},{city:'Querétaro',pct:10}];
+  document.getElementById('env-chart-destinations').innerHTML=dests.map((d,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;${i<dests.length-1?'border-bottom:1px solid var(--border);':''}"><div style="display:flex;align-items:center;gap:8px;"><span style="width:20px;height:20px;border-radius:6px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:var(--accent);">${i+1}</span><span style="font-size:13px;font-weight:600;color:var(--text-primary);">${d.city}</span></div><span style="font-size:13px;font-weight:800;color:var(--accent);">${d.pct}%</span></div>`).join('');
+
+  // Monthly shipments
+  const months=['Oct','Nov','Dic','Ene','Feb','Mar'],vals=[42,56,78,63,71,85],mV=Math.max(...vals);
+  document.getElementById('env-chart-monthly').innerHTML=months.map((m,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;background:var(--accent);border-radius:4px 4px 0 0;height:${(vals[i]/mV)*150}px;opacity:0.8;position:relative;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'"><span style="position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:var(--text-faint);">${vals[i]}</span></div><span style="font-size:10px;color:var(--text-faint);font-weight:600;">${m}</span></div>`).join('');
+}
+
+// ═══════ AUTOPILOT ═══════
+function renderEnvAutopilot(){
+  const el=document.getElementById('env-autopilot-list');if(!el)return;
+  el.innerHTML=envAutoFlows.map(f=>`<div style="padding:16px;border-radius:12px;border:1px solid ${f.active?f.color+'30':'var(--border)'};background:${f.active?f.color+'08':'var(--input-bg)'};">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:18px;">${f.icon}</span><span style="font-size:13px;font-weight:800;color:var(--text-primary);">${f.name}</span></div><label class="env-toggle-wrap"><input type="checkbox" ${f.active?'checked':''} onchange="envAutoFlows.find(x=>x.id==='${f.id}').active=this.checked;renderEnvAutopilot();showToast(this.checked?'Activado':'Desactivado')"/><span class="env-toggle-slider" style="${f.active?'--toggle-color:'+f.color:''}"></span></label></div>
+    <p style="font-size:11px;color:var(--text-muted);line-height:1.4;">${f.desc}</p></div>`).join('');
+}
+
+// ═══════ PESO VOLUMÉTRICO ═══════
+function envCalcVolumetric(){
+  const l=parseFloat(document.getElementById('env-q-largo')?.value)||30;
+  const w=parseFloat(document.getElementById('env-q-ancho')?.value)||20;
+  const h=parseFloat(document.getElementById('env-q-alto')?.value)||15;
+  const real=parseFloat(document.getElementById('env-q-peso')?.value)||1;
+  const vol=((l*w*h)/5000).toFixed(1);
+  const el=document.getElementById('env-vol-val');
+  const msg=document.getElementById('env-vol-msg');
+  if(el)el.textContent=vol+' kg';
+  if(msg){
+    if(parseFloat(vol)>real)msg.textContent=`⚠ Te cobrarán por peso volumétrico (${vol}kg) porque es mayor que el real (${real}kg)`;
+    else msg.textContent='✓ Te cobrarán por peso real porque es mayor que el volumétrico';
+  }
+}
+// Auto-calc on dimension change
+['env-q-largo','env-q-ancho','env-q-alto','env-q-peso'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('input',envCalcVolumetric);
+});
+
+// ═══════ GUÍAS MASIVAS ═══════
+function openEnvMassModal(){document.getElementById('env-modal-mass').style.display='flex';}
+function envMassPreview(input){
+  if(!input.files[0])return;
+  const file=input.files[0];const reader=new FileReader();
+  reader.onload=function(e){
+    const lines=e.target.result.split('\n').filter(l=>l.trim());
+    const total=lines.length-1;
+    document.getElementById('env-mass-preview').style.display='block';
+    document.getElementById('env-mass-preview').innerHTML=`<div style="padding:12px;border-radius:8px;background:var(--accent-bg);border:1px solid rgba(111,207,245,0.15);"><p style="font-size:13px;font-weight:700;color:var(--accent);">✓ ${file.name}</p><p style="font-size:11px;color:var(--text-muted);margin-top:2px;">${total} envíos encontrados</p></div>`;
+  };reader.readAsText(file);
+}
+function envMassGenerate(){
+  const preview=document.getElementById('env-mass-preview');
+  if(preview.style.display==='none'){showToast('Sube un archivo CSV primero');return;}
+  document.getElementById('env-modal-mass').style.display='none';
+  showToast('Guías masivas generadas (demo)');
+}
+
+// ═══════ ETIQUETA PREVIEW ═══════
+function envShowLabel(id){
+  const s=demoShipments.find(x=>x.id===id);if(!s)return;
+  document.getElementById('env-label-preview').innerHTML=`
+    <div style="text-align:center;border-bottom:2px dashed #000;padding-bottom:12px;margin-bottom:12px;">
+      <p style="font-size:18px;font-weight:900;letter-spacing:2px;">${s.carrier.toUpperCase()}</p>
+      <p style="font-size:11px;margin-top:4px;">GUÍA: ${s.tracking}</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+      <div><p style="font-size:9px;font-weight:700;text-transform:uppercase;">ORIGEN</p><p style="font-size:12px;font-weight:600;">${s.origin}</p></div>
+      <div><p style="font-size:9px;font-weight:700;text-transform:uppercase;">DESTINO</p><p style="font-size:12px;font-weight:600;">${s.dest}</p></div>
+    </div>
+    <div style="border-top:1px solid #ccc;padding-top:8px;margin-bottom:8px;">
+      <p style="font-size:9px;font-weight:700;text-transform:uppercase;">DESTINATARIO</p>
+      <p style="font-size:14px;font-weight:800;">${s.client}</p>
+    </div>
+    <div style="display:flex;justify-content:space-between;">
+      <div><p style="font-size:9px;font-weight:700;">PESO</p><p style="font-size:13px;font-weight:700;">${s.weight}</p></div>
+      <div style="text-align:right;"><p style="font-size:9px;font-weight:700;">FECHA</p><p style="font-size:13px;font-weight:700;">${s.date}</p></div>
+    </div>
+    <div style="margin-top:12px;padding:8px;background:#000;color:#fff;text-align:center;border-radius:4px;">
+      <p style="font-size:10px;font-family:monospace;letter-spacing:3px;">||||| ${s.tracking} |||||</p>
+    </div>`;
+  document.getElementById('env-modal-label').style.display='flex';
+}
+
+// ═══════ NOTIFICACIÓN PREVIEW ═══════
+function envShowNotif(id){
+  const s=demoShipments.find(x=>x.id===id);if(!s)return;
+  const st=statusMap[s.status];
+  document.getElementById('env-notif-preview').innerHTML=`
+    <p style="font-size:11px;color:var(--text-faint);margin-bottom:12px;">Así se verá el mensaje que recibe tu cliente:</p>
+    <!-- WhatsApp preview -->
+    <div style="background:#075e54;border-radius:12px;padding:16px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <div style="width:32px;height:32px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;"><svg style="width:16px;height:16px;color:#fff;" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg></div>
+        <span style="font-size:12px;font-weight:700;color:#fff;">WhatsApp</span>
+      </div>
+      <div style="background:#dcf8c6;border-radius:8px;padding:12px;color:#000;">
+        <p style="font-size:13px;line-height:1.5;">¡Hola ${s.client.split(' ')[0]}! 📦</p>
+        <p style="font-size:13px;line-height:1.5;margin-top:6px;">${s.status==='shipped'||s.status==='in_transit'?'Tu pedido ya va en camino.':'Tu pedido ha sido '+st.l.toLowerCase()+'.'}</p>
+        <p style="font-size:13px;line-height:1.5;margin-top:6px;"><strong>Guía:</strong> ${s.tracking}</p>
+        <p style="font-size:13px;line-height:1.5;"><strong>Paquetería:</strong> ${s.carrier}</p>
+        <p style="font-size:13px;line-height:1.5;margin-top:6px;">Rastrear aquí: <span style="color:#0066cc;text-decoration:underline;">skybrandmx.com/track/${s.tracking}</span></p>
+        <p style="font-size:10px;color:#666;margin-top:8px;">— Enviado desde SkyBrandMX</p>
+      </div>
+    </div>
+    <!-- Email preview -->
+    <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+      <div style="background:var(--accent);padding:10px 14px;"><p style="font-size:11px;font-weight:700;color:#fff;">📧 Email: Tu pedido ${s.status==='shipped'?'va en camino':'ha sido '+st.l.toLowerCase()}</p></div>
+      <div style="padding:12px;font-size:11px;color:var(--text-secondary);line-height:1.5;">
+        <p>Hola ${s.client.split(' ')[0]},</p>
+        <p style="margin-top:6px;">Tu número de rastreo es: <strong style="color:var(--accent);">${s.tracking}</strong></p>
+        <p>Paquetería: ${s.carrier} · Destino: ${s.dest}</p>
+      </div>
+    </div>`;
+  document.getElementById('env-modal-notif').style.display='flex';
+}
+
+// ═══════ TARIFF MAP ═══════
+function renderTariffMap(){
+  const el=document.getElementById('env-tariff-map');if(!el)return;
+  const states=[
+    {n:'CDMX',p:'$89',c:'#22c55e'},{n:'Edo. México',p:'$95',c:'#22c55e'},{n:'Querétaro',p:'$110',c:'#22c55e'},
+    {n:'Puebla',p:'$115',c:'#6fcff5'},{n:'Guadalajara',p:'$135',c:'#6fcff5'},{n:'Morelos',p:'$105',c:'#22c55e'},
+    {n:'Monterrey',p:'$155',c:'#eab308'},{n:'Mérida',p:'$185',c:'#eab308'},{n:'Cancún',p:'$195',c:'#f97316'},
+    {n:'Tijuana',p:'$220',c:'#f97316'},{n:'Hermosillo',p:'$210',c:'#f97316'},{n:'Chihuahua',p:'$200',c:'#f97316'},
+    {n:'Oaxaca',p:'$165',c:'#eab308'},{n:'Veracruz',p:'$145',c:'#eab308'},{n:'León',p:'$125',c:'#6fcff5'},
+    {n:'San Luis Potosí',p:'$140',c:'#eab308'},{n:'Aguascalientes',p:'$130',c:'#6fcff5'},{n:'Villahermosa',p:'$175',c:'#eab308'},
+  ];
+  el.innerHTML=states.map(s=>`<div style="padding:10px;border-radius:8px;background:${s.c}08;border:1px solid ${s.c}20;display:flex;align-items:center;justify-content:space-between;"><span style="font-size:12px;font-weight:600;color:var(--text-primary);">${s.n}</span><span style="font-size:13px;font-weight:800;color:${s.c};">${s.p}</span></div>`).join('');
+  el.insertAdjacentHTML('afterend',`<div style="display:flex;gap:16px;margin-top:12px;justify-content:center;">${[{l:'Cercano',c:'#22c55e'},{l:'Medio',c:'#6fcff5'},{l:'Lejano',c:'#eab308'},{l:'Muy lejano',c:'#f97316'}].map(x=>`<div style="display:flex;align-items:center;gap:4px;"><div style="width:8px;height:8px;border-radius:2px;background:${x.c};"></div><span style="font-size:10px;color:var(--text-faint);">${x.l}</span></div>`).join('')}</div>`);
+}
+
+// ═══════ INIT ═══════
+document.addEventListener('DOMContentLoaded',()=>{
+  ['shipments','quote','tracking','returns','analytics'].forEach(t=>{if(localStorage.getItem('env_help_'+t+'_dismissed')){const el=document.getElementById('env-help-'+t);if(el)el.style.display='none';}});
+  renderEnvRecs();renderEnvStats();renderShipments();renderReturnLabels();renderEnvAnalytics();renderEnvAutopilot();renderTariffMap();envCalcVolumetric();
+});
+['env-modal-detail','env-modal-mass','env-modal-label','env-modal-notif'].forEach(id=>{document.getElementById(id)?.addEventListener('click',function(e){if(e.target===this)this.style.display='none';});});
+</script>

@@ -112,6 +112,13 @@ const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:6100';
     formData.append('username', currentEmail);
     formData.append('password', currentPassword);
 
+    // Demo mode: bypass API when backend is not running
+    if (currentEmail === 'demo@skybrandmx.com' && currentPassword === 'demo') {
+      localStorage.setItem('skybrand_token', 'demo');
+      window.location.href = '/dashboard';
+      return;
+    }
+
     try {
       const res = await fetch(`${API_URL}/api/v1/auth/login`, {
         method: 'POST',
@@ -134,7 +141,8 @@ const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:6100';
         document.getElementById('code').focus();
       }
     } catch (err) {
-      error1.textContent = 'Error de conexión con el servidor.';
+      // If API is unreachable, show demo credentials hint
+      error1.innerHTML = 'No se pudo conectar al servidor. <br><span style="color:#6fcff5;font-weight:600;">Modo demo: usa demo@skybrandmx.com / demo</span>';
       error1.classList.remove('hidden');
       btn1.textContent = 'Continuar';
       btn1.disabled = false;

@@ -3,312 +3,521 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:6100';
 ---
 
-<DashboardLayout title="Configuraci&oacute;n">
-  <!-- Two column layout -->
-  <div style="display:grid;grid-template-columns:320px 1fr;gap:20px;">
-    <!-- Left: Profile card -->
+<DashboardLayout title="Configuración">
+  <!-- Tabs lateral -->
+  <div style="display:grid;grid-template-columns:220px 1fr;gap:20px;">
+    <!-- Left: Menu -->
     <div>
-      <div class="stat-card animate-in" style="text-align:center;padding:32px 24px;">
-        <!-- Logo -->
-        <div id="company-logo-preview" style="width:100px;height:100px;border-radius:20px;background:linear-gradient(135deg,var(--accent-gradient-start),var(--accent-gradient-end));display:flex;align-items:center;justify-content:center;margin:0 auto 16px;overflow:hidden;cursor:pointer;transition:all 0.3s;position:relative;box-shadow:0 8px 32px rgba(0,0,0,0.2);" onclick="document.getElementById('logo-upload').click()" onmouseover="this.querySelector('.logo-overlay').style.opacity='1'" onmouseout="this.querySelector('.logo-overlay').style.opacity='0'">
-          <span id="company-logo-initials" style="font-size:36px;font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.2);">S</span>
-          <img id="company-logo-img" src="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;" />
-          <div class="logo-overlay" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;opacity:0;transition:opacity 0.2s;border-radius:20px;">
-            <svg style="width:20px;height:20px;color:#fff;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            <span style="font-size:10px;font-weight:700;color:#fff;">Cambiar</span>
-          </div>
-          <input type="file" id="logo-upload" accept="image/*" style="display:none;" />
-        </div>
-        <h3 id="profile-company-name" style="font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">Mi empresa</h3>
-        <p id="profile-email" style="font-size:12px;color:var(--text-faint);margin-bottom:16px;">serratos@skybrandmx.com</p>
-        <div style="display:flex;gap:8px;justify-content:center;">
-          <button onclick="document.getElementById('logo-upload').click()" style="padding:8px 16px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">Subir logo</button>
-          <button id="remove-logo-btn" onclick="removeLogo()" style="display:none;padding:8px 16px;border-radius:10px;border:1px solid rgba(239,68,68,0.3);background:transparent;color:#ef4444;font-size:11px;font-weight:700;cursor:pointer;">Quitar</button>
-        </div>
-        <!-- Plan badge -->
-        <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
-          <div style="display:flex;align-items:center;justify-content:center;gap:6px;">
-            <div style="width:8px;height:8px;border-radius:50%;background:#22c55e;"></div>
-            <span style="font-size:12px;font-weight:700;color:var(--text-secondary);">Plan Growth</span>
-          </div>
-          <p style="font-size:11px;color:var(--text-faintest);margin-top:4px;">$1,999 MXN/mes</p>
-        </div>
+      <div class="stat-card animate-in" style="padding:8px;">
+        <button onclick="switchCfgTab('company')" id="cfg-nav-company" class="cfg-nav-item active">
+          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          Mi empresa
+        </button>
+        <button onclick="switchCfgTab('account')" id="cfg-nav-account" class="cfg-nav-item">
+          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          Mi cuenta
+        </button>
+        <button onclick="switchCfgTab('team')" id="cfg-nav-team" class="cfg-nav-item">
+          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Equipo
+        </button>
+        <button onclick="switchCfgTab('integrations')" id="cfg-nav-integrations" class="cfg-nav-item">
+          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+          Integraciones
+        </button>
+        <button onclick="switchCfgTab('notifications')" id="cfg-nav-notifications" class="cfg-nav-item">
+          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+          Notificaciones
+        </button>
+        <button onclick="switchCfgTab('billing')" id="cfg-nav-billing" class="cfg-nav-item">
+          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          Suscripción y pagos
+        </button>
+        <button onclick="switchCfgTab('appearance')" id="cfg-nav-appearance" class="cfg-nav-item">
+          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+          Apariencia
+        </button>
+        <button onclick="switchCfgTab('security')" id="cfg-nav-security" class="cfg-nav-item">
+          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          Seguridad
+        </button>
+        <div style="border-top:1px solid var(--border);margin:8px 0;"></div>
+        <button onclick="switchCfgTab('danger')" id="cfg-nav-danger" class="cfg-nav-item" style="color:#ef4444;">
+          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          Zona de peligro
+        </button>
       </div>
     </div>
 
-    <!-- Right: Forms -->
+    <!-- Right: Content -->
     <div>
-      <!-- Company info -->
-      <div class="stat-card animate-in" style="margin-bottom:20px;">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
-          <div style="width:32px;height:32px;border-radius:10px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;">
-            <svg style="width:16px;height:16px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-          </div>
-          <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);">Datos de empresa</h3>
-        </div>
-        <div style="display:grid;gap:16px;">
-          <div>
-            <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">Nombre de la empresa</label>
-            <input id="settings-company-name" type="text" placeholder="Ej: SkyBrandMX S.A. de C.V." style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-weight:600;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-            <div>
-              <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">RFC</label>
-              <input id="settings-rfc" type="text" placeholder="XAXX010101000" style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-weight:600;text-transform:uppercase;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+      <!-- ══════════ Mi empresa ══════════ -->
+      <div id="cfg-panel-company" class="cfg-panel">
+        <div class="stat-card animate-in" style="padding:24px;">
+          <h3 class="cfg-section-title">Mi empresa</h3>
+          <p class="cfg-section-desc">La información de tu negocio. Se usa en facturas, emails y tu panel.</p>
+          <!-- Logo -->
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;padding:16px;border-radius:12px;background:var(--input-bg);">
+            <div id="cfg-logo" style="width:72px;height:72px;border-radius:16px;background:linear-gradient(135deg,var(--accent-gradient-start),var(--accent-gradient-end));display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;flex-shrink:0;" onclick="document.getElementById('cfg-logo-file').click()">
+              <span id="cfg-logo-initial" style="font-size:28px;font-weight:900;color:#fff;">S</span>
+              <input type="file" id="cfg-logo-file" accept="image/*" style="display:none;" onchange="cfgUploadLogo(this)"/>
             </div>
             <div>
-              <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">R&eacute;gimen fiscal</label>
-              <select style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--bg-sidebar);color:var(--text-primary);font-size:13px;font-weight:600;-webkit-appearance:none;appearance:none;background-image:url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2364748b%22 stroke-width=%222%22%3E%3Cpath d=%22M6 9l6 6 6-6%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 16px center;padding-right:40px;cursor:pointer;">
-                <option value="">Seleccionar...</option>
-                <option>601 - General de Ley</option>
-                <option>612 - Personas F&iacute;sicas con Act. Empresarial</option>
-                <option>621 - Incorporaci&oacute;n Fiscal</option>
-                <option>626 - Simplificado de Confianza</option>
-              </select>
+              <p style="font-size:13px;font-weight:700;color:var(--text-primary);">Logo de tu empresa</p>
+              <p style="font-size:11px;color:var(--text-faint);">JPG, PNG o SVG. Máximo 2MB. Se muestra en facturas, emails y tu panel.</p>
+              <button onclick="document.getElementById('cfg-logo-file').click()" style="margin-top:6px;padding:5px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;font-weight:600;cursor:pointer;">Subir logo</button>
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-            <div>
-              <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">Tel&eacute;fono</label>
-              <input type="tel" placeholder="+52 55 1234 5678" style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-weight:600;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+          <!-- Form -->
+          <div style="display:grid;gap:16px;">
+            <div><label class="cfg-label">Nombre de la empresa</label><input id="cfg-company-name" type="text" value="SkyBrandMX" class="cfg-input"/></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div><label class="cfg-label">RFC</label><input id="cfg-rfc" type="text" placeholder="XAXX010101000" class="cfg-input"/></div>
+              <div>
+                <label class="cfg-label">Régimen fiscal</label>
+                <select id="cfg-regimen" class="cfg-input" style="cursor:pointer;">
+                  <option value="">Seleccionar...</option>
+                  <option value="601">601 - General de Ley</option>
+                  <option value="603">603 - Personas Morales sin fines de lucro</option>
+                  <option value="612" selected>612 - Personas Físicas con Act. Empresarial</option>
+                  <option value="621">621 - Incorporación Fiscal</option>
+                  <option value="626">626 - Simplificado de Confianza</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">Sitio web</label>
-              <input type="url" placeholder="https://tuempresa.com" style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-weight:600;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div><label class="cfg-label">Teléfono</label><input id="cfg-phone" type="tel" placeholder="+52 55 1234 5678" class="cfg-input"/></div>
+              <div><label class="cfg-label">Sitio web</label><input id="cfg-website" type="url" placeholder="https://mitienda.com" class="cfg-input"/></div>
+            </div>
+            <div><label class="cfg-label">Dirección fiscal</label><input id="cfg-address" type="text" placeholder="Calle, Número, Colonia, CP, Ciudad, Estado" class="cfg-input"/></div>
+          </div>
+          <button onclick="cfgSave('empresa')" class="cfg-save-btn">Guardar cambios</button>
+        </div>
+      </div>
+
+      <!-- ══════════ Mi cuenta ══════════ -->
+      <div id="cfg-panel-account" class="cfg-panel" style="display:none;">
+        <div class="stat-card animate-in" style="padding:24px;">
+          <h3 class="cfg-section-title">Mi cuenta</h3>
+          <p class="cfg-section-desc">Tu información personal como administrador.</p>
+          <div style="display:grid;gap:16px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div><label class="cfg-label">Nombre completo</label><input id="cfg-fullname" type="text" value="Eduardo Serratos" class="cfg-input"/></div>
+              <div><label class="cfg-label">Email</label><input id="cfg-email" type="email" value="serratos@skybrandmx.com" class="cfg-input" disabled style="opacity:0.6;"/><p style="font-size:10px;color:var(--text-faint);margin-top:4px;">Para cambiar email, contacta soporte</p></div>
+            </div>
+            <div><label class="cfg-label">Idioma</label><select id="cfg-lang" class="cfg-input" style="cursor:pointer;"><option value="es" selected>Español (México)</option><option value="en">English</option><option value="pt">Português</option></select></div>
+            <div><label class="cfg-label">Zona horaria</label><select id="cfg-tz" class="cfg-input" style="cursor:pointer;"><option value="America/Mexico_City" selected>Ciudad de México (GMT-6)</option><option value="America/Cancun">Cancún (GMT-5)</option><option value="America/Tijuana">Tijuana (GMT-8)</option><option value="America/Hermosillo">Hermosillo (GMT-7)</option></select></div>
+          </div>
+          <button onclick="cfgSave('cuenta')" class="cfg-save-btn">Guardar cambios</button>
+        </div>
+      </div>
+
+      <!-- ══════════ Equipo ══════════ -->
+      <div id="cfg-panel-team" class="cfg-panel" style="display:none;">
+        <div class="stat-card animate-in" style="padding:24px;">
+          <h3 class="cfg-section-title">Mi equipo</h3>
+          <p class="cfg-section-desc">Invita a tu equipo y asígnales un rol. Cada persona solo ve lo que necesita.</p>
+          <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+            <button onclick="cfgInviteTeam()" style="padding:10px 20px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">
+              <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Invitar persona
+            </button>
+          </div>
+          <div id="cfg-team-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+      </div>
+
+      <!-- ══════════ Integraciones ══════════ -->
+      <div id="cfg-panel-integrations" class="cfg-panel" style="display:none;">
+        <div class="stat-card animate-in" style="padding:24px;">
+          <h3 class="cfg-section-title">Integraciones</h3>
+          <p class="cfg-section-desc">Conecta tus herramientas favoritas. Solo haz clic en "Conectar" y sigue los pasos.</p>
+          <div id="cfg-integrations-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+        </div>
+      </div>
+
+      <!-- ══════════ Notificaciones ══════════ -->
+      <div id="cfg-panel-notifications" class="cfg-panel" style="display:none;">
+        <div class="stat-card animate-in" style="padding:24px;">
+          <h3 class="cfg-section-title">Notificaciones</h3>
+          <p class="cfg-section-desc">Elige cómo y cuándo quieres que te avisemos. Puedes activar o desactivar cada una.</p>
+          <div id="cfg-notif-list" style="display:flex;flex-direction:column;gap:0;"></div>
+        </div>
+      </div>
+
+      <!-- ══════════ Suscripción y pagos ══════════ -->
+      <div id="cfg-panel-billing" class="cfg-panel" style="display:none;">
+        <div class="stat-card animate-in" style="padding:24px;">
+          <h3 class="cfg-section-title">Mi suscripción</h3>
+          <p class="cfg-section-desc">Tu plan actual y facturas.</p>
+          <div id="cfg-plan-card" style="padding:20px;border-radius:12px;background:linear-gradient(135deg,rgba(111,207,245,0.06),rgba(139,92,246,0.06));border:1px solid rgba(111,207,245,0.15);margin-bottom:20px;"></div>
+          <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:12px;">Historial de pagos</h4>
+          <div id="cfg-invoices-list" style="display:flex;flex-direction:column;gap:0;"></div>
+          <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin:20px 0 12px;">Método de pago</h4>
+          <div id="cfg-payment-method" style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);"></div>
+        </div>
+      </div>
+
+      <!-- ══════════ Apariencia ══════════ -->
+      <div id="cfg-panel-appearance" class="cfg-panel" style="display:none;">
+        <div class="stat-card animate-in" style="padding:24px;">
+          <h3 class="cfg-section-title">Apariencia</h3>
+          <p class="cfg-section-desc">Personaliza cómo se ve tu panel. Los cambios son solo para ti.</p>
+          <!-- Theme -->
+          <div style="margin-bottom:20px;">
+            <label class="cfg-label">Modo</label>
+            <div style="display:flex;gap:10px;">
+              <button onclick="cfgSetTheme('dark')" id="cfg-theme-dark" class="cfg-theme-btn active">
+                <span style="font-size:20px;">🌙</span><span style="font-size:12px;font-weight:700;">Oscuro</span>
+              </button>
+              <button onclick="cfgSetTheme('light')" id="cfg-theme-light" class="cfg-theme-btn">
+                <span style="font-size:20px;">☀️</span><span style="font-size:12px;font-weight:700;">Claro</span>
+              </button>
             </div>
           </div>
+          <!-- Color -->
           <div>
-            <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">Direcci&oacute;n fiscal</label>
-            <input type="text" placeholder="Calle, Numero, Colonia, CP, Ciudad, Estado" style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-weight:600;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
-          </div>
-          <div style="display:flex;gap:10px;">
-            <button style="padding:12px 28px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:800;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.opacity='0.9';this.style.transform='translateY(-1px)'" onmouseout="this.style.opacity='1';this.style.transform='none'">Guardar cambios</button>
+            <label class="cfg-label">Color de tu panel</label>
+            <div style="display:flex;gap:8px;margin-bottom:12px;" id="cfg-color-presets"></div>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <input type="color" id="cfg-color-picker" value="#6fcff5" style="width:40px;height:40px;border:none;border-radius:8px;cursor:pointer;"/>
+              <input type="text" id="cfg-color-hex" value="#6fcff5" class="cfg-input" style="width:120px;font-family:monospace;font-size:12px;" oninput="document.getElementById('cfg-color-picker').value=this.value"/>
+              <button onclick="cfgApplyColor()" style="padding:8px 16px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:700;cursor:pointer;">Aplicar</button>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Personal Account -->
-      <div class="stat-card animate-in" style="margin-bottom:20px;">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
-          <div style="width:32px;height:32px;border-radius:10px;background:rgba(168,85,247,0.1);display:flex;align-items:center;justify-content:center;">
-            <svg style="width:16px;height:16px;color:#a855f7;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+      <!-- ══════════ Seguridad ══════════ -->
+      <div id="cfg-panel-security" class="cfg-panel" style="display:none;">
+        <div class="stat-card animate-in" style="padding:24px;">
+          <h3 class="cfg-section-title">Seguridad</h3>
+          <p class="cfg-section-desc">Protege tu cuenta con una contraseña fuerte y verificación en dos pasos.</p>
+          <!-- Password -->
+          <div style="margin-bottom:24px;">
+            <h4 style="font-size:13px;font-weight:800;color:var(--text-primary);margin-bottom:12px;">Cambiar contraseña</h4>
+            <div style="display:grid;gap:12px;max-width:400px;">
+              <div><label class="cfg-label">Contraseña actual</label><input type="password" id="cfg-pw-current" class="cfg-input" placeholder="••••••••"/></div>
+              <div><label class="cfg-label">Nueva contraseña</label><input type="password" id="cfg-pw-new" class="cfg-input" placeholder="Mínimo 8 caracteres"/></div>
+              <div><label class="cfg-label">Confirmar nueva contraseña</label><input type="password" id="cfg-pw-confirm" class="cfg-input" placeholder="Repite la nueva contraseña"/></div>
+              <button onclick="cfgChangePassword()" style="padding:10px 20px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;width:fit-content;">Cambiar contraseña</button>
+            </div>
           </div>
-          <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);">Mi cuenta</h3>
+          <!-- 2FA -->
+          <div style="padding:16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:36px;height:36px;border-radius:10px;background:rgba(34,197,94,0.1);display:flex;align-items:center;justify-content:center;">
+                  <svg style="width:18px;height:18px;color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                </div>
+                <div>
+                  <p style="font-size:13px;font-weight:700;color:var(--text-primary);">Verificación en dos pasos (2FA)</p>
+                  <p style="font-size:11px;color:var(--text-faint);">Te enviamos un código por email cada vez que inicias sesión</p>
+                </div>
+              </div>
+              <span style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;color:#22c55e;background:rgba(34,197,94,0.1);">Activo</span>
+            </div>
+          </div>
+          <!-- Sessions -->
+          <div style="margin-top:20px;">
+            <h4 style="font-size:13px;font-weight:800;color:var(--text-primary);margin-bottom:12px;">Sesiones activas</h4>
+            <div id="cfg-sessions-list"></div>
+          </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-          <div>
-            <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">Nombre completo</label>
-            <input id="settings-name" type="text" placeholder="Tu nombre" style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-weight:600;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">Email</label>
-            <input id="settings-email" type="email" disabled style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-muted);font-size:13px;font-weight:600;cursor:not-allowed;opacity:0.6;" />
+      </div>
+
+      <!-- ══════════ Zona de peligro ══════════ -->
+      <div id="cfg-panel-danger" class="cfg-panel" style="display:none;">
+        <div class="stat-card animate-in" style="padding:24px;border-color:rgba(239,68,68,0.2);">
+          <h3 class="cfg-section-title" style="color:#ef4444;">Zona de peligro</h3>
+          <p class="cfg-section-desc">Acciones irreversibles. Ten cuidado.</p>
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;border-radius:10px;border:1px solid var(--border);">
+              <div><p style="font-size:13px;font-weight:700;color:var(--text-primary);">Exportar todos mis datos</p><p style="font-size:11px;color:var(--text-faint);">Descarga una copia de toda tu información</p></div>
+              <button onclick="cfgToast('Exportación iniciada. Te enviaremos un link por email.')" style="padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;">Exportar</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;border-radius:10px;border:1px solid var(--border);">
+              <div><p style="font-size:13px;font-weight:700;color:var(--text-primary);">Cerrar sesión en todos los dispositivos</p><p style="font-size:11px;color:var(--text-faint);">Cierra tu cuenta en todas las computadoras y celulares</p></div>
+              <button onclick="if(confirm('¿Cerrar sesión en todos tus dispositivos?')){localStorage.removeItem('skybrand_token');window.location.href='/login';}" style="padding:8px 16px;border-radius:8px;border:1px solid #f97316;background:transparent;color:#f97316;font-size:12px;font-weight:700;cursor:pointer;">Cerrar todas</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;border-radius:10px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.03);">
+              <div><p style="font-size:13px;font-weight:700;color:#ef4444;">Eliminar mi cuenta</p><p style="font-size:11px;color:var(--text-faint);">Se borran todos tus datos permanentemente. No se puede deshacer.</p></div>
+              <button onclick="if(confirm('⚠ ¿Estás SEGURO? Se eliminarán TODOS tus datos, contactos, pedidos y configuraciones. Esta acción NO se puede deshacer.')){cfgToast('Solicitud enviada. Te contactaremos para confirmar.');}" style="padding:8px 16px;border-radius:8px;border:1px solid #ef4444;background:transparent;color:#ef4444;font-size:12px;font-weight:700;cursor:pointer;">Eliminar cuenta</button>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-
-  <!-- Integrations -->
-  <div class="stat-card animate-in" style="margin-bottom:20px;">
-    <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);margin-bottom:16px;">Integraciones</h3>
-    <div style="display:flex;flex-direction:column;gap:12px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:36px;height:36px;border-radius:10px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;">
-            <svg style="width:18px;height:18px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-          </div>
-          <div>
-            <p style="font-size:13px;font-weight:700;color:var(--text-primary);">Shopify / WooCommerce</p>
-            <p style="font-size:11px;color:var(--text-faint);">Sincroniza productos y pedidos</p>
-          </div>
-        </div>
-        <span style="font-size:11px;font-weight:700;color:var(--text-faintest);background:var(--input-bg);border:1px solid var(--border);padding:4px 10px;border-radius:6px;">Pr&oacute;ximamente</span>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:36px;height:36px;border-radius:10px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;">
-            <svg style="width:18px;height:18px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z"/></svg>
-          </div>
-          <div>
-            <p style="font-size:13px;font-weight:700;color:var(--text-primary);">Facturama / SAT</p>
-            <p style="font-size:11px;color:var(--text-faint);">Facturaci&oacute;n electr&oacute;nica CFDI 4.0</p>
-          </div>
-        </div>
-        <span style="font-size:11px;font-weight:700;color:var(--text-faintest);background:var(--input-bg);border:1px solid var(--border);padding:4px 10px;border-radius:6px;">Pr&oacute;ximamente</span>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:36px;height:36px;border-radius:10px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;">
-            <svg style="width:18px;height:18px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-          </div>
-          <div>
-            <p style="font-size:13px;font-weight:700;color:var(--text-primary);">Estafeta / FedEx / DHL</p>
-            <p style="font-size:11px;color:var(--text-faint);">Gu&iacute;as y rastreo autom&aacute;tico</p>
-          </div>
-        </div>
-        <span style="font-size:11px;font-weight:700;color:var(--text-faintest);background:var(--input-bg);border:1px solid var(--border);padding:4px 10px;border-radius:6px;">Pr&oacute;ximamente</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Appearance -->
-  <div class="stat-card animate-in" style="margin-bottom:20px;">
-    <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);margin-bottom:16px;">Apariencia</h3>
-    <div style="display:flex;flex-direction:column;gap:16px;">
-      <!-- Theme mode -->
-      <div>
-        <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:8px;">Modo</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <button id="setting-mode-dark" onclick="setThemeMode('dark')" style="padding:14px;border-radius:12px;border:2px solid var(--accent);background:var(--input-bg);cursor:pointer;text-align:center;transition:all 0.2s;">
-            <svg style="width:20px;height:20px;color:var(--text-muted);margin:0 auto 4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-            <p style="font-size:12px;font-weight:700;color:var(--text-secondary);">Oscuro</p>
-          </button>
-          <button id="setting-mode-light" onclick="setThemeMode('light')" style="padding:14px;border-radius:12px;border:2px solid var(--border);background:var(--input-bg);cursor:pointer;text-align:center;transition:all 0.2s;">
-            <svg style="width:20px;height:20px;color:var(--text-muted);margin:0 auto 4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-            <p style="font-size:12px;font-weight:700;color:var(--text-secondary);">Claro</p>
-          </button>
-        </div>
-      </div>
-      <!-- Accent color -->
-      <div>
-        <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:8px;">Color del tema</label>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
-          <button class="color-swatch selected" style="background:#6fcff5;width:36px;height:36px;border-radius:10px;border:2px solid transparent;cursor:pointer;" onclick="setAccentColor('#6fcff5','#084D6E')"></button>
-          <button class="color-swatch" style="background:#22c55e;width:36px;height:36px;border-radius:10px;border:2px solid transparent;cursor:pointer;" onclick="setAccentColor('#22c55e','#166534')"></button>
-          <button class="color-swatch" style="background:#3b82f6;width:36px;height:36px;border-radius:10px;border:2px solid transparent;cursor:pointer;" onclick="setAccentColor('#3b82f6','#1e40af')"></button>
-          <button class="color-swatch" style="background:#8b5cf6;width:36px;height:36px;border-radius:10px;border:2px solid transparent;cursor:pointer;" onclick="setAccentColor('#8b5cf6','#5b21b6')"></button>
-          <button class="color-swatch" style="background:#ec4899;width:36px;height:36px;border-radius:10px;border:2px solid transparent;cursor:pointer;" onclick="setAccentColor('#ec4899','#9d174d')"></button>
-          <button class="color-swatch" style="background:#f97316;width:36px;height:36px;border-radius:10px;border:2px solid transparent;cursor:pointer;" onclick="setAccentColor('#f97316','#9a3412')"></button>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input type="color" id="settings-custom-color" value="#6fcff5" style="width:40px;height:40px;border:none;border-radius:8px;cursor:pointer;background:transparent;padding:0;" />
-          <input type="text" id="settings-custom-hex" value="#6fcff5" placeholder="#hex" style="flex:1;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-family:monospace;" />
-          <button onclick="const h=document.getElementById('settings-custom-hex').value;if(/^#[0-9a-fA-F]{6}$/.test(h))setAccentColor(h,h);" style="padding:10px 16px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:800;cursor:pointer;">Aplicar</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Subscription -->
-  <div class="stat-card animate-in" style="margin-bottom:20px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);">Suscripci&oacute;n</h3>
-      <span style="font-size:11px;font-weight:800;color:#22c55e;background:rgba(34,197,94,0.1);padding:4px 12px;border-radius:999px;">Activa</span>
-    </div>
-    <div style="padding:16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);margin-bottom:16px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <div>
-          <p style="font-size:14px;font-weight:800;color:var(--text-primary);">Plan Growth</p>
-          <p style="font-size:12px;color:var(--text-faint);">Facturaci&oacute;n mensual</p>
-        </div>
-        <p style="font-size:24px;font-weight:900;color:var(--text-primary);">$1,999<span style="font-size:12px;font-weight:600;color:var(--text-faint);">/mes</span></p>
-      </div>
-      <div style="height:4px;border-radius:999px;background:var(--border);overflow:hidden;">
-        <div style="height:100%;width:45%;border-radius:999px;background:var(--accent);"></div>
-      </div>
-      <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">15 de 30 d&iacute;as del ciclo actual. Pr&oacute;ximo cobro: 15 abril 2026</p>
-    </div>
-    <div style="display:flex;gap:8px;">
-      <button style="padding:10px 20px;border-radius:10px;border:1px solid var(--accent);background:transparent;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;">Cambiar plan</button>
-      <button style="padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;">Ver facturas</button>
-    </div>
-  </div>
-
-  <!-- Security -->
-  <div class="stat-card animate-in" style="margin-bottom:20px;">
-    <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);margin-bottom:16px;">Seguridad</h3>
-    <div style="display:grid;gap:14px;">
-      <div>
-        <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">Contrase&ntilde;a actual</label>
-        <input type="password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;" />
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-        <div>
-          <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">Nueva contrase&ntilde;a</label>
-          <input type="password" placeholder="M&iacute;nimo 8 caracteres" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;" />
-        </div>
-        <div>
-          <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">Confirmar nueva contrase&ntilde;a</label>
-          <input type="password" placeholder="Repite la contrase&ntilde;a" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;" />
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);">
-        <div>
-          <p style="font-size:13px;font-weight:700;color:var(--text-primary);">Autenticaci&oacute;n 2FA</p>
-          <p style="font-size:11px;color:var(--text-faint);">C&oacute;digo por email al iniciar sesi&oacute;n</p>
-        </div>
-        <span style="font-size:11px;font-weight:800;color:#22c55e;background:rgba(34,197,94,0.1);padding:4px 10px;border-radius:6px;">Activo</span>
-      </div>
-      <button style="padding:12px 20px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:800;cursor:pointer;width:fit-content;">Actualizar contrase&ntilde;a</button>
-    </div>
-  </div>
-
-  <!-- Danger zone -->
-  <div class="stat-card animate-in" style="border-color:rgba(239,68,68,0.2);">
-    <h3 style="font-size:16px;font-weight:900;color:#ef4444;margin-bottom:8px;">Zona de peligro</h3>
-    <p style="font-size:12px;color:var(--text-faint);margin-bottom:16px;">Estas acciones son irreversibles. Ten cuidado.</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button onclick="localStorage.removeItem('skybrand_token');window.location.href='/login';" style="padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;">Cerrar sesi&oacute;n</button>
-      <button style="padding:10px 20px;border-radius:10px;border:1px solid #ef4444;background:transparent;color:#ef4444;font-size:12px;font-weight:700;cursor:pointer;" onclick="if(confirm('Estas seguro que quieres eliminar tu cuenta? Esta accion no se puede deshacer.'))alert('Funcionalidad en desarrollo. Contacta a soporte.')">Eliminar mi cuenta</button>
-    </div>
-  </div>
-
-  <script define:vars={{ API_URL }}>
-    // Logo upload preview
-    document.getElementById('logo-upload')?.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      if (file.size > 2 * 1024 * 1024) { alert('El archivo es muy grande. Maximo 2MB.'); return; }
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const img = document.getElementById('company-logo-img');
-        const initials = document.getElementById('company-logo-initials');
-        const removeBtn = document.getElementById('remove-logo-btn');
-        img.src = ev.target.result;
-        img.style.display = 'block';
-        initials.style.display = 'none';
-        removeBtn.style.display = 'inline-block';
-        localStorage.setItem('skybrand_company_logo', ev.target.result);
-      };
-      reader.readAsDataURL(file);
-    });
-
-    window.removeLogo = function() {
-      document.getElementById('company-logo-img').style.display = 'none';
-      document.getElementById('company-logo-initials').style.display = 'block';
-      document.getElementById('remove-logo-btn').style.display = 'none';
-      document.getElementById('logo-upload').value = '';
-      localStorage.removeItem('skybrand_company_logo');
-    };
-
-    // Load saved logo
-    const savedLogo = localStorage.getItem('skybrand_company_logo');
-    if (savedLogo) {
-      const img = document.getElementById('company-logo-img');
-      if (img) { img.src = savedLogo; img.style.display = 'block'; }
-      const initials = document.getElementById('company-logo-initials');
-      if (initials) initials.style.display = 'none';
-      const removeBtn = document.getElementById('remove-logo-btn');
-      if (removeBtn) removeBtn.style.display = 'inline-block';
-    }
-
-    // Sync color picker
-    document.getElementById('settings-custom-color')?.addEventListener('input', (e) => {
-      document.getElementById('settings-custom-hex').value = e.target.value;
-    });
-
-    // Fill user settings on auth
-    function fillSettings(user) {
-      const settingsName = document.getElementById('settings-name');
-      const settingsEmail = document.getElementById('settings-email');
-      const profileEmail = document.getElementById('profile-email');
-      if (settingsName) settingsName.value = user.full_name || '';
-      if (settingsEmail) settingsEmail.value = user.email || '';
-      if (profileEmail) profileEmail.textContent = user.email || '';
-    }
-
-    window.addEventListener('skybrand:auth', (e) => { fillSettings(e.detail); });
-    if (window._skybrandUser) { fillSettings(window._skybrandUser); }
-  </script>
 </DashboardLayout>
+
+<style>
+  .cfg-nav-item { width:100%;display:flex;align-items:center;gap:10px;padding:10px 14px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:600;cursor:pointer;border-radius:8px;transition:all 0.15s;text-align:left; }
+  .cfg-nav-item:hover { background:var(--nav-hover);color:var(--text-secondary); }
+  .cfg-nav-item.active { background:var(--accent-bg);color:var(--accent); }
+  .cfg-panel { }
+  .cfg-section-title { font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:4px; }
+  .cfg-section-desc { font-size:12px;color:var(--text-muted);margin-bottom:20px; }
+  .cfg-label { font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:4px;display:block; }
+  .cfg-input { width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;transition:border-color 0.2s; }
+  .cfg-input:focus { border-color:var(--accent); }
+  .cfg-save-btn { margin-top:20px;padding:10px 24px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s; }
+  .cfg-save-btn:hover { opacity:0.85; }
+  .cfg-theme-btn { display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 24px;border-radius:12px;border:2px solid var(--border);background:transparent;cursor:pointer;transition:all 0.2s;flex:1; }
+  .cfg-theme-btn.active { border-color:var(--accent);background:var(--accent-bg); }
+  .cfg-theme-btn:hover:not(.active) { border-color:var(--border-hover); }
+  .cfg-toggle-wrap { position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0; }
+  .cfg-toggle-wrap input { opacity:0;width:0;height:0; }
+  .cfg-toggle-slider { position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:22px;transition:0.3s; }
+  .cfg-toggle-slider::before { content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s; }
+  .cfg-toggle-wrap input:checked + .cfg-toggle-slider { background:#22c55e; }
+  .cfg-toggle-wrap input:checked + .cfg-toggle-slider::before { transform:translateX(18px); }
+</style>
+
+<script is:inline>
+const cfgTabs = ['company','account','team','integrations','notifications','billing','appearance','security','danger'];
+
+function switchCfgTab(tab) {
+  cfgTabs.forEach(t => {
+    const nav = document.getElementById('cfg-nav-'+t);
+    const panel = document.getElementById('cfg-panel-'+t);
+    if (nav) nav.classList.toggle('active', t === tab);
+    if (panel) panel.style.display = t === tab ? '' : 'none';
+  });
+}
+
+function cfgToast(msg) {
+  const ex = document.getElementById('cfg-toast'); if (ex) ex.remove();
+  const t = document.createElement('div'); t.id = 'cfg-toast'; t.textContent = msg;
+  Object.assign(t.style, { position:'fixed', bottom:'24px', right:'24px', background:'#22c55e', color:'#fff', padding:'12px 24px', borderRadius:'10px', fontSize:'13px', fontWeight:'700', zIndex:'9999', boxShadow:'0 4px 20px rgba(0,0,0,0.3)' });
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+function cfgSave(section) { cfgToast('Cambios guardados en ' + section); }
+
+function cfgUploadLogo(input) {
+  const file = input.files[0]; if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { alert('El archivo excede 2MB'); return; }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const logo = document.getElementById('cfg-logo');
+    logo.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;"/>`;
+    cfgToast('Logo actualizado');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ═══════ TEAM ═══════
+const cfgTeam = [
+  { name: 'Eduardo Serratos', email: 'serratos@skybrandmx.com', role: 'admin', status: 'active', avatar: 'ES' },
+  { name: 'María López', email: 'maria@skybrandmx.com', role: 'editor', status: 'active', avatar: 'ML' },
+  { name: 'Carlos Ruiz', email: 'carlos@skybrandmx.com', role: 'viewer', status: 'pending', avatar: 'CR' },
+];
+const roleLabels = { admin: 'Administrador', editor: 'Editor', viewer: 'Solo lectura' };
+const roleColors = { admin: '#8b5cf6', editor: '#6fcff5', viewer: '#64748b' };
+
+function renderTeam() {
+  const el = document.getElementById('cfg-team-list'); if (!el) return;
+  el.innerHTML = cfgTeam.map(m => `
+    <div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);">
+      <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,${roleColors[m.role]}40,${roleColors[m.role]}20);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:${roleColors[m.role]};flex-shrink:0;">${m.avatar}</div>
+      <div style="flex:1;">
+        <p style="font-size:13px;font-weight:700;color:var(--text-primary);">${m.name}</p>
+        <p style="font-size:11px;color:var(--text-faint);">${m.email}</p>
+      </div>
+      <span style="padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700;color:${roleColors[m.role]};background:${roleColors[m.role]}15;">${roleLabels[m.role]}</span>
+      ${m.status === 'pending' ? '<span style="padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700;color:#f97316;background:rgba(249,115,22,0.1);">Pendiente</span>' : ''}
+      ${m.role !== 'admin' ? `<button onclick="cfgToast('Invitación reenviada')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-faint);font-size:10px;cursor:pointer;">···</button>` : ''}
+    </div>
+  `).join('');
+}
+
+function cfgInviteTeam() {
+  const email = prompt('Email de la persona que quieres invitar:');
+  if (!email) return;
+  cfgTeam.push({ name: email.split('@')[0], email, role: 'viewer', status: 'pending', avatar: email.substring(0, 2).toUpperCase() });
+  renderTeam();
+  cfgToast('Invitación enviada a ' + email);
+}
+
+// ═══════ INTEGRATIONS ═══════
+const cfgIntegrations = [
+  { id: 'shopify', name: 'Shopify', desc: 'Sincroniza productos, pedidos e inventario', icon: '🛍', color: '#96bf48', connected: false },
+  { id: 'woocommerce', name: 'WooCommerce', desc: 'Conecta tu tienda de WordPress', icon: '🔌', color: '#96588a', connected: false },
+  { id: 'mercadolibre', name: 'Mercado Libre', desc: 'Sincroniza ventas y mensajes', icon: '🤝', color: '#ffe600', connected: false },
+  { id: 'facturama', name: 'Facturama (SAT)', desc: 'Genera facturas CFDI 4.0 automáticas', icon: '🧾', color: '#22c55e', connected: false },
+  { id: 'dhl', name: 'DHL', desc: 'Genera guías y rastrea envíos', icon: '📦', color: '#FFCC00', connected: true },
+  { id: 'estafeta', name: 'Estafeta', desc: 'Genera guías y rastrea envíos', icon: '📦', color: '#ED1C24', connected: false },
+  { id: 'stripe', name: 'Stripe', desc: 'Acepta pagos con tarjeta', icon: '💳', color: '#635bff', connected: true },
+  { id: 'mercadopago', name: 'Mercado Pago', desc: 'Acepta pagos en OXXO y transferencia', icon: '💰', color: '#00b1ea', connected: false },
+  { id: 'whatsapp', name: 'WhatsApp Business', desc: 'Envía mensajes automáticos a clientes', icon: '💬', color: '#25D366', connected: false },
+  { id: 'meta', name: 'Meta Ads', desc: 'Conecta Facebook e Instagram Ads', icon: '📢', color: '#1877f2', connected: false },
+  { id: 'google', name: 'Google Ads', desc: 'Conecta campañas de Google', icon: '🔍', color: '#4285f4', connected: false },
+];
+
+function renderIntegrations() {
+  const el = document.getElementById('cfg-integrations-list'); if (!el) return;
+  el.innerHTML = cfgIntegrations.map(i => `
+    <div style="display:flex;align-items:center;gap:14px;padding:16px;border-radius:12px;border:1px solid ${i.connected ? '#22c55e30' : 'var(--border)'};background:${i.connected ? 'rgba(34,197,94,0.03)' : 'var(--input-bg)'};">
+      <span style="font-size:28px;flex-shrink:0;">${i.icon}</span>
+      <div style="flex:1;">
+        <p style="font-size:14px;font-weight:800;color:var(--text-primary);">${i.name}</p>
+        <p style="font-size:11px;color:var(--text-faint);">${i.desc}</p>
+      </div>
+      ${i.connected
+        ? '<span style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;color:#22c55e;background:rgba(34,197,94,0.1);">Conectado ✓</span>'
+        : `<button onclick="cfgConnectIntegration('${i.id}')" style="padding:8px 16px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:700;cursor:pointer;">Conectar</button>`
+      }
+    </div>
+  `).join('');
+}
+
+function cfgConnectIntegration(id) {
+  const i = cfgIntegrations.find(x => x.id === id);
+  if (i) { i.connected = true; renderIntegrations(); cfgToast(i.name + ' conectado'); }
+}
+
+// ═══════ NOTIFICATIONS ═══════
+const cfgNotifs = [
+  { id: 'new_order', name: 'Nuevo pedido', desc: 'Cuando alguien compra en tu tienda', email: true, whatsapp: true, push: true },
+  { id: 'payment', name: 'Pago recibido', desc: 'Cuando se confirma un pago', email: true, whatsapp: false, push: true },
+  { id: 'shipment', name: 'Pedido enviado', desc: 'Cuando se genera una guía de envío', email: true, whatsapp: false, push: false },
+  { id: 'return', name: 'Solicitud de devolución', desc: 'Cuando un cliente pide devolver algo', email: true, whatsapp: true, push: true },
+  { id: 'low_stock', name: 'Inventario bajo', desc: 'Cuando un producto tiene menos de 5 unidades', email: true, whatsapp: false, push: false },
+  { id: 'new_lead', name: 'Nuevo contacto en CRM', desc: 'Cuando alguien se registra o llena un formulario', email: false, whatsapp: false, push: true },
+  { id: 'weekly_report', name: 'Reporte semanal', desc: 'Resumen de ventas cada lunes', email: true, whatsapp: false, push: false },
+  { id: 'campaign_done', name: 'Campaña enviada', desc: 'Cuando una campaña de email termina de enviarse', email: true, whatsapp: false, push: false },
+];
+
+function renderNotifications() {
+  const el = document.getElementById('cfg-notif-list'); if (!el) return;
+  el.innerHTML = cfgNotifs.map(n => `
+    <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);">
+      <div style="flex:1;"><p style="font-size:13px;font-weight:700;color:var(--text-primary);">${n.name}</p><p style="font-size:11px;color:var(--text-faint);">${n.desc}</p></div>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" ${n.email ? 'checked' : ''} style="accent-color:var(--accent);"/><span style="font-size:10px;color:var(--text-muted);">Email</span></label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" ${n.whatsapp ? 'checked' : ''} style="accent-color:#25D366;"/><span style="font-size:10px;color:var(--text-muted);">WhatsApp</span></label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" ${n.push ? 'checked' : ''} style="accent-color:#8b5cf6;"/><span style="font-size:10px;color:var(--text-muted);">Push</span></label>
+      </div>
+    </div>
+  `).join('') + '<button onclick="cfgToast(\'Preferencias guardadas\')" style="margin-top:16px;padding:10px 24px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Guardar preferencias</button>';
+}
+
+// ═══════ BILLING ═══════
+function renderBilling() {
+  // Plan card
+  document.getElementById('cfg-plan-card').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div>
+        <p style="font-size:20px;font-weight:900;color:var(--text-primary);">Plan Growth</p>
+        <p style="font-size:13px;color:var(--text-muted);">$1,999 MXN/mes + IVA</p>
+      </div>
+      <a href="/precios" style="padding:8px 16px;border-radius:8px;border:1px solid var(--accent);color:var(--accent);font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;">Cambiar plan</a>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+      <div style="flex:1;height:8px;border-radius:4px;background:var(--input-bg);overflow:hidden;"><div style="height:100%;width:60%;background:var(--accent);border-radius:4px;"></div></div>
+      <span style="font-size:11px;color:var(--text-faint);">18 de 30 días</span>
+    </div>
+    <p style="font-size:11px;color:var(--text-faint);">Próximo cobro: 15 de abril 2026</p>
+  `;
+
+  // Invoices
+  const invoices = [
+    { id: 'INV-2026-03', date: '01 Mar 2026', amount: '$2,318.84', status: 'Pagada' },
+    { id: 'INV-2026-02', date: '01 Feb 2026', amount: '$2,318.84', status: 'Pagada' },
+    { id: 'INV-2026-01', date: '01 Ene 2026', amount: '$2,318.84', status: 'Pagada' },
+  ];
+  document.getElementById('cfg-invoices-list').innerHTML = invoices.map(i => `
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:12px;font-weight:700;color:var(--accent);min-width:100px;">${i.id}</span>
+      <span style="font-size:12px;color:var(--text-muted);flex:1;">${i.date}</span>
+      <span style="font-size:13px;font-weight:800;color:var(--text-primary);">${i.amount}</span>
+      <span style="padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700;color:#22c55e;background:rgba(34,197,94,0.1);">${i.status}</span>
+      <button onclick="cfgToast('Factura descargada')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-faint);font-size:10px;cursor:pointer;">📄 PDF</button>
+    </div>
+  `).join('');
+
+  // Payment method
+  document.getElementById('cfg-payment-method').innerHTML = `
+    <div style="width:48px;height:32px;border-radius:6px;background:linear-gradient(135deg,#1a1f71,#00a3e0);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <span style="font-size:10px;font-weight:900;color:#fff;">VISA</span>
+    </div>
+    <div style="flex:1;">
+      <p style="font-size:13px;font-weight:700;color:var(--text-primary);">•••• •••• •••• 4242</p>
+      <p style="font-size:11px;color:var(--text-faint);">Vence 12/28</p>
+    </div>
+    <button onclick="cfgToast('Funcionalidad disponible pronto')" style="padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;font-weight:600;cursor:pointer;">Cambiar</button>
+  `;
+}
+
+// ═══════ APPEARANCE ═══════
+function renderColorPresets() {
+  const colors = ['#6fcff5','#22c55e','#8b5cf6','#f97316','#ec4899','#eab308'];
+  document.getElementById('cfg-color-presets').innerHTML = colors.map(c => `
+    <button onclick="document.getElementById('cfg-color-picker').value='${c}';document.getElementById('cfg-color-hex').value='${c}'" style="width:36px;height:36px;border-radius:10px;border:2px solid ${c === '#6fcff5' ? 'var(--accent)' : 'transparent'};background:${c};cursor:pointer;transition:border-color 0.2s;" onmouseover="this.style.borderColor='${c}'" onmouseout="this.style.borderColor='${c === '#6fcff5' ? 'var(--accent)' : 'transparent'}'"></button>
+  `).join('');
+}
+
+function cfgSetTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('skybrand_theme', theme);
+  document.getElementById('cfg-theme-dark').classList.toggle('active', theme === 'dark');
+  document.getElementById('cfg-theme-light').classList.toggle('active', theme === 'light');
+  cfgToast('Tema cambiado a ' + (theme === 'dark' ? 'oscuro' : 'claro'));
+}
+
+function cfgApplyColor() {
+  const color = document.getElementById('cfg-color-hex').value;
+  document.documentElement.style.setProperty('--accent', color);
+  cfgToast('Color aplicado: ' + color);
+}
+
+// ═══════ SECURITY ═══════
+function cfgChangePassword() {
+  const current = document.getElementById('cfg-pw-current').value;
+  const newPw = document.getElementById('cfg-pw-new').value;
+  const confirm = document.getElementById('cfg-pw-confirm').value;
+  if (!current || !newPw || !confirm) { alert('Completa todos los campos'); return; }
+  if (newPw.length < 8) { alert('La contraseña debe tener al menos 8 caracteres'); return; }
+  if (newPw !== confirm) { alert('Las contraseñas no coinciden'); return; }
+  cfgToast('Contraseña actualizada');
+  document.getElementById('cfg-pw-current').value = '';
+  document.getElementById('cfg-pw-new').value = '';
+  document.getElementById('cfg-pw-confirm').value = '';
+}
+
+function renderSessions() {
+  const sessions = [
+    { device: 'Chrome en Windows', location: 'CDMX, México', date: 'Ahora mismo', current: true },
+    { device: 'Safari en iPhone', location: 'CDMX, México', date: 'Hace 2 horas', current: false },
+  ];
+  document.getElementById('cfg-sessions-list').innerHTML = sessions.map(s => `
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">
+      <div style="width:36px;height:36px;border-radius:8px;background:var(--input-bg);display:flex;align-items:center;justify-content:center;">
+        <svg style="width:16px;height:16px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${s.current ? 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' : 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z'}"/></svg>
+      </div>
+      <div style="flex:1;">
+        <p style="font-size:12px;font-weight:700;color:var(--text-primary);">${s.device} ${s.current ? '<span style="padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;color:#22c55e;background:rgba(34,197,94,0.1);">Esta sesión</span>' : ''}</p>
+        <p style="font-size:11px;color:var(--text-faint);">${s.location} · ${s.date}</p>
+      </div>
+      ${!s.current ? '<button onclick="cfgToast(\'Sesión cerrada\')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-faint);font-size:10px;cursor:pointer;">Cerrar</button>' : ''}
+    </div>
+  `).join('');
+}
+
+// ═══════ INIT ═══════
+document.addEventListener('DOMContentLoaded', () => {
+  renderTeam();
+  renderIntegrations();
+  renderNotifications();
+  renderBilling();
+  renderColorPresets();
+  renderSessions();
+
+  // Set current theme button
+  const theme = localStorage.getItem('skybrand_theme') || 'dark';
+  document.getElementById('cfg-theme-dark')?.classList.toggle('active', theme === 'dark');
+  document.getElementById('cfg-theme-light')?.classList.toggle('active', theme === 'light');
+});
+</script>
