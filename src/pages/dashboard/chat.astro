@@ -1,0 +1,1097 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Chat">
+  <!-- Help banner -->
+  <div id="chat-help-banner" class="stat-card animate-in" style="margin-bottom:20px;background:linear-gradient(135deg,#0c2d3f,#084D6E);border:1px solid rgba(111,207,245,0.15);display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+    <div style="width:40px;height:40px;border-radius:12px;background:rgba(111,207,245,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <svg style="width:20px;height:20px;color:#6fcff5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+    </div>
+    <div style="flex:1;min-width:200px;">
+      <h3 style="font-size:14px;font-weight:800;color:#fff;margin-bottom:2px;">Bandeja unificada</h3>
+      <p style="font-size:12px;color:rgba(255,255,255,0.6);">Todos los mensajes de WhatsApp, Facebook Messenger, Instagram DM y correo llegan aqui. Responde desde un solo lugar sin cambiar de app.</p>
+    </div>
+    <button onclick="dismissChatHelp()" style="width:32px;height:32px;border-radius:8px;border:none;background:rgba(255,255,255,0.15);cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+      <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <!-- Stats bar -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px;" class="animate-in">
+    <div class="stat-card" style="padding:16px 20px;">
+      <p class="chat-stat-label">Total conversaciones</p>
+      <p class="chat-stat-value">5</p>
+    </div>
+    <div class="stat-card" style="padding:16px 20px;">
+      <p class="chat-stat-label">Sin contestar</p>
+      <p class="chat-stat-value" style="color:#f97316;">1</p>
+    </div>
+    <div class="stat-card" style="padding:16px 20px;">
+      <p class="chat-stat-label" style="display:flex;align-items:center;gap:4px;">Tiempo promedio <span class="chat-tooltip-trigger" data-tip="Tiempo promedio que tardas en responder el primer mensaje de un cliente">?</span></p>
+      <p class="chat-stat-value" style="color:#22c55e;">4 min</p>
+    </div>
+    <div class="stat-card" style="padding:16px 20px;">
+      <p class="chat-stat-label">Satisfaccion</p>
+      <p class="chat-stat-value" style="color:#8b5cf6;">94%</p>
+    </div>
+  </div>
+
+  <!-- Autopilot bar -->
+  <div class="stat-card animate-in" style="margin-bottom:20px;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <svg style="width:18px;height:18px;color:#8b5cf6;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      <span style="font-size:13px;font-weight:800;color:var(--text-primary);">Autopilot</span>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;flex:1;">
+      <button class="chat-autopilot-btn chat-autopilot-active" id="chat-ap-horario" onclick="toggleAutopilot('horario',this)">
+        <span class="chat-ap-dot"></span> Auto-respuesta fuera de horario
+      </button>
+      <button class="chat-autopilot-btn" id="chat-ap-faq" onclick="toggleAutopilot('faq',this)">
+        <span class="chat-ap-dot" style="background:#475569;"></span> Bot de preguntas frecuentes
+      </button>
+      <button class="chat-autopilot-btn" id="chat-ap-assign" onclick="toggleAutopilot('assign',this)">
+        <span class="chat-ap-dot" style="background:#475569;"></span> Asignar automatico por tema
+      </button>
+    </div>
+  </div>
+
+  <!-- Main chat container -->
+  <div class="chat-container animate-in">
+    <!-- Left panel: conversation list -->
+    <div class="chat-left-panel">
+      <!-- Search & filter -->
+      <div class="chat-search-bar">
+        <div class="chat-search-input-wrap">
+          <svg style="width:16px;height:16px;color:var(--text-faint);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="text" id="chat-search" placeholder="Buscar conversacion..." class="chat-search-field" oninput="filterConversations()" />
+        </div>
+        <div class="chat-channel-filters">
+          <button class="chat-channel-btn chat-channel-active" data-channel="todos" onclick="filterByChannel('todos',this)">Todos</button>
+          <button class="chat-channel-btn" data-channel="whatsapp" onclick="filterByChannel('whatsapp',this)">
+            <span class="chat-channel-icon" style="color:#25D366;">&#9679;</span> WhatsApp
+          </button>
+          <button class="chat-channel-btn" data-channel="facebook" onclick="filterByChannel('facebook',this)">
+            <span class="chat-channel-icon" style="color:#1877F2;">&#9679;</span> Facebook
+          </button>
+          <button class="chat-channel-btn" data-channel="instagram" onclick="filterByChannel('instagram',this)">
+            <span class="chat-channel-icon" style="color:#E4405F;">&#9679;</span> Instagram
+          </button>
+          <button class="chat-channel-btn" data-channel="email" onclick="filterByChannel('email',this)">
+            <span class="chat-channel-icon" style="color:#64748b;">&#9679;</span> Email
+          </button>
+        </div>
+      </div>
+      <!-- Conversation list -->
+      <div class="chat-conv-list" id="chat-conv-list"></div>
+    </div>
+
+    <!-- Right panel: active conversation -->
+    <div class="chat-right-panel" id="chat-right-panel">
+      <!-- Empty state -->
+      <div id="chat-empty-state" class="chat-empty-state">
+        <svg style="width:56px;height:56px;color:var(--accent);opacity:0.4;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        <h3 style="font-size:16px;font-weight:800;color:var(--text-primary);margin:12px 0 4px;">Selecciona una conversacion</h3>
+        <p style="font-size:12px;color:var(--text-faint);">Elige una conversacion del panel izquierdo para empezar a responder</p>
+      </div>
+
+      <!-- Active conversation view (hidden initially) -->
+      <div id="chat-active-conv" style="display:none;height:100%;display:none;flex-direction:column;">
+        <!-- Header -->
+        <div class="chat-conv-header" id="chat-conv-header"></div>
+        <!-- Messages -->
+        <div class="chat-messages" id="chat-messages"></div>
+        <!-- Input bar -->
+        <div class="chat-input-bar">
+          <div class="chat-input-actions">
+            <button class="chat-input-icon-btn" onclick="toggleQuickReplies()" title="Respuestas rapidas">
+              <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </button>
+            <button class="chat-input-icon-btn" title="Adjuntar archivo">
+              <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+            </button>
+          </div>
+          <input type="text" id="chat-msg-input" class="chat-msg-field" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter')sendMessage()" />
+          <button class="chat-send-btn" onclick="sendMessage()">
+            <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+            Enviar
+          </button>
+        </div>
+        <!-- Quick replies dropdown -->
+        <div id="chat-quick-replies" class="chat-quick-replies" style="display:none;">
+          <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;padding:10px 14px 6px;">Respuestas rapidas</p>
+          <button class="chat-qr-item" onclick="useQuickReply('Gracias por tu mensaje, en breve te atendemos.')">Gracias por tu mensaje</button>
+          <button class="chat-qr-item" onclick="useQuickReply('Tu pedido va en camino, te llegara en 2-3 dias habiles.')">Tu pedido va en camino</button>
+          <button class="chat-qr-item" onclick="useQuickReply('Aqui esta tu numero de guia: SKY-TRACK-00123. Puedes rastrearlo en nuestra pagina.')">Aqui esta tu numero de guia</button>
+          <button class="chat-qr-item" onclick="useQuickReply('Si tenemos disponible, te mando el link de pago.')">Si tenemos disponible</button>
+          <button class="chat-qr-item" onclick="useQuickReply('Te generamos tu factura en las proximas 24 horas.')">Te generamos tu factura</button>
+          <button class="chat-qr-item" onclick="useQuickReply('Nuestro horario de atencion es de lunes a viernes de 9am a 6pm.')">Horario de atencion</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .chat-stat-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .chat-stat-value {
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--text-primary);
+    }
+    .chat-tooltip-trigger {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--text-faint);
+      cursor: help;
+      position: relative;
+    }
+    .chat-tooltip-trigger:hover::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-sidebar);
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      white-space: normal;
+      width: 220px;
+      z-index: 20;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    /* Autopilot */
+    .chat-autopilot-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .chat-autopilot-btn:hover {
+      border-color: var(--border-hover);
+      color: var(--text-secondary);
+    }
+    .chat-autopilot-active {
+      border-color: rgba(34,197,94,0.3);
+      background: rgba(34,197,94,0.08);
+      color: #22c55e;
+    }
+    .chat-ap-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      flex-shrink: 0;
+    }
+
+    /* Main container */
+    .chat-container {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      height: calc(100vh - 380px);
+      min-height: 480px;
+      background: var(--bg-card);
+    }
+
+    /* Left panel */
+    .chat-left-panel {
+      width: 340px;
+      min-width: 280px;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-sidebar);
+    }
+    .chat-search-bar {
+      padding: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .chat-search-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 12px;
+      margin-bottom: 10px;
+    }
+    .chat-search-field {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+    }
+    .chat-search-field::placeholder {
+      color: var(--text-faint);
+    }
+    .chat-channel-filters {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+    .chat-channel-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 10px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .chat-channel-btn:hover {
+      background: var(--nav-hover);
+      color: var(--text-secondary);
+    }
+    .chat-channel-active {
+      background: var(--accent-bg);
+      color: var(--accent);
+      border-color: rgba(111,207,245,0.2);
+    }
+    .chat-channel-icon {
+      font-size: 8px;
+    }
+
+    /* Conversation list */
+    .chat-conv-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+    .chat-conv-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .chat-conv-item:hover {
+      background: var(--nav-hover);
+    }
+    .chat-conv-item.chat-conv-active {
+      background: var(--accent-bg);
+      border-left: 3px solid var(--accent);
+    }
+    .chat-conv-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .chat-conv-channel-badge {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      border: 2px solid var(--bg-sidebar);
+    }
+    .chat-conv-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .chat-conv-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .chat-conv-preview {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .chat-conv-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .chat-conv-time {
+      font-size: 10px;
+      color: var(--text-faint);
+      white-space: nowrap;
+    }
+    .chat-conv-unread {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #0f172a;
+      font-size: 10px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .chat-conv-tag {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    /* Right panel */
+    .chat-right-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      min-width: 0;
+    }
+    .chat-empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+      padding: 40px;
+    }
+
+    /* Conversation header */
+    .chat-conv-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-sidebar);
+      flex-wrap: wrap;
+    }
+    .chat-header-name {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+    .chat-header-channel {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+    .chat-header-actions {
+      display: flex;
+      gap: 6px;
+      margin-left: auto;
+    }
+    .chat-header-btn {
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .chat-header-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Messages area */
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .chat-bubble {
+      max-width: 70%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.5;
+      position: relative;
+    }
+    .chat-bubble-in {
+      align-self: flex-start;
+      background: var(--input-bg);
+      color: var(--text-secondary);
+      border-bottom-left-radius: 4px;
+    }
+    .chat-bubble-out {
+      align-self: flex-end;
+      background: linear-gradient(135deg, #084D6E, #0a6b9a);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .chat-bubble-time {
+      font-size: 10px;
+      color: var(--text-faint);
+      margin-top: 4px;
+      display: block;
+    }
+    .chat-bubble-out .chat-bubble-time {
+      color: rgba(255,255,255,0.5);
+      text-align: right;
+    }
+
+    /* Input bar */
+    .chat-input-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-sidebar);
+    }
+    .chat-input-actions {
+      display: flex;
+      gap: 4px;
+    }
+    .chat-input-icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .chat-input-icon-btn:hover {
+      background: var(--nav-hover);
+      color: var(--accent);
+    }
+    .chat-msg-field {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--input-bg);
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .chat-msg-field:focus {
+      border-color: var(--accent);
+    }
+    .chat-msg-field::placeholder {
+      color: var(--text-faint);
+    }
+    .chat-send-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 18px;
+      border-radius: 10px;
+      border: none;
+      background: var(--accent);
+      color: #0f172a;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .chat-send-btn:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    /* Quick replies */
+    .chat-quick-replies {
+      position: absolute;
+      bottom: 60px;
+      left: 16px;
+      right: 16px;
+      background: var(--bg-sidebar);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+      z-index: 10;
+      overflow: hidden;
+    }
+    .chat-qr-item {
+      display: block;
+      width: 100%;
+      padding: 10px 14px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 12px;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.15s;
+      font-family: 'Inter', sans-serif;
+    }
+    .chat-qr-item:hover {
+      background: var(--accent-bg);
+      color: var(--accent);
+    }
+
+    /* Assign modal */
+    .chat-modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .chat-modal-bg {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+    }
+    .chat-modal-content {
+      position: relative;
+      width: 100%;
+      max-width: 400px;
+      background: var(--bg-sidebar);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+    }
+    .chat-modal-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+    }
+    .chat-modal-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: transparent;
+      width: 100%;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 8px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+    }
+    .chat-modal-option:hover {
+      border-color: var(--accent);
+      background: var(--accent-bg);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .chat-container {
+        flex-direction: column;
+        height: auto;
+      }
+      .chat-left-panel {
+        width: 100%;
+        min-width: 0;
+        max-height: 300px;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+    }
+  </style>
+
+  <script is:inline>
+    // ═══════ DATA ═══════
+    const chatConversations = [
+      {
+        id: 1,
+        name: 'Maria Garcia',
+        channel: 'whatsapp',
+        channelLabel: 'WhatsApp',
+        channelColor: '#25D366',
+        avatar: 'MG',
+        avatarBg: '#25D366',
+        lastMessage: 'Tienen talla M en la blusa bordada?',
+        time: 'Hace 2 min',
+        unread: 1,
+        tag: 'Venta',
+        tagColor: '#22c55e',
+        assignedTo: null,
+        messages: [
+          { from: 'customer', text: 'Hola buenas tardes!', time: '14:28' },
+          { from: 'agent', text: 'Hola Maria! Bienvenida a SkyBrand. En que te puedo ayudar?', time: '14:29' },
+          { from: 'customer', text: 'Vi en su Instagram una blusa bordada oaxaquena preciosa', time: '14:30' },
+          { from: 'customer', text: 'Tienen talla M en la blusa bordada?', time: '14:31' }
+        ]
+      },
+      {
+        id: 2,
+        name: 'Carlos Hernandez',
+        channel: 'facebook',
+        channelLabel: 'Facebook',
+        channelColor: '#1877F2',
+        avatar: 'CH',
+        avatarBg: '#1877F2',
+        lastMessage: 'Cuanto tarda el envio a Guadalajara?',
+        time: 'Hace 15 min',
+        unread: 0,
+        tag: 'Soporte',
+        tagColor: '#6fcff5',
+        assignedTo: 'Ana Lopez',
+        messages: [
+          { from: 'customer', text: 'Buenas tardes, tengo una pregunta sobre envios', time: '14:10' },
+          { from: 'agent', text: 'Claro Carlos, con gusto te ayudo. Cual es tu duda?', time: '14:12' },
+          { from: 'customer', text: 'Cuanto tarda el envio a Guadalajara?', time: '14:15' },
+          { from: 'agent', text: 'A Guadalajara el envio tarda de 2 a 3 dias habiles con Estafeta o FedEx. El costo es de $120 o gratis en compras mayores a $800.', time: '14:16' }
+        ]
+      },
+      {
+        id: 3,
+        name: 'Ana Sofia',
+        channel: 'instagram',
+        channelLabel: 'Instagram',
+        channelColor: '#E4405F',
+        avatar: 'AS',
+        avatarBg: '#C13584',
+        lastMessage: 'Me encanto el rebozo! Tienen en azul?',
+        time: 'Hace 1 hr',
+        unread: 0,
+        tag: 'Venta',
+        tagColor: '#22c55e',
+        assignedTo: null,
+        messages: [
+          { from: 'customer', text: 'Holaaaa! Me encanto el rebozo que subieron en stories', time: '13:15' },
+          { from: 'agent', text: 'Hola Ana Sofia! Muchas gracias! Si, ese rebozo es de nuestros mas populares. Es hecho a mano en Tenancingo.', time: '13:18' },
+          { from: 'customer', text: 'Me encanto el rebozo! Tienen en azul?', time: '13:20' },
+          { from: 'agent', text: 'Si! Tenemos en azul marino, azul cielo y turquesa. Te mando fotos?', time: '13:22' }
+        ]
+      },
+      {
+        id: 4,
+        name: 'Roberto Juarez',
+        channel: 'email',
+        channelLabel: 'Email',
+        channelColor: '#64748b',
+        avatar: 'RJ',
+        avatarBg: '#64748b',
+        lastMessage: 'Necesito factura de mi pedido SKY-004',
+        time: 'Hace 3 hrs',
+        unread: 0,
+        tag: 'Soporte',
+        tagColor: '#6fcff5',
+        assignedTo: 'Pedro Ramirez',
+        messages: [
+          { from: 'customer', text: 'Buenos dias, realice una compra la semana pasada con numero de pedido SKY-004.', time: '11:00' },
+          { from: 'customer', text: 'Necesito factura de mi pedido SKY-004. Mis datos fiscales son: RFC JURR850101ABC, razon social Roberto Juarez Ramirez.', time: '11:01' },
+          { from: 'agent', text: 'Buenos dias Roberto. Recibimos tu solicitud. Estamos generando tu CFDI y te lo enviamos por email en las proximas 24 horas.', time: '11:45' },
+          { from: 'customer', text: 'Perfecto, muchas gracias por la rapida atencion.', time: '11:48' }
+        ]
+      },
+      {
+        id: 5,
+        name: 'Lucia Ramirez',
+        channel: 'whatsapp',
+        channelLabel: 'WhatsApp',
+        channelColor: '#25D366',
+        avatar: 'LR',
+        avatarBg: '#25D366',
+        lastMessage: 'Ya recibi mi pedido, gracias!',
+        time: 'Ayer',
+        unread: 0,
+        tag: null,
+        tagColor: null,
+        assignedTo: null,
+        messages: [
+          { from: 'customer', text: 'Hola! Queria avisar que ya llego mi paquete', time: '16:40' },
+          { from: 'agent', text: 'Que bueno Lucia! Nos alegra mucho. Como te quedo todo?', time: '16:42' },
+          { from: 'customer', text: 'Todo perfecto! Las pulseras estan hermosas, justo como se veian en las fotos.', time: '16:44' },
+          { from: 'customer', text: 'Ya recibi mi pedido, gracias!', time: '16:45' }
+        ]
+      }
+    ];
+
+    const teamMembers = [
+      { name: 'Ana Lopez', role: 'Ventas' },
+      { name: 'Pedro Ramirez', role: 'Soporte' },
+      { name: 'Sofia Martinez', role: 'CRM' }
+    ];
+
+    const tagOptions = [
+      { label: 'Venta', color: '#22c55e' },
+      { label: 'Soporte', color: '#6fcff5' },
+      { label: 'Queja', color: '#ef4444' },
+      { label: 'Devolucion', color: '#f97316' },
+      { label: 'Facturacion', color: '#8b5cf6' },
+      { label: 'Informacion', color: '#eab308' }
+    ];
+
+    let activeConvId = null;
+    let activeChannel = 'todos';
+
+    // ═══════ HELPERS ═══════
+    function showToast(msg) {
+      const ex = document.getElementById('chat-toast');
+      if (ex) ex.remove();
+      const t = document.createElement('div');
+      t.id = 'chat-toast';
+      t.textContent = msg;
+      Object.assign(t.style, {
+        position: 'fixed', bottom: '24px', right: '24px',
+        background: '#22c55e', color: '#fff',
+        padding: '12px 24px', borderRadius: '10px',
+        fontSize: '13px', fontWeight: '700',
+        zIndex: '9999', boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+        fontFamily: "'Inter', sans-serif"
+      });
+      document.body.appendChild(t);
+      setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transition = 'opacity 0.3s';
+        setTimeout(() => t.remove(), 300);
+      }, 3000);
+    }
+
+    function dismissChatHelp() {
+      const banner = document.getElementById('chat-help-banner');
+      if (banner) {
+        banner.style.transition = 'opacity 0.3s, transform 0.3s';
+        banner.style.opacity = '0';
+        banner.style.transform = 'translateY(-10px)';
+        setTimeout(() => { banner.style.display = 'none'; }, 300);
+      }
+      localStorage.setItem('chat_help_dismissed', '1');
+    }
+
+    if (localStorage.getItem('chat_help_dismissed') === '1') {
+      const b = document.getElementById('chat-help-banner');
+      if (b) b.style.display = 'none';
+    }
+
+    // ═══════ RENDER CONVERSATION LIST ═══════
+    function renderConvList() {
+      const list = document.getElementById('chat-conv-list');
+      const search = (document.getElementById('chat-search').value || '').toLowerCase();
+      let convs = chatConversations;
+
+      if (activeChannel !== 'todos') {
+        convs = convs.filter(c => c.channel === activeChannel);
+      }
+      if (search) {
+        convs = convs.filter(c =>
+          c.name.toLowerCase().includes(search) ||
+          c.lastMessage.toLowerCase().includes(search)
+        );
+      }
+
+      if (convs.length === 0) {
+        list.innerHTML = '<div style="padding:30px;text-align:center;"><p style="font-size:13px;color:var(--text-faint);">No se encontraron conversaciones</p></div>';
+        return;
+      }
+
+      list.innerHTML = convs.map(c => `
+        <div class="chat-conv-item ${activeConvId === c.id ? 'chat-conv-active' : ''}" onclick="openConversation(${c.id})">
+          <div class="chat-conv-avatar" style="background:${c.avatarBg};">
+            ${c.avatar}
+            <div class="chat-conv-channel-badge" style="background:${c.channelColor};">
+              ${c.channel === 'whatsapp' ? '<svg style="width:10px;height:10px;color:#fff;" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>' : ''}
+              ${c.channel === 'facebook' ? '<svg style="width:10px;height:10px;color:#fff;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.145 2 11.243c0 2.936 1.444 5.544 3.7 7.254V22l3.3-1.813c.88.244 1.813.376 2.786.376h.214C17.523 20.563 22 16.418 22 11.243S17.523 2 12 2z"/></svg>' : ''}
+              ${c.channel === 'instagram' ? '<svg style="width:10px;height:10px;color:#fff;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0z"/></svg>' : ''}
+              ${c.channel === 'email' ? '<svg style="width:10px;height:10px;color:#fff;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>' : ''}
+            </div>
+          </div>
+          <div class="chat-conv-info">
+            <div class="chat-conv-name">
+              ${c.name}
+              ${c.tag ? `<span class="chat-conv-tag" style="background:${c.tagColor}15;color:${c.tagColor};">${c.tag}</span>` : ''}
+            </div>
+            <p class="chat-conv-preview">${c.lastMessage}</p>
+          </div>
+          <div class="chat-conv-meta">
+            <span class="chat-conv-time">${c.time}</span>
+            ${c.unread > 0 ? `<span class="chat-conv-unread">${c.unread}</span>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ═══════ OPEN CONVERSATION ═══════
+    function openConversation(id) {
+      activeConvId = id;
+      const conv = chatConversations.find(c => c.id === id);
+      if (!conv) return;
+
+      // Mark as read
+      conv.unread = 0;
+
+      // Show conversation panel
+      document.getElementById('chat-empty-state').style.display = 'none';
+      const activeEl = document.getElementById('chat-active-conv');
+      activeEl.style.display = 'flex';
+
+      // Header
+      document.getElementById('chat-conv-header').innerHTML = `
+        <div class="chat-conv-avatar" style="background:${conv.avatarBg};width:36px;height:36px;font-size:13px;">
+          ${conv.avatar}
+        </div>
+        <div>
+          <p class="chat-header-name">${conv.name}</p>
+          <span class="chat-header-channel" style="background:${conv.channelColor}20;color:${conv.channelColor};">${conv.channelLabel}</span>
+          ${conv.assignedTo ? `<span style="font-size:11px;color:var(--text-faint);margin-left:8px;">Asignado a: ${conv.assignedTo}</span>` : ''}
+        </div>
+        <div class="chat-header-actions">
+          <button class="chat-header-btn" onclick="openAssignModal(${conv.id})">
+            <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            Asignar
+          </button>
+          <button class="chat-header-btn" onclick="openTagModal(${conv.id})">
+            <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+            Etiquetar
+          </button>
+        </div>
+      `;
+
+      // Messages
+      renderMessages(conv);
+      renderConvList();
+
+      // Hide quick replies
+      document.getElementById('chat-quick-replies').style.display = 'none';
+    }
+
+    function renderMessages(conv) {
+      const container = document.getElementById('chat-messages');
+      container.innerHTML = conv.messages.map(m => `
+        <div class="chat-bubble ${m.from === 'customer' ? 'chat-bubble-in' : 'chat-bubble-out'}">
+          ${m.text}
+          <span class="chat-bubble-time">${m.time}</span>
+        </div>
+      `).join('');
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // ═══════ SEND MESSAGE ═══════
+    function sendMessage() {
+      const input = document.getElementById('chat-msg-input');
+      const text = input.value.trim();
+      if (!text || !activeConvId) return;
+
+      const conv = chatConversations.find(c => c.id === activeConvId);
+      if (!conv) return;
+
+      const now = new Date();
+      const time = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+      conv.messages.push({ from: 'agent', text: text, time: time });
+      conv.lastMessage = text;
+      conv.time = 'Ahora';
+
+      input.value = '';
+      renderMessages(conv);
+      renderConvList();
+      document.getElementById('chat-quick-replies').style.display = 'none';
+      showToast('Mensaje enviado');
+    }
+
+    // ═══════ QUICK REPLIES ═══════
+    function toggleQuickReplies() {
+      const el = document.getElementById('chat-quick-replies');
+      el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function useQuickReply(text) {
+      document.getElementById('chat-msg-input').value = text;
+      document.getElementById('chat-quick-replies').style.display = 'none';
+      document.getElementById('chat-msg-input').focus();
+    }
+
+    // ═══════ FILTERS ═══════
+    function filterByChannel(channel, btn) {
+      activeChannel = channel;
+      document.querySelectorAll('.chat-channel-btn').forEach(b => b.classList.remove('chat-channel-active'));
+      btn.classList.add('chat-channel-active');
+      renderConvList();
+    }
+
+    function filterConversations() {
+      renderConvList();
+    }
+
+    // ═══════ ASSIGN MODAL ═══════
+    function openAssignModal(convId) {
+      closeModals();
+      const conv = chatConversations.find(c => c.id === convId);
+      const modal = document.createElement('div');
+      modal.className = 'chat-modal-overlay';
+      modal.id = 'chat-modal';
+      modal.innerHTML = `
+        <div class="chat-modal-bg" onclick="closeModals()"></div>
+        <div class="chat-modal-content">
+          <p class="chat-modal-title">Asignar conversacion</p>
+          <p style="font-size:12px;color:var(--text-faint);margin-bottom:14px;">Selecciona un miembro del equipo para atender a ${conv.name}:</p>
+          ${teamMembers.map(m => `
+            <button class="chat-modal-option" onclick="assignConversation(${convId},'${m.name}')">
+              <div style="width:32px;height:32px;border-radius:50%;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;">
+                <span style="font-size:12px;font-weight:800;color:var(--accent);">${m.name.split(' ').map(w => w[0]).join('')}</span>
+              </div>
+              <div>
+                <p style="font-size:13px;font-weight:700;color:var(--text-primary);">${m.name}</p>
+                <p style="font-size:11px;color:var(--text-faint);">${m.role}</p>
+              </div>
+            </button>
+          `).join('')}
+          <button class="chat-modal-option" onclick="assignConversation(${convId},null)" style="justify-content:center;">
+            <span style="font-size:13px;color:var(--text-muted);">Sin asignar</span>
+          </button>
+          <button onclick="closeModals()" style="margin-top:8px;width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;">Cancelar</button>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+
+    function assignConversation(convId, name) {
+      const conv = chatConversations.find(c => c.id === convId);
+      if (conv) {
+        conv.assignedTo = name;
+        showToast(name ? 'Conversacion asignada a ' + name : 'Asignacion removida');
+        if (activeConvId === convId) openConversation(convId);
+      }
+      closeModals();
+    }
+
+    // ═══════ TAG MODAL ═══════
+    function openTagModal(convId) {
+      closeModals();
+      const conv = chatConversations.find(c => c.id === convId);
+      const modal = document.createElement('div');
+      modal.className = 'chat-modal-overlay';
+      modal.id = 'chat-modal';
+      modal.innerHTML = `
+        <div class="chat-modal-bg" onclick="closeModals()"></div>
+        <div class="chat-modal-content">
+          <p class="chat-modal-title">Etiquetar conversacion</p>
+          <p style="font-size:12px;color:var(--text-faint);margin-bottom:14px;">Selecciona una etiqueta para ${conv.name}:</p>
+          ${tagOptions.map(t => `
+            <button class="chat-modal-option" onclick="tagConversation(${convId},'${t.label}','${t.color}')">
+              <span style="width:12px;height:12px;border-radius:3px;background:${t.color};flex-shrink:0;"></span>
+              <span style="font-size:13px;font-weight:600;">${t.label}</span>
+            </button>
+          `).join('')}
+          <button class="chat-modal-option" onclick="tagConversation(${convId},null,null)" style="justify-content:center;">
+            <span style="font-size:13px;color:var(--text-muted);">Sin etiqueta</span>
+          </button>
+          <button onclick="closeModals()" style="margin-top:8px;width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;">Cancelar</button>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+
+    function tagConversation(convId, label, color) {
+      const conv = chatConversations.find(c => c.id === convId);
+      if (conv) {
+        conv.tag = label;
+        conv.tagColor = color;
+        showToast(label ? 'Etiqueta: ' + label : 'Etiqueta removida');
+        if (activeConvId === convId) openConversation(convId);
+        renderConvList();
+      }
+      closeModals();
+    }
+
+    function closeModals() {
+      const m = document.getElementById('chat-modal');
+      if (m) m.remove();
+    }
+
+    // ═══════ AUTOPILOT ═══════
+    function toggleAutopilot(type, btn) {
+      const isActive = btn.classList.contains('chat-autopilot-active');
+      const dot = btn.querySelector('.chat-ap-dot');
+      if (isActive) {
+        btn.classList.remove('chat-autopilot-active');
+        dot.style.background = '#475569';
+        showToast('Autopilot desactivado: ' + type);
+      } else {
+        btn.classList.add('chat-autopilot-active');
+        dot.style.background = '#22c55e';
+        showToast('Autopilot activado: ' + type);
+      }
+    }
+
+    // ═══════ INIT ═══════
+    renderConvList();
+
+    // Close quick replies on outside click
+    document.addEventListener('click', function(e) {
+      const qr = document.getElementById('chat-quick-replies');
+      if (qr && qr.style.display === 'block') {
+        if (!e.target.closest('.chat-quick-replies') && !e.target.closest('.chat-input-icon-btn')) {
+          qr.style.display = 'none';
+        }
+      }
+    });
+  </script>
+</DashboardLayout>

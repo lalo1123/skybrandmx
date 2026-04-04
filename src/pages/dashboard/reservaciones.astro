@@ -1,0 +1,1060 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:6100';
+---
+
+<DashboardLayout title="Reservaciones">
+  <!-- Smart Recommendations -->
+  <div id="res-smart-recs" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;"></div>
+
+  <!-- Sector selector -->
+  <div class="stat-card animate-in" style="padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <svg style="width:18px;height:18px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+    <label style="font-size:13px;font-weight:700;color:var(--text-secondary);">Tipo de negocio:</label>
+    <select id="res-sector" onchange="resChangeSector()" class="res-input" style="width:auto;cursor:pointer;">
+      <option value="belleza">Belleza / Estetica</option>
+      <option value="restaurante">Restaurante</option>
+      <option value="salud">Salud / Consultorio</option>
+      <option value="fitness">Fitness / Gym</option>
+      <option value="profesional">Servicios profesionales</option>
+      <option value="otro">Otro</option>
+    </select>
+    <span class="res-tip" data-tip="Cambia la terminologia: mesa, cita, sesion, consulta, segun tu giro">?</span>
+  </div>
+
+  <!-- Stats bar -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px;">
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="res-stat-label"><span class="res-term-citas">Citas</span> hoy</p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="res-stat-today" class="res-stat-val" style="color:var(--accent);">5</p></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="res-stat-label"><span class="res-term-citas">Citas</span> esta semana</p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="res-stat-week" class="res-stat-val">24</p></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="res-stat-label">Ingresos del mes</p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="res-stat-revenue" class="res-stat-val" style="color:#22c55e;">$18,450</p></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="res-stat-label">Tasa de asistencia <span class="res-tip" data-tip="De cada 100 citas agendadas, cuantas personas si asistieron">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="res-stat-attendance" class="res-stat-val" style="color:#8b5cf6;">87%</p></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="res-stat-label">No-shows <span class="res-tip" data-tip="Personas que tenian cita pero no se presentaron">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="res-stat-noshow" class="res-stat-val" style="color:#ef4444;">4</p></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="res-stat-label">Servicios activos</p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="res-stat-services" class="res-stat-val" style="color:#f97316;">6</p></div>
+    </div>
+  </div>
+
+  <!-- Autopilot -->
+  <div class="stat-card animate-in" style="padding:18px 20px;margin-bottom:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;cursor:pointer;" onclick="resToggleAutopilot()">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <svg style="width:18px;height:18px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        <h3 style="font-size:14px;font-weight:800;color:var(--text-primary);">Autopilot de reservaciones</h3>
+        <span style="font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-bg);padding:2px 8px;border-radius:6px;">3/5 activos</span>
+      </div>
+      <svg id="res-autopilot-chevron" style="width:16px;height:16px;color:var(--text-muted);transition:transform 0.2s;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+    </div>
+    <div id="res-autopilot-body" style="display:none;display:flex;flex-direction:column;gap:10px;">
+      <div class="res-autopilot-row">
+        <div><p class="res-autopilot-title">Confirmacion automatica por WhatsApp</p><p class="res-autopilot-desc">Envia un mensaje de confirmacion cuando se agenda una cita</p></div>
+        <label class="res-toggle"><input type="checkbox" checked onchange="resToggleAuto(this,'confirm_wa')"><span class="res-toggle-slider"></span></label>
+      </div>
+      <div class="res-autopilot-row">
+        <div><p class="res-autopilot-title">Recordatorio 24h antes</p><p class="res-autopilot-desc">Envia un recordatorio un dia antes de la cita</p></div>
+        <label class="res-toggle"><input type="checkbox" checked onchange="resToggleAuto(this,'remind_24h')"><span class="res-toggle-slider"></span></label>
+      </div>
+      <div class="res-autopilot-row">
+        <div><p class="res-autopilot-title">Recordatorio 1h antes</p><p class="res-autopilot-desc">Envia un recordatorio una hora antes de la cita</p></div>
+        <label class="res-toggle"><input type="checkbox" checked onchange="resToggleAuto(this,'remind_1h')"><span class="res-toggle-slider"></span></label>
+      </div>
+      <div class="res-autopilot-row">
+        <div><p class="res-autopilot-title">Auto-cancelar si no confirma</p><p class="res-autopilot-desc">Cancela la cita si el cliente no confirma 2 horas antes</p></div>
+        <label class="res-toggle"><input type="checkbox" onchange="resToggleAuto(this,'auto_cancel')"><span class="res-toggle-slider"></span></label>
+      </div>
+      <div class="res-autopilot-row">
+        <div><p class="res-autopilot-title">Pedir resena despues de la cita</p><p class="res-autopilot-desc">Envia un enlace para dejar resena 1 hora despues de la cita</p></div>
+        <label class="res-toggle"><input type="checkbox" onchange="resToggleAuto(this,'ask_review')"><span class="res-toggle-slider"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;overflow-x:auto;">
+    <button id="res-tab-calendario" class="res-tab active" onclick="switchResTab('calendario')">Calendario</button>
+    <button id="res-tab-lista" class="res-tab" onclick="switchResTab('lista')">Lista de citas</button>
+    <button id="res-tab-servicios" class="res-tab" onclick="switchResTab('servicios')">Servicios</button>
+    <button id="res-tab-disponibilidad" class="res-tab" onclick="switchResTab('disponibilidad')">Disponibilidad</button>
+    <button id="res-tab-analitica" class="res-tab" onclick="switchResTab('analitica')">Analitica</button>
+  </div>
+
+  <!-- ══════════ Tab: Calendario ══════════ -->
+  <div id="res-panel-calendario">
+    <div id="res-help-calendario" class="res-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Calendario semanal de citas. Haz clic en cualquier hora para agendar rapidamente. Los colores indican el tipo de servicio.</p>
+      <button onclick="resDismissHelp('calendario')" class="res-help-close">&times;</button>
+    </div>
+
+    <!-- Calendar navigation -->
+    <div class="stat-card animate-in" style="padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button onclick="resCalNavPrev()" class="res-btn-secondary" style="padding:8px 12px;">
+          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <h3 id="res-cal-week-label" style="font-size:15px;font-weight:800;color:var(--text-primary);min-width:200px;text-align:center;"></h3>
+        <button onclick="resCalNavNext()" class="res-btn-secondary" style="padding:8px 12px;">
+          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <button onclick="resCalToday()" class="res-btn-secondary" style="padding:8px 12px;font-size:12px;">Hoy</button>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:3px;background:#6fcff5;"></div><span style="font-size:11px;color:var(--text-muted);">Confirmada</span></div>
+        <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:3px;background:#f97316;"></div><span style="font-size:11px;color:var(--text-muted);">Pendiente</span></div>
+        <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:3px;background:#22c55e;"></div><span style="font-size:11px;color:var(--text-muted);">Completada</span></div>
+        <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:3px;background:#ef4444;"></div><span style="font-size:11px;color:var(--text-muted);">Cancelada</span></div>
+      </div>
+      <button onclick="resQuickBook()" class="res-btn-primary" style="display:flex;align-items:center;gap:6px;padding:10px 20px;">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Agendar rapido
+      </button>
+    </div>
+
+    <!-- Calendar grid -->
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+      <div id="res-cal-grid" style="overflow-x:auto;"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Lista de citas ══════════ -->
+  <div id="res-panel-lista" style="display:none;">
+    <div id="res-help-lista" class="res-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Todas tus citas en lista. Filtra por estado, busca por nombre y gestiona cada cita con las acciones rapidas.</p>
+      <button onclick="resDismissHelp('lista')" class="res-help-close">&times;</button>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="stat-card animate-in" style="padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;position:relative;">
+        <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input id="res-list-search" type="text" placeholder="Buscar por cliente, servicio..." oninput="resFilterList()" class="res-input" style="padding-left:38px;"/>
+      </div>
+      <select id="res-list-filter-status" onchange="resFilterList()" class="res-input" style="width:auto;cursor:pointer;">
+        <option value="">Todos los estados</option>
+        <option value="confirmada">Confirmada</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="completada">Completada</option>
+        <option value="cancelada">Cancelada</option>
+      </select>
+      <select id="res-list-filter-service" onchange="resFilterList()" class="res-input" style="width:auto;cursor:pointer;">
+        <option value="">Todos los servicios</option>
+      </select>
+      <button onclick="resQuickBook()" class="res-btn-primary" style="display:flex;align-items:center;gap:6px;padding:10px 20px;">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Nueva cita
+      </button>
+    </div>
+
+    <!-- Table -->
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table id="res-list-table" class="res-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Cliente</th>
+              <th>Servicio</th>
+              <th>Fecha</th>
+              <th>Hora</th>
+              <th>Duracion</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="res-list-body"></tbody>
+        </table>
+      </div>
+      <div id="res-list-empty" style="display:none;text-align:center;padding:48px 20px;">
+        <svg style="width:48px;height:48px;color:var(--accent);opacity:0.5;margin:0 auto 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <h3 style="font-size:16px;font-weight:800;color:var(--text-primary);margin-bottom:6px;">No hay citas</h3>
+        <p style="font-size:13px;color:var(--text-muted);max-width:320px;margin:0 auto;line-height:1.5;">Agenda tu primera cita para empezar a organizar tu agenda.</p>
+        <button onclick="resQuickBook()" class="res-btn-primary" style="margin-top:16px;padding:12px 28px;">Agendar primera cita</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Servicios ══════════ -->
+  <div id="res-panel-servicios" style="display:none;">
+    <div id="res-help-servicios" class="res-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Define los servicios que ofreces, con precio, duracion y capacidad. Estos aparecen cuando agendas una cita.</p>
+      <button onclick="resDismissHelp('servicios')" class="res-help-close">&times;</button>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+      <button onclick="resAddService()" class="res-btn-primary" style="display:flex;align-items:center;gap:6px;padding:10px 20px;">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Agregar servicio
+      </button>
+    </div>
+
+    <div id="res-services-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;"></div>
+
+    <div id="res-services-empty" style="display:none;text-align:center;padding:48px 20px;">
+      <svg style="width:48px;height:48px;color:var(--accent);opacity:0.5;margin:0 auto 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+      <h3 style="font-size:16px;font-weight:800;color:var(--text-primary);margin-bottom:6px;">No tienes servicios</h3>
+      <p style="font-size:13px;color:var(--text-muted);max-width:320px;margin:0 auto;line-height:1.5;">Agrega tus servicios para que los clientes puedan agendar.</p>
+      <button onclick="resAddService()" class="res-btn-primary" style="margin-top:16px;padding:12px 28px;">Agregar primer servicio</button>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Disponibilidad ══════════ -->
+  <div id="res-panel-disponibilidad" style="display:none;">
+    <div id="res-help-disponibilidad" class="res-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Configura tus horarios de atencion por dia de la semana y bloquea fechas especificas. Tambien puedes definir cuantas citas puedes atender por hora.</p>
+      <button onclick="resDismissHelp('disponibilidad')" class="res-help-close">&times;</button>
+    </div>
+
+    <!-- Business hours -->
+    <div class="stat-card animate-in" style="padding:20px;margin-bottom:20px;">
+      <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Horario de atencion</h4>
+      <div id="res-hours-grid" style="display:flex;flex-direction:column;gap:10px;"></div>
+    </div>
+
+    <!-- Capacity -->
+    <div class="stat-card animate-in" style="padding:20px;margin-bottom:20px;">
+      <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:8px;">Capacidad por franja horaria <span class="res-tip" data-tip="Cuantas citas puedes atender al mismo tiempo en cada hora. Ej: si tienes 3 sillones de corte, puedes atender 3 a la vez">?</span></h4>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+        <label class="res-label" style="min-width:auto;">Citas simultaneas:</label>
+        <input id="res-capacity" type="number" min="1" max="50" value="3" class="res-input" style="width:80px;" onchange="showToast('Capacidad actualizada')"/>
+        <p style="font-size:12px;color:var(--text-muted);">Por cada franja horaria</p>
+      </div>
+    </div>
+
+    <!-- Blocked dates -->
+    <div class="stat-card animate-in" style="padding:20px;">
+      <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:8px;">Fechas bloqueadas <span class="res-tip" data-tip="Dias que no atiendes: vacaciones, dias festivos, etc.">?</span></h4>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
+        <input id="res-block-date" type="date" class="res-input" style="width:auto;"/>
+        <input id="res-block-reason" type="text" placeholder="Motivo (opcional)" class="res-input" style="width:200px;"/>
+        <button onclick="resBlockDate()" class="res-btn-primary" style="padding:10px 16px;">Bloquear</button>
+      </div>
+      <div id="res-blocked-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <div id="res-blocked-empty" style="text-align:center;padding:20px;">
+        <p style="font-size:13px;color:var(--text-muted);">No hay fechas bloqueadas. Agrega una para evitar agendamientos en dias no laborables.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Analitica ══════════ -->
+  <div id="res-panel-analitica" style="display:none;">
+    <div id="res-help-analitica" class="res-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Estadisticas de tu agenda: cuantas citas tienes por dia, cuales son tus servicios mas populares y a que horas tienes mas demanda.</p>
+      <button onclick="resDismissHelp('analitica')" class="res-help-close">&times;</button>
+    </div>
+
+    <!-- Reservations by day -->
+    <div class="stat-card animate-in" style="padding:24px;margin-bottom:20px;">
+      <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">Reservaciones por dia</h3>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:20px;">Ultimos 7 dias</p>
+      <div id="res-chart-daily" style="display:flex;align-items:flex-end;gap:12px;height:180px;padding:0 8px;"></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+      <!-- Top services -->
+      <div class="stat-card animate-in" style="padding:24px;">
+        <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">Servicios mas populares</h3>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Por numero de reservaciones</p>
+        <div id="res-chart-services" style="display:flex;flex-direction:column;gap:12px;"></div>
+      </div>
+
+      <!-- No-shows rate -->
+      <div class="stat-card animate-in" style="padding:24px;">
+        <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">Tasa de no-shows</h3>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Comparado con el mes anterior</p>
+        <div style="display:flex;align-items:center;justify-content:center;gap:24px;padding:20px 0;">
+          <div style="text-align:center;">
+            <p style="font-size:42px;font-weight:900;color:#ef4444;">13%</p>
+            <p style="font-size:12px;color:var(--text-muted);margin-top:4px;">Este mes</p>
+          </div>
+          <svg style="width:24px;height:24px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          <div style="text-align:center;">
+            <p style="font-size:42px;font-weight:900;color:var(--text-muted);">18%</p>
+            <p style="font-size:12px;color:var(--text-muted);margin-top:4px;">Mes anterior</p>
+          </div>
+        </div>
+        <div style="padding:12px;border-radius:10px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);text-align:center;">
+          <p style="font-size:12px;color:#22c55e;font-weight:700;">Mejoraste 5 puntos porcentuales. Los recordatorios automaticos estan funcionando.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Revenue from appointments -->
+    <div class="stat-card animate-in" style="padding:24px;margin-bottom:20px;">
+      <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">Ingresos por reservaciones</h3>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:20px;">Ultimos 7 dias</p>
+      <div id="res-chart-revenue" style="display:flex;align-items:flex-end;gap:12px;height:180px;padding:0 8px;"></div>
+    </div>
+
+    <!-- Peak hours heatmap -->
+    <div class="stat-card animate-in" style="padding:24px;">
+      <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">Horas pico <span class="res-tip" data-tip="Las horas con mas reservaciones. El color mas intenso indica mayor demanda">?</span></h3>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Mapa de calor semanal</p>
+      <div id="res-heatmap" style="overflow-x:auto;"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ Quick Book Modal ══════════ -->
+  <div id="res-modal-overlay" class="res-modal-overlay" onclick="resCloseModal()"></div>
+  <div id="res-modal" class="res-modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <h3 id="res-modal-title" style="font-size:16px;font-weight:900;color:var(--text-primary);">Nueva cita</h3>
+      <button onclick="resCloseModal()" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:none;background:transparent;cursor:pointer;color:var(--text-muted);">
+        <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div><label class="res-label">Cliente *</label><input id="res-book-client" type="text" placeholder="Nombre del cliente" class="res-input"/></div>
+      <div><label class="res-label">Telefono</label><input id="res-book-phone" type="tel" placeholder="55 1234 5678" class="res-input"/></div>
+      <div><label class="res-label">Servicio *</label><select id="res-book-service" class="res-input" style="cursor:pointer;" onchange="resUpdateDuration()"></select></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div><label class="res-label">Fecha *</label><input id="res-book-date" type="date" class="res-input"/></div>
+        <div><label class="res-label">Hora *</label><input id="res-book-time" type="time" class="res-input"/></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div><label class="res-label">Duracion</label><input id="res-book-duration" type="text" class="res-input" readonly style="color:var(--text-muted);"/></div>
+        <div><label class="res-label">Precio</label><input id="res-book-price" type="text" class="res-input" readonly style="color:#22c55e;"/></div>
+      </div>
+      <div><label class="res-label">Notas</label><textarea id="res-book-notes" rows="2" placeholder="Notas adicionales..." class="res-input" style="resize:vertical;"></textarea></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <label style="font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="res-book-send-wa" checked style="accent-color:var(--accent);"/> Enviar confirmacion por WhatsApp
+        </label>
+        <label style="font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="res-book-send-email" style="accent-color:var(--accent);"/> Enviar por Email
+        </label>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
+        <button onclick="resCloseModal()" class="res-btn-secondary" style="padding:10px 20px;">Cancelar</button>
+        <button onclick="resSaveBooking()" class="res-btn-primary" style="padding:10px 24px;">Agendar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Service Modal ══════════ -->
+  <div id="res-svc-modal-overlay" class="res-modal-overlay" onclick="resCloseSvcModal()"></div>
+  <div id="res-svc-modal" class="res-modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);">Nuevo servicio</h3>
+      <button onclick="resCloseSvcModal()" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:none;background:transparent;cursor:pointer;color:var(--text-muted);">
+        <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div><label class="res-label">Nombre del servicio *</label><input id="res-svc-name" type="text" placeholder="Ej: Corte de cabello" class="res-input"/></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div><label class="res-label">Duracion (min) *</label><input id="res-svc-duration" type="number" min="5" step="5" placeholder="30" class="res-input"/></div>
+        <div><label class="res-label">Precio *</label><input id="res-svc-price" type="number" step="0.01" placeholder="150.00" class="res-input"/></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div><label class="res-label">Capacidad <span class="res-tip" data-tip="Cuantas personas pueden tomar este servicio al mismo tiempo">?</span></label><input id="res-svc-capacity" type="number" min="1" value="1" class="res-input"/></div>
+        <div><label class="res-label">Color</label><select id="res-svc-color" class="res-input" style="cursor:pointer;">
+          <option value="#6fcff5">Cyan</option>
+          <option value="#22c55e">Verde</option>
+          <option value="#f97316">Naranja</option>
+          <option value="#8b5cf6">Morado</option>
+          <option value="#ec4899">Rosa</option>
+          <option value="#eab308">Amarillo</option>
+        </select></div>
+      </div>
+      <div><label class="res-label">Descripcion</label><textarea id="res-svc-desc" rows="2" placeholder="Descripcion breve del servicio..." class="res-input" style="resize:vertical;"></textarea></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
+        <button onclick="resCloseSvcModal()" class="res-btn-secondary" style="padding:10px 20px;">Cancelar</button>
+        <button onclick="resSaveService()" class="res-btn-primary" style="padding:10px 24px;">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="res-toast-container" style="position:fixed;top:20px;right:20px;z-index:10000;display:flex;flex-direction:column;gap:8px;"></div>
+
+<style>
+  .res-stat-label{font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px;}
+  .res-stat-val{font-size:28px;font-weight:900;color:var(--text-primary);}
+  .res-tip{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--accent-bg);color:var(--accent);font-size:10px;font-weight:800;cursor:help;position:relative;}
+  .res-tip:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg-sidebar);border:1px solid var(--border);color:var(--text-secondary);font-size:11px;font-weight:500;padding:8px 12px;border-radius:8px;white-space:normal;width:220px;z-index:100;line-height:1.4;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,0.3);}
+  .res-tab{padding:10px 20px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;}
+  .res-tab:hover{color:var(--text-secondary);}
+  .res-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+  .res-input{width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-weight:500;font-family:inherit;transition:border-color 0.2s;}
+  .res-input:focus{outline:none;border-color:var(--accent);}
+  .res-label{display:block;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+  .res-btn-primary{padding:10px 20px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:800;cursor:pointer;transition:all 0.2s;font-family:inherit;}
+  .res-btn-primary:hover{opacity:0.9;transform:translateY(-1px);}
+  .res-btn-secondary{padding:10px 16px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:inherit;}
+  .res-btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+  .res-help-banner{display:flex;align-items:flex-start;gap:10px;padding:14px 16px;border-radius:12px;background:var(--accent-bg);border:1px solid rgba(111,207,245,0.15);margin-bottom:16px;}
+  .res-help-close{border:none;background:transparent;color:var(--text-muted);font-size:18px;cursor:pointer;padding:0 4px;line-height:1;}
+  .res-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .res-table th{text-align:left;padding:12px 16px;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border);background:var(--bg-card);}
+  .res-table td{padding:12px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);vertical-align:middle;}
+  .res-table tbody tr:hover{background:var(--bg-card-hover);}
+  .res-badge{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;display:inline-block;}
+  .res-badge-confirmada{background:rgba(111,207,245,0.15);color:#6fcff5;}
+  .res-badge-pendiente{background:rgba(249,115,22,0.15);color:#f97316;}
+  .res-badge-completada{background:rgba(34,197,94,0.15);color:#22c55e;}
+  .res-badge-cancelada{background:rgba(239,68,68,0.15);color:#ef4444;}
+  .res-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;display:none;backdrop-filter:blur(4px);}
+  .res-modal-overlay.active{display:block;}
+  .res-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-sidebar);border:1px solid var(--border);border-radius:16px;padding:24px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;z-index:9999;display:none;box-shadow:0 8px 40px rgba(0,0,0,0.4);}
+  .res-modal.active{display:block;}
+  .res-autopilot-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px;border-radius:10px;background:var(--input-bg);border:1px solid var(--border);}
+  .res-autopilot-title{font-size:13px;font-weight:700;color:var(--text-secondary);margin-bottom:2px;}
+  .res-autopilot-desc{font-size:11px;color:var(--text-muted);}
+  .res-toggle{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;}
+  .res-toggle input{opacity:0;width:0;height:0;}
+  .res-toggle-slider{position:absolute;cursor:pointer;inset:0;background:var(--text-faintest);border-radius:24px;transition:0.3s;}
+  .res-toggle-slider::before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s;}
+  .res-toggle input:checked+.res-toggle-slider{background:var(--accent);}
+  .res-toggle input:checked+.res-toggle-slider::before{transform:translateX(20px);}
+  .res-cal-cell{min-height:60px;border:1px solid var(--border);padding:4px;cursor:pointer;transition:background 0.15s;position:relative;}
+  .res-cal-cell:hover{background:var(--accent-bg);}
+  .res-cal-cell.today{background:rgba(111,207,245,0.05);border-color:var(--accent);}
+  .res-cal-event{padding:3px 6px;border-radius:4px;font-size:10px;font-weight:700;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
+  .res-hours-row{display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:10px;background:var(--input-bg);border:1px solid var(--border);}
+  .res-hours-day{font-size:13px;font-weight:700;color:var(--text-secondary);width:100px;flex-shrink:0;}
+  .res-action-btn{border:none;background:transparent;color:var(--text-muted);cursor:pointer;padding:4px;border-radius:6px;transition:all 0.2s;display:inline-flex;align-items:center;}
+  .res-action-btn:hover{color:var(--accent);background:var(--accent-bg);}
+  .res-heatmap-cell{width:36px;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:rgba(255,255,255,0.7);}
+  @media(max-width:768px){
+    .res-modal{width:95vw;padding:20px;}
+    .res-hours-row{flex-wrap:wrap;}
+  }
+</style>
+
+<script is:inline>
+// ═══════ DATA ═══════
+const resSectorTerms = {
+  belleza:      { singular:'cita',    plural:'citas',    action:'Agendar' },
+  restaurante:  { singular:'mesa',    plural:'mesas',    action:'Reservar' },
+  salud:        { singular:'consulta',plural:'consultas', action:'Agendar' },
+  fitness:      { singular:'sesion',  plural:'sesiones',  action:'Reservar' },
+  profesional:  { singular:'reunion', plural:'reuniones', action:'Agendar' },
+  otro:         { singular:'cita',    plural:'citas',    action:'Agendar' }
+};
+let resSector = 'belleza';
+
+const resDemoServices = [
+  { id:1, name:'Corte de cabello', duration:30, price:150, capacity:1, color:'#6fcff5', desc:'Corte profesional para dama o caballero' },
+  { id:2, name:'Consulta medica general', duration:45, price:500, capacity:1, color:'#22c55e', desc:'Consulta de medicina general' },
+  { id:3, name:'Mesa para 4 personas', duration:120, price:0, capacity:4, color:'#f97316', desc:'Reserva de mesa en restaurante' },
+  { id:4, name:'Clase de yoga', duration:60, price:200, capacity:15, color:'#8b5cf6', desc:'Clase grupal de yoga vinyasa' },
+  { id:5, name:'Asesoria legal', duration:60, price:800, capacity:1, color:'#ec4899', desc:'Consulta con abogado especialista' },
+  { id:6, name:'Manicure y pedicure', duration:90, price:350, capacity:1, color:'#eab308', desc:'Servicio completo de unas' }
+];
+
+function resToday(){ const d=new Date(); return d.toISOString().split('T')[0]; }
+function resTomorrow(){ const d=new Date(); d.setDate(d.getDate()+1); return d.toISOString().split('T')[0]; }
+function resYesterday(){ const d=new Date(); d.setDate(d.getDate()-1); return d.toISOString().split('T')[0]; }
+function resDayAfter(n){ const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().split('T')[0]; }
+
+const resDemoAppointments = [
+  { id:1, client:'Maria Fernanda Lopez', phone:'55 1234 5678', service:1, date:resToday(), time:'09:00', status:'confirmada', notes:'' },
+  { id:2, client:'Carlos Eduardo Martinez', phone:'55 9876 5432', service:2, date:resToday(), time:'10:30', status:'pendiente', notes:'Primera consulta' },
+  { id:3, client:'Ana Patricia Gomez', phone:'55 5555 1234', service:3, date:resToday(), time:'14:00', status:'confirmada', notes:'Cumpleanos' },
+  { id:4, client:'Roberto Sanchez Diaz', phone:'55 4321 8765', service:4, date:resToday(), time:'17:00', status:'pendiente', notes:'' },
+  { id:5, client:'Guadalupe Hernandez', phone:'55 6789 0123', service:5, date:resTomorrow(), time:'11:00', status:'pendiente', notes:'Contrato de arrendamiento' },
+  { id:6, client:'Jose Luis Ramirez', phone:'55 3456 7890', service:6, date:resTomorrow(), time:'15:00', status:'confirmada', notes:'' },
+  { id:7, client:'Patricia Morales', phone:'55 7890 1234', service:1, date:resYesterday(), time:'10:00', status:'completada', notes:'Cliente frecuente' },
+  { id:8, client:'Fernando Garcia Vega', phone:'55 2345 6789', service:2, date:resDayAfter(-2), time:'09:30', status:'cancelada', notes:'Cancelo por enfermedad' }
+];
+
+let resServices = [...resDemoServices];
+let resAppointments = [...resDemoAppointments];
+let resBlockedDates = [];
+let resCalWeekOffset = 0;
+let resNextId = 9;
+let resNextSvcId = 7;
+
+const resBusinessHours = [
+  { day:'Lunes',     open:'09:00', close:'19:00', active:true },
+  { day:'Martes',    open:'09:00', close:'19:00', active:true },
+  { day:'Miercoles', open:'09:00', close:'19:00', active:true },
+  { day:'Jueves',    open:'09:00', close:'19:00', active:true },
+  { day:'Viernes',   open:'09:00', close:'19:00', active:true },
+  { day:'Sabado',    open:'10:00', close:'14:00', active:true },
+  { day:'Domingo',   open:'00:00', close:'00:00', active:false }
+];
+
+// ═══════ HELPERS ═══════
+function showToast(msg, type='success'){
+  const c = document.getElementById('res-toast-container');
+  if(!c) return;
+  const t = document.createElement('div');
+  const bg = type==='error'?'#ef4444':type==='warning'?'#f97316':'#22c55e';
+  t.style.cssText = `padding:12px 20px;border-radius:10px;background:${bg};color:#fff;font-size:13px;font-weight:700;font-family:inherit;box-shadow:0 4px 20px rgba(0,0,0,0.3);animation:fadeIn 0.3s ease;`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(()=>t.remove(),300);},3000);
+}
+
+function resDismissHelp(tab){ const el=document.getElementById('res-help-'+tab); if(el) el.style.display='none'; localStorage.setItem('res_help_'+tab+'_dismissed','1'); }
+
+function switchResTab(tab){
+  document.querySelectorAll('.res-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('res-tab-'+tab).classList.add('active');
+  ['calendario','lista','servicios','disponibilidad','analitica'].forEach(p=>{
+    const panel=document.getElementById('res-panel-'+p);
+    if(panel) panel.style.display = p===tab ? '' : 'none';
+  });
+}
+window.switchResTab = switchResTab;
+
+// ═══════ SECTOR ═══════
+function resChangeSector(){
+  resSector = document.getElementById('res-sector').value;
+  const terms = resSectorTerms[resSector];
+  document.querySelectorAll('.res-term-citas').forEach(el => el.textContent = terms.plural.charAt(0).toUpperCase() + terms.plural.slice(1));
+  showToast('Terminologia actualizada a: ' + terms.singular);
+}
+window.resChangeSector = resChangeSector;
+
+// ═══════ SMART RECS ═══════
+function resRenderRecs(){
+  const el = document.getElementById('res-smart-recs');
+  if(!el) return;
+  const today = resToday();
+  const todayPending = resAppointments.filter(a=>a.date===today && a.status==='pendiente').length;
+  const tomorrow = resTomorrow();
+  const tomorrowCount = resAppointments.filter(a=>a.date===tomorrow).length;
+  const recs = [];
+  if(todayPending > 0) recs.push({icon:'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',text:todayPending+' cita'+(todayPending>1?'s':'')+' hoy sin confirmar',action:'Enviar recordatorio',color:'#f97316',fn:'resRemindPending()'});
+  if(tomorrowCount >= 5) recs.push({icon:'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',text:'Manana tienes agenda llena ('+tomorrowCount+' citas)',action:'Ver agenda',color:'var(--accent)',fn:'resCalNavNext()'});
+  const noShowRate = 13;
+  if(noShowRate > 10) recs.push({icon:'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',text:'Tu tasa de no-shows es '+noShowRate+'%. Activa recordatorios automaticos.',action:'Activar',color:'#ef4444',fn:'resToggleAutopilot()'});
+  if(recs.length===0) recs.push({icon:'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',text:'Todo esta en orden. Tu agenda luce bien para hoy.',action:'',color:'#22c55e',fn:''});
+  el.innerHTML = recs.map(r=>`<div class="stat-card animate-in" style="padding:14px 20px;display:flex;align-items:center;gap:12px;border-left:3px solid ${r.color};">
+    <svg style="width:18px;height:18px;color:${r.color};flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${r.icon}"/></svg>
+    <p style="flex:1;font-size:13px;color:var(--text-secondary);font-weight:600;">${r.text}</p>
+    ${r.action?`<button onclick="${r.fn}" class="res-btn-primary" style="padding:8px 16px;font-size:12px;">${r.action}</button>`:''}
+  </div>`).join('');
+}
+
+function resRemindPending(){
+  const today = resToday();
+  resAppointments.filter(a=>a.date===today && a.status==='pendiente').forEach(a=>a.status='confirmada');
+  showToast('Recordatorios enviados por WhatsApp');
+  resRenderAll();
+}
+window.resRemindPending = resRemindPending;
+
+// ═══════ CALENDAR ═══════
+function resGetWeekDates(offset){
+  const now = new Date();
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day===0?-6:1) + (offset*7);
+  const monday = new Date(now);
+  monday.setDate(diff);
+  const dates=[];
+  for(let i=0;i<7;i++){
+    const d = new Date(monday);
+    d.setDate(monday.getDate()+i);
+    dates.push(d);
+  }
+  return dates;
+}
+
+function resRenderCalendar(){
+  const dates = resGetWeekDates(resCalWeekOffset);
+  const today = resToday();
+  const label = document.getElementById('res-cal-week-label');
+  if(label){
+    const m1 = dates[0].toLocaleDateString('es-MX',{month:'short',day:'numeric'});
+    const m2 = dates[6].toLocaleDateString('es-MX',{month:'short',day:'numeric',year:'numeric'});
+    label.textContent = m1 + ' — ' + m2;
+  }
+
+  const hours = [];
+  for(let h=8;h<=20;h++) hours.push(h);
+  const dayNames = ['Lun','Mar','Mie','Jue','Vie','Sab','Dom'];
+
+  let html = '<table style="width:100%;border-collapse:collapse;min-width:700px;">';
+  html += '<thead><tr><th style="padding:10px 8px;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;border-bottom:1px solid var(--border);width:60px;text-align:center;">Hora</th>';
+  dates.forEach((d,i)=>{
+    const ds = d.toISOString().split('T')[0];
+    const isToday = ds===today;
+    html += `<th style="padding:10px 8px;font-size:11px;font-weight:700;color:${isToday?'var(--accent)':'var(--text-faint)'};text-transform:uppercase;border-bottom:1px solid var(--border);text-align:center;${isToday?'background:var(--accent-bg);':''}">${dayNames[i]}<br><span style="font-size:13px;font-weight:900;color:${isToday?'var(--accent)':'var(--text-primary)'};">${d.getDate()}</span></th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  hours.forEach(h=>{
+    html += '<tr>';
+    html += `<td style="padding:6px 8px;font-size:11px;font-weight:600;color:var(--text-faint);border-right:1px solid var(--border);text-align:center;vertical-align:top;">${h}:00</td>`;
+    dates.forEach(d=>{
+      const ds = d.toISOString().split('T')[0];
+      const isToday = ds===today;
+      const cellAppts = resAppointments.filter(a=>a.date===ds && parseInt(a.time.split(':')[0])===h);
+      html += `<td class="res-cal-cell${isToday?' today':''}" onclick="resQuickBook('${ds}','${String(h).padStart(2,'0')}:00')" style="border-bottom:1px solid var(--border);">`;
+      cellAppts.forEach(a=>{
+        const svc = resServices.find(s=>s.id===a.service);
+        const color = a.status==='cancelada'?'#ef4444':a.status==='completada'?'#22c55e':a.status==='pendiente'?'#f97316':(svc?svc.color:'#6fcff5');
+        html += `<div class="res-cal-event" style="background:${color}22;color:${color};border-left:3px solid ${color};" title="${a.client} - ${svc?svc.name:''}">${a.time} ${a.client.split(' ')[0]}</div>`;
+      });
+      html += '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('res-cal-grid').innerHTML = html;
+}
+
+function resCalNavPrev(){ resCalWeekOffset--; resRenderCalendar(); }
+function resCalNavNext(){ resCalWeekOffset++; resRenderCalendar(); }
+function resCalToday(){ resCalWeekOffset=0; resRenderCalendar(); }
+window.resCalNavPrev = resCalNavPrev;
+window.resCalNavNext = resCalNavNext;
+window.resCalToday = resCalToday;
+
+// ═══════ LIST ═══════
+function resRenderList(){
+  const search = (document.getElementById('res-list-search')?.value||'').toLowerCase();
+  const filterStatus = document.getElementById('res-list-filter-status')?.value||'';
+  const filterService = document.getElementById('res-list-filter-service')?.value||'';
+
+  let filtered = resAppointments.filter(a=>{
+    const svc = resServices.find(s=>s.id===a.service);
+    if(search && !a.client.toLowerCase().includes(search) && !(svc&&svc.name.toLowerCase().includes(search))) return false;
+    if(filterStatus && a.status!==filterStatus) return false;
+    if(filterService && a.service!==parseInt(filterService)) return false;
+    return true;
+  });
+  filtered.sort((a,b)=>b.date.localeCompare(a.date)||b.time.localeCompare(a.time));
+
+  const tbody = document.getElementById('res-list-body');
+  const empty = document.getElementById('res-list-empty');
+  const table = document.getElementById('res-list-table');
+  if(!tbody) return;
+
+  if(filtered.length===0){
+    if(table) table.style.display='none';
+    if(empty) empty.style.display='';
+    return;
+  }
+  if(table) table.style.display='';
+  if(empty) empty.style.display='none';
+
+  tbody.innerHTML = filtered.map((a,i)=>{
+    const svc = resServices.find(s=>s.id===a.service);
+    const dateStr = new Date(a.date+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'});
+    return `<tr>
+      <td style="font-weight:700;color:var(--text-faint);">${i+1}</td>
+      <td><div style="font-weight:700;color:var(--text-primary);">${a.client}</div><div style="font-size:11px;color:var(--text-muted);">${a.phone}</div></td>
+      <td>${svc?svc.name:'-'}</td>
+      <td>${dateStr}</td>
+      <td style="font-weight:600;">${a.time}</td>
+      <td>${svc?svc.duration+' min':'-'}</td>
+      <td><span class="res-badge res-badge-${a.status}">${a.status.charAt(0).toUpperCase()+a.status.slice(1)}</span></td>
+      <td style="white-space:nowrap;">
+        ${a.status==='pendiente'?`<button class="res-action-btn" onclick="resConfirmAppt(${a.id})" title="Confirmar"><svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></button>`:''}
+        ${a.status!=='cancelada'&&a.status!=='completada'?`<button class="res-action-btn" onclick="resCancelAppt(${a.id})" title="Cancelar"><svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>`:''}
+        ${a.status==='confirmada'?`<button class="res-action-btn" onclick="resCompleteAppt(${a.id})" title="Completar"><svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></button>`:''}
+        <button class="res-action-btn" onclick="resShareLink(${a.id})" title="Enviar enlace al cliente"><svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg></button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function resFilterList(){ resRenderList(); }
+window.resFilterList = resFilterList;
+
+function resConfirmAppt(id){
+  const a=resAppointments.find(x=>x.id===id);
+  if(a){a.status='confirmada';showToast('Cita confirmada. Notificacion enviada.');resRenderAll();}
+}
+function resCancelAppt(id){
+  const a=resAppointments.find(x=>x.id===id);
+  if(a){a.status='cancelada';showToast('Cita cancelada','warning');resRenderAll();}
+}
+function resCompleteAppt(id){
+  const a=resAppointments.find(x=>x.id===id);
+  if(a){a.status='completada';showToast('Cita marcada como completada');resRenderAll();}
+}
+function resShareLink(id){
+  showToast('Enlace de cancelacion/reagendamiento copiado al portapapeles');
+}
+window.resConfirmAppt=resConfirmAppt;
+window.resCancelAppt=resCancelAppt;
+window.resCompleteAppt=resCompleteAppt;
+window.resShareLink=resShareLink;
+
+// ═══════ SERVICES ═══════
+function resRenderServices(){
+  const grid = document.getElementById('res-services-grid');
+  const empty = document.getElementById('res-services-empty');
+  if(!grid) return;
+  if(resServices.length===0){
+    grid.style.display='none';
+    if(empty) empty.style.display='';
+    return;
+  }
+  grid.style.display='';
+  if(empty) empty.style.display='none';
+
+  grid.innerHTML = resServices.map(s=>`
+    <div class="stat-card animate-in" style="padding:20px;border-left:4px solid ${s.color};">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">
+        <div>
+          <h4 style="font-size:15px;font-weight:800;color:var(--text-primary);margin-bottom:4px;">${s.name}</h4>
+          <p style="font-size:12px;color:var(--text-muted);">${s.desc}</p>
+        </div>
+        <div style="display:flex;gap:4px;">
+          <button class="res-action-btn" onclick="resDeleteService(${s.id})" title="Eliminar">
+            <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          </button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+        <div style="text-align:center;padding:10px;border-radius:8px;background:var(--input-bg);">
+          <p style="font-size:11px;color:var(--text-faint);font-weight:700;margin-bottom:2px;">DURACION</p>
+          <p style="font-size:16px;font-weight:900;color:var(--text-primary);">${s.duration} min</p>
+        </div>
+        <div style="text-align:center;padding:10px;border-radius:8px;background:var(--input-bg);">
+          <p style="font-size:11px;color:var(--text-faint);font-weight:700;margin-bottom:2px;">PRECIO</p>
+          <p style="font-size:16px;font-weight:900;color:#22c55e;">${s.price>0?'$'+s.price.toLocaleString():'Gratis'}</p>
+        </div>
+        <div style="text-align:center;padding:10px;border-radius:8px;background:var(--input-bg);">
+          <p style="font-size:11px;color:var(--text-faint);font-weight:700;margin-bottom:2px;">CAPACIDAD</p>
+          <p style="font-size:16px;font-weight:900;color:var(--accent);">${s.capacity}</p>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // Populate filter dropdowns
+  const filterSvc = document.getElementById('res-list-filter-service');
+  if(filterSvc){
+    const val = filterSvc.value;
+    filterSvc.innerHTML = '<option value="">Todos los servicios</option>' + resServices.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+    filterSvc.value = val;
+  }
+}
+
+function resAddService(){
+  document.getElementById('res-svc-modal-overlay').classList.add('active');
+  document.getElementById('res-svc-modal').classList.add('active');
+  document.getElementById('res-svc-name').value='';
+  document.getElementById('res-svc-duration').value='';
+  document.getElementById('res-svc-price').value='';
+  document.getElementById('res-svc-capacity').value='1';
+  document.getElementById('res-svc-desc').value='';
+}
+window.resAddService = resAddService;
+
+function resCloseSvcModal(){
+  document.getElementById('res-svc-modal-overlay').classList.remove('active');
+  document.getElementById('res-svc-modal').classList.remove('active');
+}
+window.resCloseSvcModal = resCloseSvcModal;
+
+function resSaveService(){
+  const name = document.getElementById('res-svc-name').value.trim();
+  const duration = parseInt(document.getElementById('res-svc-duration').value);
+  const price = parseFloat(document.getElementById('res-svc-price').value)||0;
+  const capacity = parseInt(document.getElementById('res-svc-capacity').value)||1;
+  const color = document.getElementById('res-svc-color').value;
+  const desc = document.getElementById('res-svc-desc').value.trim();
+  if(!name||!duration){showToast('Completa nombre y duracion','error');return;}
+  resServices.push({id:resNextSvcId++,name,duration,price,capacity,color,desc});
+  resCloseSvcModal();
+  showToast('Servicio agregado');
+  resRenderAll();
+}
+window.resSaveService = resSaveService;
+
+function resDeleteService(id){
+  resServices = resServices.filter(s=>s.id!==id);
+  showToast('Servicio eliminado','warning');
+  resRenderAll();
+}
+window.resDeleteService = resDeleteService;
+
+// ═══════ AVAILABILITY ═══════
+function resRenderHours(){
+  const grid = document.getElementById('res-hours-grid');
+  if(!grid) return;
+  grid.innerHTML = resBusinessHours.map((h,i)=>`
+    <div class="res-hours-row">
+      <div class="res-hours-day">${h.day}</div>
+      <label class="res-toggle" style="margin-right:8px;"><input type="checkbox" ${h.active?'checked':''} onchange="resToggleDay(${i},this.checked)"><span class="res-toggle-slider"></span></label>
+      <input type="time" value="${h.open}" class="res-input" style="width:120px;" onchange="resUpdateHours(${i},'open',this.value)" ${h.active?'':'disabled'}/>
+      <span style="color:var(--text-muted);font-size:12px;">a</span>
+      <input type="time" value="${h.close}" class="res-input" style="width:120px;" onchange="resUpdateHours(${i},'close',this.value)" ${h.active?'':'disabled'}/>
+    </div>
+  `).join('');
+}
+
+function resToggleDay(idx,val){
+  resBusinessHours[idx].active=val;
+  showToast(resBusinessHours[idx].day+(val?' activado':' desactivado'));
+  resRenderHours();
+}
+function resUpdateHours(idx,field,val){
+  resBusinessHours[idx][field]=val;
+  showToast('Horario actualizado');
+}
+window.resToggleDay=resToggleDay;
+window.resUpdateHours=resUpdateHours;
+
+function resBlockDate(){
+  const date=document.getElementById('res-block-date').value;
+  const reason=document.getElementById('res-block-reason').value.trim();
+  if(!date){showToast('Selecciona una fecha','error');return;}
+  resBlockedDates.push({date,reason});
+  document.getElementById('res-block-date').value='';
+  document.getElementById('res-block-reason').value='';
+  showToast('Fecha bloqueada');
+  resRenderBlocked();
+}
+window.resBlockDate = resBlockDate;
+
+function resRenderBlocked(){
+  const list=document.getElementById('res-blocked-list');
+  const empty=document.getElementById('res-blocked-empty');
+  if(!list) return;
+  if(resBlockedDates.length===0){
+    list.innerHTML='';
+    if(empty) empty.style.display='';
+    return;
+  }
+  if(empty) empty.style.display='none';
+  list.innerHTML = resBlockedDates.map((b,i)=>{
+    const ds=new Date(b.date+'T12:00:00').toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:10px;background:var(--input-bg);border:1px solid var(--border);">
+      <svg style="width:16px;height:16px;color:#ef4444;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+      <div style="flex:1;"><p style="font-size:13px;font-weight:700;color:var(--text-secondary);">${ds}</p>${b.reason?`<p style="font-size:11px;color:var(--text-muted);">${b.reason}</p>`:''}</div>
+      <button class="res-action-btn" onclick="resUnblock(${i})" title="Desbloquear"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+    </div>`;
+  }).join('');
+}
+
+function resUnblock(i){
+  resBlockedDates.splice(i,1);
+  showToast('Fecha desbloqueada');
+  resRenderBlocked();
+}
+window.resUnblock = resUnblock;
+
+// ═══════ ANALYTICS ═══════
+function resRenderAnalytics(){
+  // Daily chart
+  const chartDaily = document.getElementById('res-chart-daily');
+  if(chartDaily){
+    const days=['Lun','Mar','Mie','Jue','Vie','Sab','Dom'];
+    const vals=[5,3,7,4,6,8,2];
+    const max=Math.max(...vals);
+    chartDaily.innerHTML = vals.map((v,i)=>`
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+        <span style="font-size:12px;font-weight:800;color:var(--text-primary);">${v}</span>
+        <div style="width:100%;max-width:50px;height:${(v/max)*140}px;background:linear-gradient(to top,var(--accent-gradient-start),var(--accent-gradient-end));border-radius:6px 6px 0 0;min-height:8px;transition:height 0.5s;"></div>
+        <span style="font-size:11px;font-weight:600;color:var(--text-muted);">${days[i]}</span>
+      </div>
+    `).join('');
+  }
+
+  // Top services chart
+  const chartSvc = document.getElementById('res-chart-services');
+  if(chartSvc){
+    const svcData = [
+      {name:'Corte de cabello',count:28,color:'#6fcff5'},
+      {name:'Consulta medica',count:22,color:'#22c55e'},
+      {name:'Clase de yoga',count:18,color:'#8b5cf6'},
+      {name:'Manicure y pedicure',count:15,color:'#eab308'},
+      {name:'Mesa para 4',count:12,color:'#f97316'},
+      {name:'Asesoria legal',count:8,color:'#ec4899'}
+    ];
+    const maxC=Math.max(...svcData.map(s=>s.count));
+    chartSvc.innerHTML = svcData.map(s=>`
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <span style="font-size:12px;font-weight:700;color:var(--text-secondary);">${s.name}</span>
+          <span style="font-size:12px;font-weight:800;color:var(--text-primary);">${s.count}</span>
+        </div>
+        <div style="width:100%;height:8px;border-radius:4px;background:var(--input-bg);">
+          <div style="width:${(s.count/maxC)*100}%;height:100%;border-radius:4px;background:${s.color};transition:width 0.5s;"></div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Revenue chart
+  const chartRev = document.getElementById('res-chart-revenue');
+  if(chartRev){
+    const days=['Lun','Mar','Mie','Jue','Vie','Sab','Dom'];
+    const vals=[2400,1800,3500,2200,3100,4200,800];
+    const max=Math.max(...vals);
+    chartRev.innerHTML = vals.map((v,i)=>`
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+        <span style="font-size:11px;font-weight:800;color:#22c55e;">$${(v/1000).toFixed(1)}k</span>
+        <div style="width:100%;max-width:50px;height:${(v/max)*140}px;background:linear-gradient(to top,#166534,#22c55e);border-radius:6px 6px 0 0;min-height:8px;transition:height 0.5s;"></div>
+        <span style="font-size:11px;font-weight:600;color:var(--text-muted);">${days[i]}</span>
+      </div>
+    `).join('');
+  }
+
+  // Heatmap
+  const heatmap = document.getElementById('res-heatmap');
+  if(heatmap){
+    const days=['Lun','Mar','Mie','Jue','Vie','Sab','Dom'];
+    const hours=['8','9','10','11','12','13','14','15','16','17','18','19'];
+    const data=[
+      [1,3,5,4,2,1,0,1,2,4,3,1],
+      [2,2,4,5,3,1,1,2,3,5,4,2],
+      [1,4,6,5,3,2,1,3,4,6,3,1],
+      [2,3,5,4,2,1,0,2,3,5,4,2],
+      [3,4,7,6,4,2,1,3,5,7,5,3],
+      [4,5,8,6,3,1,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0]
+    ];
+    const maxV=8;
+    let html='<table style="border-collapse:collapse;">';
+    html+='<tr><td></td>'+hours.map(h=>`<td style="padding:4px 2px;font-size:10px;font-weight:700;color:var(--text-faint);text-align:center;">${h}:00</td>`).join('')+'</tr>';
+    data.forEach((row,di)=>{
+      html+=`<tr><td style="padding:4px 8px;font-size:11px;font-weight:700;color:var(--text-muted);white-space:nowrap;">${days[di]}</td>`;
+      row.forEach(v=>{
+        const intensity=v/maxV;
+        const bg = v===0?'var(--input-bg)':`rgba(111,207,245,${0.15+intensity*0.7})`;
+        html+=`<td style="padding:2px;"><div class="res-heatmap-cell" style="background:${bg};">${v||''}</div></td>`;
+      });
+      html+='</tr>';
+    });
+    html+='</table>';
+    heatmap.innerHTML=html;
+  }
+}
+
+// ═══════ MODALS ═══════
+function resQuickBook(date,time){
+  document.getElementById('res-modal-overlay').classList.add('active');
+  document.getElementById('res-modal').classList.add('active');
+  document.getElementById('res-book-client').value='';
+  document.getElementById('res-book-phone').value='';
+  document.getElementById('res-book-date').value=date||resToday();
+  document.getElementById('res-book-time').value=time||'09:00';
+  document.getElementById('res-book-notes').value='';
+  // Populate services
+  const sel=document.getElementById('res-book-service');
+  sel.innerHTML=resServices.map(s=>`<option value="${s.id}">${s.name} — ${s.price>0?'$'+s.price:'Gratis'}</option>`).join('');
+  resUpdateDuration();
+}
+window.resQuickBook = resQuickBook;
+
+function resCloseModal(){
+  document.getElementById('res-modal-overlay').classList.remove('active');
+  document.getElementById('res-modal').classList.remove('active');
+}
+window.resCloseModal = resCloseModal;
+
+function resUpdateDuration(){
+  const svcId=parseInt(document.getElementById('res-book-service').value);
+  const svc=resServices.find(s=>s.id===svcId);
+  document.getElementById('res-book-duration').value=svc?svc.duration+' minutos':'--';
+  document.getElementById('res-book-price').value=svc?(svc.price>0?'$'+svc.price.toLocaleString():'Gratis'):'--';
+}
+window.resUpdateDuration = resUpdateDuration;
+
+function resSaveBooking(){
+  const client=document.getElementById('res-book-client').value.trim();
+  const phone=document.getElementById('res-book-phone').value.trim();
+  const service=parseInt(document.getElementById('res-book-service').value);
+  const date=document.getElementById('res-book-date').value;
+  const time=document.getElementById('res-book-time').value;
+  const notes=document.getElementById('res-book-notes').value.trim();
+  const sendWa=document.getElementById('res-book-send-wa').checked;
+  const sendEmail=document.getElementById('res-book-send-email').checked;
+  if(!client||!date||!time){showToast('Completa cliente, fecha y hora','error');return;}
+  resAppointments.push({id:resNextId++,client,phone,service,date,time,status:'pendiente',notes});
+  resCloseModal();
+  let msg='Cita agendada';
+  if(sendWa) msg+='. Confirmacion enviada por WhatsApp';
+  if(sendEmail) msg+='. Email enviado';
+  showToast(msg);
+  resRenderAll();
+}
+window.resSaveBooking = resSaveBooking;
+
+// ═══════ AUTOPILOT ═══════
+function resToggleAutopilot(){
+  const body=document.getElementById('res-autopilot-body');
+  const chevron=document.getElementById('res-autopilot-chevron');
+  if(body.style.display==='none'){body.style.display='flex';chevron.style.transform='rotate(180deg)';}
+  else{body.style.display='none';chevron.style.transform='';}
+}
+window.resToggleAutopilot = resToggleAutopilot;
+
+function resToggleAuto(el,key){
+  showToast(el.checked?'Automatizacion activada':'Automatizacion desactivada');
+  // Update counter
+  const count=document.querySelectorAll('.res-autopilot-row input[type=checkbox]:checked').length;
+  const badge=document.querySelector('.res-autopilot-row')?.parentElement?.previousElementSibling?.querySelector('span:last-child');
+}
+window.resToggleAuto = resToggleAuto;
+
+// ═══════ STATS ═══════
+function resUpdateStats(){
+  const today=resToday();
+  const todayAppts=resAppointments.filter(a=>a.date===today).length;
+  document.getElementById('res-stat-today').textContent=todayAppts;
+
+  const dates=resGetWeekDates(0);
+  const weekStart=dates[0].toISOString().split('T')[0];
+  const weekEnd=dates[6].toISOString().split('T')[0];
+  const weekAppts=resAppointments.filter(a=>a.date>=weekStart&&a.date<=weekEnd).length;
+  document.getElementById('res-stat-week').textContent=weekAppts;
+
+  const total=resAppointments.filter(a=>a.status!=='cancelada').length;
+  const completed=resAppointments.filter(a=>a.status==='completada').length;
+  const attendance=total>0?Math.round((completed/(completed+4))*100):0;
+  document.getElementById('res-stat-attendance').textContent=attendance>0?attendance+'%':'87%';
+
+  document.getElementById('res-stat-services').textContent=resServices.length;
+}
+
+// ═══════ RENDER ALL ═══════
+function resRenderAll(){
+  resRenderRecs();
+  resRenderCalendar();
+  resRenderList();
+  resRenderServices();
+  resRenderHours();
+  resRenderBlocked();
+  resRenderAnalytics();
+  resUpdateStats();
+}
+
+// ═══════ INIT ═══════
+function resInit(){
+  // Restore dismissed help banners
+  ['calendario','lista','servicios','disponibilidad','analitica'].forEach(tab=>{
+    if(localStorage.getItem('res_help_'+tab+'_dismissed')==='1'){
+      const el=document.getElementById('res-help-'+tab);
+      if(el) el.style.display='none';
+    }
+  });
+  // Show autopilot body by default
+  document.getElementById('res-autopilot-body').style.display='flex';
+  resRenderAll();
+}
+
+// Wait for auth
+if(window._skybrandUser) resInit();
+else window.addEventListener('skybrand:auth',()=>resInit());
+</script>
+</DashboardLayout>

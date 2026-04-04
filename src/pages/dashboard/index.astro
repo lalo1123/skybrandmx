@@ -1,0 +1,279 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:6100';
+---
+
+<DashboardLayout title="Resumen">
+  <!-- Demo Banner -->
+  <div id="demo-banner" class="stat-card" style="margin-bottom:20px;background:linear-gradient(135deg,#0c2d3f,#084D6E);border:1px solid rgba(111,207,245,0.15);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h3 style="font-size:14px;font-weight:800;color:#fff;margin-bottom:4px;">Modo Demo</h3>
+      <p style="font-size:12px;color:rgba(255,255,255,0.6);">Carga datos de prueba para explorar la plataforma</p>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="loadDemoData()" id="demo-load-btn" style="padding:10px 20px;border-radius:10px;border:none;background:#6fcff5;color:#0f172a;font-size:12px;font-weight:800;cursor:pointer;">Cargar datos demo</button>
+      <button onclick="openSimulator()" style="padding:10px 20px;border-radius:10px;border:1px solid rgba(111,207,245,0.3);background:transparent;color:#6fcff5;font-size:12px;font-weight:700;cursor:pointer;">Simulador de tienda</button>
+    </div>
+  </div>
+
+  <!-- Onboarding Banner -->
+  <div id="onboarding-banner" style="background:linear-gradient(135deg, #0c2d3f, #0a4060, #084D6E);border-radius:16px;padding:24px 28px;margin-bottom:24px;position:relative;overflow:hidden;border:1px solid rgba(111,207,245,0.15);" class="animate-in delay-1">
+    <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:rgba(111,207,245,0.06);border-radius:50%;"></div>
+    <div style="position:absolute;bottom:-60px;right:60px;width:120px;height:120px;background:rgba(111,207,245,0.04);border-radius:50%;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div>
+        <h2 style="font-size:18px;font-weight:900;color:#fff;margin-bottom:4px;">Configura tu negocio</h2>
+        <p style="font-size:13px;color:rgba(255,255,255,0.75);">Completa estos pasos para activar tu plataforma</p>
+      </div>
+      <button onclick="dismissOnboarding()" style="background:rgba(255,255,255,0.15);border:none;border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+      <a href="/dashboard/configuracion" style="background:rgba(111,207,245,0.08);border:1px solid rgba(111,207,245,0.15);border-radius:12px;padding:14px 16px;text-align:center;cursor:pointer;transition:all 0.2s;text-decoration:none;" onmouseover="this.style.background='rgba(111,207,245,0.15)';this.style.borderColor='rgba(111,207,245,0.3)'" onmouseout="this.style.background='rgba(111,207,245,0.08)';this.style.borderColor='rgba(111,207,245,0.15)'">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(111,207,245,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+          <svg style="width:18px;height:18px;color:#6fcff5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+        </div>
+        <p style="font-size:12px;font-weight:700;color:#fff;margin-bottom:2px;">Empresa</p>
+        <p style="font-size:10px;color:#6fcff5;">Datos fiscales</p>
+      </a>
+      <a href="/dashboard/pedidos" style="background:rgba(111,207,245,0.08);border:1px solid rgba(111,207,245,0.15);border-radius:12px;padding:14px 16px;text-align:center;cursor:pointer;transition:all 0.2s;text-decoration:none;" onmouseover="this.style.background='rgba(111,207,245,0.15)';this.style.borderColor='rgba(111,207,245,0.3)'" onmouseout="this.style.background='rgba(111,207,245,0.08)';this.style.borderColor='rgba(111,207,245,0.15)'">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(111,207,245,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+          <svg style="width:18px;height:18px;color:#6fcff5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+        </div>
+        <p style="font-size:12px;font-weight:700;color:#fff;margin-bottom:2px;">Tienda</p>
+        <p style="font-size:10px;color:#6fcff5;">Productos y cat&aacute;logo</p>
+      </a>
+      <a href="/dashboard/facturacion" style="background:rgba(111,207,245,0.08);border:1px solid rgba(111,207,245,0.15);border-radius:12px;padding:14px 16px;text-align:center;cursor:pointer;transition:all 0.2s;text-decoration:none;" onmouseover="this.style.background='rgba(111,207,245,0.15)';this.style.borderColor='rgba(111,207,245,0.3)'" onmouseout="this.style.background='rgba(111,207,245,0.08)';this.style.borderColor='rgba(111,207,245,0.15)'">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(111,207,245,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+          <svg style="width:18px;height:18px;color:#6fcff5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z"/></svg>
+        </div>
+        <p style="font-size:12px;font-weight:700;color:#fff;margin-bottom:2px;">Facturaci&oacute;n</p>
+        <p style="font-size:10px;color:#6fcff5;">CFDI y SAT</p>
+      </a>
+      <a href="/dashboard/envios" style="background:rgba(111,207,245,0.08);border:1px solid rgba(111,207,245,0.15);border-radius:12px;padding:14px 16px;text-align:center;cursor:pointer;transition:all 0.2s;text-decoration:none;" onmouseover="this.style.background='rgba(111,207,245,0.15)';this.style.borderColor='rgba(111,207,245,0.3)'" onmouseout="this.style.background='rgba(111,207,245,0.08)';this.style.borderColor='rgba(111,207,245,0.15)'">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(111,207,245,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+          <svg style="width:18px;height:18px;color:#6fcff5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+        </div>
+        <p style="font-size:12px;font-weight:700;color:#fff;margin-bottom:2px;">Env&iacute;os</p>
+        <p style="font-size:10px;color:#6fcff5;">Paqueter&iacute;as</p>
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats row -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:28px;" class="animate-in delay-1">
+    <div class="stat-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <span class="stat-label">Ingresos</span>
+        <span class="stat-change stat-up">+24.5%</span>
+      </div>
+      <p class="stat-value" style="color:var(--text-primary);">$0</p>
+      <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">vs. mes anterior</p>
+    </div>
+    <div class="stat-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <span class="stat-label">Pedidos</span>
+        <span class="stat-change stat-up">+12%</span>
+      </div>
+      <p class="stat-value" style="color:var(--text-primary);">0</p>
+      <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">este mes</p>
+    </div>
+    <div class="stat-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <span class="stat-label">Contactos CRM</span>
+        <span class="stat-change stat-up">+31%</span>
+      </div>
+      <p class="stat-value" style="color:var(--text-primary);">1</p>
+      <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">activos</p>
+    </div>
+    <div class="stat-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <span class="stat-label">Facturas</span>
+        <span class="stat-change stat-up">+18%</span>
+      </div>
+      <p class="stat-value" style="color:var(--text-primary);">0</p>
+      <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">emitidas este mes</p>
+    </div>
+  </div>
+
+  <!-- Quick actions -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;" class="animate-in delay-2">
+    <a href="/dashboard/pedidos" class="stat-card" style="cursor:pointer;transition:border-color 0.2s;text-decoration:none;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="width:40px;height:40px;border-radius:12px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
+        <svg style="width:20px;height:20px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+      </div>
+      <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:4px;">Pedidos</h4>
+      <p style="font-size:12px;color:var(--text-faint);">Gestiona tus ventas</p>
+    </a>
+    <a href="/dashboard/crm" class="stat-card" style="cursor:pointer;transition:border-color 0.2s;text-decoration:none;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="width:40px;height:40px;border-radius:12px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
+        <svg style="width:20px;height:20px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </div>
+      <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:4px;">CRM</h4>
+      <p style="font-size:12px;color:var(--text-faint);">Contactos y leads</p>
+    </a>
+    <a href="/dashboard/facturacion" class="stat-card" style="cursor:pointer;transition:border-color 0.2s;text-decoration:none;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="width:40px;height:40px;border-radius:12px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
+        <svg style="width:20px;height:20px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z"/></svg>
+      </div>
+      <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:4px;">Facturaci&oacute;n</h4>
+      <p style="font-size:12px;color:var(--text-faint);">CFDI y complementos</p>
+    </a>
+    <a href="/dashboard/ads" class="stat-card" style="cursor:pointer;transition:border-color 0.2s;text-decoration:none;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="width:40px;height:40px;border-radius:12px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
+        <svg style="width:20px;height:20px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+      </div>
+      <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:4px;">Ads con IA</h4>
+      <p style="font-size:12px;color:var(--text-faint);">Meta + Google Ads</p>
+    </a>
+  </div>
+
+  <script define:vars={{ API_URL }}>
+    // ===== ONBOARDING =====
+    window.dismissOnboarding = function() {
+      const banner = document.getElementById('onboarding-banner');
+      if (banner) {
+        banner.style.transition = 'opacity 0.3s, transform 0.3s';
+        banner.style.opacity = '0';
+        banner.style.transform = 'translateY(-10px)';
+        setTimeout(() => { banner.style.display = 'none'; }, 300);
+      }
+      localStorage.setItem('skybrand_onboarding_dismissed', 'true');
+    };
+
+    if (localStorage.getItem('skybrand_onboarding_dismissed') === 'true') {
+      const banner = document.getElementById('onboarding-banner');
+      if (banner) banner.style.display = 'none';
+    }
+
+    // ===== DEMO & SIMULATOR =====
+    let demoData = null;
+
+    window.loadDemoData = async function() {
+      const btn = document.getElementById('demo-load-btn');
+      btn.textContent = 'Cargando...';
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${API_URL}/api/v1/demo/seed`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('skybrand_token')}` },
+        });
+        demoData = await res.json();
+        if (demoData.success) {
+          const s = demoData.stats;
+          const statValues = document.querySelectorAll('.stat-value');
+          if (statValues[0]) statValues[0].textContent = '$' + s.revenue.toLocaleString();
+          if (statValues[1]) statValues[1].textContent = s.orders;
+          if (statValues[2]) statValues[2].textContent = s.customers;
+          if (statValues[3]) statValues[3].textContent = s.invoices;
+          btn.textContent = '\u2713 Datos cargados';
+          btn.style.background = '#22c55e';
+        }
+      } catch(e) {
+        btn.textContent = 'Error - Reintentar';
+        btn.style.background = '#ef4444';
+      }
+      setTimeout(() => {
+        btn.textContent = 'Cargar datos demo';
+        btn.style.background = '#6fcff5';
+        btn.disabled = false;
+      }, 3000);
+    };
+
+    window.openSimulator = function() {
+      document.getElementById('simulator-modal')?.remove();
+      const events = [
+        {type: 'order.created', icon: '\u{1F4E6}', label: 'Nuevo pedido', desc: 'Simula que entra un pedido de Shopify'},
+        {type: 'order.paid', icon: '\u2705', label: 'Pedido pagado', desc: 'Simula confirmaci\u00F3n de pago'},
+        {type: 'order.shipped', icon: '\u{1F69A}', label: 'Pedido enviado', desc: 'Simula que el pedido sale del almac\u00E9n'},
+        {type: 'order.delivered', icon: '\u{1F4EC}', label: 'Pedido entregado', desc: 'Simula entrega al cliente'},
+        {type: 'order.cancelled', icon: '\u274C', label: 'Pedido cancelado', desc: 'Simula cancelaci\u00F3n de pedido'},
+        {type: 'cart.abandoned', icon: '\u{1F6D2}', label: 'Carrito abandonado', desc: 'Simula que un cliente deja productos en el carrito'},
+        {type: 'payment.failed', icon: '\u{1F6AB}', label: 'Pago fallido', desc: 'Simula un pago rechazado'},
+        {type: 'inventory.low', icon: '\u{1F4C9}', label: 'Stock bajo', desc: 'Simula alerta de inventario bajo'},
+        {type: 'customer.created', icon: '\u{1F464}', label: 'Nuevo cliente', desc: 'Simula registro de cliente'},
+      ];
+
+      const modal = document.createElement('div');
+      modal.id = 'simulator-modal';
+      modal.style.cssText = 'position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px;';
+      modal.innerHTML = `
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);" onclick="document.getElementById('simulator-modal')?.remove()"></div>
+        <div style="position:relative;width:100%;max-width:600px;max-height:80vh;overflow-y:auto;background:var(--bg-sidebar);border:1px solid var(--border);border-radius:20px;padding:28px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+            <div>
+              <h2 style="font-size:18px;font-weight:900;color:var(--text-primary);">Simulador de Tienda</h2>
+              <p style="font-size:12px;color:var(--text-faint);">Simula eventos reales y ve c\u00F3mo responden tus automatizaciones</p>
+            </div>
+            <button onclick="document.getElementById('simulator-modal')?.remove()" style="width:32px;height:32px;border-radius:8px;border:none;background:transparent;cursor:pointer;color:var(--text-muted);display:flex;align-items:center;justify-content:center;">
+              <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div id="simulator-events" style="display:grid;gap:8px;">
+            ${events.map(e => `
+              <button onclick="simulateEvent('${e.type}', this)" style="display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:var(--bg-card);cursor:pointer;text-align:left;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+                <span style="font-size:24px;flex-shrink:0;">${e.icon}</span>
+                <div style="flex:1;min-width:0;">
+                  <p style="font-size:13px;font-weight:700;color:var(--text-primary);">${e.label}</p>
+                  <p style="font-size:11px;color:var(--text-faint);">${e.desc}</p>
+                </div>
+                <div class="sim-status" style="font-size:11px;font-weight:700;color:var(--text-faintest);">Simular \u2192</div>
+              </button>
+            `).join('')}
+          </div>
+          <div id="simulator-result" style="display:none;margin-top:16px;padding:16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    };
+
+    window.simulateEvent = async function(eventType, btn) {
+      const statusEl = btn.querySelector('.sim-status');
+      statusEl.textContent = 'Simulando...';
+      statusEl.style.color = 'var(--accent)';
+      try {
+        const res = await fetch(`${API_URL}/api/v1/demo/simulate/${eventType}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('skybrand_token')}` },
+        });
+        const data = await res.json();
+        if (data.rules_triggered > 0) {
+          statusEl.textContent = `\u2713 ${data.rules_triggered} regla(s)`;
+          statusEl.style.color = '#22c55e';
+        } else {
+          statusEl.textContent = 'Sin reglas';
+          statusEl.style.color = '#f97316';
+        }
+        const resultEl = document.getElementById('simulator-result');
+        if (resultEl) {
+          resultEl.style.display = 'block';
+          let html = `<p style="font-size:13px;font-weight:800;color:var(--text-primary);margin-bottom:8px;">Resultado: ${eventType}</p>`;
+          html += `<p style="font-size:12px;color:var(--text-faint);margin-bottom:8px;">Cliente: ${data.event_data.customer_name || 'N/A'} | ${data.rules_triggered} regla(s) ejecutada(s)</p>`;
+          if (data.automation_results && data.automation_results.length > 0) {
+            for (const r of data.automation_results) {
+              html += `<div style="margin-top:8px;padding:10px;border-radius:8px;background:var(--bg-card);border:1px solid var(--border);">`;
+              html += `<p style="font-size:12px;font-weight:700;color:var(--text-primary);">${r.rule_name} <span style="color:${r.status === 'success' ? '#22c55e' : '#ef4444'}">(${r.status})</span></p>`;
+              for (const s of r.steps) {
+                const icon = s.status === 'success' ? '\u2705' : s.status === 'skipped' ? '\u23ED\uFE0F' : '\u274C';
+                html += `<p style="font-size:11px;color:var(--text-faint);margin-top:4px;">${icon} ${s.action}: ${s.status}</p>`;
+              }
+              html += `</div>`;
+            }
+          } else {
+            html += `<p style="font-size:12px;color:#f97316;">No hay reglas configuradas para este evento. Crea una en Automatizaciones.</p>`;
+          }
+          resultEl.innerHTML = html;
+        }
+      } catch(e) {
+        statusEl.textContent = 'Error';
+        statusEl.style.color = '#ef4444';
+      }
+      setTimeout(() => {
+        statusEl.textContent = 'Simular \u2192';
+        statusEl.style.color = 'var(--text-faintest)';
+      }, 5000);
+    };
+  </script>
+</DashboardLayout>
+

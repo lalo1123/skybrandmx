@@ -1,0 +1,1916 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:6100';
+---
+
+<DashboardLayout title="Email Marketing">
+  <!-- ══════════ Smart Recommendations ══════════ -->
+  <div id="em-smart-recs" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;"></div>
+
+  <!-- ══════════ AI Campaign Generator (prominent) ══════════ -->
+  <div id="em-ai-generator" class="stat-card animate-in" style="padding:0;margin-bottom:20px;overflow:hidden;background:linear-gradient(135deg,rgba(139,92,246,0.08),rgba(111,207,245,0.08));border:1px solid rgba(139,92,246,0.15);">
+    <div style="display:flex;align-items:center;gap:16px;padding:20px;flex-wrap:wrap;">
+      <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#8b5cf6,#6fcff5);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg style="width:24px;height:24px;color:#fff;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);margin-bottom:2px;">Crear campaña con IA</h3>
+        <p style="font-size:12px;color:var(--text-muted);">Dile a la IA qué quieres promocionar y ella arma todo: asunto, contenido, audiencia y horario.</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex:1;min-width:280px;">
+        <input id="em-ai-prompt" type="text" placeholder="Ej: Quiero promocionar mi nueva colección de verano..." class="em-input" style="flex:1;border-color:rgba(139,92,246,0.3);"/>
+        <button onclick="generateAICampaign()" class="em-btn-primary" style="background:linear-gradient(135deg,#8b5cf6,#6fcff5);padding:10px 20px;white-space:nowrap;display:flex;align-items:center;gap:6px;">
+          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Generar
+        </button>
+      </div>
+    </div>
+    <div id="em-ai-gen-result" style="display:none;"></div>
+  </div>
+
+  <!-- Stats bar with tooltips + trends -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px;">
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Campañas enviadas</p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="em-stat-sent" style="font-size:28px;font-weight:900;color:var(--text-primary);">--</p><span id="em-trend-sent" class="em-trend"></span></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px;">Tasa de apertura <span class="em-tip" data-tip="De cada 100 personas que recibieron tu email, ¿cuántas lo abrieron?">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="em-stat-open" style="font-size:28px;font-weight:900;color:#22c55e;">--</p><span id="em-trend-open" class="em-trend"></span></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px;">Tasa de clics <span class="em-tip" data-tip="De cada 100 personas que recibieron tu email, ¿cuántas hicieron clic en algún link?">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="em-stat-clicks" style="font-size:28px;font-weight:900;color:var(--accent);">--</p><span id="em-trend-clicks" class="em-trend"></span></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Suscriptores</p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="em-stat-subs" style="font-size:28px;font-weight:900;color:var(--text-primary);">--</p><span id="em-trend-subs" class="em-trend"></span></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px;">Rebotes <span class="em-tip" data-tip="Emails que no pudieron entregarse porque el buzón no existe o está lleno">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="em-stat-bounces" style="font-size:28px;font-weight:900;color:#f97316;">--</p><span id="em-trend-bounces" class="em-trend"></span></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px;">Bajas <span class="em-tip" data-tip="Personas que pidieron no recibir más emails tuyos">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="em-stat-unsubs" style="font-size:28px;font-weight:900;color:#ef4444;">--</p><span id="em-trend-unsubs" class="em-trend"></span></div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;overflow-x:auto;">
+    <button id="em-tab-campaigns" class="em-tab active" onclick="switchEMTab('campaigns')">Campañas</button>
+    <button id="em-tab-templates" class="em-tab" onclick="switchEMTab('templates')">Plantillas</button>
+    <button id="em-tab-sequences" class="em-tab" onclick="switchEMTab('sequences')">Secuencias</button>
+    <button id="em-tab-audiences" class="em-tab" onclick="switchEMTab('audiences')">Audiencias</button>
+    <button id="em-tab-forms" class="em-tab" onclick="switchEMTab('forms')">Formularios</button>
+    <button id="em-tab-analytics" class="em-tab" onclick="switchEMTab('analytics')">Analítica</button>
+  </div>
+
+  <!-- ══════════ Tab: Campaigns ══════════ -->
+  <div id="em-panel-campaigns">
+    <!-- Help banner -->
+    <div id="em-help-campaigns" class="em-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Aquí creas y envías emails a tus clientes. Crea una campaña, elige a quién enviarla y programa la fecha.</p>
+      <button onclick="dismissHelp('campaigns')" class="em-help-close">&times;</button>
+    </div>
+    <!-- Empty state -->
+    <div id="em-empty-campaigns" style="display:none;" class="em-empty-state">
+      <svg style="width:56px;height:56px;color:var(--accent);opacity:0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      <h3 style="font-size:16px;font-weight:800;color:var(--text-primary);margin:12px 0 6px;">Aún no has enviado emails</h3>
+      <p style="font-size:13px;color:var(--text-muted);max-width:360px;line-height:1.5;">¡Crea tu primera campaña y conecta con tus clientes! Es más fácil de lo que crees.</p>
+      <button onclick="openCampaignWizard()" class="em-btn-primary" style="margin-top:16px;padding:12px 28px;">Crear mi primera campaña</button>
+    </div>
+    <!-- Toolbar (simplified) -->
+    <div id="em-toolbar-campaigns" class="stat-card animate-in" style="padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;position:relative;">
+        <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input id="em-search" type="text" placeholder="Buscar campañas..." oninput="emFilterCampaigns()" class="em-input" style="padding-left:38px;"/>
+      </div>
+      <select id="em-filter-status" onchange="emFilterCampaigns()" class="em-input" style="width:auto;cursor:pointer;">
+        <option value="">Todos los estados</option>
+        <option value="sent">Enviada</option>
+        <option value="draft">Borrador</option>
+        <option value="scheduled">Programada</option>
+        <option value="ab_test">Prueba A/B</option>
+      </select>
+      <button onclick="openCampaignWizard()" class="em-btn-primary" style="display:flex;align-items:center;gap:6px;padding:10px 20px;">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Crear campaña
+      </button>
+      <!-- More options dropdown -->
+      <div style="position:relative;" id="em-more-wrap">
+        <button onclick="toggleMoreMenu()" class="em-btn-secondary" style="padding:10px 14px;display:flex;align-items:center;gap:4px;">
+          Más opciones <svg style="width:12px;height:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="em-more-menu" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;background:var(--bg-sidebar);border:1px solid var(--border);border-radius:10px;padding:6px;min-width:180px;z-index:50;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+          <button onclick="openABTestModal();toggleMoreMenu()" class="em-dropdown-item">
+            <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            Prueba A/B
+          </button>
+          <button onclick="openCompareModal();toggleMoreMenu()" class="em-dropdown-item">
+            <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            Comparar campañas
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);">
+              <th class="em-th">Campaña</th>
+              <th class="em-th">Estado</th>
+              <th class="em-th">Audiencia</th>
+              <th class="em-th" style="text-align:right;">Enviados</th>
+              <th class="em-th" style="text-align:right;">Apertura</th>
+              <th class="em-th" style="text-align:right;">Clics</th>
+              <th class="em-th" style="text-align:right;">Rebote</th>
+              <th class="em-th" style="text-align:right;">Bajas</th>
+              <th class="em-th">Fecha</th>
+              <th class="em-th" style="text-align:center;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="em-campaigns-tbody">
+            <tr><td colspan="10" style="padding:40px;text-align:center;color:var(--text-faint);font-size:13px;">Cargando campañas...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Templates ══════════ -->
+  <div id="em-panel-templates" style="display:none;">
+    <div id="em-help-templates" class="em-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Los diseños que puedes reutilizar. Crea uno bonito y úsalo en muchas campañas.</p>
+      <button onclick="dismissHelp('templates')" class="em-help-close">&times;</button>
+    </div>
+    <div class="stat-card animate-in" style="padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <h3 style="font-size:15px;font-weight:800;color:var(--text-primary);margin:0;">Plantillas de email</h3>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <button onclick="filterTemplates('')" class="em-tpl-filter active" data-cat="">Todas</button>
+          <button onclick="filterTemplates('promotional')" class="em-tpl-filter" data-cat="promotional">Promocional</button>
+          <button onclick="filterTemplates('welcome')" class="em-tpl-filter" data-cat="welcome">Bienvenida</button>
+          <button onclick="filterTemplates('newsletter')" class="em-tpl-filter" data-cat="newsletter">Newsletter</button>
+          <button onclick="filterTemplates('abandoned')" class="em-tpl-filter" data-cat="abandoned">Carrito</button>
+          <button onclick="filterTemplates('transactional')" class="em-tpl-filter" data-cat="transactional">Transaccional</button>
+        </div>
+      </div>
+      <button onclick="openEditorModal(null)" class="em-btn-primary" style="display:flex;align-items:center;gap:6px;padding:10px 20px;">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Crear plantilla
+      </button>
+    </div>
+    <div id="em-empty-templates" style="display:none;" class="em-empty-state">
+      <svg style="width:56px;height:56px;color:#8b5cf6;opacity:0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
+      <h3 style="font-size:16px;font-weight:800;color:var(--text-primary);margin:12px 0 6px;">Diseña tu primera plantilla</h3>
+      <p style="font-size:13px;color:var(--text-muted);max-width:360px;line-height:1.5;">Crea un diseño profesional para tus emails. Arrastra bloques, personaliza colores y listo.</p>
+      <button onclick="openEditorModal(null)" class="em-btn-primary" style="margin-top:16px;padding:12px 28px;">Crear plantilla</button>
+    </div>
+    <div id="em-templates-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;"></div>
+  </div>
+
+  <!-- ══════════ Tab: Sequences ══════════ -->
+  <div id="em-panel-sequences" style="display:none;">
+    <div id="em-help-sequences" class="em-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Emails que se envían solos cuando algo pasa. Ejemplo: alguien se registra y recibe un email de bienvenida automático, y 2 días después otro con tips.</p>
+      <button onclick="dismissHelp('sequences')" class="em-help-close">&times;</button>
+    </div>
+    <!-- Autopilot -->
+    <div class="stat-card animate-in" style="padding:20px;margin-bottom:20px;background:linear-gradient(135deg,rgba(34,197,94,0.06),rgba(111,207,245,0.06));border:1px solid rgba(34,197,94,0.15);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+        <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#22c55e,#6fcff5);display:flex;align-items:center;justify-content:center;">
+          <svg style="width:18px;height:18px;color:#fff;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <div>
+          <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);">Piloto automático</h3>
+          <p style="font-size:11px;color:var(--text-muted);">Activa estos flujos y se envían solos. Sin que hagas nada.</p>
+        </div>
+      </div>
+      <div id="em-autopilot-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
+    </div>
+
+    <div class="stat-card animate-in" style="padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <h3 style="font-size:15px;font-weight:800;color:var(--text-primary);margin:0;">Secuencias personalizadas</h3>
+      <button onclick="openSequenceModal()" class="em-btn-primary" style="display:flex;align-items:center;gap:6px;padding:10px 20px;">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Nueva secuencia
+      </button>
+    </div>
+    <div id="em-empty-sequences" style="display:none;" class="em-empty-state">
+      <svg style="width:56px;height:56px;color:#f97316;opacity:0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      <h3 style="font-size:16px;font-weight:800;color:var(--text-primary);margin:12px 0 6px;">Automatiza tus emails</h3>
+      <p style="font-size:13px;color:var(--text-muted);max-width:400px;line-height:1.5;">Las secuencias envían emails automáticos. Por ejemplo: un cliente nuevo recibe bienvenida, y 2 días después tips para usar tu producto.</p>
+      <button onclick="openSequenceModal()" class="em-btn-primary" style="margin-top:16px;padding:12px 28px;">Crear mi primera secuencia</button>
+    </div>
+    <div id="em-sequences-list" style="display:flex;flex-direction:column;gap:16px;"></div>
+  </div>
+
+  <!-- ══════════ Tab: Audiences ══════════ -->
+  <div id="em-panel-audiences" style="display:none;">
+    <div id="em-help-audiences" class="em-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Tus listas de contactos organizadas por tipo. Puedes importarlos desde un archivo o traerlos del CRM.</p>
+      <button onclick="dismissHelp('audiences')" class="em-help-close">&times;</button>
+    </div>
+    <div class="stat-card animate-in" style="padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <h3 style="font-size:15px;font-weight:800;color:var(--text-primary);margin:0;">Listas de audiencia</h3>
+      <button onclick="openAudienceModal()" class="em-btn-primary" style="display:flex;align-items:center;gap:6px;padding:10px 20px;">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Nueva lista
+      </button>
+    </div>
+    <div id="em-empty-audiences" style="display:none;" class="em-empty-state">
+      <svg style="width:56px;height:56px;color:#22c55e;opacity:0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <h3 style="font-size:16px;font-weight:800;color:var(--text-primary);margin:12px 0 6px;">Importa tus contactos</h3>
+      <p style="font-size:13px;color:var(--text-muted);max-width:360px;line-height:1.5;">Organiza a tus clientes en listas para enviarles campañas específicas. Importa desde CSV o conecta tu CRM.</p>
+      <button onclick="openAudienceModal()" class="em-btn-primary" style="margin-top:16px;padding:12px 28px;">Crear mi primera lista</button>
+    </div>
+    <div id="em-audiences-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+
+    <!-- Emails bloqueados (collapsed by default) -->
+    <div class="stat-card animate-in" style="padding:0;margin-top:20px;overflow:hidden;">
+      <button onclick="toggleSection('em-suppression-content')" class="em-collapse-header">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:28px;height:28px;border-radius:8px;background:rgba(239,68,68,0.1);display:flex;align-items:center;justify-content:center;">
+            <svg style="width:14px;height:14px;color:#ef4444;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+          </div>
+          <div style="text-align:left;">
+            <p style="font-size:13px;font-weight:700;color:var(--text-primary);">Emails bloqueados <span class="em-tip" data-tip="Emails que nunca recibirán correos tuyos, sin importar en qué lista estén. Incluye rebotes permanentes, quejas de spam y solicitudes de eliminación.">?</span></p>
+            <p id="em-suppression-count" style="font-size:11px;color:var(--text-faint);">5 emails</p>
+          </div>
+        </div>
+        <svg class="em-collapse-arrow" style="width:16px;height:16px;color:var(--text-faint);transition:transform 0.2s;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div id="em-suppression-content" style="display:none;padding:16px 20px;">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+          <button onclick="openSuppressionModal()" style="padding:6px 14px;border-radius:8px;border:1px solid #ef4444;background:transparent;color:#ef4444;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:4px;" onmouseover="this.style.background='rgba(239,68,68,0.08)'" onmouseout="this.style.background='transparent'">
+            <svg style="width:12px;height:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Agregar email
+          </button>
+        </div>
+        <div id="em-suppression-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Formularios ══════════ -->
+  <div id="em-panel-forms" style="display:none;">
+    <div id="em-help-forms" class="em-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Crea formularios de suscripción para tu sitio web o landing pages para capturar contactos. Solo copia el código y pégalo en tu página.</p>
+      <button onclick="dismissHelp('forms')" class="em-help-close">&times;</button>
+    </div>
+
+    <!-- Formularios existentes -->
+    <div class="stat-card animate-in" style="padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <h3 style="font-size:15px;font-weight:800;color:var(--text-primary);margin:0;">Mis formularios</h3>
+      <div style="display:flex;gap:8px;">
+        <button onclick="openFormBuilder('embed')" class="em-btn-primary" style="display:flex;align-items:center;gap:6px;padding:10px 16px;">
+          <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Formulario para mi sitio web
+        </button>
+        <button onclick="openFormBuilder('landing')" class="em-btn-secondary" style="display:flex;align-items:center;gap:6px;padding:10px 16px;border-color:#8b5cf6;color:#8b5cf6;">
+          <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Landing page de captura
+        </button>
+      </div>
+    </div>
+
+    <div id="em-forms-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;"></div>
+
+    <!-- Double opt-in config -->
+    <div class="stat-card animate-in" style="padding:0;margin-top:20px;overflow:hidden;">
+      <button onclick="toggleSection('em-optin-content')" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border:none;background:transparent;cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:28px;height:28px;border-radius:8px;background:rgba(34,197,94,0.1);display:flex;align-items:center;justify-content:center;">
+            <svg style="width:14px;height:14px;color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </div>
+          <div style="text-align:left;">
+            <p style="font-size:13px;font-weight:700;color:var(--text-primary);">Doble confirmación (Double opt-in) <span class="em-tip" data-tip="Cuando alguien se suscribe, primero recibe un email para confirmar que sí quiere recibir tus correos. Esto mejora la calidad de tu lista y es requisito legal en algunos países.">?</span></p>
+            <p style="font-size:11px;color:var(--text-faint);">Los nuevos suscriptores deben confirmar su email antes de recibirlo</p>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <label class="em-toggle-wrap"><input type="checkbox" id="em-double-optin" checked onchange="toggleDoubleOptin(this.checked)"/><span class="em-toggle-slider"></span></label>
+          <span id="em-optin-status" style="font-size:11px;font-weight:700;color:#22c55e;">Activo</span>
+        </div>
+      </button>
+      <div id="em-optin-content" style="display:none;padding:16px 20px;border-top:1px solid var(--border);">
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Personaliza el email de confirmación que reciben tus nuevos suscriptores:</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div><label class="em-label">Asunto del email de confirmación</label><input id="em-optin-subject" type="text" value="Confirma tu suscripción" class="em-input" style="font-size:12px;"/></div>
+          <div><label class="em-label">Mensaje</label><textarea id="em-optin-body" rows="3" class="em-input" style="font-size:12px;resize:vertical;">¡Hola! Haz clic en el botón de abajo para confirmar que quieres recibir nuestros emails. Si no te suscribiste, ignora este mensaje.</textarea></div>
+          <button onclick="showToast('Configuración guardada')" class="em-btn-primary" style="padding:8px 16px;font-size:12px;width:auto;align-self:flex-start;">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Analytics ══════════ -->
+  <div id="em-panel-analytics" style="display:none;">
+    <div id="em-help-analytics" class="em-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Mira cómo van tus emails. <span style="color:#22c55e;font-weight:700;">Verde = bien</span>, <span style="color:#eab308;font-weight:700;">amarillo = puede mejorar</span>, <span style="color:#ef4444;font-weight:700;">rojo = necesita atención</span>.</p>
+      <button onclick="dismissHelp('analytics')" class="em-help-close">&times;</button>
+    </div>
+    <div id="em-empty-analytics" style="display:none;" class="em-empty-state">
+      <svg style="width:56px;height:56px;color:var(--accent);opacity:0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      <h3 style="font-size:16px;font-weight:800;color:var(--text-primary);margin:12px 0 6px;">Aún no hay datos</h3>
+      <p style="font-size:13px;color:var(--text-muted);max-width:360px;line-height:1.5;">Envía tu primera campaña para ver las estadísticas aquí. Te mostraremos quién abre tus emails, qué links funcionan mejor y mucho más.</p>
+    </div>
+    <div id="em-analytics-content">
+      <!-- Weekly Auto-Report -->
+      <div class="stat-card animate-in" style="padding:20px;margin-bottom:20px;background:linear-gradient(135deg,rgba(111,207,245,0.06),rgba(139,92,246,0.06));border:1px solid rgba(111,207,245,0.15);">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;border-radius:10px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;">
+              <svg style="width:18px;height:18px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <div>
+              <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);">Reporte semanal automático</h4>
+              <p style="font-size:11px;color:var(--text-muted);">Recibe un resumen cada lunes en tu email</p>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <label class="em-toggle-wrap">
+              <input type="checkbox" id="em-weekly-report-toggle" checked onchange="toggleWeeklyReport(this.checked)"/>
+              <span class="em-toggle-slider"></span>
+            </label>
+            <span id="em-weekly-report-status" style="font-size:11px;font-weight:700;color:#22c55e;">Activo</span>
+          </div>
+        </div>
+        <div id="em-weekly-report-preview" style="border:1px solid var(--border);border-radius:10px;padding:16px;background:var(--input-bg);"></div>
+      </div>
+      <!-- Deliverability -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px;">
+        <div class="stat-card animate-in" style="padding:16px 18px;">
+          <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;display:flex;align-items:center;gap:4px;">Tasa de entrega <span class="em-tip" data-tip="De todos los emails enviados, ¿cuántos llegaron al buzón del destinatario?">?</span></p>
+          <p id="em-an-delivery" style="font-size:24px;font-weight:900;color:#22c55e;">--</p>
+          <div style="height:4px;border-radius:2px;background:var(--input-bg);margin-top:8px;"><div id="em-an-delivery-bar" style="height:100%;border-radius:2px;background:#22c55e;transition:width 0.6s;width:0%;"></div></div>
+        </div>
+        <div class="stat-card animate-in" style="padding:16px 18px;">
+          <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;display:flex;align-items:center;gap:4px;">Tasa de rebote <span class="em-tip" data-tip="Porcentaje de emails que no pudieron entregarse. Menos del 2% es normal.">?</span></p>
+          <p id="em-an-bounce" style="font-size:24px;font-weight:900;color:#f97316;">--</p>
+          <div style="height:4px;border-radius:2px;background:var(--input-bg);margin-top:8px;"><div id="em-an-bounce-bar" style="height:100%;border-radius:2px;background:#f97316;transition:width 0.6s;width:0%;"></div></div>
+        </div>
+        <div class="stat-card animate-in" style="padding:16px 18px;">
+          <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;display:flex;align-items:center;gap:4px;">Reportes de spam <span class="em-tip" data-tip="Personas que marcaron tu email como correo no deseado. Menos del 0.1% es lo ideal.">?</span></p>
+          <p id="em-an-spam" style="font-size:24px;font-weight:900;color:#ef4444;">--</p>
+          <div style="height:4px;border-radius:2px;background:var(--input-bg);margin-top:8px;"><div id="em-an-spam-bar" style="height:100%;border-radius:2px;background:#ef4444;transition:width 0.6s;width:0%;"></div></div>
+        </div>
+        <div class="stat-card animate-in" style="padding:16px 18px;">
+          <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;display:flex;align-items:center;gap:4px;">Tasa de bajas <span class="em-tip" data-tip="Porcentaje de personas que se desuscribieron después de recibir tu email.">?</span></p>
+          <p id="em-an-unsub" style="font-size:24px;font-weight:900;color:#8b5cf6;">--</p>
+          <div style="height:4px;border-radius:2px;background:var(--input-bg);margin-top:8px;"><div id="em-an-unsub-bar" style="height:100%;border-radius:2px;background:#8b5cf6;transition:width 0.6s;width:0%;"></div></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:20px;">
+        <div class="stat-card animate-in" style="padding:20px;">
+          <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Rendimiento por mes</h4>
+          <div id="em-chart-monthly" style="height:200px;display:flex;align-items:flex-end;gap:6px;padding-top:10px;"></div>
+          <div style="display:flex;gap:16px;margin-top:12px;">
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:2px;background:var(--accent);"></div><span style="font-size:11px;color:var(--text-muted);">Apertura</span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:2px;background:#f97316;"></div><span style="font-size:11px;color:var(--text-muted);">Clics</span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:2px;background:#ef4444;"></div><span style="font-size:11px;color:var(--text-muted);">Rebotes</span></div>
+          </div>
+        </div>
+        <div class="stat-card animate-in" style="padding:20px;">
+          <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Top campañas</h4>
+          <div id="em-top-campaigns" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:20px;">
+        <div class="stat-card animate-in" style="padding:20px;">
+          <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Crecimiento de suscriptores</h4>
+          <div id="em-chart-growth" style="height:180px;display:flex;align-items:flex-end;gap:4px;"></div>
+        </div>
+        <div class="stat-card animate-in" style="padding:20px;">
+          <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Actividad por día</h4>
+          <div id="em-chart-days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;"></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;">
+        <div class="stat-card animate-in" style="padding:20px;">
+          <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;display:flex;align-items:center;gap:6px;">Aperturas por dispositivo <span class="em-tip" data-tip="Muestra en qué tipo de aparato abren tus emails tus contactos">?</span></h4>
+          <div id="em-chart-devices" style="display:flex;flex-direction:column;gap:12px;"></div>
+        </div>
+        <div class="stat-card animate-in" style="padding:20px;">
+          <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;display:flex;align-items:center;gap:6px;">Mapa de clics <span class="em-tip" data-tip="Muestra qué partes de tu último email recibieron más clics. Rojo = muchos clics, verde = pocos">?</span></h4>
+          <div id="em-click-heatmap"></div>
+        </div>
+        <div class="stat-card animate-in" style="padding:20px;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:16px;">
+            <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);">Mejor horario de envío</h4>
+            <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;background:rgba(139,92,246,0.1);color:#8b5cf6;">IA</span>
+            <span class="em-tip" data-tip="Analizamos cuándo tus contactos abren más emails y te sugerimos el mejor momento para enviar">?</span>
+          </div>
+          <div id="em-optimal-time" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Modal: Campaign Wizard (4 steps) ══════════ -->
+  <div id="em-modal-wizard" class="em-modal-overlay" style="display:none;">
+    <div class="em-modal-box" style="max-width:600px;">
+      <!-- Progress bar -->
+      <div style="display:flex;align-items:center;gap:0;margin-bottom:24px;">
+        <div id="em-wiz-step-1" class="em-wiz-step active"><span class="em-wiz-num">1</span><span class="em-wiz-label">Lo básico</span></div>
+        <div class="em-wiz-connector" id="em-wiz-conn-1"></div>
+        <div id="em-wiz-step-2" class="em-wiz-step"><span class="em-wiz-num">2</span><span class="em-wiz-label">Diseño</span></div>
+        <div class="em-wiz-connector" id="em-wiz-conn-2"></div>
+        <div id="em-wiz-step-3" class="em-wiz-step"><span class="em-wiz-num">3</span><span class="em-wiz-label">Audiencia</span></div>
+        <div class="em-wiz-connector" id="em-wiz-conn-3"></div>
+        <div id="em-wiz-step-4" class="em-wiz-step"><span class="em-wiz-num">4</span><span class="em-wiz-label">Revisar</span></div>
+      </div>
+
+      <!-- Step 1: Basics -->
+      <div id="em-wiz-panel-1" class="em-wiz-panel">
+        <h3 style="font-size:17px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">¿Cómo se llamará tu campaña?</h3>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">El nombre es solo para ti, tus contactos no lo ven.</p>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div>
+            <label class="em-label">Nombre de campaña</label>
+            <input id="em-wiz-name" type="text" placeholder="Ej: Promo verano 2026" class="em-input"/>
+          </div>
+          <div>
+            <label class="em-label" style="display:flex;align-items:center;gap:4px;">Asunto del email <span class="em-tip" data-tip="Es lo primero que ven tus contactos en su bandeja de entrada. Un buen asunto = más aperturas.">?</span></label>
+            <div style="display:flex;gap:8px;">
+              <input id="em-wiz-subject" type="text" placeholder="Lo que verán en su bandeja de entrada" class="em-input" style="flex:1;"/>
+              <button onclick="wizGenerateAI()" class="em-ai-btn">
+                <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                Sugerir con IA
+              </button>
+            </div>
+            <div id="em-wiz-ai-suggestions" style="display:none;margin-top:8px;"></div>
+          </div>
+          <div>
+            <label class="em-label" style="display:flex;align-items:center;gap:4px;">Texto de vista previa <span class="em-tip" data-tip="Es el texto que aparece después del asunto en la bandeja de entrada. Ayuda a que la gente decida abrir tu email.">?</span></label>
+            <input id="em-wiz-preview" type="text" placeholder="Lo que ven junto al asunto antes de abrir" class="em-input"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Design -->
+      <div id="em-wiz-panel-2" class="em-wiz-panel" style="display:none;">
+        <h3 style="font-size:17px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">¿Cómo se verá tu email?</h3>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Elige una plantilla existente o crea una desde cero.</p>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div>
+            <label class="em-label">Elegir plantilla</label>
+            <select id="em-wiz-template" class="em-input" style="cursor:pointer;"><option value="">Sin plantilla (empezar vacío)</option></select>
+          </div>
+          <div style="text-align:center;padding:20px;border:2px dashed var(--border);border-radius:12px;">
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">¿Quieres personalizar el diseño?</p>
+            <button onclick="openEditorModal('campaign')" class="em-btn-secondary" style="border-color:#8b5cf6;color:#8b5cf6;">
+              <span style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                Abrir editor visual
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Audience -->
+      <div id="em-wiz-panel-3" class="em-wiz-panel" style="display:none;">
+        <h3 style="font-size:17px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">¿A quién le envías?</h3>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Selecciona la lista de contactos que recibirá tu campaña.</p>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div>
+            <label class="em-label">Lista de contactos</label>
+            <select id="em-wiz-audience" class="em-input" style="cursor:pointer;"><option value="">Seleccionar lista...</option></select>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div>
+              <label class="em-label">Tu nombre (remitente)</label>
+              <input id="em-wiz-from-name" type="text" value="SkyBrandMX" class="em-input" style="font-size:12px;"/>
+            </div>
+            <div>
+              <label class="em-label">Tu email (remitente)</label>
+              <input id="em-wiz-from-email" type="email" value="hola@skybrandmx.com" class="em-input" style="font-size:12px;"/>
+            </div>
+          </div>
+          <!-- Collapsed advanced -->
+          <button onclick="toggleSection('em-wiz-advanced-sender')" class="em-collapse-toggle">Más opciones de remitente ▾</button>
+          <div id="em-wiz-advanced-sender" style="display:none;">
+            <label class="em-label">Responder a (Reply-to)</label>
+            <input id="em-wiz-reply-to" type="email" placeholder="Igual que remitente si se deja vacío" class="em-input" style="font-size:12px;"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Review & Send -->
+      <div id="em-wiz-panel-4" class="em-wiz-panel" style="display:none;">
+        <h3 style="font-size:17px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">¡Revisa antes de enviar!</h3>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Verifica que todo esté correcto.</p>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <!-- Summary -->
+          <div id="em-wiz-summary" style="border:1px solid var(--border);border-radius:10px;padding:16px;background:var(--input-bg);"></div>
+          <!-- Spam score -->
+          <div style="border:1px solid var(--border);border-radius:10px;padding:14px;background:var(--input-bg);">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:4px;">Revisión anti-spam <span class="em-tip" data-tip="Analizamos tu asunto para predecir si podría caer en la carpeta de correo no deseado">?</span></p>
+              <button onclick="wizAnalyzeSpam()" style="padding:4px 12px;border-radius:6px;border:1px solid var(--accent);background:transparent;color:var(--accent);font-size:11px;font-weight:600;cursor:pointer;">Analizar</button>
+            </div>
+            <div id="em-wiz-spam-result"></div>
+          </div>
+          <!-- Optimal time -->
+          <div id="em-wiz-optimal-hint" style="padding:10px 14px;border-radius:10px;background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.15);display:flex;align-items:center;gap:10px;">
+            <svg style="width:16px;height:16px;color:#8b5cf6;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <div style="flex:1;">
+              <p style="font-size:11px;color:#8b5cf6;font-weight:700;">Sugerencia de IA: envía el Jueves a las 10:00 AM</p>
+              <p style="font-size:11px;color:var(--text-muted);">Tus contactos abren más emails a esa hora (55% apertura)</p>
+            </div>
+            <button onclick="wizApplyOptimalTime()" style="padding:4px 12px;border-radius:6px;border:1px solid #8b5cf6;background:transparent;color:#8b5cf6;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;">Aplicar</button>
+          </div>
+          <!-- Schedule -->
+          <div>
+            <label class="em-label">¿Cuándo quieres enviarlo?</label>
+            <input id="em-wiz-schedule" type="datetime-local" class="em-input"/>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="checkbox" id="em-wiz-timezone" style="accent-color:var(--accent);"/>
+                <span style="font-size:11px;color:var(--text-muted);font-weight:600;">Enviar a la hora local de cada contacto <span class="em-tip" data-tip="En vez de enviar todo a las 10am hora CDMX, cada contacto recibe el email a las 10am de SU zona horaria. Ideal si tienes clientes en diferentes estados o países.">?</span></span>
+              </label>
+            </div>
+            <p style="font-size:11px;color:var(--text-faint);margin-top:4px;">Deja vacío para guardar como borrador</p>
+          </div>
+          <!-- Collapsed advanced: UTM -->
+          <button onclick="toggleSection('em-wiz-advanced-utm')" class="em-collapse-toggle">Configuración avanzada (rastreo de enlaces) ▾</button>
+          <div id="em-wiz-advanced-utm" style="display:none;border:1px solid var(--border);border-radius:10px;padding:14px;background:var(--input-bg);">
+            <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:4px;">Rastreo de enlaces (UTM) <span class="em-tip" data-tip="Agrega etiquetas invisibles a los links de tu email para saber en Google Analytics de dónde vienen tus visitas">?</span></p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <div><label class="em-label">Fuente</label><input id="em-wiz-utm-source" type="text" value="email" class="em-input" style="font-size:11px;padding:6px 10px;"/></div>
+              <div><label class="em-label">Medio</label><input id="em-wiz-utm-medium" type="text" value="campaign" class="em-input" style="font-size:11px;padding:6px 10px;"/></div>
+              <div><label class="em-label">Campaña</label><input id="em-wiz-utm-campaign" type="text" placeholder="auto del nombre" class="em-input" style="font-size:11px;padding:6px 10px;"/></div>
+              <div><label class="em-label">Contenido</label><input id="em-wiz-utm-content" type="text" placeholder="(opcional)" class="em-input" style="font-size:11px;padding:6px 10px;"/></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wizard navigation -->
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button id="em-wiz-back" onclick="wizBack()" class="em-btn-secondary" style="flex:1;display:none;">← Anterior</button>
+        <button id="em-wiz-send-test" onclick="wizSendTest()" class="em-btn-secondary" style="flex:0;border-color:#22c55e;color:#22c55e;padding:12px 16px;display:none;">
+          <span style="display:flex;align-items:center;gap:4px;"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8"/></svg>Enviar prueba</span>
+        </button>
+        <button id="em-wiz-draft" onclick="wizSaveDraft()" class="em-btn-secondary" style="flex:1;display:none;">Guardar borrador</button>
+        <button id="em-wiz-next" onclick="wizNext()" class="em-btn-primary" style="flex:1;">Siguiente →</button>
+        <button id="em-wiz-send" onclick="wizSend()" class="em-btn-primary" style="flex:1;display:none;">Programar envío</button>
+        <button onclick="closeWizard()" style="position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;">&times;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Modal: A/B Test ══════════ -->
+  <div id="em-modal-abtest" class="em-modal-overlay" style="display:none;">
+    <div class="em-modal-box" style="max-width:640px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <h3 style="font-size:17px;font-weight:900;color:var(--text-primary);">Crear Prueba A/B <span class="em-tip" data-tip="Envía 2 versiones diferentes de tu email a un grupo pequeño. La que funcione mejor se envía al resto automáticamente.">?</span></h3>
+        <button onclick="closeABTestModal()" class="em-modal-close">&times;</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <label class="em-label">Nombre del test</label>
+          <input id="em-ab-name" type="text" placeholder="Ej: Test asunto promo abril" class="em-input"/>
+        </div>
+        <div>
+          <label class="em-label">¿Qué quieres probar?</label>
+          <div style="display:flex;gap:8px;">
+            <button onclick="setABType('subject')" id="em-ab-type-subject" class="em-chip active" style="flex:1;">Asunto</button>
+            <button onclick="setABType('content')" id="em-ab-type-content" class="em-chip" style="flex:1;">Contenido</button>
+            <button onclick="setABType('sendtime')" id="em-ab-type-sendtime" class="em-chip" style="flex:1;">Hora de envío</button>
+          </div>
+        </div>
+        <div id="em-ab-variants">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div><label class="em-label">Versión A</label><input id="em-ab-var-a" type="text" placeholder="Asunto versión A" class="em-input"/></div>
+            <div><label class="em-label">Versión B</label><input id="em-ab-var-b" type="text" placeholder="Asunto versión B" class="em-input"/></div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div><label class="em-label">Audiencia</label><select id="em-ab-audience" class="em-input" style="cursor:pointer;"><option value="">Seleccionar...</option></select></div>
+          <div>
+            <label class="em-label" style="display:flex;align-items:center;gap:4px;">Muestra del test <span class="em-tip" data-tip="¿A qué porcentaje de tu lista le envías las 2 versiones? El resto recibe la ganadora.">?</span></label>
+            <select id="em-ab-sample" class="em-input" style="cursor:pointer;">
+              <option value="20">20% (10% cada versión)</option>
+              <option value="30">30% (15% cada versión)</option>
+              <option value="50" selected>50% (25% cada versión)</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="em-label">¿Cómo se elige la ganadora?</label>
+          <div style="display:flex;gap:8px;">
+            <button onclick="setABWinner('open')" id="em-ab-win-open" class="em-chip active" style="flex:1;">Más aperturas</button>
+            <button onclick="setABWinner('click')" id="em-ab-win-click" class="em-chip" style="flex:1;">Más clics</button>
+          </div>
+          <p style="font-size:11px;color:var(--text-faint);margin-top:6px;">La versión ganadora se envía automáticamente al resto de la lista después de 4 horas.</p>
+        </div>
+        <button onclick="saveABTest()" class="em-btn-primary">Crear Prueba A/B</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Modal: Email Editor (full-screen) ══════════ -->
+  <div id="em-modal-editor" style="display:none;position:fixed;inset:0;background:var(--bg-main);z-index:1100;overflow:hidden;">
+    <!-- Editor guide overlay -->
+    <div id="em-editor-guide" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.7);z-index:1200;display:none;">
+      <div id="em-guide-content" style="position:absolute;background:var(--bg-sidebar);border:1px solid var(--accent);border-radius:16px;padding:24px;max-width:320px;box-shadow:0 4px 30px rgba(111,207,245,0.2);"></div>
+    </div>
+    <div style="height:52px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:var(--bg-sidebar);">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button onclick="closeEditorModal()" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-size:13px;font-weight:600;display:flex;align-items:center;gap:4px;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          Volver
+        </button>
+        <input id="em-editor-name" type="text" placeholder="Nombre de plantilla..." style="background:transparent;border:none;color:var(--text-primary);font-size:14px;font-weight:700;outline:none;width:200px;"/>
+        <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
+        <input id="em-editor-preheader" type="text" placeholder="Texto de vista previa (lo que ven antes de abrir)..." style="background:transparent;border:none;color:var(--text-muted);font-size:12px;outline:none;width:280px;"/>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+          <button onclick="setPreviewMode('desktop')" id="em-prev-desktop" class="em-preview-btn active" style="padding:6px 12px;border:none;background:var(--accent-bg);color:var(--accent);cursor:pointer;font-size:11px;font-weight:700;display:flex;align-items:center;gap:4px;">
+            <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            Escritorio
+          </button>
+          <button onclick="setPreviewMode('mobile')" id="em-prev-mobile" class="em-preview-btn" style="padding:6px 12px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;font-size:11px;font-weight:700;display:flex;align-items:center;gap:4px;">
+            <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+            Celular
+          </button>
+        </div>
+        <div style="display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+          <button onclick="setEmailDarkMode(false)" id="em-prev-light" class="em-preview-btn active" style="padding:6px 10px;border:none;background:var(--accent-bg);color:var(--accent);cursor:pointer;font-size:11px;font-weight:700;">Claro</button>
+          <button onclick="setEmailDarkMode(true)" id="em-prev-dark" class="em-preview-btn" style="padding:6px 10px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;font-size:11px;font-weight:700;">Oscuro</button>
+        </div>
+        <button onclick="sendTestFromEditor()" style="padding:6px 14px;border-radius:8px;border:1px solid #22c55e;background:transparent;color:#22c55e;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;transition:all 0.15s;" onmouseover="this.style.background='rgba(34,197,94,0.1)'" onmouseout="this.style.background='transparent'">
+          <svg style="width:12px;height:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8"/></svg>
+          Enviar prueba
+        </button>
+        <button onclick="saveEditorTemplate()" class="em-btn-primary" style="padding:8px 20px;font-size:12px;">Guardar</button>
+      </div>
+    </div>
+    <div style="display:flex;height:calc(100vh - 52px);">
+      <div style="width:240px;border-right:1px solid var(--border);background:var(--bg-sidebar);overflow-y:auto;padding:16px;">
+        <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Bloques</p>
+        <div id="em-block-palette" style="display:flex;flex-direction:column;gap:6px;"></div>
+        <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 10px;display:flex;align-items:center;gap:4px;">Variables personales <span class="em-tip" data-tip="Estos códigos se reemplazan automáticamente con los datos reales de cada contacto. Ejemplo: {{nombre}} se convierte en 'María'.">?</span></p>
+        <div id="em-merge-tags" style="display:flex;flex-direction:column;gap:4px;"></div>
+        <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 10px;">Categoría</p>
+        <select id="em-editor-category" class="em-input" style="cursor:pointer;font-size:12px;">
+          <option value="promotional">Promocional</option>
+          <option value="transactional">Transaccional</option>
+          <option value="welcome">Bienvenida</option>
+          <option value="newsletter">Newsletter</option>
+          <option value="abandoned">Carrito abandonado</option>
+        </select>
+      </div>
+      <div style="flex:1;overflow-y:auto;background:var(--bg-main);display:flex;justify-content:center;padding:24px;">
+        <div id="em-editor-canvas" style="width:600px;max-width:100%;min-height:400px;background:#ffffff;border-radius:8px;box-shadow:0 2px 20px rgba(0,0,0,0.3);transition:width 0.3s;">
+          <div id="em-editor-blocks" style="padding:0;min-height:400px;"></div>
+          <div id="em-editor-dropzone" style="border:2px dashed #cbd5e1;border-radius:8px;margin:16px;padding:32px;text-align:center;color:#94a3b8;font-size:13px;cursor:pointer;transition:all 0.2s;" onclick="addBlock('text')" ondragover="event.preventDefault();this.style.borderColor='var(--accent)';this.style.background='rgba(111,207,245,0.05)'" ondragleave="this.style.borderColor='#cbd5e1';this.style.background='transparent'" ondrop="handleBlockDrop(event);this.style.borderColor='#cbd5e1';this.style.background='transparent'">
+            Arrastra un bloque aquí o haz clic para agregar texto
+          </div>
+        </div>
+      </div>
+      <div id="em-editor-settings" style="width:260px;border-left:1px solid var(--border);background:var(--bg-sidebar);overflow-y:auto;padding:16px;">
+        <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Propiedades del bloque</p>
+        <div id="em-block-settings-content" style="color:var(--text-muted);font-size:12px;">Selecciona un bloque para editar sus propiedades</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Modal: Sequence ══════════ -->
+  <div id="em-modal-sequence" class="em-modal-overlay" style="display:none;">
+    <div class="em-modal-box" style="max-width:640px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <h3 style="font-size:17px;font-weight:900;color:var(--text-primary);">Nueva secuencia</h3>
+        <button onclick="closeSequenceModal()" class="em-modal-close">&times;</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div><label class="em-label">Nombre</label><input id="em-seq-name" type="text" placeholder="Ej: Bienvenida nuevos clientes" class="em-input"/></div>
+        <div>
+          <label class="em-label" style="display:flex;align-items:center;gap:4px;">¿Cuándo se activa? <span class="em-tip" data-tip="El evento que hace que un contacto entre a esta secuencia automáticamente.">?</span></label>
+          <select id="em-seq-trigger" class="em-input" style="cursor:pointer;">
+            <option value="signup">Cuando alguien se registra</option>
+            <option value="purchase">Cuando hace su primera compra</option>
+            <option value="abandoned">Cuando abandona su carrito</option>
+            <option value="inactive">Cuando lleva 30 días sin actividad</option>
+            <option value="tag">Cuando se le asigna una etiqueta</option>
+            <option value="segment">Cuando entra en un segmento</option>
+            <option value="manual">Inicio manual</option>
+          </select>
+        </div>
+        <div>
+          <label class="em-label">Pasos de la secuencia</label>
+          <div id="em-seq-steps" style="display:flex;flex-direction:column;gap:0;"></div>
+          <button onclick="addSequenceStep()" style="margin-top:8px;padding:8px 16px;border-radius:8px;border:1px dashed var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;width:100%;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">+ Agregar paso</button>
+        </div>
+        <div>
+          <label class="em-label">¿Cuándo termina la secuencia?</label>
+          <select id="em-seq-exit" class="em-input" style="cursor:pointer;">
+            <option value="complete">Al completar todos los pasos</option>
+            <option value="purchase">Cuando hace una compra</option>
+            <option value="reply">Cuando responde un email</option>
+            <option value="unsubscribe">Cuando se da de baja</option>
+          </select>
+        </div>
+        <button onclick="saveSequence()" class="em-btn-primary">Crear secuencia</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Modal: Audience ══════════ -->
+  <div id="em-modal-audience" class="em-modal-overlay" style="display:none;">
+    <div class="em-modal-box" style="max-width:480px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <h3 style="font-size:17px;font-weight:900;color:var(--text-primary);">Nueva lista</h3>
+        <button onclick="closeAudienceModal()" class="em-modal-close">&times;</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div><label class="em-label">Nombre de la lista</label><input id="em-aud-name" type="text" placeholder="Ej: Clientes VIP" class="em-input"/></div>
+        <div><label class="em-label">Descripción</label><input id="em-aud-desc" type="text" placeholder="Describe brevemente esta lista" class="em-input"/></div>
+        <div>
+          <label class="em-label">¿De dónde vienen los contactos?</label>
+          <select id="em-aud-source" class="em-input" style="cursor:pointer;">
+            <option value="crm">Desde mi CRM</option>
+            <option value="import">Importar archivo CSV</option>
+            <option value="manual">Agregar uno por uno</option>
+            <option value="form">Desde un formulario web</option>
+          </select>
+        </div>
+        <div id="em-csv-upload-zone" style="display:none;">
+          <label class="em-label">Archivo CSV</label>
+          <div id="em-csv-dropzone" style="border:2px dashed var(--border);border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:all 0.2s;" onclick="document.getElementById('em-csv-file').click()" ondragover="event.preventDefault();this.style.borderColor='var(--accent)';this.style.background='var(--accent-bg)'" ondragleave="this.style.borderColor='var(--border)';this.style.background='transparent'" ondrop="handleCSVDrop(event)">
+            <svg style="width:32px;height:32px;color:var(--text-faint);margin-bottom:8px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+            <p style="font-size:13px;color:var(--text-muted);font-weight:600;">Arrastra tu archivo aquí</p>
+            <p style="font-size:11px;color:var(--text-faint);margin-top:4px;">o haz clic para seleccionar</p>
+            <input type="file" id="em-csv-file" accept=".csv,.tsv,.txt" style="display:none;" onchange="handleCSVSelect(this)"/>
+          </div>
+          <div id="em-csv-preview" style="display:none;margin-top:10px;"></div>
+        </div>
+        <button onclick="saveAudience()" class="em-btn-primary">Crear lista</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Modal: Compare Campaigns ══════════ -->
+  <div id="em-modal-compare" class="em-modal-overlay" style="display:none;">
+    <div class="em-modal-box" style="max-width:800px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <h3 style="font-size:17px;font-weight:900;color:var(--text-primary);">Comparar campañas</h3>
+        <button onclick="closeCompareModal()" class="em-modal-close">&times;</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+        <div><label class="em-label">Campaña A</label><select id="em-compare-a" class="em-input" style="cursor:pointer;" onchange="renderComparison()"><option value="">Seleccionar...</option></select></div>
+        <div><label class="em-label">Campaña B</label><select id="em-compare-b" class="em-input" style="cursor:pointer;" onchange="renderComparison()"><option value="">Seleccionar...</option></select></div>
+      </div>
+      <div id="em-compare-result"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ Modal: Send Test ══════════ -->
+  <div id="em-modal-test-email" class="em-modal-overlay" style="display:none;">
+    <div class="em-modal-box" style="max-width:420px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <h3 style="font-size:17px;font-weight:900;color:var(--text-primary);">Enviar email de prueba</h3>
+        <button onclick="document.getElementById('em-modal-test-email').style.display='none'" class="em-modal-close">&times;</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div><label class="em-label">Enviar a (separa con comas)</label><input id="em-test-email-to" type="text" placeholder="tu@email.com" class="em-input"/></div>
+        <div><label class="em-label">Asunto</label><input id="em-test-email-subject" type="text" placeholder="[PRUEBA] Asunto" class="em-input"/></div>
+        <p style="font-size:11px;color:var(--text-faint);background:var(--input-bg);padding:10px;border-radius:8px;">Se enviará con el prefijo [PRUEBA] para que sepas que es una prueba.</p>
+        <button onclick="confirmSendTest()" class="em-btn-primary" style="background:#22c55e;">Enviar prueba</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Modal: Suppression ══════════ -->
+  <div id="em-modal-suppression" class="em-modal-overlay" style="display:none;">
+    <div class="em-modal-box" style="max-width:420px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <h3 style="font-size:17px;font-weight:900;color:var(--text-primary);">Bloquear emails</h3>
+        <button onclick="document.getElementById('em-modal-suppression').style.display='none'" class="em-modal-close">&times;</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div><label class="em-label">Emails (uno por línea o separados por coma)</label><textarea id="em-suppress-emails" rows="4" placeholder="email1@ejemplo.com&#10;email2@ejemplo.com" class="em-input" style="resize:vertical;font-family:monospace;font-size:12px;"></textarea></div>
+        <div>
+          <label class="em-label">Motivo</label>
+          <select id="em-suppress-reason" class="em-input" style="cursor:pointer;">
+            <option value="manual">El contacto lo pidió</option>
+            <option value="bounce">El email no existe (rebote)</option>
+            <option value="complaint">Marcó como spam</option>
+            <option value="legal">Solicitud legal</option>
+            <option value="invalid">Email inválido</option>
+          </select>
+        </div>
+        <button onclick="addToSuppression()" class="em-btn-primary" style="background:#ef4444;">Bloquear emails</button>
+      </div>
+    </div>
+  </div>
+</DashboardLayout>
+
+<style>
+  @keyframes fadeInUp { from { opacity:0;transform:translateY(10px); } to { opacity:1;transform:translateY(0); } }
+
+  /* Tabs */
+  .em-tab { padding:10px 20px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap; }
+  .em-tab.active { color:var(--accent);border-bottom-color:var(--accent); }
+
+  /* Table headers */
+  .em-th { padding:14px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px; }
+
+  /* Modals */
+  .em-modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center; }
+  .em-modal-box { background:var(--bg-sidebar);border:1px solid var(--border);border-radius:16px;padding:28px;width:90%;max-height:90vh;overflow-y:auto;position:relative; }
+  .em-modal-close { width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px; }
+
+  /* Form */
+  .em-label { font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:4px;display:block; }
+  .em-input { width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;transition:border-color 0.2s; }
+  .em-input:focus { border-color:var(--accent); }
+
+  /* Buttons */
+  .em-btn-primary { padding:12px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s; }
+  .em-btn-primary:hover { opacity:0.85; }
+  .em-btn-secondary { padding:12px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-primary);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s; }
+  .em-btn-secondary:hover { background:var(--nav-hover); }
+  .em-tbl-btn { padding:5px 9px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;transition:all 0.15s; }
+  .em-tbl-btn:hover { border-color:var(--accent);color:var(--accent); }
+  .em-tbl-btn-del:hover { border-color:#ef4444 !important;color:#ef4444 !important; }
+
+  /* AI button */
+  .em-ai-btn { padding:8px 14px;border-radius:10px;border:1px solid #8b5cf6;background:rgba(139,92,246,0.1);color:#8b5cf6;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:4px;transition:all 0.2s; }
+  .em-ai-btn:hover { background:rgba(139,92,246,0.2); }
+
+  /* Chips */
+  .em-chip { padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;text-align:center; }
+  .em-chip.active { border-color:var(--accent);background:var(--accent-bg);color:var(--accent); }
+  .em-chip:hover:not(.active) { border-color:var(--border-hover);color:var(--text-secondary); }
+
+  /* Template filter */
+  .em-tpl-filter { padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;font-weight:600;cursor:pointer;transition:all 0.15s; }
+  .em-tpl-filter.active { border-color:var(--accent);background:var(--accent-bg);color:var(--accent); }
+  .em-tpl-filter:hover:not(.active) { border-color:var(--border-hover);color:var(--text-secondary); }
+
+  /* Preview toggle */
+  .em-preview-btn.active { background:var(--accent-bg) !important;color:var(--accent) !important; }
+
+  /* Editor blocks */
+  .em-block-item { padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-secondary);font-size:12px;font-weight:600;cursor:grab;display:flex;align-items:center;gap:8px;transition:all 0.15s; }
+  .em-block-item:hover { border-color:var(--accent);color:var(--accent); }
+  .em-block-item:active { cursor:grabbing; }
+  .em-merge-tag { padding:6px 10px;border-radius:6px;background:var(--input-bg);color:var(--accent);font-size:11px;font-weight:700;font-family:monospace;cursor:pointer;transition:background 0.15s;border:none;text-align:left; }
+  .em-merge-tag:hover { background:var(--accent-bg); }
+  .editor-block { position:relative;border:2px solid transparent;transition:border-color 0.15s;cursor:pointer; }
+  .editor-block:hover { border-color:rgba(111,207,245,0.3); }
+  .editor-block.selected { border-color:var(--accent); }
+  .editor-block-actions { position:absolute;top:-12px;right:8px;display:none;gap:4px; }
+  .editor-block:hover .editor-block-actions, .editor-block.selected .editor-block-actions { display:flex; }
+  .editor-block-btn { width:24px;height:24px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;box-shadow:0 1px 3px rgba(0,0,0,0.1); }
+  .editor-block-btn:hover { border-color:var(--accent);color:var(--accent); }
+
+  /* Sequences */
+  .seq-step { position:relative;padding:14px 16px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg); }
+  .seq-connector { width:2px;height:20px;background:var(--border);margin:0 auto; }
+
+  /* Tooltips */
+  .em-tip { display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--input-bg);color:var(--text-faint);font-size:10px;font-weight:800;cursor:help;position:relative;flex-shrink:0; }
+  .em-tip:hover::after { content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--bg-sidebar);border:1px solid var(--border);color:var(--text-secondary);padding:10px 14px;border-radius:10px;font-size:12px;font-weight:500;white-space:normal;width:260px;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.3);line-height:1.5;pointer-events:none; }
+  .em-tip:hover::before { content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--border);z-index:101; }
+
+  /* Help banners */
+  .em-help-banner { display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;background:var(--accent-bg);border:1px solid rgba(111,207,245,0.15);margin-bottom:16px; }
+  .em-help-close { border:none;background:transparent;color:var(--text-faint);cursor:pointer;font-size:16px;padding:0 4px; }
+
+  /* Empty states */
+  .em-empty-state { text-align:center;padding:48px 24px; }
+
+  /* Trend indicators */
+  .em-trend { font-size:11px;font-weight:700; }
+  .em-trend-up { color:#22c55e; }
+  .em-trend-down { color:#ef4444; }
+
+  /* Dropdown */
+  .em-dropdown-item { width:100%;display:flex;align-items:center;gap:8px;padding:8px 12px;border:none;background:transparent;color:var(--text-secondary);font-size:12px;font-weight:600;cursor:pointer;border-radius:6px;transition:all 0.15s;text-align:left; }
+  .em-dropdown-item:hover { background:var(--nav-hover);color:var(--accent); }
+
+  /* Wizard steps */
+  .em-wiz-step { display:flex;align-items:center;gap:6px;flex:1; }
+  .em-wiz-num { width:28px;height:28px;border-radius:50%;background:var(--input-bg);color:var(--text-faint);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;transition:all 0.3s; }
+  .em-wiz-label { font-size:11px;font-weight:600;color:var(--text-faint);transition:color 0.3s; }
+  .em-wiz-step.active .em-wiz-num { background:var(--accent);color:#fff; }
+  .em-wiz-step.active .em-wiz-label { color:var(--accent); }
+  .em-wiz-step.done .em-wiz-num { background:#22c55e;color:#fff; }
+  .em-wiz-step.done .em-wiz-label { color:#22c55e; }
+  .em-wiz-connector { flex:0 0 20px;height:2px;background:var(--border);transition:background 0.3s; }
+  .em-wiz-connector.done { background:#22c55e; }
+  .em-wiz-panel { min-height:200px; }
+
+  /* Collapse */
+  .em-collapse-header { width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border:none;background:transparent;cursor:pointer;transition:background 0.15s; }
+  .em-collapse-header:hover { background:var(--nav-hover); }
+  .em-collapse-toggle { width:100%;padding:8px;border:none;background:transparent;color:var(--text-faint);font-size:12px;font-weight:600;cursor:pointer;text-align:left;transition:color 0.15s; }
+  .em-collapse-toggle:hover { color:var(--accent); }
+
+  /* Compare */
+  .em-compare-metric { display:flex;flex-direction:column;align-items:center;padding:12px;border-radius:10px;background:var(--input-bg); }
+  .em-compare-metric-label { font-size:10px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px; }
+  .em-compare-metric-val { font-size:22px;font-weight:900; }
+  .em-compare-winner { box-shadow:0 0 0 2px #22c55e;position:relative; }
+  .em-compare-winner::after { content:'✓';position:absolute;top:-8px;right:-8px;width:18px;height:18px;border-radius:50%;background:#22c55e;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center; }
+
+  /* Toggle switch */
+  .em-toggle-wrap { position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0; }
+  .em-toggle-wrap input { opacity:0;width:0;height:0; }
+  .em-toggle-slider { position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:22px;transition:0.3s; }
+  .em-toggle-slider::before { content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s; }
+  .em-toggle-wrap input:checked + .em-toggle-slider { background:var(--toggle-color, #22c55e); }
+  .em-toggle-wrap input:checked + .em-toggle-slider::before { transform:translateX(18px); }
+
+  /* Auto-resend badge */
+  .em-auto-badge { display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(34,197,94,0.1);color:#22c55e; }
+</style>
+
+<script is:inline>
+// ═══════ DEMO DATA ═══════
+const demoCampaigns = [
+  { id:1, name:'Promo Verano 2026', subject:'¡Descuentos de verano hasta 40%!', previewText:'Los mejores precios te esperan', status:'sent', audience:'Todos los clientes', audienceId:1, sent:2450, opened:1078, clicked:312, bounced:45, spam:3, unsubs:8, date:'2026-03-25', templateId:1 },
+  { id:2, name:'Newsletter Marzo', subject:'Las novedades de marzo en tu tienda', previewText:'Nuevos productos y ofertas', status:'sent', audience:'Newsletter suscriptores', audienceId:2, sent:1830, opened:695, clicked:187, bounced:32, spam:1, unsubs:5, date:'2026-03-15', templateId:4 },
+  { id:3, name:'Carrito abandonado', subject:'¡No olvides tu carrito! Te esperamos', previewText:'Tus productos siguen disponibles', status:'sent', audience:'Carritos abandonados', audienceId:3, sent:420, opened:252, clicked:134, bounced:8, spam:0, unsubs:2, date:'2026-03-20', templateId:5 },
+  { id:4, name:'Bienvenida nuevos', subject:'¡Bienvenido a la familia! Tu cupón de 15%', previewText:'Usa tu cupón de bienvenida', status:'sent', audience:'Nuevos registros', audienceId:4, sent:680, opened:510, clicked:238, bounced:12, spam:0, unsubs:1, date:'2026-03-10', templateId:3 },
+  { id:5, name:'Flash Sale Primavera', subject:'¡Solo 24 horas! Descuentos exclusivos', previewText:'No te lo pierdas', status:'scheduled', audience:'Clientes VIP', audienceId:5, sent:0, opened:0, clicked:0, bounced:0, spam:0, unsubs:0, date:'2026-04-01', templateId:1 },
+  { id:6, name:'Prueba A/B: Asunto abril', subject:'', previewText:'', status:'ab_test', audience:'Todos los clientes', audienceId:1, sent:500, opened:210, clicked:67, bounced:9, spam:0, unsubs:1, date:'2026-03-28', templateId:1, abTest:{ varA:'¡Oferta imperdible! -30% solo hoy', varB:'Tu descuento exclusivo te espera', openA:23.4, openB:28.1, clickA:5.2, clickB:7.8, winner:'B' }},
+  { id:7, name:'Re-engagement Q1', subject:'Te extrañamos, vuelve con un 20%', previewText:'', status:'draft', audience:'Inactivos 90 días', audienceId:6, sent:0, opened:0, clicked:0, bounced:0, spam:0, unsubs:0, date:'', templateId:2 },
+  { id:8, name:'Lanzamiento colección', subject:'Conoce nuestra nueva colección', previewText:'', status:'draft', audience:'', audienceId:null, sent:0, opened:0, clicked:0, bounced:0, spam:0, unsubs:0, date:'', templateId:null },
+];
+
+const demoTemplates = [
+  { id:1, name:'Promoción general', category:'promotional', subject:'¡Oferta especial para ti!', uses:8, preview:'#6fcff5' },
+  { id:2, name:'Re-engagement', category:'promotional', subject:'Te extrañamos, vuelve con descuento', uses:3, preview:'#f97316' },
+  { id:3, name:'Bienvenida', category:'welcome', subject:'¡Bienvenido a {{marca}}!', uses:12, preview:'#22c55e' },
+  { id:4, name:'Newsletter semanal', category:'newsletter', subject:'Las novedades de la semana', uses:15, preview:'#8b5cf6' },
+  { id:5, name:'Carrito abandonado', category:'abandoned', subject:'¡Tu carrito te espera!', uses:6, preview:'#ef4444' },
+  { id:6, name:'Confirmación pedido', category:'transactional', subject:'Pedido #{{orderId}} confirmado', uses:24, preview:'#eab308' },
+];
+
+const demoAudiences = [
+  { id:1, name:'Todos los clientes', description:'Base completa de clientes activos', count:2450, source:'crm', growth:'+120 este mes' },
+  { id:2, name:'Newsletter suscriptores', description:'Suscriptores del blog y newsletter', count:1830, source:'form', growth:'+85 este mes' },
+  { id:3, name:'Carritos abandonados', description:'Con carritos sin completar (últimos 7 días)', count:420, source:'crm', growth:'+32 esta semana' },
+  { id:4, name:'Nuevos registros', description:'Registros de los últimos 30 días', count:680, source:'crm', growth:'+180 este mes' },
+  { id:5, name:'Clientes VIP', description:'Más de $5,000 en compras', count:310, source:'crm', growth:'+15 este mes' },
+  { id:6, name:'Inactivos 90 días', description:'Sin actividad en los últimos 90 días', count:540, source:'crm', growth:'-25 este mes' },
+];
+
+const demoSequences = [
+  { id:1, name:'Bienvenida nuevos clientes', trigger:'signup', status:'active', steps:[
+    { type:'email', subject:'¡Bienvenido! Aquí tu cupón de 15%', delay:0 },
+    { type:'delay', days:2 },
+    { type:'email', subject:'3 tips para aprovechar tu cuenta', delay:0 },
+    { type:'condition', condition:'opened_prev', yesAction:'Enviar email de productos', noAction:'Reenviar con nuevo asunto' },
+    { type:'delay', days:3 },
+    { type:'email', subject:'¿Necesitas ayuda? Estamos aquí', delay:0 },
+  ], subscribers:680, completed:412, exitCondition:'purchase', conversions:89 },
+  { id:2, name:'Recuperación de carrito', trigger:'abandoned', status:'active', steps:[
+    { type:'delay', days:0, hours:1 },
+    { type:'email', subject:'¡Olvidaste algo en tu carrito!', delay:0 },
+    { type:'delay', days:1 },
+    { type:'condition', condition:'clicked_prev', yesAction:'No más emails', noAction:'Enviar cupón 10%' },
+    { type:'email', subject:'Último aviso: 10% extra en tu carrito', delay:0 },
+  ], subscribers:420, completed:285, exitCondition:'purchase', conversions:134 },
+  { id:3, name:'Re-engagement inactivos', trigger:'inactive', status:'paused', steps:[
+    { type:'email', subject:'Te extrañamos... vuelve con 20%', delay:0 },
+    { type:'delay', days:5 },
+    { type:'email', subject:'Última oportunidad: tu cupón vence mañana', delay:0 },
+  ], subscribers:540, completed:0, exitCondition:'purchase', conversions:0 },
+];
+
+const demoSuppression = [
+  { email:'spam-trap@test.com', reason:'bounce', date:'2026-03-20' },
+  { email:'complaint@blocked.mx', reason:'complaint', date:'2026-03-18' },
+  { email:'removed@legal.com', reason:'legal', date:'2026-03-15' },
+  { email:'invalid@noexiste.mx', reason:'invalid', date:'2026-03-12' },
+  { email:'noquiero@ejemplo.com', reason:'manual', date:'2026-03-10' },
+];
+
+const mergeTags = [
+  { tag:'{{nombre}}', label:'Nombre' }, { tag:'{{apellido}}', label:'Apellido' },
+  { tag:'{{email}}', label:'Email' }, { tag:'{{empresa}}', label:'Empresa' },
+  { tag:'{{marca}}', label:'Tu marca' }, { tag:'{{cupon}}', label:'Código cupón' },
+  { tag:'{{orderId}}', label:'# Pedido' }, { tag:'{{unsubscribe}}', label:'Link de baja' },
+];
+
+const editorBlocks = [
+  { type:'header', label:'Encabezado', icon:'H' }, { type:'text', label:'Texto', icon:'T' },
+  { type:'image', label:'Imagen', icon:'🖼' }, { type:'button', label:'Botón', icon:'▶' },
+  { type:'divider', label:'Separador', icon:'—' }, { type:'columns', label:'2 Columnas', icon:'⫼' },
+  { type:'social', label:'Redes sociales', icon:'@' }, { type:'footer', label:'Pie de email', icon:'_' },
+  { type:'spacer', label:'Espacio', icon:'↕' }, { type:'product', label:'Producto', icon:'🛍' },
+];
+
+const aiSubjects = {
+  promotional: ['¡Solo por hoy! {{nombre}}, tu descuento exclusivo', 'Ahorra hasta 40% — termina a medianoche', '{{nombre}}, elegimos estas ofertas para ti', 'Precios que no vas a creer'],
+  welcome: ['¡Bienvenido, {{nombre}}! Tu regalo de bienvenida', 'Tu aventura con {{marca}} empieza aquí', '{{nombre}}, esto puedes lograr con nosotros'],
+  abandoned: ['{{nombre}}, tu carrito te extraña', 'Se están agotando... ¡no pierdas tus favoritos!', '¿Olvidaste algo? Te guardamos tu selección'],
+  reengagement: ['Ha pasado tiempo, {{nombre}}. Mira lo nuevo', 'Te extrañamos — aquí va un 20% para volver'],
+  newsletter: ['Lo mejor de la semana, curado para ti', '{{nombre}}, las 5 novedades que no te puedes perder'],
+};
+
+let currentABType='subject', currentABWinner='open', currentTplFilter='', seqStepCount=0;
+let editorBlockList=[], selectedBlockIdx=null, wizStep=1, emailDarkMode=false;
+
+// ═══════ HELP BANNERS ═══════
+function dismissHelp(tab) {
+  document.getElementById('em-help-'+tab).style.display='none';
+  localStorage.setItem('em_help_'+tab+'_dismissed','1');
+}
+function initHelpBanners() {
+  ['campaigns','templates','sequences','audiences','forms','analytics'].forEach(t => {
+    if (localStorage.getItem('em_help_'+t+'_dismissed')) {
+      const el = document.getElementById('em-help-'+t);
+      if (el) el.style.display = 'none';
+    }
+  });
+}
+
+// ═══════ TOGGLE HELPERS ═══════
+function toggleSection(id) { const el=document.getElementById(id); el.style.display=el.style.display==='none'?'block':'none'; }
+function toggleMoreMenu() { const m=document.getElementById('em-more-menu'); m.style.display=m.style.display==='none'?'block':'none'; }
+document.addEventListener('click', e => { if (!document.getElementById('em-more-wrap')?.contains(e.target)) document.getElementById('em-more-menu').style.display='none'; });
+
+// ═══════ TAB SWITCHING ═══════
+function switchEMTab(tab) {
+  document.querySelectorAll('.em-tab').forEach(t => { t.classList.remove('active'); });
+  document.getElementById('em-tab-'+tab).classList.add('active');
+  ['campaigns','templates','sequences','audiences','forms','analytics'].forEach(p => {
+    document.getElementById('em-panel-'+p).style.display = p===tab ? '' : 'none';
+  });
+}
+
+// ═══════ STATS WITH TRENDS ═══════
+function renderStats() {
+  const sent=demoCampaigns.filter(c=>c.status==='sent'||c.status==='ab_test');
+  const ts=sent.reduce((s,c)=>s+c.sent,0), to=sent.reduce((s,c)=>s+c.opened,0);
+  const tc=sent.reduce((s,c)=>s+c.clicked,0), tb=sent.reduce((s,c)=>s+c.bounced,0);
+  const tu=sent.reduce((s,c)=>s+c.unsubs,0), totalSubs=demoAudiences.reduce((s,a)=>s+a.count,0);
+
+  document.getElementById('em-stat-sent').textContent = sent.length;
+  document.getElementById('em-stat-open').textContent = ts>0?((to/ts)*100).toFixed(1)+'%':'0%';
+  document.getElementById('em-stat-clicks').textContent = ts>0?((tc/ts)*100).toFixed(1)+'%':'0%';
+  document.getElementById('em-stat-subs').textContent = totalSubs.toLocaleString();
+  document.getElementById('em-stat-bounces').textContent = ts>0?((tb/ts)*100).toFixed(1)+'%':'0%';
+  document.getElementById('em-stat-unsubs').textContent = tu;
+
+  // Trends
+  setTrend('em-trend-sent','+2','vs mes pasado',true);
+  setTrend('em-trend-open','+5.3%','vs mes pasado',true);
+  setTrend('em-trend-clicks','+2.1%','vs mes pasado',true);
+  setTrend('em-trend-subs','+385','vs mes pasado',true);
+  setTrend('em-trend-bounces','-0.3%','vs mes pasado',true);
+  setTrend('em-trend-unsubs','-2','vs mes pasado',true);
+}
+function setTrend(id,val,label,good) {
+  const el=document.getElementById(id);
+  if (!el) return;
+  const isUp = val.startsWith('+');
+  const isGood = (good && isUp) || (!good && !isUp);
+  // For bounces and unsubs, down is good
+  const color = id.includes('bounces')||id.includes('unsubs') ? (isUp?'#ef4444':'#22c55e') : (isUp?'#22c55e':'#ef4444');
+  el.innerHTML = `<span style="color:${color};">${isUp?'▲':'▼'} ${val}</span>`;
+  el.title = label;
+}
+
+// ═══════ CAMPAIGNS TABLE ═══════
+function renderCampaigns() {
+  const tbody=document.getElementById('em-campaigns-tbody');
+  let data=[...demoCampaigns];
+  const search=document.getElementById('em-search').value.toLowerCase();
+  const sf=document.getElementById('em-filter-status').value;
+  if (search) data=data.filter(c=>c.name.toLowerCase().includes(search)||c.subject.toLowerCase().includes(search));
+  if (sf) data=data.filter(c=>c.status===sf);
+
+  if (!data.length) { tbody.innerHTML='<tr><td colspan="10" style="padding:40px;text-align:center;color:var(--text-faint);font-size:13px;">No se encontraron campañas</td></tr>'; return; }
+
+  const sm = { sent:{l:'Enviada',c:'#22c55e',b:'rgba(34,197,94,0.1)'}, draft:{l:'Borrador',c:'#64748b',b:'rgba(100,116,139,0.1)'}, scheduled:{l:'Programada',c:'#f97316',b:'rgba(249,115,22,0.1)'}, ab_test:{l:'Prueba A/B',c:'#8b5cf6',b:'rgba(139,92,246,0.1)'} };
+  const pct=(v,t)=>t>0?((v/t)*100).toFixed(1)+'%':'--';
+
+  tbody.innerHTML=data.map(c=>{
+    const st=sm[c.status]||sm.draft;
+    const ab=c.abTest?`<span style="display:block;font-size:10px;color:#8b5cf6;margin-top:2px;">Ganadora: Versión ${c.abTest.winner}</span>`:'';
+    const autoR=c.autoResend?`<span class="em-auto-badge">⟳ Auto-reenvío</span>`:'';
+    return `<tr style="border-bottom:1px solid var(--border);transition:background 0.15s;" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background='transparent'">
+      <td style="padding:14px 16px;"><p style="font-weight:700;color:var(--text-primary);margin-bottom:2px;">${c.name} ${autoR}</p><p style="font-size:11px;color:var(--text-faint);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.subject||'Sin asunto'}</p>${ab}</td>
+      <td style="padding:14px 16px;"><span style="display:inline-block;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;color:${st.c};background:${st.b};">${st.l}</span></td>
+      <td style="padding:14px 16px;color:var(--text-secondary);font-size:12px;">${c.audience||'<span style=color:var(--text-faintest)>—</span>'}</td>
+      <td style="padding:14px 16px;text-align:right;color:var(--text-secondary);">${c.sent>0?c.sent.toLocaleString():'--'}</td>
+      <td style="padding:14px 16px;text-align:right;color:${c.sent>0?'#22c55e':'var(--text-faintest)'};">${pct(c.opened,c.sent)}</td>
+      <td style="padding:14px 16px;text-align:right;color:${c.sent>0?'var(--accent)':'var(--text-faintest)'};">${pct(c.clicked,c.sent)}</td>
+      <td style="padding:14px 16px;text-align:right;color:${c.bounced>0?'#f97316':'var(--text-faintest)'};font-size:12px;">${pct(c.bounced,c.sent)}</td>
+      <td style="padding:14px 16px;text-align:right;color:${c.unsubs>0?'#ef4444':'var(--text-faintest)'};font-size:12px;">${c.unsubs>0?c.unsubs:'--'}</td>
+      <td style="padding:14px 16px;color:var(--text-muted);font-size:12px;">${c.date||'--'}</td>
+      <td style="padding:14px 16px;text-align:center;">
+        <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
+          ${c.status==='draft'?`<button onclick="event.stopPropagation();editCampaign(${c.id})" class="em-tbl-btn">Editar</button>`:''}
+          ${c.abTest?`<button onclick="event.stopPropagation();viewABResults(${c.id})" class="em-tbl-btn" style="border-color:#8b5cf6;color:#8b5cf6;">A/B</button>`:''}
+          ${c.status==='sent'&&c.sent>0?`<button onclick="event.stopPropagation();toggleAutoResend(${c.id})" class="em-tbl-btn" style="border-color:${c.autoResend?'#22c55e':'var(--border)'};color:${c.autoResend?'#22c55e':'var(--text-faint)'};" title="${c.autoResend?'Auto-reenvío activo':'Activar auto-reenvío a no abiertos'}">${c.autoResend?'⟳ Auto':'⟳ Reenvío'}</button>`:''}
+          <button onclick="event.stopPropagation();duplicateCampaign(${c.id})" class="em-tbl-btn">Duplicar</button>
+          <button onclick="event.stopPropagation();deleteCampaign(${c.id})" class="em-tbl-btn em-tbl-btn-del">Eliminar</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+function emFilterCampaigns(){renderCampaigns();}
+
+// ═══════ TEMPLATES ═══════
+function renderTemplates() {
+  const grid=document.getElementById('em-templates-grid');
+  const cats={promotional:'Promocional',transactional:'Transaccional',welcome:'Bienvenida',newsletter:'Newsletter',abandoned:'Carrito abandonado'};
+  const filtered=currentTplFilter?demoTemplates.filter(t=>t.category===currentTplFilter):demoTemplates;
+  if(!filtered.length){grid.innerHTML='<p style="color:var(--text-faintest);font-size:13px;text-align:center;padding:32px;grid-column:1/-1;">No hay plantillas en esta categoría</p>';return;}
+  grid.innerHTML=filtered.map(t=>`
+    <div class="stat-card" style="padding:0;overflow:hidden;cursor:pointer;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--border-hover)'" onmouseout="this.style.borderColor='var(--border)'" onclick="openEditorModal(${t.id})">
+      <div style="height:120px;background:linear-gradient(135deg,${t.preview}22,${t.preview}44);display:flex;align-items:center;justify-content:center;">
+        <svg style="width:40px;height:40px;color:${t.preview};opacity:0.6;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      </div>
+      <div style="padding:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);">${t.name}</h4>
+          <span style="font-size:10px;font-weight:700;color:${t.preview};background:${t.preview}18;padding:3px 8px;border-radius:4px;">${cats[t.category]||t.category}</span>
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.subject}</p>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <p style="font-size:11px;color:var(--text-faint);">Usado ${t.uses} veces</p>
+          <span style="font-size:10px;color:var(--accent);font-weight:700;">Abrir editor →</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+function filterTemplates(cat){currentTplFilter=cat;document.querySelectorAll('.em-tpl-filter').forEach(b=>b.classList.toggle('active',b.dataset.cat===cat));renderTemplates();}
+
+// ═══════ SEQUENCES ═══════
+function renderSequences() {
+  const list=document.getElementById('em-sequences-list');
+  const trigL={signup:'Nuevo registro',purchase:'Primera compra',abandoned:'Carrito abandonado',inactive:'Inactividad 30 días',tag:'Tag asignado',segment:'Entra en segmento',manual:'Manual'};
+  const stC={active:'#22c55e',paused:'#f97316',draft:'#64748b'};
+  list.innerHTML=demoSequences.map(seq=>{
+    const emailSteps=seq.steps.filter(s=>s.type==='email').length;
+    const convRate=seq.subscribers>0?((seq.conversions/seq.subscribers)*100).toFixed(1):0;
+    return `<div class="stat-card animate-in" style="padding:20px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <h4 style="font-size:15px;font-weight:800;color:var(--text-primary);">${seq.name}</h4>
+            <span style="padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700;color:${stC[seq.status]};background:${stC[seq.status]}15;">${seq.status==='active'?'Activa':seq.status==='paused'?'Pausada':'Borrador'}</span>
+          </div>
+          <p style="font-size:12px;color:var(--text-muted);">Se activa: ${trigL[seq.trigger]} · ${emailSteps} emails · ${seq.steps.length} pasos</p>
+        </div>
+        <div style="display:flex;gap:16px;">
+          <div style="text-align:center;"><p style="font-size:18px;font-weight:900;color:var(--text-primary);">${seq.subscribers}</p><p style="font-size:10px;color:var(--text-faint);text-transform:uppercase;">Activos</p></div>
+          <div style="text-align:center;"><p style="font-size:18px;font-weight:900;color:#22c55e;">${seq.completed}</p><p style="font-size:10px;color:var(--text-faint);text-transform:uppercase;">Completados</p></div>
+          <div style="text-align:center;"><p style="font-size:18px;font-weight:900;color:var(--accent);">${convRate}%</p><p style="font-size:10px;color:var(--text-faint);text-transform:uppercase;">Conversión</p></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:0;overflow-x:auto;padding:8px 0;">
+        ${seq.steps.map((step,i)=>{
+          if(step.type==='email')return`<div style="display:flex;align-items:center;"><div style="padding:8px 14px;border-radius:8px;background:var(--accent-bg);border:1px solid rgba(111,207,245,0.2);white-space:nowrap;"><p style="font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;">Email</p><p style="font-size:11px;color:var(--text-secondary);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${step.subject}</p></div>${i<seq.steps.length-1?'<div style="width:20px;height:2px;background:var(--border);flex-shrink:0;"></div>':''}</div>`;
+          if(step.type==='delay')return`<div style="display:flex;align-items:center;"><div style="padding:6px 12px;border-radius:20px;background:rgba(249,115,22,0.1);white-space:nowrap;"><span style="font-size:10px;font-weight:700;color:#f97316;">⏱ ${step.days>0?step.days+'d':step.hours+'h'}</span></div><div style="width:20px;height:2px;background:var(--border);flex-shrink:0;"></div></div>`;
+          if(step.type==='condition')return`<div style="display:flex;align-items:center;"><div style="padding:8px 14px;border-radius:8px;background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.2);white-space:nowrap;"><p style="font-size:10px;font-weight:700;color:#eab308;text-transform:uppercase;">Condición</p><p style="font-size:10px;color:var(--text-muted);">${step.condition==='opened_prev'?'¿Abrió email?':'¿Hizo clic?'}</p></div>${i<seq.steps.length-1?'<div style="width:20px;height:2px;background:var(--border);flex-shrink:0;"></div>':''}</div>`;
+          return'';
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════ AUDIENCES ═══════
+function renderAudiences() {
+  const list=document.getElementById('em-audiences-list');
+  const srcL={crm:'CRM',import:'CSV',manual:'Manual',form:'Formulario'};
+  const srcC={crm:'#6fcff5',import:'#f97316',manual:'#8b5cf6',form:'#22c55e'};
+  list.innerHTML=demoAudiences.map(a=>`
+    <div class="stat-card" style="padding:18px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;transition:border-color 0.2s;cursor:pointer;" onmouseover="this.style.borderColor='var(--border-hover)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="width:44px;height:44px;border-radius:12px;background:${srcC[a.source]}15;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg style="width:22px;height:22px;color:${srcC[a.source]};" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </div>
+      <div style="flex:1;min-width:150px;"><p style="font-weight:700;color:var(--text-primary);font-size:14px;margin-bottom:2px;">${a.name}</p><p style="font-size:12px;color:var(--text-muted);">${a.description}</p></div>
+      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+        <div style="text-align:center;"><p style="font-size:20px;font-weight:900;color:var(--text-primary);">${a.count.toLocaleString()}</p><p style="font-size:10px;color:var(--text-faint);text-transform:uppercase;">Contactos</p></div>
+        <span style="font-size:10px;font-weight:700;padding:4px 10px;border-radius:6px;color:${srcC[a.source]};background:${srcC[a.source]}15;">${srcL[a.source]}</span>
+        <span style="font-size:11px;color:${a.growth.startsWith('+')?'#22c55e':'#ef4444'};font-weight:600;">${a.growth}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ═══════ SUPPRESSION ═══════
+function renderSuppression() {
+  const el=document.getElementById('em-suppression-list'); if(!el)return;
+  const rL={manual:'Solicitado',bounce:'Rebote',complaint:'Spam',legal:'Legal',invalid:'Inválido'};
+  const rC={manual:'#64748b',bounce:'#f97316',complaint:'#ef4444',legal:'#8b5cf6',invalid:'#eab308'};
+  document.getElementById('em-suppression-count').textContent=demoSuppression.length+' emails';
+  if(!demoSuppression.length){el.innerHTML='<p style="text-align:center;color:var(--text-faintest);font-size:13px;padding:20px;">No hay emails bloqueados</p>';return;}
+  el.innerHTML=demoSuppression.map((s,i)=>`
+    <div style="display:flex;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);gap:12px;">
+      <span style="flex:2;font-size:12px;color:var(--text-secondary);font-family:monospace;">${s.email}</span>
+      <span style="flex:1;"><span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;color:${rC[s.reason]};background:${rC[s.reason]}15;">${rL[s.reason]}</span></span>
+      <span style="flex:1;font-size:11px;color:var(--text-faint);">${s.date}</span>
+      <button onclick="removeSuppression(${i})" class="em-tbl-btn" style="font-size:10px;">Desbloquear</button>
+    </div>
+  `).join('');
+}
+function openSuppressionModal(){document.getElementById('em-modal-suppression').style.display='flex';}
+function addToSuppression(){
+  const raw=document.getElementById('em-suppress-emails').value.trim();
+  if(!raw){alert('Ingresa al menos un email');return;}
+  const emails=raw.split(/[,\n]+/).map(e=>e.trim()).filter(e=>e);
+  const reason=document.getElementById('em-suppress-reason').value;
+  const date=new Date().toISOString().split('T')[0];
+  emails.forEach(email=>{if(!demoSuppression.find(s=>s.email===email))demoSuppression.unshift({email,reason,date});});
+  document.getElementById('em-modal-suppression').style.display='none';
+  document.getElementById('em-suppress-emails').value='';
+  renderSuppression();showToast(emails.length+' email(s) bloqueados');
+}
+function removeSuppression(idx){demoSuppression.splice(idx,1);renderSuppression();showToast('Email desbloqueado');}
+
+// ═══════ ANALYTICS ═══════
+function renderAnalytics() {
+  const sent=demoCampaigns.filter(c=>c.status==='sent'||c.status==='ab_test');
+  const ts=sent.reduce((s,c)=>s+c.sent,0),tb=sent.reduce((s,c)=>s+c.bounced,0);
+  const tsp=sent.reduce((s,c)=>s+c.spam,0),tu=sent.reduce((s,c)=>s+c.unsubs,0);
+  const delivR=ts>0?(((ts-tb)/ts)*100).toFixed(1):0, bounceR=ts>0?((tb/ts)*100).toFixed(2):0;
+  const spamR=ts>0?((tsp/ts)*100).toFixed(3):0, unsubR=ts>0?((tu/ts)*100).toFixed(2):0;
+
+  document.getElementById('em-an-delivery').textContent=delivR+'%';
+  document.getElementById('em-an-delivery-bar').style.width=delivR+'%';
+  document.getElementById('em-an-bounce').textContent=bounceR+'%';
+  document.getElementById('em-an-bounce-bar').style.width=Math.min(bounceR*10,100)+'%';
+  document.getElementById('em-an-spam').textContent=spamR+'%';
+  document.getElementById('em-an-spam-bar').style.width=Math.min(spamR*100,100)+'%';
+  document.getElementById('em-an-unsub').textContent=unsubR+'%';
+  document.getElementById('em-an-unsub-bar').style.width=Math.min(unsubR*10,100)+'%';
+
+  // Monthly chart
+  const months=['Oct','Nov','Dic','Ene','Feb','Mar'],openR=[38,42,36,44,41,47],clickR=[12,14,11,16,15,16],bounceRm=[3.2,2.8,3.5,2.1,1.9,1.7];
+  document.getElementById('em-chart-monthly').innerHTML=months.map((m,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;display:flex;gap:2px;align-items:flex-end;height:160px;"><div style="flex:1;background:var(--accent);border-radius:3px 3px 0 0;height:${openR[i]*3}px;opacity:0.8;" title="Apertura: ${openR[i]}%"></div><div style="flex:1;background:#f97316;border-radius:3px 3px 0 0;height:${clickR[i]*3}px;opacity:0.8;" title="Clics: ${clickR[i]}%"></div><div style="flex:1;background:#ef4444;border-radius:3px 3px 0 0;height:${bounceRm[i]*20}px;opacity:0.8;" title="Rebote: ${bounceRm[i]}%"></div></div><span style="font-size:10px;color:var(--text-faint);font-weight:600;">${m}</span></div>`).join('');
+
+  // Top campaigns
+  const sortedC=sent.filter(c=>c.sent>0).sort((a,b)=>(b.opened/b.sent)-(a.opened/a.sent));
+  document.getElementById('em-top-campaigns').innerHTML=sortedC.slice(0,4).map((c,i)=>{
+    const rate=((c.opened/c.sent)*100).toFixed(1);
+    return`<div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;background:var(--input-bg);"><span style="width:24px;height:24px;border-radius:6px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--accent);">${i+1}</span><div style="flex:1;min-width:0;"><p style="font-size:13px;font-weight:700;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.name}</p><p style="font-size:11px;color:var(--text-faint);">${c.sent.toLocaleString()} env.</p></div><span style="font-size:14px;font-weight:800;color:#22c55e;">${rate}%</span></div>`;
+  }).join('');
+
+  // Growth
+  const gD=[3200,3450,3680,3900,4350,4820,5380,5700,5950,6100,6230,6430],mG=Math.max(...gD);
+  document.getElementById('em-chart-growth').innerHTML=gD.map(v=>`<div style="flex:1;background:linear-gradient(to top,var(--accent),var(--accent)88);border-radius:3px 3px 0 0;height:${(v/mG)*160}px;opacity:0.7;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'"></div>`).join('');
+
+  // Engagement by day
+  const days=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'],dayR=[45,52,48,55,42,28,22],mD=Math.max(...dayR);
+  document.getElementById('em-chart-days').innerHTML=days.map((d,i)=>{const int=dayR[i]/mD;return`<div style="text-align:center;"><div style="width:100%;aspect-ratio:1;border-radius:8px;background:rgba(111,207,245,${0.15+int*0.85});display:flex;align-items:center;justify-content:center;margin-bottom:6px;"><span style="font-size:14px;font-weight:800;color:${int>0.5?'#fff':'var(--text-muted)'};">${dayR[i]}%</span></div><span style="font-size:10px;color:var(--text-faint);font-weight:600;">${d}</span></div>`;}).join('');
+
+  // Device stats
+  const devices=[{l:'Celular',pct:58,icon:'📱',c:'var(--accent)'},{l:'Escritorio',pct:32,icon:'💻',c:'#f97316'},{l:'Tableta',pct:7,icon:'📟',c:'#8b5cf6'},{l:'Otros',pct:3,icon:'🔗',c:'#64748b'}];
+  document.getElementById('em-chart-devices').innerHTML=devices.map(d=>`<div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;"><span style="font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:6px;"><span style="font-size:14px;">${d.icon}</span>${d.l}</span><span style="font-size:13px;font-weight:800;color:var(--text-primary);">${d.pct}%</span></div><div style="height:8px;border-radius:4px;background:var(--input-bg);overflow:hidden;"><div style="height:100%;width:${d.pct}%;background:${d.c};border-radius:4px;"></div></div></div>`).join('');
+
+  // Click heatmap
+  const links=[{l:'Logo',cl:45,p:5.2},{l:'Banner imagen',cl:89,p:10.3},{l:'Botón principal "Ver ofertas"',cl:312,p:36.1},{l:'Producto 1',cl:156,p:18.1},{l:'Producto 2',cl:98,p:11.4},{l:'Link "Ver todos"',cl:67,p:7.8},{l:'Redes sociales',cl:34,p:3.9},{l:'Link de baja',cl:62,p:7.2}];
+  const maxCl=Math.max(...links.map(l=>l.cl));
+  document.getElementById('em-click-heatmap').innerHTML=`<div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;">${links.map(l=>{const int=l.cl/maxCl;const hC=int>0.7?'#ef4444':int>0.4?'#f97316':int>0.2?'#eab308':'#22c55e';return`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);background:${hC}0d;"><div style="width:8px;height:8px;border-radius:50%;background:${hC};flex-shrink:0;"></div><span style="flex:1;font-size:11px;color:var(--text-secondary);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${l.l}</span><span style="font-size:11px;color:var(--text-muted);white-space:nowrap;">${l.cl} clics</span><span style="font-size:11px;font-weight:800;color:${hC};min-width:40px;text-align:right;">${l.p}%</span></div>`;}).join('')}</div><div style="display:flex;justify-content:center;gap:16px;margin-top:10px;"><div style="display:flex;align-items:center;gap:4px;"><div style="width:8px;height:8px;border-radius:50%;background:#ef4444;"></div><span style="font-size:10px;color:var(--text-faint);">Alto</span></div><div style="display:flex;align-items:center;gap:4px;"><div style="width:8px;height:8px;border-radius:50%;background:#f97316;"></div><span style="font-size:10px;color:var(--text-faint);">Medio</span></div><div style="display:flex;align-items:center;gap:4px;"><div style="width:8px;height:8px;border-radius:50%;background:#eab308;"></div><span style="font-size:10px;color:var(--text-faint);">Bajo</span></div></div>`;
+
+  // Optimal time
+  const timeSlots=[{h:'8:00',l:'Temprano',r:38,d:'Mar-Jue'},{h:'10:00',l:'Media mañana',r:55,d:'Jue',best:true},{h:'13:00',l:'Hora de comida',r:42,d:'Mar-Mié'},{h:'18:00',l:'Fin de jornada',r:48,d:'Lun-Mar'},{h:'20:00',l:'Noche',r:35,d:'Vie'}];
+  const maxR=Math.max(...timeSlots.map(t=>t.r));
+  document.getElementById('em-optimal-time').innerHTML=timeSlots.map(t=>`<div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;${t.best?'background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);':'background:var(--input-bg);'}"><div style="min-width:48px;text-align:center;"><p style="font-size:14px;font-weight:900;color:${t.best?'#8b5cf6':'var(--text-primary)'};">${t.h}</p><p style="font-size:9px;color:var(--text-faint);">${t.d}</p></div><div style="flex:1;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:11px;color:var(--text-muted);">${t.l}</span><span style="font-size:11px;font-weight:800;color:${t.best?'#8b5cf6':'var(--text-secondary)'};">${t.r}%</span></div><div style="height:6px;border-radius:3px;background:var(--border);overflow:hidden;"><div style="height:100%;width:${(t.r/maxR)*100}%;background:${t.best?'#8b5cf6':'var(--accent)'};border-radius:3px;"></div></div></div>${t.best?'<span style="font-size:10px;font-weight:800;color:#8b5cf6;white-space:nowrap;">⭐ MEJOR</span>':''}</div>`).join('');
+}
+
+// ═══════ WIZARD ═══════
+function openCampaignWizard(){
+  wizStep=1;updateWizUI();
+  document.getElementById('em-modal-wizard').style.display='flex';
+  const as=document.getElementById('em-wiz-audience');
+  as.innerHTML='<option value="">Seleccionar lista...</option>'+demoAudiences.map(a=>`<option value="${a.id}">${a.name} (${a.count.toLocaleString()} contactos)</option>`).join('');
+  const ts=document.getElementById('em-wiz-template');
+  ts.innerHTML='<option value="">Sin plantilla (empezar vacío)</option>'+demoTemplates.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+  document.getElementById('em-wiz-ai-suggestions').style.display='none';
+  ['em-wiz-name','em-wiz-subject','em-wiz-preview','em-wiz-schedule'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+}
+function closeWizard(){document.getElementById('em-modal-wizard').style.display='none';}
+
+function updateWizUI(){
+  for(let i=1;i<=4;i++){
+    const s=document.getElementById('em-wiz-step-'+i);
+    s.classList.remove('active','done');
+    if(i<wizStep)s.classList.add('done');
+    if(i===wizStep)s.classList.add('active');
+    const p=document.getElementById('em-wiz-panel-'+i);
+    p.style.display=i===wizStep?'':'none';
+    if(i<4){const c=document.getElementById('em-wiz-conn-'+i);c.classList.toggle('done',i<wizStep);}
+  }
+  document.getElementById('em-wiz-back').style.display=wizStep>1?'':'none';
+  document.getElementById('em-wiz-next').style.display=wizStep<4?'':'none';
+  document.getElementById('em-wiz-send').style.display=wizStep===4?'':'none';
+  document.getElementById('em-wiz-draft').style.display=wizStep===4?'':'none';
+  document.getElementById('em-wiz-send-test').style.display=wizStep===4?'':'none';
+  if(wizStep===4)renderWizSummary();
+}
+function wizNext(){if(wizStep===1&&!document.getElementById('em-wiz-name').value.trim()){alert('Ingresa un nombre para tu campaña');return;}if(wizStep<4){wizStep++;updateWizUI();}}
+function wizBack(){if(wizStep>1){wizStep--;updateWizUI();}}
+
+function renderWizSummary(){
+  const name=document.getElementById('em-wiz-name').value||'Sin nombre';
+  const subject=document.getElementById('em-wiz-subject').value||'Sin asunto';
+  const preview=document.getElementById('em-wiz-preview').value||'Sin texto de vista previa';
+  const audSel=document.getElementById('em-wiz-audience');
+  const aud=audSel.options[audSel.selectedIndex]?.text||'Sin seleccionar';
+  const fromName=document.getElementById('em-wiz-from-name').value||'--';
+  const fromEmail=document.getElementById('em-wiz-from-email').value||'--';
+  document.getElementById('em-wiz-summary').innerHTML=`
+    <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;font-size:12px;">
+      <span style="color:var(--text-faint);font-weight:700;">Campaña:</span><span style="color:var(--text-primary);font-weight:600;">${name}</span>
+      <span style="color:var(--text-faint);font-weight:700;">Asunto:</span><span style="color:var(--text-primary);">${subject}</span>
+      <span style="color:var(--text-faint);font-weight:700;">Vista previa:</span><span style="color:var(--text-muted);">${preview}</span>
+      <span style="color:var(--text-faint);font-weight:700;">Audiencia:</span><span style="color:var(--text-primary);">${aud}</span>
+      <span style="color:var(--text-faint);font-weight:700;">Remitente:</span><span style="color:var(--text-primary);">${fromName} &lt;${fromEmail}&gt;</span>
+    </div>`;
+}
+
+function wizSaveDraft(){
+  const name=document.getElementById('em-wiz-name').value.trim();
+  const subject=document.getElementById('em-wiz-subject').value.trim();
+  if(!name){alert('Ingresa un nombre');return;}
+  const audId=document.getElementById('em-wiz-audience').value;
+  const aud=demoAudiences.find(a=>a.id==audId);
+  demoCampaigns.unshift({id:Date.now(),name,subject:subject||'Sin asunto',previewText:document.getElementById('em-wiz-preview').value,status:'draft',audience:aud?aud.name:'',audienceId:audId?parseInt(audId):null,sent:0,opened:0,clicked:0,bounced:0,spam:0,unsubs:0,date:'',templateId:document.getElementById('em-wiz-template').value||null});
+  closeWizard();renderCampaigns();renderStats();showToast('Borrador guardado');
+}
+function wizSend(){
+  const name=document.getElementById('em-wiz-name').value.trim();
+  const subject=document.getElementById('em-wiz-subject').value.trim();
+  if(!name||!subject){alert('Completa nombre y asunto');return;}
+  const schedule=document.getElementById('em-wiz-schedule').value;
+  const audId=document.getElementById('em-wiz-audience').value;
+  const aud=demoAudiences.find(a=>a.id==audId);
+  demoCampaigns.unshift({id:Date.now(),name,subject,previewText:document.getElementById('em-wiz-preview').value,status:schedule?'scheduled':'draft',audience:aud?aud.name:'',audienceId:audId?parseInt(audId):null,sent:0,opened:0,clicked:0,bounced:0,spam:0,unsubs:0,date:schedule?schedule.split('T')[0]:'',templateId:document.getElementById('em-wiz-template').value||null});
+  closeWizard();renderCampaigns();renderStats();showToast(schedule?'Campaña programada':'Borrador guardado');
+}
+function wizSendTest(){
+  document.getElementById('em-test-email-subject').value='[PRUEBA] '+(document.getElementById('em-wiz-subject').value||'Sin asunto');
+  document.getElementById('em-modal-test-email').style.display='flex';
+}
+function wizApplyOptimalTime(){
+  const now=new Date();const d=(4-now.getDay()+7)%7||7;const t=new Date(now);t.setDate(now.getDate()+d);t.setHours(10,0,0,0);
+  document.getElementById('em-wiz-schedule').value=t.toISOString().slice(0,16);showToast('Horario óptimo aplicado: Jueves 10:00 AM');
+}
+
+// AI Subject generator (reused in wizard)
+function wizGenerateAI(){
+  const box=document.getElementById('em-wiz-ai-suggestions');
+  box.style.display='block';box.innerHTML='<p style="color:var(--text-muted);font-size:12px;padding:4px;">Generando...</p>';
+  setTimeout(()=>{
+    const cn=document.getElementById('em-wiz-name').value.toLowerCase();
+    let pool=aiSubjects.promotional;
+    if(/bienven|welcome/.test(cn))pool=aiSubjects.welcome;
+    else if(/carrito|abandon/.test(cn))pool=aiSubjects.abandoned;
+    else if(/re-engagement|extrañ/.test(cn))pool=aiSubjects.reengagement;
+    else if(/newsletter/.test(cn))pool=aiSubjects.newsletter;
+    box.innerHTML=`<p style="font-size:11px;font-weight:700;color:#8b5cf6;margin-bottom:6px;">Sugerencias de IA:</p>`+pool.map(s=>`<button onclick="document.getElementById('em-wiz-subject').value='${s.replace(/'/g,"\\'")}';document.getElementById('em-wiz-ai-suggestions').style.display='none';showToast('Asunto aplicado')" style="display:block;width:100%;text-align:left;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-secondary);font-size:12px;cursor:pointer;margin-bottom:4px;transition:all 0.15s;" onmouseover="this.style.borderColor='#8b5cf6'" onmouseout="this.style.borderColor='var(--border)'">${s}</button>`).join('');
+  },600);
+}
+
+// Spam score in wizard
+function wizAnalyzeSpam(){
+  const result=document.getElementById('em-wiz-spam-result');
+  result.innerHTML='<p style="color:var(--text-muted);font-size:12px;">Analizando...</p>';
+  setTimeout(()=>{
+    const subject=document.getElementById('em-wiz-subject').value||'';
+    let score=2;const warnings=[];const tips=[];
+    if(/gratis|free|ganar|winner|prize/i.test(subject)){score+=3;warnings.push('Palabras como "gratis" o "ganar" activan filtros');}
+    if(/!!!|¡¡¡|\$\$|URGENTE|IMPORTANTE/i.test(subject)){score+=2;warnings.push('Signos de exclamación o mayúsculas excesivas');}
+    if(/100%|garantizado|sin riesgo/i.test(subject)){score+=2;warnings.push('Frases como "100% garantizado" son señales de spam');}
+    if(subject.length>60){score+=1;warnings.push('Asunto muy largo (más de 60 caracteres)');}
+    if(subject===subject.toUpperCase()&&subject.length>3){score+=3;warnings.push('Todo en mayúsculas');}
+    if(!subject){score+=1;warnings.push('No hay asunto');}
+    if(/\{\{nombre\}\}/i.test(subject)){score-=1;tips.push('Personalización con nombre del contacto');}
+    if(subject.length>=20&&subject.length<=50)tips.push('Longitud de asunto ideal');
+    score=Math.max(0,Math.min(10,score));
+    let color,label;
+    if(score<=3){color='#22c55e';label='Excelente';}else if(score<=5){color='#eab308';label='Aceptable';}else{color='#ef4444';label='Riesgo alto';}
+    result.innerHTML=`<div style="display:flex;align-items:center;gap:12px;"><div style="width:40px;height:40px;border-radius:10px;background:${color}15;display:flex;align-items:center;justify-content:center;"><span style="font-size:16px;font-weight:900;color:${color};">${score}/10</span></div><div><p style="font-size:13px;font-weight:800;color:${color};">${label}</p><p style="font-size:10px;color:var(--text-muted);">0 = excelente, 10 = muy probable spam</p></div></div>${warnings.length?'<div style="margin-top:8px;">'+warnings.map(w=>`<p style="font-size:11px;color:var(--text-secondary);padding:2px 0;">⚠ ${w}</p>`).join('')+'</div>':''}${tips.length?'<div style="margin-top:4px;">'+tips.map(t=>`<p style="font-size:11px;color:#22c55e;padding:2px 0;">✓ ${t}</p>`).join('')+'</div>':''}`;
+  },500);
+}
+
+// ═══════ A/B TEST ═══════
+function openABTestModal(){
+  document.getElementById('em-modal-abtest').style.display='flex';
+  const as=document.getElementById('em-ab-audience');
+  as.innerHTML='<option value="">Seleccionar...</option>'+demoAudiences.map(a=>`<option value="${a.id}">${a.name} (${a.count.toLocaleString()})</option>`).join('');
+}
+function closeABTestModal(){document.getElementById('em-modal-abtest').style.display='none';}
+function setABType(t){currentABType=t;['subject','content','sendtime'].forEach(x=>document.getElementById('em-ab-type-'+x).classList.toggle('active',x===t));
+  const v=document.getElementById('em-ab-variants');
+  if(t==='subject')v.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label class="em-label">Versión A</label><input id="em-ab-var-a" type="text" placeholder="Asunto A" class="em-input"/></div><div><label class="em-label">Versión B</label><input id="em-ab-var-b" type="text" placeholder="Asunto B" class="em-input"/></div></div>`;
+  else if(t==='content')v.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label class="em-label">Plantilla A</label><select id="em-ab-var-a" class="em-input">${demoTemplates.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')}</select></div><div><label class="em-label">Plantilla B</label><select id="em-ab-var-b" class="em-input">${demoTemplates.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')}</select></div></div>`;
+  else v.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label class="em-label">Hora A</label><input id="em-ab-var-a" type="time" value="09:00" class="em-input"/></div><div><label class="em-label">Hora B</label><input id="em-ab-var-b" type="time" value="18:00" class="em-input"/></div></div>`;
+}
+function setABWinner(w){currentABWinner=w;document.getElementById('em-ab-win-open').classList.toggle('active',w==='open');document.getElementById('em-ab-win-click').classList.toggle('active',w==='click');}
+function saveABTest(){
+  const name=document.getElementById('em-ab-name').value.trim();if(!name){alert('Ingresa un nombre');return;}
+  demoCampaigns.unshift({id:Date.now(),name,subject:'Prueba A/B',previewText:'',status:'ab_test',audience:demoAudiences[0]?.name||'',audienceId:1,sent:0,opened:0,clicked:0,bounced:0,spam:0,unsubs:0,date:new Date().toISOString().split('T')[0],templateId:null,abTest:{varA:document.getElementById('em-ab-var-a')?.value||'A',varB:document.getElementById('em-ab-var-b')?.value||'B',openA:0,openB:0,clickA:0,clickB:0,winner:'Pendiente'}});
+  closeABTestModal();renderCampaigns();showToast('Prueba A/B creada');
+}
+function viewABResults(id){const c=demoCampaigns.find(x=>x.id===id);if(!c||!c.abTest)return;const ab=c.abTest;alert(`Prueba A/B: ${c.name}\n\nVersión A: "${ab.varA}"\n  Apertura: ${ab.openA}%  Clics: ${ab.clickA}%\n\nVersión B: "${ab.varB}"\n  Apertura: ${ab.openB}%  Clics: ${ab.clickB}%\n\nGanadora: Versión ${ab.winner}`);}
+
+// ═══════ SEQUENCES MODAL ═══════
+function openSequenceModal(){document.getElementById('em-modal-sequence').style.display='flex';seqStepCount=0;document.getElementById('em-seq-steps').innerHTML='';addSequenceStep();}
+function closeSequenceModal(){document.getElementById('em-modal-sequence').style.display='none';}
+function addSequenceStep(){
+  seqStepCount++;const c=document.getElementById('em-seq-steps');
+  c.insertAdjacentHTML('beforeend',`${seqStepCount>1?'<div class="seq-connector"></div><div style="text-align:center;margin:4px 0;"><select class="em-input" style="width:auto;display:inline;font-size:11px;padding:4px 10px;border-radius:20px;background:rgba(249,115,22,0.1);border-color:rgba(249,115,22,0.2);color:#f97316;cursor:pointer;"><option value="1h" selected>Esperar 1 hora</option><option value="6h">Esperar 6 horas</option><option value="1d">Esperar 1 día</option><option value="2d">Esperar 2 días</option><option value="3d">Esperar 3 días</option><option value="7d">Esperar 7 días</option></select></div><div class="seq-connector"></div>':''}
+    <div class="seq-step" id="em-seq-step-${seqStepCount}"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;">Paso ${seqStepCount}</span><select class="em-input" style="width:auto;font-size:11px;padding:4px 10px;" onchange="toggleSeqStepType(this,${seqStepCount})"><option value="email">Email</option><option value="whatsapp">WhatsApp</option><option value="condition">Condición</option></select>${seqStepCount>1?`<button onclick="removeSequenceStep(${seqStepCount})" style="margin-left:auto;padding:2px 8px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-faint);cursor:pointer;font-size:11px;">✕</button>`:''}</div><div id="em-seq-step-content-${seqStepCount}"><input type="text" placeholder="Asunto del email" class="em-input" style="font-size:12px;"/></div></div>`);
+}
+function toggleSeqStepType(sel,num){const c=document.getElementById('em-seq-step-content-'+num);if(sel.value==='condition')c.innerHTML=`<select class="em-input" style="font-size:12px;"><option>Si abrió el email anterior</option><option>Si hizo clic</option><option>Si tiene una etiqueta</option></select><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;"><div><label class="em-label">Sí →</label><input class="em-input" style="font-size:11px;" placeholder="Continuar"/></div><div><label class="em-label">No →</label><input class="em-input" style="font-size:11px;" placeholder="Email alternativo"/></div></div>`;else if(sel.value==='whatsapp')c.innerHTML=`<div style="padding:10px;border-radius:8px;background:rgba(37,211,102,0.06);border:1px solid rgba(37,211,102,0.15);margin-bottom:8px;display:flex;align-items:center;gap:6px;"><svg style="width:16px;height:16px;color:#25D366;" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52z"/></svg><span style="font-size:11px;font-weight:700;color:#25D366;">Mensaje de WhatsApp</span></div><textarea placeholder="Hola {{nombre}}, te escribimos para..." class="em-input" style="font-size:12px;resize:vertical;min-height:60px;"></textarea>`;else c.innerHTML=`<input type="text" placeholder="Asunto del email" class="em-input" style="font-size:12px;"/>`;}
+function removeSequenceStep(num){const s=document.getElementById('em-seq-step-'+num);if(s){let el=s.previousElementSibling;while(el&&!el.classList.contains('seq-step')){const prev=el.previousElementSibling;el.remove();el=prev;}s.remove();}}
+function saveSequence(){const name=document.getElementById('em-seq-name').value.trim();if(!name){alert('Ingresa un nombre');return;}demoSequences.unshift({id:Date.now(),name,trigger:document.getElementById('em-seq-trigger').value,status:'draft',steps:[{type:'email',subject:'Email paso 1',delay:0}],subscribers:0,completed:0,exitCondition:document.getElementById('em-seq-exit').value,conversions:0});closeSequenceModal();renderSequences();showToast('Secuencia creada');}
+
+// ═══════ AUDIENCES MODAL ═══════
+function openAudienceModal(){document.getElementById('em-modal-audience').style.display='flex';}
+function closeAudienceModal(){document.getElementById('em-modal-audience').style.display='none';}
+function saveAudience(){const name=document.getElementById('em-aud-name').value.trim();if(!name){alert('Ingresa un nombre');return;}demoAudiences.unshift({id:Date.now(),name,description:document.getElementById('em-aud-desc').value||'',count:0,source:document.getElementById('em-aud-source').value,growth:'Nueva'});closeAudienceModal();document.getElementById('em-aud-name').value='';document.getElementById('em-aud-desc').value='';renderAudiences();renderStats();showToast('Lista creada');}
+document.getElementById('em-aud-source')?.addEventListener('change',function(){document.getElementById('em-csv-upload-zone').style.display=this.value==='import'?'block':'none';});
+
+// ═══════ CSV IMPORT ═══════
+function handleCSVDrop(e){e.preventDefault();document.getElementById('em-csv-dropzone').style.borderColor='var(--border)';document.getElementById('em-csv-dropzone').style.background='transparent';if(e.dataTransfer.files[0])processCSVFile(e.dataTransfer.files[0]);}
+function handleCSVSelect(input){if(input.files[0])processCSVFile(input.files[0]);}
+function processCSVFile(file){
+  if(file.size>10*1024*1024){alert('Archivo muy grande (máx 10MB)');return;}
+  const reader=new FileReader();reader.onload=function(e){
+    const lines=e.target.result.split('\n').filter(l=>l.trim());const headers=lines[0].split(',').map(h=>h.trim());const rows=lines.slice(1,6);const total=lines.length-1;
+    document.getElementById('em-csv-preview').style.display='block';
+    document.getElementById('em-csv-preview').innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><p style="font-size:12px;font-weight:700;color:var(--text-primary);">${file.name}</p><span style="font-size:11px;color:var(--accent);font-weight:600;">${total} contactos</span></div><div style="overflow-x:auto;border:1px solid var(--border);border-radius:8px;"><table style="width:100%;border-collapse:collapse;font-size:11px;"><thead><tr>${headers.map(h=>`<th style="padding:6px 10px;text-align:left;font-weight:700;color:var(--text-faint);text-transform:uppercase;font-size:10px;border-bottom:1px solid var(--border);">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr style="border-bottom:1px solid var(--border);">${r.split(',').map(c=>`<td style="padding:6px 10px;color:var(--text-secondary);">${c.trim()}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+    document.getElementById('em-csv-dropzone').innerHTML=`<p style="font-size:13px;color:#22c55e;font-weight:700;">✓ ${file.name}</p><p style="font-size:11px;color:var(--text-faint);">${total} contactos</p>`;
+  };reader.readAsText(file);
+}
+
+// ═══════ EDITOR ═══════
+function openEditorModal(tplId){
+  document.getElementById('em-modal-editor').style.display='block';editorBlockList=[];selectedBlockIdx=null;
+  if(tplId&&typeof tplId==='number'){
+    const tpl=demoTemplates.find(t=>t.id===tplId);
+    if(tpl){document.getElementById('em-editor-name').value=tpl.name;editorBlockList=[{type:'header',content:'Tu marca',styles:{bg:'#6fcff5',color:'#ffffff',padding:'32px',align:'center',fontSize:'28px'}},{type:'text',content:'Hola {{nombre}},\n\nGracias por ser parte de nuestra comunidad.',styles:{padding:'20px 32px',color:'#333333',fontSize:'15px'}},{type:'image',content:'https://placehold.co/600x200/e2e8f0/64748b?text=Banner',styles:{padding:'0',width:'100%'}},{type:'button',content:'Ver ofertas',styles:{bg:'#6fcff5',color:'#ffffff',padding:'14px 32px',align:'center',borderRadius:'8px',margin:'24px auto'}},{type:'divider',content:'',styles:{padding:'0 32px',color:'#e2e8f0'}},{type:'footer',content:'{{marca}} · {{unsubscribe}}',styles:{padding:'20px 32px',color:'#94a3b8',fontSize:'11px',align:'center'}}];}
+  } else {document.getElementById('em-editor-name').value='';}
+  renderEditorBlocks();renderBlockPalette();renderMergeTags();updateBlockSettings();
+  // Show guide on first use
+  if(!localStorage.getItem('em_editor_guide_seen'))showEditorGuide();
+}
+function closeEditorModal(){document.getElementById('em-modal-editor').style.display='none';}
+
+function showEditorGuide(){
+  const guide=document.getElementById('em-editor-guide');guide.style.display='block';
+  const content=document.getElementById('em-guide-content');
+  let step=0;const steps=[
+    {text:'<h4 style="font-size:15px;font-weight:800;color:var(--text-primary);margin-bottom:8px;">1. Arrastra bloques</h4><p style="font-size:13px;color:var(--text-muted);line-height:1.5;">Desde este panel izquierdo, arrastra los bloques que necesites: texto, imágenes, botones, etc.</p>',left:'260px',top:'200px'},
+    {text:'<h4 style="font-size:15px;font-weight:800;color:var(--text-primary);margin-bottom:8px;">2. Tu email se arma aquí</h4><p style="font-size:13px;color:var(--text-muted);line-height:1.5;">En el centro ves cómo va quedando tu email. Haz clic en cualquier bloque para editarlo.</p>',left:'50%',top:'200px',transform:'translateX(-50%)'},
+    {text:'<h4 style="font-size:15px;font-weight:800;color:var(--text-primary);margin-bottom:8px;">3. Personaliza aquí</h4><p style="font-size:13px;color:var(--text-muted);line-height:1.5;">Cuando seleccionas un bloque, aquí cambias colores, tamaños, textos y más.</p>',right:'20px',top:'200px'},
+  ];
+  function showStep(i){
+    if(i>=steps.length){guide.style.display='none';localStorage.setItem('em_editor_guide_seen','1');return;}
+    const s=steps[i];content.innerHTML=s.text+`<button onclick="document.getElementById('em-guide-step').click()" class="em-btn-primary" style="margin-top:12px;padding:8px 20px;font-size:12px;">${i<steps.length-1?'Siguiente →':'¡Entendido!'}</button>`;
+    content.style.cssText='position:absolute;background:var(--bg-sidebar);border:1px solid var(--accent);border-radius:16px;padding:24px;max-width:320px;box-shadow:0 4px 30px rgba(111,207,245,0.2);'+(s.left?'left:'+s.left+';':'')+(s.right?'right:'+s.right+';':'')+(s.top?'top:'+s.top+';':'')+(s.transform?'transform:'+s.transform+';':'');
+  }
+  showStep(step);
+  const btn=document.createElement('button');btn.id='em-guide-step';btn.style.display='none';
+  btn.onclick=()=>{step++;showStep(step);};document.body.appendChild(btn);
+  guide.onclick=e=>{if(e.target===guide){guide.style.display='none';localStorage.setItem('em_editor_guide_seen','1');btn.remove();}};
+}
+
+function setPreviewMode(mode){
+  document.getElementById('em-prev-desktop').classList.toggle('active',mode==='desktop');
+  document.getElementById('em-prev-mobile').classList.toggle('active',mode==='mobile');
+  document.getElementById('em-prev-desktop').style.background=mode==='desktop'?'var(--accent-bg)':'transparent';
+  document.getElementById('em-prev-desktop').style.color=mode==='desktop'?'var(--accent)':'var(--text-muted)';
+  document.getElementById('em-prev-mobile').style.background=mode==='mobile'?'var(--accent-bg)':'transparent';
+  document.getElementById('em-prev-mobile').style.color=mode==='mobile'?'var(--accent)':'var(--text-muted)';
+  document.getElementById('em-editor-canvas').style.width=mode==='mobile'?'375px':'600px';
+}
+function setEmailDarkMode(dark){
+  emailDarkMode=dark;const canvas=document.getElementById('em-editor-canvas');
+  document.getElementById('em-prev-light').classList.toggle('active',!dark);
+  document.getElementById('em-prev-dark').classList.toggle('active',dark);
+  document.getElementById('em-prev-light').style.background=!dark?'var(--accent-bg)':'transparent';
+  document.getElementById('em-prev-light').style.color=!dark?'var(--accent)':'var(--text-muted)';
+  document.getElementById('em-prev-dark').style.background=dark?'var(--accent-bg)':'transparent';
+  document.getElementById('em-prev-dark').style.color=dark?'var(--accent)':'var(--text-muted)';
+  canvas.style.background=dark?'#1a1a2e':'#ffffff';
+  renderEditorBlocks();
+}
+
+function renderBlockPalette(){document.getElementById('em-block-palette').innerHTML=editorBlocks.map(b=>`<div class="em-block-item" draggable="true" ondragstart="event.dataTransfer.setData('blockType','${b.type}')" onclick="addBlock('${b.type}')"><span style="width:24px;text-align:center;font-size:14px;">${b.icon}</span>${b.label}</div>`).join('');}
+function renderMergeTags(){document.getElementById('em-merge-tags').innerHTML=mergeTags.map(mt=>`<button class="em-merge-tag" onclick="insertMergeTag('${mt.tag}')" title="Copiar ${mt.tag}">${mt.tag} <span style="color:var(--text-faint);font-weight:400;">${mt.label}</span></button>`).join('');}
+function insertMergeTag(tag){navigator.clipboard.writeText(tag).then(()=>showToast('Variable '+tag+' copiada'));}
+
+function addBlock(type){
+  const defaults={header:{content:'Encabezado',styles:{bg:'#6fcff5',color:'#ffffff',padding:'32px',align:'center',fontSize:'28px'}},text:{content:'Escribe tu texto aquí...',styles:{padding:'20px 32px',color:'#333333',fontSize:'15px'}},image:{content:'https://placehold.co/600x200/e2e8f0/64748b?text=Tu+Imagen',styles:{padding:'0',width:'100%'}},button:{content:'Botón',styles:{bg:'#6fcff5',color:'#ffffff',padding:'14px 32px',align:'center',borderRadius:'8px',margin:'24px auto'}},divider:{content:'',styles:{padding:'0 32px',color:'#e2e8f0'}},columns:{content:'Col 1|Col 2',styles:{padding:'20px 32px'}},social:{content:'Facebook|Instagram|Twitter',styles:{padding:'20px 32px',align:'center'}},footer:{content:'Tu empresa · {{unsubscribe}}',styles:{padding:'20px 32px',color:'#94a3b8',fontSize:'11px',align:'center'}},spacer:{content:'',styles:{height:'32px'}},product:{content:'Nombre del producto',styles:{padding:'20px 32px'}}};
+  editorBlockList.push({type,...defaults[type]});renderEditorBlocks();selectBlock(editorBlockList.length-1);
+}
+function handleBlockDrop(e){e.preventDefault();const t=e.dataTransfer.getData('blockType');if(t)addBlock(t);}
+function selectBlock(idx){selectedBlockIdx=idx;renderEditorBlocks();updateBlockSettings();}
+function moveBlock(idx,dir){const ni=idx+dir;if(ni<0||ni>=editorBlockList.length)return;[editorBlockList[idx],editorBlockList[ni]]=[editorBlockList[ni],editorBlockList[idx]];selectedBlockIdx=ni;renderEditorBlocks();updateBlockSettings();}
+function deleteBlock(idx){editorBlockList.splice(idx,1);selectedBlockIdx=null;renderEditorBlocks();updateBlockSettings();}
+
+function renderEditorBlocks(){
+  const el=document.getElementById('em-editor-blocks');if(!editorBlockList.length){el.innerHTML='';return;}
+  const dark=emailDarkMode;
+  el.innerHTML=editorBlockList.map((b,i)=>{
+    const sel=i===selectedBlockIdx?'selected':'';let html='';const s=b.styles||{};
+    const txtColor=dark&&(s.color==='#333333'||s.color==='#333')? '#e0e0e0':s.color;
+    const footColor=dark&&s.color==='#94a3b8'?'#888':s.color;
+    switch(b.type){
+      case'header':html=`<div style="background:${s.bg||'#6fcff5'};color:${s.color||'#fff'};padding:${s.padding||'32px'};text-align:${s.align||'center'};font-size:${s.fontSize||'28px'};font-weight:800;">${b.content}</div>`;break;
+      case'text':html=`<div style="padding:${s.padding||'20px 32px'};color:${txtColor||'#333'};font-size:${s.fontSize||'15px'};line-height:1.6;white-space:pre-wrap;">${b.content}</div>`;break;
+      case'image':html=`<div style="padding:${s.padding||'0'};text-align:center;"><img src="${b.content}" style="max-width:100%;width:${s.width||'100%'};display:block;" alt=""/></div>`;break;
+      case'button':html=`<div style="text-align:${s.align||'center'};padding:16px 32px;"><table cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr><td style="background:${s.bg||'#6fcff5'};color:${s.color||'#fff'};padding:${s.padding||'14px 32px'};border-radius:${s.borderRadius||'8px'};font-weight:700;font-size:15px;">${b.content}</td></tr></table></div>`;break;
+      case'divider':html=`<div style="padding:${s.padding||'0 32px'};"><hr style="border:none;border-top:1px solid ${dark?'#444':s.color||'#e2e8f0'};"/></div>`;break;
+      case'columns':{const cols=b.content.split('|');html=`<div style="padding:${s.padding||'20px 32px'};display:flex;gap:16px;">${cols.map(c=>`<div style="flex:1;padding:12px;background:${dark?'#2a2a3e':'#f8fafc'};border-radius:6px;color:${dark?'#ccc':'#333'};font-size:13px;">${c.trim()}</div>`).join('')}</div>`;break;}
+      case'social':html=`<div style="padding:${s.padding||'20px 32px'};text-align:${s.align||'center'};display:flex;gap:12px;justify-content:center;">${b.content.split('|').map(n=>`<span style="display:inline-block;width:36px;height:36px;border-radius:50%;background:${dark?'#444':'#e2e8f0'};line-height:36px;text-align:center;font-size:12px;color:${dark?'#aaa':'#64748b'};">${n.trim().charAt(0)}</span>`).join('')}</div>`;break;
+      case'footer':html=`<div style="padding:${s.padding||'20px 32px'};color:${footColor||'#94a3b8'};font-size:${s.fontSize||'11px'};text-align:${s.align||'center'};line-height:1.5;">${b.content}</div>`;break;
+      case'spacer':html=`<div style="height:${s.height||'32px'};"></div>`;break;
+      case'product':html=`<div style="padding:${s.padding||'20px 32px'};display:flex;gap:16px;align-items:center;"><div style="width:80px;height:80px;border-radius:8px;background:${dark?'#2a2a3e':'#e2e8f0'};display:flex;align-items:center;justify-content:center;font-size:24px;">🛍</div><div><p style="font-weight:700;color:${dark?'#e0e0e0':'#333'};font-size:15px;">${b.content}</p><p style="color:${dark?'#888':'#64748b'};font-size:13px;">$0.00 MXN</p></div></div>`;break;
+    }
+    return`<div class="editor-block ${sel}" onclick="selectBlock(${i})"><div class="editor-block-actions"><button class="editor-block-btn" onclick="event.stopPropagation();moveBlock(${i},-1)">↑</button><button class="editor-block-btn" onclick="event.stopPropagation();moveBlock(${i},1)">↓</button><button class="editor-block-btn" onclick="event.stopPropagation();deleteBlock(${i})" style="color:#ef4444;">✕</button></div>${html}</div>`;
+  }).join('');
+}
+
+function updateBlockSettings(){
+  const el=document.getElementById('em-block-settings-content');
+  if(selectedBlockIdx===null||!editorBlockList[selectedBlockIdx]){el.innerHTML='<p style="color:var(--text-muted);font-size:12px;">Selecciona un bloque para editar</p>';return;}
+  const b=editorBlockList[selectedBlockIdx],s=b.styles||{};
+  const tL={header:'Encabezado',text:'Texto',image:'Imagen',button:'Botón',divider:'Separador',columns:'Columnas',social:'Redes',footer:'Pie',spacer:'Espacio',product:'Producto'};
+  let html=`<p style="font-size:13px;font-weight:800;color:var(--text-primary);margin-bottom:12px;">${tL[b.type]||b.type}</p>`;
+  if(b.type!=='divider'&&b.type!=='spacer'){
+    html+=`<label class="em-label">Contenido</label>`;
+    if(b.type==='text'||b.type==='footer')html+=`<textarea onchange="updateBlockProp(${selectedBlockIdx},'content',this.value)" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:12px;outline:none;resize:vertical;min-height:80px;">${b.content}</textarea>`;
+    else html+=`<input type="text" value="${b.content}" onchange="updateBlockProp(${selectedBlockIdx},'content',this.value)" class="em-input" style="font-size:12px;margin-bottom:8px;"/>`;
+  }
+  if(s.bg!==undefined)html+=`<label class="em-label" style="margin-top:8px;">Color fondo</label><input type="color" value="${s.bg}" onchange="updateBlockStyle(${selectedBlockIdx},'bg',this.value)" style="width:100%;height:32px;border:none;border-radius:6px;cursor:pointer;"/>`;
+  if(s.color!==undefined)html+=`<label class="em-label" style="margin-top:8px;">Color texto</label><input type="color" value="${s.color}" onchange="updateBlockStyle(${selectedBlockIdx},'color',this.value)" style="width:100%;height:32px;border:none;border-radius:6px;cursor:pointer;"/>`;
+  if(s.fontSize!==undefined)html+=`<label class="em-label" style="margin-top:8px;">Tamaño</label><select onchange="updateBlockStyle(${selectedBlockIdx},'fontSize',this.value)" class="em-input" style="font-size:12px;">${['11px','13px','15px','18px','22px','28px','36px'].map(v=>`<option ${s.fontSize===v?'selected':''}>${v}</option>`).join('')}</select>`;
+  if(s.align!==undefined)html+=`<label class="em-label" style="margin-top:8px;">Alineación</label><div style="display:flex;gap:4px;"><button onclick="updateBlockStyle(${selectedBlockIdx},'align','left')" class="em-chip ${s.align==='left'?'active':''}" style="flex:1;padding:6px;">Izq</button><button onclick="updateBlockStyle(${selectedBlockIdx},'align','center')" class="em-chip ${s.align==='center'?'active':''}" style="flex:1;padding:6px;">Centro</button><button onclick="updateBlockStyle(${selectedBlockIdx},'align','right')" class="em-chip ${s.align==='right'?'active':''}" style="flex:1;padding:6px;">Der</button></div>`;
+  if(s.borderRadius!==undefined)html+=`<label class="em-label" style="margin-top:8px;">Bordes</label><select onchange="updateBlockStyle(${selectedBlockIdx},'borderRadius',this.value)" class="em-input" style="font-size:12px;"><option ${s.borderRadius==='0'?'selected':''}>0</option><option ${s.borderRadius==='4px'?'selected':''}>4px</option><option ${s.borderRadius==='8px'?'selected':''}>8px</option><option ${s.borderRadius==='20px'?'selected':''}>20px</option></select>`;
+  if(b.type==='spacer')html+=`<label class="em-label">Altura</label><select onchange="updateBlockStyle(${selectedBlockIdx},'height',this.value)" class="em-input" style="font-size:12px;">${['16px','24px','32px','48px','64px'].map(v=>`<option ${s.height===v?'selected':''}>${v}</option>`).join('')}</select>`;
+  el.innerHTML=html;
+}
+function updateBlockProp(idx,prop,val){editorBlockList[idx][prop]=val;renderEditorBlocks();}
+function updateBlockStyle(idx,prop,val){editorBlockList[idx].styles[prop]=val;renderEditorBlocks();updateBlockSettings();}
+function saveEditorTemplate(){const name=document.getElementById('em-editor-name').value.trim();if(!name){alert('Ingresa un nombre');return;}const colors=['#6fcff5','#f97316','#22c55e','#8b5cf6','#ef4444','#eab308'];demoTemplates.unshift({id:Date.now(),name,category:document.getElementById('em-editor-category').value,subject:name,uses:0,preview:colors[Math.floor(Math.random()*colors.length)]});closeEditorModal();renderTemplates();showToast('Plantilla guardada');}
+
+// ═══════ SEND TEST ═══════
+function sendTestFromEditor(){document.getElementById('em-test-email-subject').value='[PRUEBA] '+(document.getElementById('em-editor-name').value||'Plantilla');document.getElementById('em-modal-test-email').style.display='flex';}
+function confirmSendTest(){const to=document.getElementById('em-test-email-to').value.trim();if(!to){alert('Ingresa al menos un email');return;}document.getElementById('em-modal-test-email').style.display='none';showToast('Email de prueba enviado a '+to);}
+
+// ═══════ COMPARE ═══════
+function openCompareModal(){
+  document.getElementById('em-modal-compare').style.display='flex';
+  const sc=demoCampaigns.filter(c=>c.status==='sent'||c.status==='ab_test');
+  const opts=sc.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  document.getElementById('em-compare-a').innerHTML='<option value="">Seleccionar...</option>'+opts;
+  document.getElementById('em-compare-b').innerHTML='<option value="">Seleccionar...</option>'+opts;
+  document.getElementById('em-compare-result').innerHTML='<p style="text-align:center;color:var(--text-faintest);font-size:13px;padding:24px;">Selecciona dos campañas</p>';
+}
+function closeCompareModal(){document.getElementById('em-modal-compare').style.display='none';}
+function renderComparison(){
+  const aId=parseInt(document.getElementById('em-compare-a').value),bId=parseInt(document.getElementById('em-compare-b').value);
+  const box=document.getElementById('em-compare-result');
+  if(!aId||!bId){box.innerHTML='<p style="text-align:center;color:var(--text-faintest);font-size:13px;padding:24px;">Selecciona dos campañas</p>';return;}
+  if(aId===bId){box.innerHTML='<p style="text-align:center;color:#f97316;font-size:13px;padding:24px;">Elige campañas diferentes</p>';return;}
+  const a=demoCampaigns.find(c=>c.id===aId),b=demoCampaigns.find(c=>c.id===bId);if(!a||!b)return;
+  const pct=(v,t)=>t>0?((v/t)*100).toFixed(1):0;
+  const metrics=[{l:'Enviados',aV:a.sent,bV:b.sent,f:v=>v.toLocaleString(),hi:true},{l:'Apertura',aV:pct(a.opened,a.sent),bV:pct(b.opened,b.sent),f:v=>v+'%',hi:true},{l:'Clics',aV:pct(a.clicked,a.sent),bV:pct(b.clicked,b.sent),f:v=>v+'%',hi:true},{l:'Rebote',aV:pct(a.bounced,a.sent),bV:pct(b.bounced,b.sent),f:v=>v+'%',hi:false},{l:'Bajas',aV:a.unsubs,bV:b.unsubs,f:v=>v,hi:false}];
+  box.innerHTML=`<div style="display:grid;grid-template-columns:1fr 60px 1fr;gap:8px;align-items:center;"><div style="text-align:center;padding:10px;"><p style="font-size:14px;font-weight:800;color:var(--accent);">${a.name}</p></div><div style="text-align:center;font-size:12px;font-weight:800;color:var(--text-faint);">VS</div><div style="text-align:center;padding:10px;"><p style="font-size:14px;font-weight:800;color:#f97316;">${b.name}</p></div></div>${metrics.map(m=>{const aN=parseFloat(m.aV),bN=parseFloat(m.bV);const aW=m.hi?aN>bN:aN<bN;const bW=m.hi?bN>aN:bN<aN;return`<div style="display:grid;grid-template-columns:1fr 60px 1fr;gap:8px;margin-top:8px;"><div class="em-compare-metric ${aW?'em-compare-winner':''}"><span class="em-compare-metric-label">${m.l}</span><span class="em-compare-metric-val" style="color:${aW?'#22c55e':'var(--text-primary)'};">${m.f(m.aV)}</span></div><div style="text-align:center;">${aW?'<span style="color:#22c55e;">←</span>':bW?'<span style="color:#22c55e;">→</span>':'='}</div><div class="em-compare-metric ${bW?'em-compare-winner':''}"><span class="em-compare-metric-label">${m.l}</span><span class="em-compare-metric-val" style="color:${bW?'#22c55e':'var(--text-primary)'};">${m.f(m.bV)}</span></div></div>`;}).join('')}`;
+}
+
+// ═══════ RESEND TO NON-OPENERS ═══════
+function toggleAutoResend(id){
+  const c=demoCampaigns.find(x=>x.id===id);if(!c)return;
+  c.autoResend=!c.autoResend;renderCampaigns();
+  showToast(c.autoResend?'Auto-reenvío activado: se reenviará a quienes no abran en 24h':'Auto-reenvío desactivado');
+}
+
+function resendToNonOpeners(id){const c=demoCampaigns.find(x=>x.id===id);if(!c)return;const no=c.sent-c.opened;if(no<=0){alert('Todos ya abrieron este email');return;}const ns=prompt(`Reenviar a ${no.toLocaleString()} que no abrieron.\n\nNuevo asunto:`,'⏰ Última oportunidad: '+c.subject);if(!ns)return;demoCampaigns.unshift({id:Date.now(),name:c.name+' (reenvío)',subject:ns,previewText:c.previewText,status:'scheduled',audience:c.audience+' (no abiertos)',audienceId:c.audienceId,sent:0,opened:0,clicked:0,bounced:0,spam:0,unsubs:0,date:new Date().toISOString().split('T')[0],templateId:c.templateId});renderCampaigns();renderStats();showToast(`Reenvío programado a ${no.toLocaleString()} contactos`);}
+
+// ═══════ CAMPAIGN EDIT ═══════
+function editCampaign(id){const c=demoCampaigns.find(x=>x.id===id);if(!c)return;openCampaignWizard();document.getElementById('em-wiz-name').value=c.name;document.getElementById('em-wiz-subject').value=c.subject;document.getElementById('em-wiz-preview').value=c.previewText||'';}
+function duplicateCampaign(id){const o=demoCampaigns.find(c=>c.id===id);if(!o)return;demoCampaigns.unshift({...o,id:Date.now(),name:o.name+' (copia)',status:'draft',sent:0,opened:0,clicked:0,bounced:0,spam:0,unsubs:0,date:'',abTest:null});renderCampaigns();showToast('Campaña duplicada');}
+function deleteCampaign(id){const idx=demoCampaigns.findIndex(c=>c.id===id);if(idx===-1)return;if(!confirm('¿Eliminar esta campaña?'))return;demoCampaigns.splice(idx,1);renderCampaigns();renderStats();showToast('Campaña eliminada');}
+
+// ═══════ TOAST ═══════
+function showToast(msg){const ex=document.getElementById('em-toast');if(ex)ex.remove();const t=document.createElement('div');t.id='em-toast';t.textContent=msg;Object.assign(t.style,{position:'fixed',bottom:'24px',right:'24px',background:'#22c55e',color:'#fff',padding:'12px 24px',borderRadius:'10px',fontSize:'13px',fontWeight:'700',zIndex:'9999',animation:'fadeInUp 0.3s ease',boxShadow:'0 4px 20px rgba(0,0,0,0.3)'});document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(()=>t.remove(),300);},3000);}
+
+// ═══════ SMART RECOMMENDATIONS ═══════
+function renderSmartRecs() {
+  const el = document.getElementById('em-smart-recs');
+  if (!el) return;
+  const recs = [];
+
+  // Check abandoned carts
+  const cartSeq = demoSequences.find(s => s.trigger === 'abandoned');
+  if (cartSeq && cartSeq.status !== 'active') {
+    recs.push({ icon: '🛒', color: '#f97316', title: `Tienes ${demoAudiences.find(a=>a.name.includes('Carrito'))?.count || 0} carritos abandonados`, desc: 'Activa la recuperación automática y recupera ventas perdidas.', btn: 'Activar ahora', action: "toggleAutopilot('abandoned',true)" });
+  }
+
+  // Check inactivity
+  const lastSent = demoCampaigns.filter(c => c.status === 'sent').sort((a, b) => b.date.localeCompare(a.date))[0];
+  if (!lastSent || daysSince(lastSent.date) > 10) {
+    recs.push({ icon: '📬', color: '#8b5cf6', title: 'Llevas tiempo sin enviar emails', desc: 'Tus contactos podrían olvidarte. ¿Enviamos un newsletter automático?', btn: 'Crear con IA', action: "document.getElementById('em-ai-prompt').value='Newsletter con novedades del mes';generateAICampaign()" });
+  }
+
+  // Check VIP customers
+  const vipAud = demoAudiences.find(a => a.name.includes('VIP'));
+  if (vipAud && vipAud.count > 0) {
+    recs.push({ icon: '⭐', color: '#eab308', title: `${vipAud.count} clientes VIP sin actividad reciente`, desc: 'Envíales una promoción exclusiva para mantenerlos comprando.', btn: 'Enviar promo VIP', action: "document.getElementById('em-ai-prompt').value='Promoción exclusiva para clientes VIP con descuento especial';generateAICampaign()" });
+  }
+
+  // Check welcome sequence
+  const welcomeSeq = demoSequences.find(s => s.trigger === 'signup');
+  if (welcomeSeq && welcomeSeq.status !== 'active') {
+    recs.push({ icon: '👋', color: '#22c55e', title: 'No tienes bienvenida automática', desc: 'Los clientes nuevos no reciben un email de bienvenida. Actívalo con un clic.', btn: 'Activar', action: "toggleAutopilot('signup',true)" });
+  }
+
+  if (!recs.length) { el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  el.innerHTML = recs.slice(0, 3).map(r => `
+    <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;background:${r.color}08;border:1px solid ${r.color}20;">
+      <span style="font-size:24px;flex-shrink:0;">${r.icon}</span>
+      <div style="flex:1;min-width:0;">
+        <p style="font-size:13px;font-weight:700;color:var(--text-primary);">${r.title}</p>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:2px;">${r.desc}</p>
+      </div>
+      <button onclick="${r.action}" style="padding:8px 16px;border-radius:8px;border:none;background:${r.color};color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">${r.btn}</button>
+      <button onclick="this.closest('div[style]').remove()" style="border:none;background:transparent;color:var(--text-faint);cursor:pointer;font-size:14px;padding:0 4px;">✕</button>
+    </div>
+  `).join('');
+}
+
+function daysSince(dateStr) {
+  if (!dateStr) return 999;
+  const d = new Date(dateStr);
+  const now = new Date();
+  return Math.floor((now - d) / (1000 * 60 * 60 * 24));
+}
+
+// ═══════ AI CAMPAIGN GENERATOR ═══════
+function generateAICampaign() {
+  const prompt = document.getElementById('em-ai-prompt').value.trim();
+  if (!prompt) { alert('Escribe qué quieres promocionar'); return; }
+
+  const result = document.getElementById('em-ai-gen-result');
+  result.style.display = 'block';
+  result.innerHTML = '<div style="padding:20px;text-align:center;"><p style="color:var(--text-muted);font-size:13px;">Generando campaña con IA...</p></div>';
+
+  setTimeout(() => {
+    // Generate campaign based on prompt
+    const subjects = [
+      `¡${prompt.includes('colección') ? 'Nueva colección' : 'Oferta especial'}! Solo por tiempo limitado`,
+      `{{nombre}}, ${prompt.includes('descuento') ? 'tu descuento exclusivo te espera' : 'tenemos algo nuevo para ti'}`,
+      `¡No te lo pierdas! ${prompt.substring(0, 40)}...`,
+    ];
+    const bestAudience = prompt.includes('VIP') ? 'Clientes VIP' : prompt.includes('nuevo') ? 'Nuevos registros' : 'Todos los clientes';
+    const bestTime = 'Jueves 10:00 AM';
+
+    result.innerHTML = `
+      <div style="padding:20px;border-top:1px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:16px;">
+          <svg style="width:16px;height:16px;color:#8b5cf6;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          <p style="font-size:13px;font-weight:800;color:#8b5cf6;">Campaña generada por IA</p>
+        </div>
+        <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;font-size:12px;margin-bottom:16px;">
+          <span style="color:var(--text-faint);font-weight:700;">Asunto:</span><span style="color:var(--text-primary);font-weight:600;">${subjects[0]}</span>
+          <span style="color:var(--text-faint);font-weight:700;">Audiencia:</span><span style="color:var(--text-primary);">${bestAudience} (${(demoAudiences.find(a=>a.name===bestAudience)||{count:2450}).count.toLocaleString()} contactos)</span>
+          <span style="color:var(--text-faint);font-weight:700;">Horario:</span><span style="color:var(--text-primary);">${bestTime} (mejor tasa de apertura)</span>
+          <span style="color:var(--text-faint);font-weight:700;">Plantilla:</span><span style="color:var(--text-primary);">Promoción general</span>
+        </div>
+        <p style="font-size:11px;color:var(--text-faint);margin-bottom:12px;">Alternativas de asunto:</p>
+        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:16px;">
+          ${subjects.map((s,i) => `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;background:var(--input-bg);"><span style="font-size:10px;color:var(--text-faint);">${i+1}.</span><span style="font-size:12px;color:var(--text-secondary);flex:1;">${s}</span></div>`).join('')}
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button onclick="aiCampaignApply('${subjects[0].replace(/'/g,"\\'")}','${bestAudience}')" class="em-btn-primary" style="flex:1;background:linear-gradient(135deg,#8b5cf6,#6fcff5);display:flex;align-items:center;justify-content:center;gap:6px;">
+            <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            Crear esta campaña
+          </button>
+          <button onclick="document.getElementById('em-ai-gen-result').style.display='none'" class="em-btn-secondary" style="flex:0;padding:12px 16px;">Cerrar</button>
+        </div>
+      </div>`;
+  }, 1200);
+}
+
+function aiCampaignApply(subject, audience) {
+  const name = document.getElementById('em-ai-prompt').value.substring(0, 50);
+  const audId = demoAudiences.find(a => a.name === audience)?.id || 1;
+  const aud = demoAudiences.find(a => a.id === audId);
+
+  // Create the campaign directly
+  const now = new Date();
+  const d = (4 - now.getDay() + 7) % 7 || 7;
+  const t = new Date(now); t.setDate(now.getDate() + d); t.setHours(10, 0, 0, 0);
+
+  demoCampaigns.unshift({
+    id: Date.now(), name: 'IA: ' + name, subject, previewText: '', status: 'scheduled',
+    audience: aud ? aud.name : '', audienceId: audId, sent: 0, opened: 0, clicked: 0,
+    bounced: 0, spam: 0, unsubs: 0, date: t.toISOString().split('T')[0], templateId: 1, autoResend: true
+  });
+
+  document.getElementById('em-ai-gen-result').style.display = 'none';
+  document.getElementById('em-ai-prompt').value = '';
+  renderCampaigns(); renderStats();
+  showToast('Campaña creada por IA y programada para ' + t.toLocaleDateString('es-MX', { weekday: 'long', hour: '2-digit', minute: '2-digit' }));
+}
+
+// ═══════ AUTOPILOT ═══════
+const autopilotFlows = [
+  { id: 'signup', name: 'Bienvenida nuevos clientes', desc: 'Envía un cupón de bienvenida y tips para usar tu tienda', icon: '👋', color: '#22c55e', emails: 3, active: true, stats: { sent: 680, converted: 89 } },
+  { id: 'abandoned', name: 'Recuperar carritos abandonados', desc: 'Recuerda a los clientes que tienen productos en su carrito', icon: '🛒', color: '#f97316', emails: 2, active: true, stats: { sent: 420, converted: 134 } },
+  { id: 'inactive', name: 'Reactivar clientes inactivos', desc: 'Envía un descuento a quienes llevan 30+ días sin comprar', icon: '💤', color: '#8b5cf6', emails: 2, active: false, stats: { sent: 0, converted: 0 } },
+  { id: 'postpurchase', name: 'Email post-compra (reseña)', desc: 'Pide una reseña 5 días después de la entrega', icon: '⭐', color: '#eab308', emails: 1, active: false, stats: { sent: 0, converted: 0 } },
+  { id: 'birthday', name: 'Felicitación de cumpleaños', desc: 'Envía un cupón especial en el cumpleaños de tu cliente', icon: '🎂', color: '#ec4899', emails: 1, active: false, stats: { sent: 0, converted: 0 } },
+];
+
+function renderAutopilot() {
+  const el = document.getElementById('em-autopilot-list');
+  if (!el) return;
+  el.innerHTML = autopilotFlows.map(f => `
+    <div style="padding:16px;border-radius:12px;border:1px solid ${f.active ? f.color + '30' : 'var(--border)'};background:${f.active ? f.color + '08' : 'var(--input-bg)'};transition:all 0.2s;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:20px;">${f.icon}</span>
+          <span style="font-size:13px;font-weight:800;color:var(--text-primary);">${f.name}</span>
+        </div>
+        <label class="em-toggle-wrap">
+          <input type="checkbox" ${f.active ? 'checked' : ''} onchange="toggleAutopilot('${f.id}',this.checked)"/>
+          <span class="em-toggle-slider" style="${f.active ? '--toggle-color:' + f.color : ''}"></span>
+        </label>
+      </div>
+      <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px;line-height:1.4;">${f.desc}</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:10px;color:var(--text-faint);">${f.emails} email${f.emails > 1 ? 's' : ''} en la secuencia</span>
+        ${f.active && f.stats.sent > 0 ? `<span style="font-size:10px;font-weight:700;color:${f.color};">${f.stats.sent} enviados · ${f.stats.converted} convertidos</span>` : f.active ? `<span style="font-size:10px;font-weight:700;color:${f.color};">Activo ✓</span>` : `<span style="font-size:10px;color:var(--text-faintest);">Inactivo</span>`}
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleAutopilot(flowId, active) {
+  const flow = autopilotFlows.find(f => f.id === flowId);
+  if (flow) { flow.active = active; renderAutopilot(); renderSmartRecs(); }
+  showToast(active ? `Piloto automático "${flow?.name}" activado` : `"${flow?.name}" desactivado`);
+}
+
+// ═══════ AUTO-RESEND ═══════
+// Add autoResend property to existing campaigns
+demoCampaigns.forEach(c => { if (c.autoResend === undefined) c.autoResend = false; });
+demoCampaigns[0].autoResend = true; // First campaign has it on
+
+// ═══════ WEEKLY REPORT ═══════
+function renderWeeklyReport() {
+  const el = document.getElementById('em-weekly-report-preview');
+  if (!el) return;
+  const sent = demoCampaigns.filter(c => c.status === 'sent' || c.status === 'ab_test');
+  const ts = sent.reduce((s, c) => s + c.sent, 0);
+  const to = sent.reduce((s, c) => s + c.opened, 0);
+  const tc = sent.reduce((s, c) => s + c.clicked, 0);
+  const activeAuto = autopilotFlows.filter(f => f.active).length;
+
+  el.innerHTML = `
+    <p style="font-size:12px;font-weight:800;color:var(--text-primary);margin-bottom:12px;">Vista previa del reporte de esta semana:</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:12px;">
+      <div style="text-align:center;padding:10px;border-radius:8px;background:var(--bg-card);">
+        <p style="font-size:18px;font-weight:900;color:var(--accent);">${sent.length}</p>
+        <p style="font-size:10px;color:var(--text-faint);">Campañas</p>
+      </div>
+      <div style="text-align:center;padding:10px;border-radius:8px;background:var(--bg-card);">
+        <p style="font-size:18px;font-weight:900;color:#22c55e;">${ts > 0 ? ((to/ts)*100).toFixed(0) : 0}%</p>
+        <p style="font-size:10px;color:var(--text-faint);">Apertura prom.</p>
+      </div>
+      <div style="text-align:center;padding:10px;border-radius:8px;background:var(--bg-card);">
+        <p style="font-size:18px;font-weight:900;color:var(--text-primary);">${ts.toLocaleString()}</p>
+        <p style="font-size:10px;color:var(--text-faint);">Emails enviados</p>
+      </div>
+      <div style="text-align:center;padding:10px;border-radius:8px;background:var(--bg-card);">
+        <p style="font-size:18px;font-weight:900;color:#8b5cf6;">${activeAuto}</p>
+        <p style="font-size:10px;color:var(--text-faint);">Flujos activos</p>
+      </div>
+    </div>
+    <p style="font-size:11px;color:var(--text-faint);">Se envía cada lunes a las 9:00 AM a: <span style="color:var(--text-secondary);font-weight:600;">hola@skybrandmx.com</span></p>
+  `;
+}
+
+function toggleWeeklyReport(on) {
+  document.getElementById('em-weekly-report-status').textContent = on ? 'Activo' : 'Inactivo';
+  document.getElementById('em-weekly-report-status').style.color = on ? '#22c55e' : 'var(--text-faint)';
+  showToast(on ? 'Reporte semanal activado' : 'Reporte semanal desactivado');
+}
+
+// ═══════ FORMULARIOS ═══════
+const demoForms = [
+  { id:1, name:'Suscripción newsletter', type:'embed', fields:['Nombre','Email'], subs:342, status:'active', color:'#6fcff5', created:'2026-03-10' },
+  { id:2, name:'Descuento 10% primera compra', type:'landing', fields:['Nombre','Email','Teléfono'], subs:187, status:'active', color:'#22c55e', created:'2026-03-15' },
+  { id:3, name:'Guía gratuita descargable', type:'embed', fields:['Email'], subs:89, status:'draft', color:'#8b5cf6', created:'2026-03-20' },
+];
+
+function renderForms() {
+  const el = document.getElementById('em-forms-list'); if (!el) return;
+  if (!demoForms.length) { el.innerHTML = '<div class="em-empty-state"><h3 style="font-size:16px;font-weight:800;color:var(--text-primary);">Crea tu primer formulario</h3><p style="font-size:13px;color:var(--text-muted);margin-top:6px;">Captura suscriptores desde tu sitio web o con una landing page.</p></div>'; return; }
+
+  el.innerHTML = demoForms.map(f => {
+    const typeLabel = f.type === 'embed' ? '📋 Para tu sitio web' : '🌐 Landing page';
+    return `<div class="stat-card" style="padding:0;overflow:hidden;">
+      <div style="height:8px;background:${f.color};"></div>
+      <div style="padding:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);">${f.name}</h4>
+          <span style="padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700;color:${f.status==='active'?'#22c55e':'#64748b'};background:${f.status==='active'?'rgba(34,197,94,0.1)':'rgba(100,116,139,0.1)'};">${f.status==='active'?'Activo':'Borrador'}</span>
+        </div>
+        <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">${typeLabel} · Campos: ${f.fields.join(', ')}</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:baseline;gap:4px;">
+            <span style="font-size:20px;font-weight:900;color:var(--text-primary);">${f.subs}</span>
+            <span style="font-size:11px;color:var(--text-faint);">suscriptores</span>
+          </div>
+          <div style="display:flex;gap:4px;">
+            <button onclick="copyFormCode(${f.id})" class="em-tbl-btn" style="font-size:10px;">${f.type==='embed'?'📋 Copiar código':'🔗 Copiar link'}</button>
+            <button onclick="previewForm(${f.id})" class="em-tbl-btn" style="font-size:10px;">👁 Vista previa</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openFormBuilder(type) {
+  const name = prompt(type === 'embed' ? '¿Cómo se llamará tu formulario?' : '¿Cómo se llamará tu landing page?', type === 'embed' ? 'Suscripción a mi newsletter' : 'Oferta especial');
+  if (!name) return;
+  const colors = ['#6fcff5','#f97316','#22c55e','#8b5cf6','#ec4899'];
+  demoForms.unshift({ id: Date.now(), name, type, fields: ['Nombre','Email'], subs: 0, status: 'active', color: colors[Math.floor(Math.random()*colors.length)], created: '2026-04-02' });
+  renderForms();
+  showToast(type === 'embed' ? 'Formulario creado. Copia el código y pégalo en tu sitio.' : 'Landing page creada.');
+}
+
+function copyFormCode(id) {
+  const f = demoForms.find(x => x.id === id);
+  if (!f) return;
+  if (f.type === 'embed') {
+    const code = `<!-- SkyBrandMX Form: ${f.name} -->\n<div id="skybrand-form-${f.id}"></div>\n<script src="https://app.skybrandmx.com/forms/${f.id}.js"><\/script>`;
+    navigator.clipboard.writeText(code).then(() => showToast('Código copiado. Pégalo en tu sitio web.'));
+  } else {
+    navigator.clipboard.writeText(`https://app.skybrandmx.com/f/${f.id}`).then(() => showToast('Link copiado. Compártelo con tus clientes.'));
+  }
+}
+
+function previewForm(id) {
+  const f = demoForms.find(x => x.id === id);
+  if (!f) return;
+  alert(`Vista previa: "${f.name}"\n\nCampos: ${f.fields.join(', ')}\nTipo: ${f.type === 'embed' ? 'Formulario embebido' : 'Landing page'}\nSuscriptores: ${f.subs}\n\n(La vista previa completa estará disponible cuando se conecte el backend)`);
+}
+
+function toggleDoubleOptin(on) {
+  document.getElementById('em-optin-status').textContent = on ? 'Activo' : 'Inactivo';
+  document.getElementById('em-optin-status').style.color = on ? '#22c55e' : 'var(--text-faint)';
+  showToast(on ? 'Doble confirmación activada' : 'Doble confirmación desactivada');
+}
+
+// ═══════ TAGS AUTOMÁTICOS ═══════
+const autoTagRules = [
+  { id: 1, name: 'Abrió email', trigger: 'Cuando un contacto abre cualquier campaña', tag: 'enganchado', color: '#22c55e', active: true },
+  { id: 2, name: 'Hizo clic', trigger: 'Cuando un contacto hace clic en un link del email', tag: 'interesado', color: '#6fcff5', active: true },
+  { id: 3, name: 'Compró desde email', trigger: 'Cuando compra después de hacer clic en un email', tag: 'comprador-email', color: '#8b5cf6', active: false },
+  { id: 4, name: 'No abre en 30 días', trigger: 'Cuando no abre ningún email en 30 días', tag: 'inactivo', color: '#ef4444', active: true },
+  { id: 5, name: 'Se desuscribió', trigger: 'Cuando pide no recibir más emails', tag: 'baja', color: '#64748b', active: true },
+];
+
+// ═══════ ENGAGEMENT SCORE ═══════
+// Score is already in CRM, this adds email-specific scoring display
+function renderEngagementInfo() {
+  // This would be displayed in audiences tab as additional info
+  // The actual scoring happens per-contact in CRM
+}
+
+// ═══════ INIT ═══════
+document.addEventListener('DOMContentLoaded',()=>{
+  initHelpBanners();renderSmartRecs();renderStats();renderCampaigns();renderTemplates();renderAutopilot();renderSequences();renderAudiences();renderForms();renderAnalytics();renderSuppression();renderWeeklyReport();
+});
+
+// Close modals on backdrop
+['em-modal-wizard','em-modal-abtest','em-modal-sequence','em-modal-audience','em-modal-compare','em-modal-test-email','em-modal-suppression'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('click',function(e){if(e.target===this)this.style.display='none';});
+});
+</script>

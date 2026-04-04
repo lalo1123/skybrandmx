@@ -1,0 +1,214 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Navbar from '../components/Navbar.astro';
+
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:6100';
+---
+
+<Layout title="Admin — SkyBrandMX">
+  <Navbar />
+  <main>
+    <!-- Loading -->
+    <div id="loading" class="min-h-[60vh] flex items-center justify-center">
+      <div class="text-center">
+        <div class="w-8 h-8 border-2 border-brand-teal border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p class="text-slate-400 text-sm font-medium">Verificando permisos...</p>
+      </div>
+    </div>
+
+    <!-- Admin content -->
+    <div id="admin" class="hidden">
+      <section class="pt-12 pb-20 bg-gradient-to-b from-slate-900 via-brand-dark to-slate-900 text-white">
+        <div class="max-w-5xl mx-auto px-6">
+          <div class="flex items-center justify-between mb-10">
+            <div>
+              <a href="/dashboard" class="text-slate-500 text-xs font-bold hover:text-brand-teal transition-colors mb-2 inline-block">← Dashboard</a>
+              <h1 class="text-3xl md:text-4xl font-black tracking-tighter">Gestión de Usuarios</h1>
+            </div>
+          </div>
+
+          <!-- Create user form -->
+          <div class="rounded-2xl bg-white/5 border border-white/10 p-6 md:p-8 mb-8">
+            <h2 class="text-lg font-black mb-6">Crear nuevo usuario</h2>
+            <form id="create-form" class="flex flex-col md:flex-row gap-4">
+              <div class="flex-1">
+                <input
+                  type="email"
+                  id="new-email"
+                  required
+                  placeholder="Email del usuario"
+                  class="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-white/10 text-white font-medium placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-teal/30 focus:border-brand-teal transition-all text-sm"
+                />
+              </div>
+              <div class="flex-1">
+                <input
+                  type="text"
+                  id="new-name"
+                  placeholder="Nombre completo"
+                  class="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-white/10 text-white font-medium placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-teal/30 focus:border-brand-teal transition-all text-sm"
+                />
+              </div>
+              <button type="submit" id="create-btn" class="px-6 py-3 rounded-xl bg-brand-teal text-slate-900 font-black text-sm whitespace-nowrap hover:-translate-y-0.5 transition-all active:scale-[0.98]">
+                Enviar invitación
+              </button>
+            </form>
+            <div id="create-msg" class="hidden mt-4 text-sm font-medium p-3 rounded-lg"></div>
+          </div>
+
+          <!-- Users table -->
+          <div class="rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
+            <div class="px-6 py-4 border-b border-white/5">
+              <h2 class="text-lg font-black">Usuarios del workspace</h2>
+            </div>
+            <div id="users-table" class="divide-y divide-white/5">
+              <div class="px-6 py-8 text-center text-slate-500 text-sm">Cargando usuarios...</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</Layout>
+
+<script define:vars={{ API_URL }}>
+  const token = localStorage.getItem('skybrand_token');
+
+  if (!token) {
+    window.location.href = '/login';
+  } else {
+    // Verify admin
+    fetch(`${API_URL}/api/v1/auth/me`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('Unauthorized');
+        return res.json();
+      })
+      .then(user => {
+        if (!user.is_admin) {
+          window.location.href = '/dashboard';
+          return;
+        }
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('admin').classList.remove('hidden');
+        loadUsers();
+      })
+      .catch(() => {
+        localStorage.removeItem('skybrand_token');
+        window.location.href = '/login';
+      });
+  }
+
+  function loadUsers() {
+    fetch(`${API_URL}/api/v1/admin/users`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    })
+      .then(res => res.json())
+      .then(users => {
+        const table = document.getElementById('users-table');
+        if (!users.length) {
+          table.innerHTML = '<div class="px-6 py-8 text-center text-slate-500 text-sm">No hay usuarios.</div>';
+          return;
+        }
+        table.innerHTML = users.map(u => `
+          <div class="flex items-center justify-between px-6 py-4 hover:bg-white/[0.02] transition-colors">
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-bold text-white truncate">${u.full_name || 'Sin nombre'}</p>
+              <p class="text-xs text-slate-500">${u.email}</p>
+            </div>
+            <div class="flex items-center gap-3">
+              ${u.is_admin ? '<span class="px-2 py-0.5 rounded-full bg-brand-teal/10 border border-brand-teal/20 text-brand-teal text-[10px] font-black uppercase">Admin</span>' : ''}
+              ${u.email_verified
+                ? '<span class="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase">Activo</span>'
+                : '<span class="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black uppercase">Pendiente</span>'}
+              ${!u.email_verified ? `<button onclick="resendInvite(${u.id})" class="px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-xs font-bold text-slate-400 hover:text-white hover:bg-white/10 transition-all">Reenviar</button>` : ''}
+              ${!u.is_admin ? `<button onclick="deactivateUser(${u.id})" class="px-3 py-1 rounded-lg bg-red-500/10 border border-red-500/20 text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-500/20 transition-all">${u.is_active ? 'Desactivar' : 'Inactivo'}</button>` : ''}
+            </div>
+          </div>
+        `).join('');
+      })
+      .catch(() => {
+        document.getElementById('users-table').innerHTML = '<div class="px-6 py-8 text-center text-red-400 text-sm">Error al cargar usuarios.</div>';
+      });
+  }
+
+  // Create user
+  document.getElementById('create-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('create-btn');
+    const msg = document.getElementById('create-msg');
+    btn.textContent = 'Enviando...';
+    btn.disabled = true;
+    msg.classList.add('hidden');
+
+    const email = document.getElementById('new-email').value;
+    const fullName = document.getElementById('new-name').value;
+
+    try {
+      const res = await fetch(`${API_URL}/api/v1/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ email, full_name: fullName || null }),
+      });
+      const data = await res.json();
+
+      msg.classList.remove('hidden');
+      if (res.ok) {
+        msg.className = 'mt-4 text-sm font-medium p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400';
+        msg.textContent = data.message || 'Invitación enviada.';
+        document.getElementById('new-email').value = '';
+        document.getElementById('new-name').value = '';
+        loadUsers();
+      } else {
+        msg.className = 'mt-4 text-sm font-medium p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400';
+        msg.textContent = data.detail || 'Error al crear usuario.';
+      }
+    } catch {
+      msg.classList.remove('hidden');
+      msg.className = 'mt-4 text-sm font-medium p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400';
+      msg.textContent = 'Error de conexión.';
+    }
+
+    btn.textContent = 'Enviar invitación';
+    btn.disabled = false;
+  });
+
+  // Global functions for inline onclick
+  window.resendInvite = async (userId) => {
+    try {
+      const res = await fetch(`${API_URL}/api/v1/admin/users/${userId}/resend-invite`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (res.ok) {
+        alert('Invitación reenviada.');
+      } else {
+        const data = await res.json();
+        alert(data.detail || 'Error al reenviar.');
+      }
+    } catch {
+      alert('Error de conexión.');
+    }
+  };
+
+  window.deactivateUser = async (userId) => {
+    if (!confirm('¿Desactivar este usuario?')) return;
+    try {
+      const res = await fetch(`${API_URL}/api/v1/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (res.ok) {
+        loadUsers();
+      } else {
+        const data = await res.json();
+        alert(data.detail || 'Error.');
+      }
+    } catch {
+      alert('Error de conexión.');
+    }
+  };
+</script>

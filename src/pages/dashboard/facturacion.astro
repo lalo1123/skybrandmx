@@ -1,0 +1,611 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:6100';
+---
+
+<DashboardLayout title="Facturación">
+  <!-- Smart Recommendations -->
+  <div id="fac-smart-recs" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;"></div>
+
+  <!-- Stats bar -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px;">
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="fac-stat-label">Facturas del mes</p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="fac-stat-total" class="fac-stat-val">--</p><span id="fac-trend-total" class="fac-trend"></span></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="fac-stat-label">Total facturado</p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="fac-stat-amount" class="fac-stat-val" style="color:#22c55e;">--</p><span id="fac-trend-amount" class="fac-trend"></span></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="fac-stat-label">Por cobrar <span class="fac-tip" data-tip="Facturas emitidas que el cliente aún no ha pagado">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="fac-stat-pending" class="fac-stat-val" style="color:#f97316;">--</p></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="fac-stat-label">Notas de crédito <span class="fac-tip" data-tip="Facturas que se cancelaron o ajustaron. Se usan cuando hay devoluciones o errores.">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="fac-stat-credit" class="fac-stat-val" style="color:#ef4444;">--</p></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="fac-stat-label">IVA del mes <span class="fac-tip" data-tip="Total de IVA (16%) que cobraste en tus facturas. Este es el impuesto que debes declarar al SAT.">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="fac-stat-iva" class="fac-stat-val" style="color:#8b5cf6;">--</p></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="fac-stat-label">Timbradas hoy</p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="fac-stat-today" class="fac-stat-val" style="color:var(--accent);">--</p></div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;overflow-x:auto;">
+    <button id="fac-tab-invoices" class="fac-tab active" onclick="switchFacTab('invoices')">Facturas</button>
+    <button id="fac-tab-create" class="fac-tab" onclick="switchFacTab('create')">Nueva factura</button>
+    <button id="fac-tab-credits" class="fac-tab" onclick="switchFacTab('credits')">Notas de crédito</button>
+    <button id="fac-tab-clients" class="fac-tab" onclick="switchFacTab('clients')">Clientes fiscales</button>
+    <button id="fac-tab-analytics" class="fac-tab" onclick="switchFacTab('analytics')">Analítica</button>
+  </div>
+
+  <!-- ══════════ Tab: Facturas ══════════ -->
+  <div id="fac-panel-invoices">
+    <div id="fac-help-invoices" class="fac-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Todas las facturas que has emitido. Puedes descargar el XML y PDF, reenviar por email o cancelar ante el SAT.</p>
+      <button onclick="facDismissHelp('invoices')" class="fac-help-close">&times;</button>
+    </div>
+    <div class="stat-card animate-in" style="padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;position:relative;">
+        <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input id="fac-search" type="text" placeholder="Buscar por folio, cliente, RFC..." oninput="facFilter()" class="fac-input" style="padding-left:38px;"/>
+      </div>
+      <select id="fac-filter-status" onchange="facFilter()" class="fac-input" style="width:auto;cursor:pointer;">
+        <option value="">Todos los estados</option>
+        <option value="active">Vigente</option>
+        <option value="paid">Pagada</option>
+        <option value="cancelled">Cancelada</option>
+      </select>
+      <button onclick="switchFacTab('create')" class="fac-btn-primary" style="display:flex;align-items:center;gap:6px;padding:10px 20px;">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Nueva factura
+      </button>
+      <button onclick="facExportZIP()" class="fac-btn-secondary" style="padding:10px 14px;display:flex;align-items:center;gap:4px;font-size:12px;" title="Descarga todos los XML del mes en un ZIP para tu contador">
+        📁 Exportar XML
+      </button>
+    </div>
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="border-bottom:1px solid var(--border);">
+            <th class="fac-th">Folio</th><th class="fac-th">Cliente</th><th class="fac-th">RFC</th>
+            <th class="fac-th" style="text-align:right;">Subtotal</th><th class="fac-th" style="text-align:right;">IVA</th>
+            <th class="fac-th" style="text-align:right;">Total</th><th class="fac-th">Estado</th>
+            <th class="fac-th">Fecha</th><th class="fac-th" style="text-align:center;">Acciones</th>
+          </tr></thead>
+          <tbody id="fac-invoices-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Nueva factura ══════════ -->
+  <div id="fac-panel-create" style="display:none;">
+    <div id="fac-help-create" class="fac-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Llena los datos y generamos tu factura CFDI 4.0 timbrada ante el SAT. Se envía automáticamente por email al cliente.</p>
+      <button onclick="facDismissHelp('create')" class="fac-help-close">&times;</button>
+    </div>
+    <!-- Quick actions -->
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+      <button onclick="facQuickPublic()" style="flex:1;min-width:180px;padding:14px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);cursor:pointer;transition:all 0.2s;text-align:left;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <span style="font-size:20px;">👤</span>
+        <p style="font-size:13px;font-weight:800;color:var(--text-primary);margin-top:6px;">Público en general</p>
+        <p style="font-size:11px;color:var(--text-faint);">Factura rápida sin pedir datos al cliente</p>
+      </button>
+      <button onclick="facQuickFromOrder()" style="flex:1;min-width:180px;padding:14px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);cursor:pointer;transition:all 0.2s;text-align:left;" onmouseover="this.style.borderColor='#8b5cf6'" onmouseout="this.style.borderColor='var(--border)'">
+        <span style="font-size:20px;">📦</span>
+        <p style="font-size:13px;font-weight:800;color:var(--text-primary);margin-top:6px;">Desde un pedido</p>
+        <p style="font-size:11px;color:var(--text-faint);">Auto-llena datos del pedido existente</p>
+      </button>
+      <button onclick="facQuickMass()" style="flex:1;min-width:180px;padding:14px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);cursor:pointer;transition:all 0.2s;text-align:left;" onmouseover="this.style.borderColor='#f97316'" onmouseout="this.style.borderColor='var(--border)'">
+        <span style="font-size:20px;">📋</span>
+        <p style="font-size:13px;font-weight:800;color:var(--text-primary);margin-top:6px;">Facturación masiva</p>
+        <p style="font-size:11px;color:var(--text-faint);">Factura varios pedidos de golpe</p>
+      </button>
+    </div>
+
+    <div class="stat-card animate-in" style="padding:24px;">
+      <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">Crear factura CFDI 4.0</h3>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:20px;">Completa los datos y nosotros la timbramos ante el SAT automáticamente.</p>
+
+      <!-- Receptor -->
+      <div style="border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;">
+        <p style="font-size:12px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Datos del cliente (receptor)</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div><label class="fac-label">Nombre o razón social *</label><input id="fac-c-name" type="text" placeholder="Ej: María García López" class="fac-input" list="fac-client-list"/><datalist id="fac-client-list"></datalist></div>
+          <div><label class="fac-label">RFC *</label><div style="display:flex;gap:6px;"><input id="fac-c-rfc" type="text" placeholder="XAXX010101000" class="fac-input" style="text-transform:uppercase;flex:1;" maxlength="13"/><button onclick="facValidateRFC()" style="padding:8px 12px;border-radius:10px;border:1px solid var(--accent);background:transparent;color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='var(--accent-bg)'" onmouseout="this.style.background='transparent'">Validar</button></div><p id="fac-rfc-status" style="font-size:10px;margin-top:4px;display:none;"></p></div>
+          <div>
+            <label class="fac-label">Régimen fiscal * <span class="fac-tip" data-tip="Pregúntale a tu cliente su régimen fiscal, viene en su Constancia de Situación Fiscal del SAT">?</span></label>
+            <select id="fac-c-regimen" class="fac-input" style="cursor:pointer;">
+              <option value="">Seleccionar...</option>
+              <option value="601">601 - General de Ley</option>
+              <option value="603">603 - Personas Morales sin fines de lucro</option>
+              <option value="612">612 - Personas Físicas con Act. Empresarial</option>
+              <option value="616">616 - Sin obligaciones fiscales</option>
+              <option value="621">621 - Incorporación Fiscal</option>
+              <option value="626">626 - Simplificado de Confianza (RESICO)</option>
+            </select>
+          </div>
+          <div><label class="fac-label">Código postal fiscal *</label><input id="fac-c-cp" type="text" placeholder="03100" class="fac-input" maxlength="5"/></div>
+          <div><label class="fac-label">Email (para enviar la factura)</label><input id="fac-c-email" type="email" placeholder="cliente@email.com" class="fac-input"/></div>
+          <div>
+            <label class="fac-label">Uso de CFDI * <span class="fac-tip" data-tip="Para qué va a usar tu cliente esta factura. Si no sabes, pon 'Gastos en general' (G03).">?</span></label>
+            <select id="fac-c-uso" class="fac-input" style="cursor:pointer;">
+              <option value="G03" selected>G03 - Gastos en general</option>
+              <option value="G01">G01 - Adquisición de mercancías</option>
+              <option value="G02">G02 - Devoluciones, descuentos o bonificaciones</option>
+              <option value="I01">I01 - Construcciones</option>
+              <option value="P01">P01 - Por definir</option>
+              <option value="S01">S01 - Sin efectos fiscales</option>
+              <option value="CP01">CP01 - Pagos</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Conceptos -->
+      <div style="border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;">
+        <p style="font-size:12px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Conceptos (productos o servicios)</p>
+        <div id="fac-concepts" style="display:flex;flex-direction:column;gap:10px;"></div>
+        <button onclick="facAddConcept()" style="margin-top:10px;padding:8px 16px;border-radius:8px;border:1px dashed var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;width:100%;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">+ Agregar concepto</button>
+        <!-- Totals -->
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+          <div style="display:flex;gap:20px;"><span style="font-size:13px;color:var(--text-muted);min-width:100px;text-align:right;">Subtotal:</span><span id="fac-subtotal" style="font-size:13px;font-weight:700;color:var(--text-primary);min-width:100px;text-align:right;">$0.00</span></div>
+          <div style="display:flex;gap:20px;"><span style="font-size:13px;color:var(--text-muted);min-width:100px;text-align:right;">IVA (16%):</span><span id="fac-iva-total" style="font-size:13px;font-weight:700;color:var(--text-primary);min-width:100px;text-align:right;">$0.00</span></div>
+          <div style="display:flex;gap:20px;"><span style="font-size:15px;font-weight:800;color:var(--text-primary);min-width:100px;text-align:right;">Total:</span><span id="fac-grand-total" style="font-size:18px;font-weight:900;color:var(--accent);min-width:100px;text-align:right;">$0.00</span></div>
+        </div>
+      </div>
+
+      <!-- Método y forma de pago -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;">
+        <div>
+          <label class="fac-label">Método de pago * <span class="fac-tip" data-tip="PUE = el cliente ya pagó todo. PPD = el cliente va a pagar después (a crédito).">?</span></label>
+          <select id="fac-metodo" class="fac-input" style="cursor:pointer;">
+            <option value="PUE">PUE - Pago en una sola exhibición</option>
+            <option value="PPD">PPD - Pago en parcialidades o diferido</option>
+          </select>
+        </div>
+        <div>
+          <label class="fac-label">Forma de pago *</label>
+          <select id="fac-forma" class="fac-input" style="cursor:pointer;">
+            <option value="01">01 - Efectivo</option>
+            <option value="03" selected>03 - Transferencia electrónica</option>
+            <option value="04">04 - Tarjeta de crédito</option>
+            <option value="28">28 - Tarjeta de débito</option>
+            <option value="99">99 - Por definir</option>
+          </select>
+        </div>
+        <div>
+          <label class="fac-label">Moneda</label>
+          <select id="fac-moneda" class="fac-input" style="cursor:pointer;">
+            <option value="MXN" selected>MXN - Peso mexicano</option>
+            <option value="USD">USD - Dólar americano</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;">
+        <button onclick="facCreateInvoice('draft')" class="fac-btn-secondary" style="flex:1;">Guardar borrador</button>
+        <button onclick="facCreateInvoice('preview')" class="fac-btn-secondary" style="flex:1;border-color:#8b5cf6;color:#8b5cf6;">Vista previa</button>
+        <button onclick="facCreateInvoice('stamp')" class="fac-btn-primary" style="flex:1;background:#22c55e;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Timbrar ante SAT
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Notas de crédito ══════════ -->
+  <div id="fac-panel-credits" style="display:none;">
+    <div id="fac-help-credits" class="fac-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Las notas de crédito se usan cuando necesitas cancelar una factura o hacer un ajuste (devolución, descuento, error).</p>
+      <button onclick="facDismissHelp('credits')" class="fac-help-close">&times;</button>
+    </div>
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="border-bottom:1px solid var(--border);">
+            <th class="fac-th">Folio NC</th><th class="fac-th">Factura original</th><th class="fac-th">Cliente</th>
+            <th class="fac-th">Motivo</th><th class="fac-th" style="text-align:right;">Monto</th><th class="fac-th">Fecha</th>
+          </tr></thead>
+          <tbody id="fac-credits-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Clientes fiscales ══════════ -->
+  <div id="fac-panel-clients" style="display:none;">
+    <div id="fac-help-clients" class="fac-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Guarda los datos fiscales de tus clientes frecuentes para no tener que escribirlos cada vez que hagas una factura.</p>
+      <button onclick="facDismissHelp('clients')" class="fac-help-close">&times;</button>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+      <button onclick="facAddClient()" class="fac-btn-primary" style="display:flex;align-items:center;gap:6px;padding:10px 20px;">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Agregar cliente fiscal
+      </button>
+    </div>
+    <div id="fac-clients-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+  </div>
+
+  <!-- ══════════ Tab: Analítica ══════════ -->
+  <div id="fac-panel-analytics" style="display:none;">
+    <div id="fac-help-analytics" class="fac-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Mira cuánto has facturado, cuánto IVA debes declarar y quiénes son tus mejores clientes.</p>
+      <button onclick="facDismissHelp('analytics')" class="fac-help-close">&times;</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:20px;">
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Facturado por mes</h4>
+        <div id="fac-chart-monthly" style="height:200px;display:flex;align-items:flex-end;gap:6px;"></div>
+      </div>
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Top clientes</h4>
+        <div id="fac-chart-clients"></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">IVA mensual <span class="fac-tip" data-tip="El IVA que debes declarar al SAT cada mes. Es el 16% de tus ventas facturadas.">?</span></h4>
+        <div id="fac-chart-iva"></div>
+      </div>
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Formas de pago</h4>
+        <div id="fac-chart-payments"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Autopilot -->
+  <div class="stat-card animate-in" style="padding:0;margin-top:20px;overflow:hidden;">
+    <button onclick="facToggleSection('fac-autopilot-content')" class="fac-collapse-header">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,rgba(34,197,94,0.15),rgba(111,207,245,0.15));display:flex;align-items:center;justify-content:center;">
+          <svg style="width:14px;height:14px;color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <div style="text-align:left;"><p style="font-size:13px;font-weight:700;color:var(--text-primary);">Piloto automático de facturación</p><p style="font-size:11px;color:var(--text-faint);">Factura automáticamente sin que hagas nada</p></div>
+      </div>
+      <svg style="width:16px;height:16px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+    </button>
+    <div id="fac-autopilot-content" style="display:none;padding:20px;">
+      <div id="fac-autopilot-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
+    </div>
+  </div>
+</DashboardLayout>
+
+<style>
+  .fac-stat-label { font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px; }
+  .fac-stat-val { font-size:28px;font-weight:900;color:var(--text-primary); }
+  .fac-trend { font-size:11px;font-weight:700; }
+  .fac-tab { padding:10px 20px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap; }
+  .fac-tab.active { color:var(--accent);border-bottom-color:var(--accent); }
+  .fac-th { padding:14px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px; }
+  .fac-label { font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:4px;display:block; }
+  .fac-input { width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;transition:border-color 0.2s; }
+  .fac-input:focus { border-color:var(--accent); }
+  .fac-btn-primary { padding:12px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s; }
+  .fac-btn-primary:hover { opacity:0.85; }
+  .fac-btn-secondary { padding:12px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-primary);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s; }
+  .fac-btn-secondary:hover { background:var(--nav-hover); }
+  .fac-tbl-btn { padding:5px 9px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;transition:all 0.15s; }
+  .fac-tbl-btn:hover { border-color:var(--accent);color:var(--accent); }
+  .fac-help-banner { display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;background:var(--accent-bg);border:1px solid rgba(111,207,245,0.15);margin-bottom:16px; }
+  .fac-help-close { border:none;background:transparent;color:var(--text-faint);cursor:pointer;font-size:16px;padding:0 4px; }
+  .fac-tip { display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--input-bg);color:var(--text-faint);font-size:10px;font-weight:800;cursor:help;position:relative;flex-shrink:0; }
+  .fac-tip:hover::after { content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--bg-sidebar);border:1px solid var(--border);color:var(--text-secondary);padding:10px 14px;border-radius:10px;font-size:12px;font-weight:500;white-space:normal;width:280px;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.3);line-height:1.5;pointer-events:none; }
+  .fac-tip:hover::before { content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--border);z-index:101; }
+  .fac-collapse-header { width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border:none;background:transparent;cursor:pointer;transition:background 0.15s; }
+  .fac-collapse-header:hover { background:var(--nav-hover); }
+  .fac-toggle-wrap { position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0; }
+  .fac-toggle-wrap input { opacity:0;width:0;height:0; }
+  .fac-toggle-slider { position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:22px;transition:0.3s; }
+  .fac-toggle-slider::before { content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s; }
+  .fac-toggle-wrap input:checked + .fac-toggle-slider { background:var(--toggle-color, #22c55e); }
+  .fac-toggle-wrap input:checked + .fac-toggle-slider::before { transform:translateX(18px); }
+</style>
+
+<script is:inline>
+// ═══════ DEMO DATA ═══════
+const demoInvoices = [
+  { id:1, folio:'A-001', client:'María García López', rfc:'GALM850101AB1', subtotal:5000, iva:800, total:5800, status:'paid', payment:'Transferencia', date:'2026-03-25', uso:'G03', email:'maria@gmail.com' },
+  { id:2, folio:'A-002', client:'Carlos Hernández Ruiz', rfc:'HERC900215CD2', subtotal:3500, iva:560, total:4060, status:'active', payment:'Tarjeta', date:'2026-03-28', uso:'G01', email:'carlos@outlook.com' },
+  { id:3, folio:'A-003', client:'Empresas del Norte SA', rfc:'ENO201105EF3', subtotal:12000, iva:1920, total:13920, status:'paid', payment:'Transferencia', date:'2026-03-20', uso:'G03', email:'pagos@enorte.com' },
+  { id:4, folio:'A-004', client:'Ana Sofía Martínez', rfc:'MASA950312GH4', subtotal:1800, iva:288, total:2088, status:'active', payment:'Efectivo', date:'2026-03-31', uso:'G03', email:'anasof@yahoo.com' },
+  { id:5, folio:'A-005', client:'Roberto Juárez Peña', rfc:'JUPR880520IJ5', subtotal:4200, iva:672, total:4872, status:'cancelled', payment:'Transferencia', date:'2026-03-15', uso:'G01', email:'rjuarez@gmail.com' },
+  { id:6, folio:'A-006', client:'Público en General', rfc:'XAXX010101000', subtotal:850, iva:136, total:986, status:'paid', payment:'Efectivo', date:'2026-04-01', uso:'S01', email:'' },
+  { id:7, folio:'A-007', client:'Lucía Ramírez Torres', rfc:'RATL920718KL6', subtotal:6500, iva:1040, total:7540, status:'active', payment:'Tarjeta', date:'2026-04-01', uso:'G03', email:'lucia@hotmail.com' },
+  { id:8, folio:'A-008', client:'Fernando López Castro', rfc:'LOCF870305MN7', subtotal:2200, iva:352, total:2552, status:'paid', payment:'OXXO', date:'2026-03-29', uso:'G03', email:'ferlopez@gmail.com' },
+];
+
+const demoCreditNotes = [
+  { id:1, folio:'NC-001', original:'A-005', client:'Roberto Juárez Peña', reason:'Cancelación de factura', amount:4872, date:'2026-03-16' },
+  { id:2, folio:'NC-002', original:'A-001', client:'María García López', reason:'Devolución parcial', amount:1160, date:'2026-03-30' },
+];
+
+const demoFiscalClients = [
+  { id:1, name:'María García López', rfc:'GALM850101AB1', regimen:'612', cp:'03100', email:'maria@gmail.com', invoices:3 },
+  { id:2, name:'Carlos Hernández Ruiz', rfc:'HERC900215CD2', regimen:'612', cp:'44100', email:'carlos@outlook.com', invoices:1 },
+  { id:3, name:'Empresas del Norte SA', rfc:'ENO201105EF3', regimen:'601', cp:'64060', email:'pagos@enorte.com', invoices:5 },
+  { id:4, name:'Ana Sofía Martínez', rfc:'MASA950312GH4', regimen:'626', cp:'64060', email:'anasof@yahoo.com', invoices:2 },
+  { id:5, name:'Público en General', rfc:'XAXX010101000', regimen:'616', cp:'03100', email:'', invoices:12 },
+];
+
+const facAutoFlows = [
+  { id:'auto_invoice', name:'Facturar cada venta', desc:'Genera factura automáticamente cuando un pedido se marca como pagado', icon:'🧾', color:'#22c55e', active:true },
+  { id:'auto_send', name:'Enviar factura por email', desc:'Envía PDF y XML al cliente automáticamente al timbrar', icon:'📧', color:'#6fcff5', active:true },
+  { id:'auto_reminder', name:'Recordar cobro', desc:'Envía recordatorio si la factura no se paga en 7 días', icon:'⏰', color:'#f97316', active:false },
+  { id:'auto_credit', name:'Nota de crédito en devolución', desc:'Genera nota de crédito automáticamente cuando se aprueba una devolución', icon:'↩️', color:'#ef4444', active:false },
+  { id:'auto_complement', name:'Complemento de pago', desc:'Genera complemento de pago automáticamente cuando el cliente paga una factura PPD', icon:'💰', color:'#8b5cf6', active:false },
+];
+
+const statusMap = { active:{l:'Vigente',c:'#6fcff5',b:'rgba(111,207,245,0.1)'}, paid:{l:'Pagada',c:'#22c55e',b:'rgba(34,197,94,0.1)'}, cancelled:{l:'Cancelada',c:'#ef4444',b:'rgba(239,68,68,0.1)'}, draft:{l:'Borrador',c:'#64748b',b:'rgba(100,116,139,0.1)'} };
+
+let facConcepts = [{ desc:'', qty:1, price:0, key:'' }];
+
+// ═══════ HELPERS ═══════
+function facDismissHelp(t){document.getElementById('fac-help-'+t).style.display='none';localStorage.setItem('fac_help_'+t+'_dismissed','1');}
+function facToggleSection(id){const el=document.getElementById(id);el.style.display=el.style.display==='none'?'block':'none';}
+function showToast(msg){const ex=document.getElementById('fac-toast');if(ex)ex.remove();const t=document.createElement('div');t.id='fac-toast';t.textContent=msg;Object.assign(t.style,{position:'fixed',bottom:'24px',right:'24px',background:'#22c55e',color:'#fff',padding:'12px 24px',borderRadius:'10px',fontSize:'13px',fontWeight:'700',zIndex:'9999',boxShadow:'0 4px 20px rgba(0,0,0,0.3)'});document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(()=>t.remove(),300);},3000);}
+function switchFacTab(tab){document.querySelectorAll('.fac-tab').forEach(t=>t.classList.remove('active'));document.getElementById('fac-tab-'+tab).classList.add('active');['invoices','create','credits','clients','analytics'].forEach(p=>document.getElementById('fac-panel-'+p).style.display=p===tab?'':'none');if(tab==='create'){facConcepts=[{desc:'',qty:1,price:0,key:''}];renderConcepts();}}
+
+// ═══════ STATS ═══════
+function renderFacStats(){
+  const active=demoInvoices.filter(i=>i.status!=='cancelled');
+  document.getElementById('fac-stat-total').textContent=active.length;
+  document.getElementById('fac-stat-amount').textContent='$'+active.reduce((s,i)=>s+i.total,0).toLocaleString();
+  document.getElementById('fac-stat-pending').textContent='$'+demoInvoices.filter(i=>i.status==='active').reduce((s,i)=>s+i.total,0).toLocaleString();
+  document.getElementById('fac-stat-credit').textContent=demoCreditNotes.length;
+  document.getElementById('fac-stat-iva').textContent='$'+active.reduce((s,i)=>s+i.iva,0).toLocaleString();
+  document.getElementById('fac-stat-today').textContent=demoInvoices.filter(i=>i.date==='2026-04-01').length;
+  setT('fac-trend-total','+3');setT('fac-trend-amount','+22%');
+}
+function setT(id,val){const el=document.getElementById(id);if(!el)return;const up=val.startsWith('+');el.innerHTML=`<span style="color:${up?'#22c55e':'#ef4444'};">${up?'▲':'▼'} ${val}</span>`;}
+
+// ═══════ SMART RECS ═══════
+function renderFacRecs(){
+  const el=document.getElementById('fac-smart-recs');if(!el)return;const recs=[];
+  const unpaid=demoInvoices.filter(i=>i.status==='active');
+  if(unpaid.length>0)recs.push({icon:'💰',color:'#f97316',title:`${unpaid.length} factura(s) por cobrar ($${unpaid.reduce((s,i)=>s+i.total,0).toLocaleString()})`,desc:'Envía un recordatorio de pago a tus clientes.',btn:'Enviar recordatorio',action:"showToast('Recordatorios enviados')"});
+  // Declaration reminder (17th of each month is SAT deadline)
+  const today=new Date();const day=today.getDate();
+  if(day>=10&&day<=17)recs.push({icon:'📅',color:'#ef4444',title:'Se acerca la fecha de declaración mensual',desc:`Tienes hasta el día 17 de este mes para presentar tu declaración ante el SAT. IVA del mes: $${demoInvoices.filter(i=>i.status!=='cancelled').reduce((s,i)=>s+i.iva,0).toLocaleString()}`,btn:'Ver resumen fiscal',action:"switchFacTab('analytics')"});
+  // Complemento de pago reminder
+  const ppdInvoices=demoInvoices.filter(i=>i.status==='paid'&&i.payment==='PPD');
+  if(ppdInvoices.length>0)recs.push({icon:'🧾',color:'#8b5cf6',title:`${ppdInvoices.length} factura(s) PPD necesitan complemento de pago`,desc:'Genera el complemento de pago para las facturas que ya fueron pagadas.',btn:'Generar',action:"showToast('Complementos generados')"});
+  if(!recs.length){el.style.display='none';return;}
+  el.style.display='flex';
+  el.innerHTML=recs.map(r=>`<div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;background:${r.color}08;border:1px solid ${r.color}20;"><span style="font-size:24px;flex-shrink:0;">${r.icon}</span><div style="flex:1;"><p style="font-size:13px;font-weight:700;color:var(--text-primary);">${r.title}</p><p style="font-size:11px;color:var(--text-muted);margin-top:2px;">${r.desc}</p></div><button onclick="${r.action}" style="padding:8px 16px;border-radius:8px;border:none;background:${r.color};color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">${r.btn}</button><button onclick="this.closest('div[style]').remove()" style="border:none;background:transparent;color:var(--text-faint);cursor:pointer;font-size:14px;padding:0 4px;">✕</button></div>`).join('');
+}
+
+// ═══════ INVOICES TABLE ═══════
+function renderInvoices(){
+  const tbody=document.getElementById('fac-invoices-tbody');let data=[...demoInvoices];
+  const search=document.getElementById('fac-search').value.toLowerCase();
+  const sf=document.getElementById('fac-filter-status').value;
+  if(search)data=data.filter(i=>i.folio.toLowerCase().includes(search)||i.client.toLowerCase().includes(search)||i.rfc.toLowerCase().includes(search));
+  if(sf)data=data.filter(i=>i.status===sf);
+  if(!data.length){tbody.innerHTML='<tr><td colspan="9" style="padding:40px;text-align:center;color:var(--text-faint);">No se encontraron facturas</td></tr>';return;}
+  tbody.innerHTML=data.map(i=>{const st=statusMap[i.status];return`<tr style="border-bottom:1px solid var(--border);transition:background 0.15s;" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background='transparent'">
+    <td style="padding:14px 16px;font-weight:700;color:var(--accent);font-size:12px;">${i.folio}</td>
+    <td style="padding:14px 16px;font-weight:600;color:var(--text-primary);">${i.client}</td>
+    <td style="padding:14px 16px;font-size:11px;color:var(--text-muted);font-family:monospace;">${i.rfc}</td>
+    <td style="padding:14px 16px;text-align:right;color:var(--text-secondary);">$${i.subtotal.toLocaleString()}</td>
+    <td style="padding:14px 16px;text-align:right;color:var(--text-muted);font-size:12px;">$${i.iva.toLocaleString()}</td>
+    <td style="padding:14px 16px;text-align:right;font-weight:800;color:var(--text-primary);">$${i.total.toLocaleString()}</td>
+    <td style="padding:14px 16px;"><span style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;color:${st.c};background:${st.b};">${st.l}</span></td>
+    <td style="padding:14px 16px;font-size:12px;color:var(--text-muted);">${i.date}</td>
+    <td style="padding:14px 16px;text-align:center;"><div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
+      <button onclick="showToast('PDF descargado')" class="fac-tbl-btn">PDF</button>
+      <button onclick="showToast('XML descargado')" class="fac-tbl-btn">XML</button>
+      ${i.email?`<button onclick="showToast('Factura reenviada a ${i.email}')" class="fac-tbl-btn" style="border-color:#6fcff5;color:#6fcff5;">Reenviar</button>`:''}
+      ${i.status==='active'?`<button onclick="facCancelInvoice(${i.id})" class="fac-tbl-btn" style="border-color:#ef4444;color:#ef4444;">Cancelar</button>`:''}
+    </div></td>
+  </tr>`;}).join('');
+}
+function facFilter(){renderInvoices();}
+function facCancelInvoice(id){if(!confirm('¿Cancelar esta factura ante el SAT? Se generará una nota de crédito.'))return;const i=demoInvoices.find(x=>x.id===id);if(i){i.status='cancelled';demoCreditNotes.unshift({id:Date.now(),folio:'NC-'+String(demoCreditNotes.length+1).padStart(3,'0'),original:i.folio,client:i.client,reason:'Cancelación de factura',amount:i.total,date:'2026-04-02'});renderInvoices();renderFacStats();renderCredits();showToast('Factura cancelada ante SAT');}}
+
+// ═══════ CREATE INVOICE ═══════
+function renderConcepts(){
+  const el=document.getElementById('fac-concepts');
+  el.innerHTML=facConcepts.map((c,i)=>`
+    <div style="display:flex;gap:8px;align-items:end;">
+      <div style="flex:3;"><label class="fac-label">Descripción</label><input type="text" placeholder="Ej: Servicio de diseño web" class="fac-input" style="font-size:12px;" value="${c.desc}" onchange="facConcepts[${i}].desc=this.value"/></div>
+      <div style="flex:1;"><label class="fac-label">Cantidad</label><input type="number" min="1" class="fac-input" style="font-size:12px;" value="${c.qty}" onchange="facConcepts[${i}].qty=parseInt(this.value)||1;facUpdateTotals()"/></div>
+      <div style="flex:1;"><label class="fac-label">Precio unit.</label><input type="number" min="0" class="fac-input" style="font-size:12px;" value="${c.price}" onchange="facConcepts[${i}].price=parseFloat(this.value)||0;facUpdateTotals()"/></div>
+      <div style="flex:1;"><label class="fac-label">Clave SAT <span class="fac-tip" data-tip="Código del catálogo del SAT para este producto/servicio. Si no sabes, usa 01010101 (No existe en el catálogo).">?</span></label><input type="text" class="fac-input" style="font-size:11px;" value="${c.key||'01010101'}" onchange="facConcepts[${i}].key=this.value" placeholder="01010101"/></div>
+      ${facConcepts.length>1?`<button onclick="facConcepts.splice(${i},1);renderConcepts();facUpdateTotals()" style="width:32px;height:38px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-faint);cursor:pointer;font-size:14px;">✕</button>`:''}
+    </div>`).join('');
+  facUpdateTotals();
+}
+function facAddConcept(){facConcepts.push({desc:'',qty:1,price:0,key:'01010101'});renderConcepts();}
+function facUpdateTotals(){
+  const sub=facConcepts.reduce((s,c)=>s+(c.price*c.qty),0);
+  const iva=Math.round(sub*0.16*100)/100;
+  document.getElementById('fac-subtotal').textContent='$'+sub.toLocaleString(undefined,{minimumFractionDigits:2});
+  document.getElementById('fac-iva-total').textContent='$'+iva.toLocaleString(undefined,{minimumFractionDigits:2});
+  document.getElementById('fac-grand-total').textContent='$'+(sub+iva).toLocaleString(undefined,{minimumFractionDigits:2});
+}
+
+function facCreateInvoice(action){
+  const name=document.getElementById('fac-c-name').value.trim();
+  const rfc=document.getElementById('fac-c-rfc').value.trim().toUpperCase();
+  if(!name||!rfc){alert('Completa nombre y RFC del cliente');return;}
+  if(!facConcepts.some(c=>c.desc&&c.price>0)){alert('Agrega al menos un concepto con precio');return;}
+  const sub=facConcepts.reduce((s,c)=>s+(c.price*c.qty),0);const iva=Math.round(sub*0.16*100)/100;
+  if(action==='preview'){alert(`Vista previa:\n\nCliente: ${name}\nRFC: ${rfc}\nSubtotal: $${sub.toLocaleString()}\nIVA: $${iva.toLocaleString()}\nTotal: $${(sub+iva).toLocaleString()} MXN\n\n(La vista previa PDF estará disponible con el backend)`);return;}
+  const folio='A-'+String(demoInvoices.length+1).padStart(3,'0');
+  demoInvoices.unshift({id:Date.now(),folio,client:name,rfc,subtotal:sub,iva,total:sub+iva,status:action==='draft'?'draft':'active',payment:document.getElementById('fac-forma').selectedOptions[0]?.text?.split(' - ')[1]||'Transferencia',date:'2026-04-02',uso:document.getElementById('fac-c-uso').value,email:document.getElementById('fac-c-email').value});
+  switchFacTab('invoices');renderInvoices();renderFacStats();renderFacRecs();
+  showToast(action==='draft'?'Borrador guardado':`Factura ${folio} timbrada ante el SAT`);
+}
+
+// ═══════ CREDITS ═══════
+function renderCredits(){
+  document.getElementById('fac-credits-tbody').innerHTML=demoCreditNotes.map(n=>`<tr style="border-bottom:1px solid var(--border);">
+    <td style="padding:14px 16px;font-weight:700;color:#ef4444;font-size:12px;">${n.folio}</td>
+    <td style="padding:14px 16px;font-size:12px;color:var(--accent);">${n.original}</td>
+    <td style="padding:14px 16px;font-weight:600;color:var(--text-primary);">${n.client}</td>
+    <td style="padding:14px 16px;font-size:12px;color:var(--text-secondary);">${n.reason}</td>
+    <td style="padding:14px 16px;text-align:right;font-weight:800;color:#ef4444;">-$${n.amount.toLocaleString()}</td>
+    <td style="padding:14px 16px;font-size:12px;color:var(--text-muted);">${n.date}</td>
+  </tr>`).join('');
+}
+
+// ═══════ FISCAL CLIENTS ═══════
+function renderFiscalClients(){
+  const el=document.getElementById('fac-clients-list');
+  const regimenLabels={'601':'General de Ley','603':'PM sin fines de lucro','612':'PF con Act. Empresarial','616':'Sin obligaciones','621':'Incorporación Fiscal','626':'RESICO'};
+  el.innerHTML=demoFiscalClients.map(c=>`
+    <div class="stat-card" style="padding:16px;display:flex;align-items:center;gap:14px;">
+      <div style="width:44px;height:44px;border-radius:12px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:var(--accent);flex-shrink:0;">${c.name.charAt(0)}</div>
+      <div style="flex:1;">
+        <p style="font-size:14px;font-weight:700;color:var(--text-primary);">${c.name}</p>
+        <p style="font-size:11px;color:var(--text-faint);font-family:monospace;">${c.rfc} · ${regimenLabels[c.regimen]||c.regimen} · CP ${c.cp}</p>
+      </div>
+      <div style="text-align:right;">
+        <p style="font-size:16px;font-weight:900;color:var(--text-primary);">${c.invoices}</p>
+        <p style="font-size:10px;color:var(--text-faint);">facturas</p>
+      </div>
+      <button onclick="facUseClient(${c.id})" class="fac-tbl-btn" style="font-size:10px;">Facturar</button>
+    </div>`).join('');
+  // Populate datalist for autocomplete
+  const dl=document.getElementById('fac-client-list');
+  if(dl)dl.innerHTML=demoFiscalClients.map(c=>`<option value="${c.name}">`).join('');
+}
+function facUseClient(id){
+  const c=demoFiscalClients.find(x=>x.id===id);if(!c)return;
+  switchFacTab('create');
+  document.getElementById('fac-c-name').value=c.name;
+  document.getElementById('fac-c-rfc').value=c.rfc;
+  document.getElementById('fac-c-regimen').value=c.regimen;
+  document.getElementById('fac-c-cp').value=c.cp;
+  document.getElementById('fac-c-email').value=c.email;
+  showToast('Datos fiscales cargados');
+}
+function facAddClient(){const name=prompt('Nombre o razón social:');if(!name)return;const rfc=prompt('RFC:','XAXX010101000');if(!rfc)return;demoFiscalClients.unshift({id:Date.now(),name,rfc:rfc.toUpperCase(),regimen:'612',cp:'03100',email:'',invoices:0});renderFiscalClients();showToast('Cliente fiscal agregado');}
+
+// ═══════ ANALYTICS ═══════
+function renderFacAnalytics(){
+  // Monthly
+  const months=['Oct','Nov','Dic','Ene','Feb','Mar'],vals=[28500,35200,52800,41300,47600,58200],mV=Math.max(...vals);
+  document.getElementById('fac-chart-monthly').innerHTML=months.map((m,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;background:var(--accent);border-radius:4px 4px 0 0;height:${(vals[i]/mV)*170}px;opacity:0.8;position:relative;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'"><span style="position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:var(--text-faint);white-space:nowrap;">$${(vals[i]/1000).toFixed(0)}k</span></div><span style="font-size:10px;color:var(--text-faint);font-weight:600;">${m}</span></div>`).join('');
+
+  // Top clients
+  const tops=[{n:'Empresas del Norte SA',t:69600},{n:'Lucía Ramírez Torres',t:22620},{n:'María García López',t:17400},{n:'Carlos Hernández Ruiz',t:12180},{n:'Fernando López Castro',t:7656}];
+  const mT=Math.max(...tops.map(t=>t.t));
+  document.getElementById('fac-chart-clients').innerHTML=tops.map((c,i)=>`<div style="display:flex;align-items:center;gap:12px;padding:8px 0;${i<tops.length-1?'border-bottom:1px solid var(--border);':''}"><span style="width:20px;height:20px;border-radius:6px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:var(--accent);">${i+1}</span><div style="flex:1;"><p style="font-size:12px;font-weight:700;color:var(--text-primary);">${c.n}</p><div style="height:6px;border-radius:3px;background:var(--input-bg);margin-top:4px;"><div style="height:100%;width:${(c.t/mT)*100}%;background:var(--accent);border-radius:3px;"></div></div></div><span style="font-size:12px;font-weight:800;color:#22c55e;">$${c.t.toLocaleString()}</span></div>`).join('');
+
+  // IVA monthly
+  const ivaVals=months.map((_,i)=>Math.round(vals[i]*0.16));
+  document.getElementById('fac-chart-iva').innerHTML=ivaVals.map((v,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;${i<ivaVals.length-1?'border-bottom:1px solid var(--border);':''}"><span style="font-size:12px;color:var(--text-secondary);">${months[i]}</span><span style="font-size:13px;font-weight:800;color:#8b5cf6;">$${v.toLocaleString()}</span></div>`).join('');
+
+  // Payment methods
+  const pays=[{n:'Transferencia',p:48,c:'var(--accent)'},{n:'Tarjeta',p:28,c:'#8b5cf6'},{n:'Efectivo',p:16,c:'#22c55e'},{n:'OXXO',p:8,c:'#f97316'}];
+  document.getElementById('fac-chart-payments').innerHTML=`<div style="display:flex;height:24px;border-radius:12px;overflow:hidden;margin-bottom:16px;">${pays.map(p=>`<div style="width:${p.p}%;background:${p.c};" title="${p.n}: ${p.p}%"></div>`).join('')}</div>${pays.map(p=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:10px;height:10px;border-radius:3px;background:${p.c};"></div><span style="font-size:12px;color:var(--text-secondary);">${p.n}</span></div><span style="font-size:13px;font-weight:800;color:var(--text-primary);">${p.p}%</span></div>`).join('')}`;
+}
+
+// ═══════ AUTOPILOT ═══════
+function renderFacAutopilot(){
+  const el=document.getElementById('fac-autopilot-list');if(!el)return;
+  el.innerHTML=facAutoFlows.map(f=>`<div style="padding:16px;border-radius:12px;border:1px solid ${f.active?f.color+'30':'var(--border)'};background:${f.active?f.color+'08':'var(--input-bg)'};">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:18px;">${f.icon}</span><span style="font-size:13px;font-weight:800;color:var(--text-primary);">${f.name}</span></div><label class="fac-toggle-wrap"><input type="checkbox" ${f.active?'checked':''} onchange="facAutoFlows.find(x=>x.id==='${f.id}').active=this.checked;renderFacAutopilot();showToast(this.checked?'Activado':'Desactivado')"/><span class="fac-toggle-slider" style="${f.active?'--toggle-color:'+f.color:''}"></span></label></div>
+    <p style="font-size:11px;color:var(--text-muted);line-height:1.4;">${f.desc}</p></div>`).join('');
+}
+
+// ═══════ QUICK ACTIONS ═══════
+function facQuickPublic(){
+  switchFacTab('create');
+  document.getElementById('fac-c-name').value='Público en General';
+  document.getElementById('fac-c-rfc').value='XAXX010101000';
+  document.getElementById('fac-c-regimen').value='616';
+  document.getElementById('fac-c-cp').value='03100';
+  document.getElementById('fac-c-uso').value='S01';
+  showToast('Datos de público en general cargados. Solo agrega los conceptos.');
+}
+
+function facQuickFromOrder(){
+  const orderNum=prompt('¿Número de pedido? (Ej: SKY-001)','SKY-004');
+  if(!orderNum)return;
+  switchFacTab('create');
+  // Simulate loading order data
+  document.getElementById('fac-c-name').value='Roberto Juárez Peña';
+  document.getElementById('fac-c-rfc').value='';
+  document.getElementById('fac-c-email').value='rjuarez@gmail.com';
+  facConcepts=[{desc:'Bolsa tejida',qty:1,price:680,key:'53102500'},{desc:'Pulsera jade',qty:2,price:190,key:'54101600'}];
+  renderConcepts();
+  showToast(`Datos del pedido ${orderNum} cargados. Completa el RFC del cliente.`);
+}
+
+function facQuickMass(){
+  const count=prompt('¿Cuántos pedidos quieres facturar?','5');
+  if(!count)return;
+  const n=parseInt(count)||0;
+  if(n<=0)return;
+  for(let i=0;i<Math.min(n,10);i++){
+    const folio='A-'+String(demoInvoices.length+1+i).padStart(3,'0');
+    demoInvoices.unshift({id:Date.now()+i,folio,client:'Público en General',rfc:'XAXX010101000',subtotal:500+Math.round(Math.random()*2000),iva:0,total:0,status:'active',payment:'Transferencia',date:'2026-04-02',uso:'S01',email:''});
+    demoInvoices[0].iva=Math.round(demoInvoices[0].subtotal*0.16);
+    demoInvoices[0].total=demoInvoices[0].subtotal+demoInvoices[0].iva;
+  }
+  switchFacTab('invoices');renderInvoices();renderFacStats();
+  showToast(`${Math.min(n,10)} facturas generadas y timbradas`);
+}
+
+// ═══════ RFC VALIDATOR ═══════
+function facValidateRFC(){
+  const rfc=document.getElementById('fac-c-rfc').value.trim().toUpperCase();
+  const status=document.getElementById('fac-rfc-status');
+  status.style.display='block';
+  if(!rfc){status.textContent='Ingresa un RFC';status.style.color='#ef4444';return;}
+  // Basic RFC validation
+  const isPersonaFisica=/^[A-ZÑ&]{4}\d{6}[A-Z0-9]{3}$/.test(rfc);
+  const isPersonaMoral=/^[A-ZÑ&]{3}\d{6}[A-Z0-9]{3}$/.test(rfc);
+  const isGeneric=rfc==='XAXX010101000'||rfc==='XEXX010101000';
+  if(isGeneric){status.innerHTML='✓ RFC genérico válido (público en general o extranjero)';status.style.color='#22c55e';}
+  else if(isPersonaFisica){status.innerHTML='✓ RFC válido — Persona Física (13 caracteres)';status.style.color='#22c55e';}
+  else if(isPersonaMoral){status.innerHTML='✓ RFC válido — Persona Moral (12 caracteres)';status.style.color='#22c55e';}
+  else{
+    status.innerHTML='⚠ El RFC no parece válido. Verifica que tenga 12 (moral) o 13 (física) caracteres.';status.style.color='#ef4444';
+  }
+}
+
+// ═══════ SAT CATALOG (simplified) ═══════
+const satCatalog=[
+  {key:'01010101',desc:'No existe en el catálogo'},{key:'43231500',desc:'Software'},
+  {key:'80141600',desc:'Servicios de publicidad'},{key:'80111500',desc:'Servicios de consultoría'},
+  {key:'53102500',desc:'Bolsas y accesorios'},{key:'54101600',desc:'Joyería'},
+  {key:'46181500',desc:'Ropa y textiles'},{key:'50202300',desc:'Bebidas alcohólicas'},
+  {key:'43211500',desc:'Computadoras'},{key:'78111800',desc:'Transporte de carga'},
+  {key:'84111500',desc:'Servicios contables'},{key:'80101500',desc:'Servicios de marketing'},
+  {key:'43233000',desc:'Servicios de diseño web'},{key:'81112100',desc:'Servicios de internet'},
+];
+
+// ═══════ EXPORT ZIP ═══════
+function facExportZIP(){
+  const month=prompt('¿De qué mes quieres exportar los XML?\n\nEscribe el número del mes (1-12):','3');
+  if(!month)return;
+  const monthNames=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const m=parseInt(month);
+  if(m<1||m>12){alert('Mes inválido');return;}
+  const count=demoInvoices.filter(i=>i.status!=='cancelled').length;
+  showToast(`ZIP con ${count} archivos XML de ${monthNames[m]} descargado. Envíaselo a tu contador.`);
+}
+
+// ═══════ INIT ═══════
+document.addEventListener('DOMContentLoaded',()=>{
+  ['invoices','create','credits','clients','analytics'].forEach(t=>{if(localStorage.getItem('fac_help_'+t+'_dismissed')){const el=document.getElementById('fac-help-'+t);if(el)el.style.display='none';}});
+  renderFacRecs();renderFacStats();renderInvoices();renderConcepts();renderCredits();renderFiscalClients();renderFacAnalytics();renderFacAutopilot();
+});
+</script>

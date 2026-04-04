@@ -1,0 +1,346 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:6100';
+---
+
+<DashboardLayout title="Cotizaciones">
+  <div id="cot-smart-recs" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;"></div>
+
+  <!-- Stats -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px;">
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="cot-stat-label">Total cotizaciones</p>
+      <p id="cot-stat-total" class="cot-stat-val">--</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="cot-stat-label">Aceptadas</p>
+      <p id="cot-stat-accepted" class="cot-stat-val" style="color:#22c55e;">--</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="cot-stat-label">Tasa de aceptación <span class="cot-tip" data-tip="De cada 100 cotizaciones que envías, ¿cuántas acepta el cliente?">?</span></p>
+      <p id="cot-stat-rate" class="cot-stat-val" style="color:var(--accent);">--</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="cot-stat-label">Valor promedio</p>
+      <p id="cot-stat-avg" class="cot-stat-val">--</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="cot-stat-label">Pendientes</p>
+      <p id="cot-stat-pending" class="cot-stat-val" style="color:#f97316;">--</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="cot-stat-label">Vencidas</p>
+      <p id="cot-stat-expired" class="cot-stat-val" style="color:#ef4444;">--</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;overflow-x:auto;">
+    <button id="cot-tab-list" class="cot-tab active" onclick="switchCotTab('list')">Mis cotizaciones</button>
+    <button id="cot-tab-create" class="cot-tab" onclick="switchCotTab('create')">Nueva cotización</button>
+    <button id="cot-tab-analytics" class="cot-tab" onclick="switchCotTab('analytics')">Analítica</button>
+  </div>
+
+  <!-- Tab: List -->
+  <div id="cot-panel-list">
+    <div id="cot-help-list" class="cot-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Envía cotizaciones profesionales a tus clientes. Cuando la acepten, conviértela en factura con un clic.</p>
+      <button onclick="document.getElementById('cot-help-list').style.display='none'" class="cot-help-close">&times;</button>
+    </div>
+    <div class="stat-card animate-in" style="padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;position:relative;">
+        <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input id="cot-search" type="text" placeholder="Buscar por cliente, folio..." oninput="cotFilter()" class="cot-input" style="padding-left:38px;"/>
+      </div>
+      <select id="cot-filter-status" onchange="cotFilter()" class="cot-input" style="width:auto;cursor:pointer;">
+        <option value="">Todos</option>
+        <option value="sent">Enviada</option>
+        <option value="accepted">Aceptada</option>
+        <option value="rejected">Rechazada</option>
+        <option value="expired">Vencida</option>
+        <option value="draft">Borrador</option>
+      </select>
+      <button onclick="switchCotTab('create')" class="cot-btn-primary" style="display:flex;align-items:center;gap:6px;padding:10px 20px;">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Nueva cotización
+      </button>
+    </div>
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="border-bottom:1px solid var(--border);">
+            <th class="cot-th">#</th><th class="cot-th">Cliente</th><th class="cot-th">Concepto</th>
+            <th class="cot-th" style="text-align:right;">Total</th><th class="cot-th">Estado</th>
+            <th class="cot-th">Válida hasta</th><th class="cot-th" style="text-align:center;">Acciones</th>
+          </tr></thead>
+          <tbody id="cot-list-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Create -->
+  <div id="cot-panel-create" style="display:none;">
+    <div class="stat-card animate-in" style="padding:24px;">
+      <!-- Wizard progress -->
+      <div style="display:flex;align-items:center;gap:0;margin-bottom:24px;">
+        <div id="cot-wiz-step-1" class="cot-wiz-step active"><span class="cot-wiz-num">1</span><span class="cot-wiz-label">Cliente</span></div>
+        <div class="cot-wiz-conn" id="cot-wiz-conn-1"></div>
+        <div id="cot-wiz-step-2" class="cot-wiz-step"><span class="cot-wiz-num">2</span><span class="cot-wiz-label">Conceptos</span></div>
+        <div class="cot-wiz-conn" id="cot-wiz-conn-2"></div>
+        <div id="cot-wiz-step-3" class="cot-wiz-step"><span class="cot-wiz-num">3</span><span class="cot-wiz-label">Enviar</span></div>
+      </div>
+      <!-- Step 1 -->
+      <div id="cot-wiz-panel-1">
+        <h3 style="font-size:17px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">¿Para quién es la cotización?</h3>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Datos del cliente o prospecto.</p>
+        <div style="display:grid;gap:14px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div><label class="cot-label">Nombre / Empresa *</label><input id="cot-w-name" type="text" placeholder="Ej: Grupo Comercial del Norte" class="cot-input"/></div>
+            <div><label class="cot-label">Email *</label><input id="cot-w-email" type="email" placeholder="contacto@empresa.com" class="cot-input"/></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div><label class="cot-label">Contacto</label><input id="cot-w-contact" type="text" placeholder="Nombre de la persona" class="cot-input"/></div>
+            <div><label class="cot-label">Teléfono</label><input id="cot-w-phone" type="tel" placeholder="55 1234 5678" class="cot-input"/></div>
+          </div>
+        </div>
+      </div>
+      <!-- Step 2 -->
+      <div id="cot-wiz-panel-2" style="display:none;">
+        <h3 style="font-size:17px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">¿Qué incluye la cotización?</h3>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Agrega los productos o servicios con sus precios.</p>
+        <div id="cot-concepts" style="display:flex;flex-direction:column;gap:10px;"></div>
+        <button onclick="cotAddConcept()" style="margin-top:10px;padding:8px 16px;border-radius:8px;border:1px dashed var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;width:100%;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">+ Agregar concepto</button>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+          <div style="display:flex;gap:20px;"><span style="font-size:13px;color:var(--text-muted);min-width:100px;text-align:right;">Subtotal:</span><span id="cot-subtotal" style="font-size:13px;font-weight:700;color:var(--text-primary);min-width:100px;text-align:right;">$0.00</span></div>
+          <div style="display:flex;gap:20px;"><span style="font-size:13px;color:var(--text-muted);min-width:100px;text-align:right;">IVA (16%):</span><span id="cot-iva" style="font-size:13px;font-weight:700;color:var(--text-primary);min-width:100px;text-align:right;">$0.00</span></div>
+          <div style="display:flex;gap:20px;"><span style="font-size:15px;font-weight:800;color:var(--text-primary);min-width:100px;text-align:right;">Total:</span><span id="cot-total" style="font-size:18px;font-weight:900;color:var(--accent);min-width:100px;text-align:right;">$0.00</span></div>
+        </div>
+      </div>
+      <!-- Step 3 -->
+      <div id="cot-wiz-panel-3" style="display:none;">
+        <h3 style="font-size:17px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">Revisa y envía</h3>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Verifica que todo esté correcto.</p>
+        <div id="cot-summary" style="border:1px solid var(--border);border-radius:10px;padding:16px;background:var(--input-bg);margin-bottom:14px;"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+          <div><label class="cot-label">Válida por</label><select id="cot-w-validity" class="cot-input" style="cursor:pointer;"><option value="7">7 días</option><option value="15" selected>15 días</option><option value="30">30 días</option><option value="60">60 días</option></select></div>
+          <div><label class="cot-label">Enviar por</label><select id="cot-w-send-via" class="cot-input" style="cursor:pointer;"><option value="email" selected>Email</option><option value="whatsapp">WhatsApp</option><option value="both">Email + WhatsApp</option></select></div>
+        </div>
+        <div><label class="cot-label">Notas para el cliente (opcional)</label><textarea id="cot-w-notes" rows="2" class="cot-input" style="resize:vertical;" placeholder="Ej: Precios incluyen instalación..."></textarea></div>
+      </div>
+      <!-- Nav -->
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button id="cot-wiz-back" onclick="cotWizBack()" class="cot-btn-secondary" style="flex:1;display:none;">← Anterior</button>
+        <button id="cot-wiz-next" onclick="cotWizNext()" class="cot-btn-primary" style="flex:1;">Siguiente →</button>
+        <button id="cot-wiz-draft" onclick="cotSave('draft')" class="cot-btn-secondary" style="flex:1;display:none;">Guardar borrador</button>
+        <button id="cot-wiz-send" onclick="cotSave('sent')" class="cot-btn-primary" style="flex:1;display:none;background:#22c55e;">Enviar cotización</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Analytics -->
+  <div id="cot-panel-analytics" style="display:none;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Cotizaciones por estado</h4>
+        <div id="cot-chart-status"></div>
+      </div>
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Valor por mes</h4>
+        <div id="cot-chart-monthly" style="height:180px;display:flex;align-items:flex-end;gap:6px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Autopilot -->
+  <div class="stat-card animate-in" style="padding:0;margin-top:20px;overflow:hidden;">
+    <button onclick="cotToggle('cot-auto-content')" class="cot-collapse-header">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,rgba(34,197,94,0.15),rgba(111,207,245,0.15));display:flex;align-items:center;justify-content:center;">
+          <svg style="width:14px;height:14px;color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <div style="text-align:left;"><p style="font-size:13px;font-weight:700;color:var(--text-primary);">Piloto automático</p><p style="font-size:11px;color:var(--text-faint);">Seguimiento y conversión automática</p></div>
+      </div>
+      <svg style="width:16px;height:16px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+    </button>
+    <div id="cot-auto-content" style="display:none;padding:20px;">
+      <div id="cot-auto-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
+    </div>
+  </div>
+</DashboardLayout>
+
+<style>
+  .cot-stat-label { font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px; }
+  .cot-stat-val { font-size:28px;font-weight:900;color:var(--text-primary); }
+  .cot-tab { padding:10px 20px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap; }
+  .cot-tab.active { color:var(--accent);border-bottom-color:var(--accent); }
+  .cot-th { padding:14px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px; }
+  .cot-label { font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:4px;display:block; }
+  .cot-input { width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;transition:border-color 0.2s; }
+  .cot-input:focus { border-color:var(--accent); }
+  .cot-btn-primary { padding:12px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s; }
+  .cot-btn-primary:hover { opacity:0.85; }
+  .cot-btn-secondary { padding:12px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-primary);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s; }
+  .cot-btn-secondary:hover { background:var(--nav-hover); }
+  .cot-tbl-btn { padding:5px 9px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;transition:all 0.15s; }
+  .cot-tbl-btn:hover { border-color:var(--accent);color:var(--accent); }
+  .cot-help-banner { display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;background:var(--accent-bg);border:1px solid rgba(111,207,245,0.15);margin-bottom:16px; }
+  .cot-help-close { border:none;background:transparent;color:var(--text-faint);cursor:pointer;font-size:16px;padding:0 4px; }
+  .cot-tip { display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--input-bg);color:var(--text-faint);font-size:10px;font-weight:800;cursor:help;position:relative;flex-shrink:0; }
+  .cot-tip:hover::after { content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--bg-sidebar);border:1px solid var(--border);color:var(--text-secondary);padding:10px 14px;border-radius:10px;font-size:12px;font-weight:500;white-space:normal;width:260px;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.3);line-height:1.5;pointer-events:none; }
+  .cot-collapse-header { width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border:none;background:transparent;cursor:pointer;transition:background 0.15s; }
+  .cot-collapse-header:hover { background:var(--nav-hover); }
+  .cot-wiz-step { display:flex;align-items:center;gap:6px;flex:1; }
+  .cot-wiz-num { width:28px;height:28px;border-radius:50%;background:var(--input-bg);color:var(--text-faint);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;transition:all 0.3s; }
+  .cot-wiz-label { font-size:11px;font-weight:600;color:var(--text-faint);transition:color 0.3s; }
+  .cot-wiz-step.active .cot-wiz-num { background:var(--accent);color:#fff; }
+  .cot-wiz-step.active .cot-wiz-label { color:var(--accent); }
+  .cot-wiz-step.done .cot-wiz-num { background:#22c55e;color:#fff; }
+  .cot-wiz-step.done .cot-wiz-label { color:#22c55e; }
+  .cot-wiz-conn { flex:0 0 20px;height:2px;background:var(--border);transition:background 0.3s; }
+  .cot-wiz-conn.done { background:#22c55e; }
+  .cot-toggle-wrap { position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0; }
+  .cot-toggle-wrap input { opacity:0;width:0;height:0; }
+  .cot-toggle-slider { position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:22px;transition:0.3s; }
+  .cot-toggle-slider::before { content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s; }
+  .cot-toggle-wrap input:checked + .cot-toggle-slider { background:var(--toggle-color, #22c55e); }
+  .cot-toggle-wrap input:checked + .cot-toggle-slider::before { transform:translateX(18px); }
+</style>
+
+<script is:inline>
+const demoQuotes = [
+  { id:1, folio:'COT-001', client:'Grupo Comercial del Norte', contact:'Ricardo Mendoza', email:'ricardo@gcnorte.com', concept:'Desarrollo de tienda en línea + integración con SAT', total:45000, status:'accepted', date:'2026-03-15', validUntil:'2026-03-30', items:[{desc:'Diseño y desarrollo tienda online',qty:1,price:35000},{desc:'Integración facturación SAT',qty:1,price:10000}] },
+  { id:2, folio:'COT-002', client:'María García López', contact:'María García', email:'maria@gmail.com', concept:'Paquete de email marketing mensual', total:8500, status:'sent', date:'2026-03-28', validUntil:'2026-04-12', items:[{desc:'Gestión email marketing (1 mes)',qty:1,price:5000},{desc:'Diseño de 4 templates',qty:4,price:875}] },
+  { id:3, folio:'COT-003', client:'Restaurante El Fogón', contact:'Chef Roberto', email:'info@elfogon.mx', concept:'Sistema de pedidos online + menú digital', total:28000, status:'sent', date:'2026-03-30', validUntil:'2026-04-14', items:[{desc:'Sistema pedidos online',qty:1,price:20000},{desc:'Menú digital QR',qty:1,price:5000},{desc:'Capacitación equipo',qty:1,price:3000}] },
+  { id:4, folio:'COT-004', client:'Boutique Artesanal MX', contact:'Ana López', email:'ana@boutiquemx.com', concept:'Fotografía de productos (lote 50)', total:12500, status:'rejected', date:'2026-03-20', validUntil:'2026-04-04', items:[{desc:'Fotografía profesional por producto',qty:50,price:250}] },
+  { id:5, folio:'COT-005', client:'Distribuidora Pacífico', contact:'Fernando Ruiz', email:'fernando@dispacifico.com', concept:'Automatización de inventario y logística', total:65000, status:'expired', date:'2026-02-15', validUntil:'2026-03-02', items:[{desc:'Setup automatización inventario',qty:1,price:40000},{desc:'Integración paqueterías',qty:1,price:15000},{desc:'Soporte 3 meses',qty:3,price:3333}] },
+  { id:6, folio:'COT-006', client:'Café Origen', contact:'Sofía Torres', email:'sofia@cafeorigen.mx', concept:'Landing page + campañas Meta Ads', total:18000, status:'draft', date:'2026-04-01', validUntil:'', items:[{desc:'Diseño landing page',qty:1,price:8000},{desc:'Campaña Meta Ads (1 mes)',qty:1,price:10000}] },
+];
+
+const cotAutoFlows = [
+  { id:'reminder', name:'Recordar si no responden', desc:'Envía recordatorio automático si el cliente no responde en 3 días', icon:'⏰', color:'#f97316', active:true },
+  { id:'expire', name:'Auto-expirar vencidas', desc:'Marca como vencida automáticamente cuando pasa la fecha límite', icon:'📅', color:'#ef4444', active:true },
+  { id:'invoice', name:'Convertir a factura al aceptar', desc:'Genera factura automáticamente cuando el cliente acepta', icon:'🧾', color:'#22c55e', active:false },
+  { id:'followup', name:'Seguimiento post-rechazo', desc:'Envía una propuesta alternativa si el cliente rechaza', icon:'💬', color:'#8b5cf6', active:false },
+];
+
+const statusMap = { sent:{l:'Enviada',c:'#6fcff5',b:'rgba(111,207,245,0.1)'}, accepted:{l:'Aceptada',c:'#22c55e',b:'rgba(34,197,94,0.1)'}, rejected:{l:'Rechazada',c:'#ef4444',b:'rgba(239,68,68,0.1)'}, expired:{l:'Vencida',c:'#64748b',b:'rgba(100,116,139,0.1)'}, draft:{l:'Borrador',c:'#eab308',b:'rgba(234,179,8,0.1)'} };
+
+let cotWizStep=1, cotConcepts=[{desc:'',qty:1,price:0}];
+
+function showToast(msg){const ex=document.getElementById('cot-toast');if(ex)ex.remove();const t=document.createElement('div');t.id='cot-toast';t.textContent=msg;Object.assign(t.style,{position:'fixed',bottom:'24px',right:'24px',background:'#22c55e',color:'#fff',padding:'12px 24px',borderRadius:'10px',fontSize:'13px',fontWeight:'700',zIndex:'9999',boxShadow:'0 4px 20px rgba(0,0,0,0.3)'});document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(()=>t.remove(),300);},3000);}
+function switchCotTab(tab){document.querySelectorAll('.cot-tab').forEach(t=>t.classList.remove('active'));document.getElementById('cot-tab-'+tab).classList.add('active');['list','create','analytics'].forEach(p=>document.getElementById('cot-panel-'+p).style.display=p===tab?'':'none');if(tab==='create'){cotWizStep=1;cotConcepts=[{desc:'',qty:1,price:0}];updateCotWiz();renderCotConcepts();}}
+function cotToggle(id){const el=document.getElementById(id);el.style.display=el.style.display==='none'?'block':'none';}
+
+// Stats
+function renderCotStats(){
+  document.getElementById('cot-stat-total').textContent=demoQuotes.length;
+  document.getElementById('cot-stat-accepted').textContent=demoQuotes.filter(q=>q.status==='accepted').length;
+  const sent=demoQuotes.filter(q=>q.status!=='draft');
+  const accepted=demoQuotes.filter(q=>q.status==='accepted');
+  document.getElementById('cot-stat-rate').textContent=sent.length>0?Math.round(accepted.length/sent.length*100)+'%':'--';
+  const avg=demoQuotes.length>0?Math.round(demoQuotes.reduce((s,q)=>s+q.total,0)/demoQuotes.length):0;
+  document.getElementById('cot-stat-avg').textContent='$'+avg.toLocaleString();
+  document.getElementById('cot-stat-pending').textContent=demoQuotes.filter(q=>q.status==='sent').length;
+  document.getElementById('cot-stat-expired').textContent=demoQuotes.filter(q=>q.status==='expired').length;
+}
+
+// Recs
+function renderCotRecs(){
+  const el=document.getElementById('cot-smart-recs');if(!el)return;const recs=[];
+  const pending=demoQuotes.filter(q=>q.status==='sent');
+  if(pending.length>0)recs.push({icon:'📋',color:'#f97316',title:`${pending.length} cotización(es) esperando respuesta`,desc:'Envía un recordatorio a los clientes.',btn:'Recordar',action:"showToast('Recordatorios enviados')"});
+  if(!recs.length){el.style.display='none';return;}
+  el.style.display='flex';
+  el.innerHTML=recs.map(r=>`<div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;background:${r.color}08;border:1px solid ${r.color}20;"><span style="font-size:24px;flex-shrink:0;">${r.icon}</span><div style="flex:1;"><p style="font-size:13px;font-weight:700;color:var(--text-primary);">${r.title}</p><p style="font-size:11px;color:var(--text-muted);margin-top:2px;">${r.desc}</p></div><button onclick="${r.action}" style="padding:8px 16px;border-radius:8px;border:none;background:${r.color};color:#fff;font-size:11px;font-weight:700;cursor:pointer;">${r.btn}</button><button onclick="this.closest('div[style]').remove()" style="border:none;background:transparent;color:var(--text-faint);cursor:pointer;font-size:14px;">✕</button></div>`).join('');
+}
+
+// Table
+function renderCotList(){
+  const tbody=document.getElementById('cot-list-tbody');let data=[...demoQuotes];
+  const search=document.getElementById('cot-search').value.toLowerCase();
+  const sf=document.getElementById('cot-filter-status').value;
+  if(search)data=data.filter(q=>q.client.toLowerCase().includes(search)||q.folio.toLowerCase().includes(search));
+  if(sf)data=data.filter(q=>q.status===sf);
+  if(!data.length){tbody.innerHTML='<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-faint);">No se encontraron cotizaciones</td></tr>';return;}
+  tbody.innerHTML=data.map(q=>{const st=statusMap[q.status];return`<tr style="border-bottom:1px solid var(--border);">
+    <td style="padding:14px 16px;font-weight:700;color:var(--accent);font-size:12px;">${q.folio}</td>
+    <td style="padding:14px 16px;"><p style="font-weight:700;color:var(--text-primary);">${q.client}</p><p style="font-size:11px;color:var(--text-faint);">${q.contact}</p></td>
+    <td style="padding:14px 16px;font-size:12px;color:var(--text-secondary);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${q.concept}</td>
+    <td style="padding:14px 16px;text-align:right;font-weight:800;color:var(--text-primary);">$${q.total.toLocaleString()}</td>
+    <td style="padding:14px 16px;"><span style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;color:${st.c};background:${st.b};">${st.l}</span></td>
+    <td style="padding:14px 16px;font-size:12px;color:var(--text-muted);">${q.validUntil||'--'}</td>
+    <td style="padding:14px 16px;text-align:center;"><div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
+      <button onclick="showToast('PDF descargado')" class="cot-tbl-btn">PDF</button>
+      <button onclick="cotDuplicate(${q.id})" class="cot-tbl-btn">Duplicar</button>
+      ${q.status==='accepted'?`<button onclick="showToast('Factura generada desde cotización ${q.folio}')" class="cot-tbl-btn" style="border-color:#22c55e;color:#22c55e;">Facturar</button>`:''}
+      ${q.status==='sent'?`<button onclick="showToast('Recordatorio enviado a ${q.email}')" class="cot-tbl-btn" style="border-color:#f97316;color:#f97316;">Recordar</button>`:''}
+    </div></td>
+  </tr>`;}).join('');
+}
+function cotFilter(){renderCotList();}
+function cotDuplicate(id){const q=demoQuotes.find(x=>x.id===id);if(!q)return;demoQuotes.unshift({...q,id:Date.now(),folio:'COT-'+String(demoQuotes.length+1).padStart(3,'0'),status:'draft',date:'2026-04-02',validUntil:''});renderCotList();renderCotStats();showToast('Cotización duplicada');}
+
+// Wizard
+function updateCotWiz(){
+  for(let i=1;i<=3;i++){const s=document.getElementById('cot-wiz-step-'+i);s.classList.remove('active','done');if(i<cotWizStep)s.classList.add('done');if(i===cotWizStep)s.classList.add('active');document.getElementById('cot-wiz-panel-'+i).style.display=i===cotWizStep?'':'none';if(i<3)document.getElementById('cot-wiz-conn-'+i).classList.toggle('done',i<cotWizStep);}
+  document.getElementById('cot-wiz-back').style.display=cotWizStep>1?'':'none';
+  document.getElementById('cot-wiz-next').style.display=cotWizStep<3?'':'none';
+  document.getElementById('cot-wiz-send').style.display=cotWizStep===3?'':'none';
+  document.getElementById('cot-wiz-draft').style.display=cotWizStep===3?'':'none';
+  if(cotWizStep===3)renderCotSummary();
+}
+function cotWizNext(){if(cotWizStep===1&&!document.getElementById('cot-w-name').value.trim()){alert('Ingresa el nombre del cliente');return;}if(cotWizStep===2&&!cotConcepts.some(c=>c.desc&&c.price>0)){alert('Agrega al menos un concepto');return;}if(cotWizStep<3){cotWizStep++;updateCotWiz();}}
+function cotWizBack(){if(cotWizStep>1){cotWizStep--;updateCotWiz();}}
+
+function renderCotConcepts(){
+  document.getElementById('cot-concepts').innerHTML=cotConcepts.map((c,i)=>`<div style="display:flex;gap:8px;align-items:end;"><div style="flex:3;"><label class="cot-label">Descripción</label><input type="text" placeholder="Ej: Diseño de landing page" class="cot-input" style="font-size:12px;" value="${c.desc}" onchange="cotConcepts[${i}].desc=this.value"/></div><div style="flex:1;"><label class="cot-label">Cant.</label><input type="number" min="1" class="cot-input" style="font-size:12px;" value="${c.qty}" onchange="cotConcepts[${i}].qty=parseInt(this.value)||1;cotUpdateTotals()"/></div><div style="flex:1;"><label class="cot-label">Precio</label><input type="number" min="0" class="cot-input" style="font-size:12px;" value="${c.price}" onchange="cotConcepts[${i}].price=parseFloat(this.value)||0;cotUpdateTotals()"/></div>${cotConcepts.length>1?`<button onclick="cotConcepts.splice(${i},1);renderCotConcepts()" style="width:32px;height:38px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-faint);cursor:pointer;font-size:14px;">✕</button>`:''}</div>`).join('');
+  cotUpdateTotals();
+}
+function cotAddConcept(){cotConcepts.push({desc:'',qty:1,price:0});renderCotConcepts();}
+function cotUpdateTotals(){const sub=cotConcepts.reduce((s,c)=>s+(c.price*c.qty),0);const iva=Math.round(sub*0.16);document.getElementById('cot-subtotal').textContent='$'+sub.toLocaleString();document.getElementById('cot-iva').textContent='$'+iva.toLocaleString();document.getElementById('cot-total').textContent='$'+(sub+iva).toLocaleString();}
+
+function renderCotSummary(){
+  const name=document.getElementById('cot-w-name').value||'--';
+  const email=document.getElementById('cot-w-email').value||'--';
+  const sub=cotConcepts.reduce((s,c)=>s+(c.price*c.qty),0);const iva=Math.round(sub*0.16);
+  document.getElementById('cot-summary').innerHTML=`<div style="display:grid;grid-template-columns:100px 1fr;gap:8px;font-size:12px;">
+    <span style="color:var(--text-faint);font-weight:700;">Cliente:</span><span style="color:var(--text-primary);font-weight:600;">${name}</span>
+    <span style="color:var(--text-faint);font-weight:700;">Email:</span><span style="color:var(--text-muted);">${email}</span>
+    <span style="color:var(--text-faint);font-weight:700;">Conceptos:</span><span style="color:var(--text-primary);">${cotConcepts.filter(c=>c.desc).map(c=>c.desc+' x'+c.qty).join(', ')}</span>
+    <span style="color:var(--text-faint);font-weight:700;">Total:</span><span style="color:var(--accent);font-weight:900;font-size:16px;">$${(sub+iva).toLocaleString()} MXN</span>
+  </div>`;
+}
+
+function cotSave(status){
+  const name=document.getElementById('cot-w-name').value.trim();if(!name){alert('Falta el nombre');return;}
+  const sub=cotConcepts.reduce((s,c)=>s+(c.price*c.qty),0);const iva=Math.round(sub*0.16);
+  const validity=parseInt(document.getElementById('cot-w-validity').value)||15;
+  const validDate=new Date();validDate.setDate(validDate.getDate()+validity);
+  demoQuotes.unshift({id:Date.now(),folio:'COT-'+String(demoQuotes.length+1).padStart(3,'0'),client:name,contact:document.getElementById('cot-w-contact').value,email:document.getElementById('cot-w-email').value,concept:cotConcepts.filter(c=>c.desc).map(c=>c.desc).join(', '),total:sub+iva,status,date:'2026-04-02',validUntil:status==='draft'?'':validDate.toISOString().split('T')[0],items:cotConcepts.filter(c=>c.desc)});
+  switchCotTab('list');renderCotList();renderCotStats();renderCotRecs();
+  showToast(status==='draft'?'Borrador guardado':'Cotización enviada al cliente');
+}
+
+// Analytics
+function renderCotAnalytics(){
+  const statuses=[{l:'Aceptada',c:demoQuotes.filter(q=>q.status==='accepted').length,color:'#22c55e'},{l:'Enviada',c:demoQuotes.filter(q=>q.status==='sent').length,color:'#6fcff5'},{l:'Rechazada',c:demoQuotes.filter(q=>q.status==='rejected').length,color:'#ef4444'},{l:'Vencida',c:demoQuotes.filter(q=>q.status==='expired').length,color:'#64748b'},{l:'Borrador',c:demoQuotes.filter(q=>q.status==='draft').length,color:'#eab308'}];
+  const total=statuses.reduce((s,x)=>s+x.c,0);
+  document.getElementById('cot-chart-status').innerHTML=`<div style="display:flex;height:24px;border-radius:12px;overflow:hidden;margin-bottom:16px;">${statuses.filter(s=>s.c>0).map(s=>`<div style="width:${(s.c/total)*100}%;background:${s.color};" title="${s.l}: ${s.c}"></div>`).join('')}</div>${statuses.map(s=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:10px;height:10px;border-radius:3px;background:${s.color};"></div><span style="font-size:12px;color:var(--text-secondary);">${s.l}</span></div><span style="font-size:13px;font-weight:800;color:var(--text-primary);">${s.c}</span></div>`).join('')}`;
+
+  const months=['Oct','Nov','Dic','Ene','Feb','Mar'],vals=[35000,48000,82000,55000,67000,95000],mV=Math.max(...vals);
+  document.getElementById('cot-chart-monthly').innerHTML=months.map((m,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;background:var(--accent);border-radius:4px 4px 0 0;height:${(vals[i]/mV)*150}px;opacity:0.8;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'" title="$${vals[i].toLocaleString()}"><span style="position:relative;top:-16px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:var(--text-faint);white-space:nowrap;display:block;text-align:center;">$${(vals[i]/1000).toFixed(0)}k</span></div><span style="font-size:10px;color:var(--text-faint);font-weight:600;">${m}</span></div>`).join('');
+}
+
+// Autopilot
+function renderCotAutopilot(){
+  const el=document.getElementById('cot-auto-list');if(!el)return;
+  el.innerHTML=cotAutoFlows.map(f=>`<div style="padding:16px;border-radius:12px;border:1px solid ${f.active?f.color+'30':'var(--border)'};background:${f.active?f.color+'08':'var(--input-bg)'};">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:18px;">${f.icon}</span><span style="font-size:13px;font-weight:800;color:var(--text-primary);">${f.name}</span></div><label class="cot-toggle-wrap"><input type="checkbox" ${f.active?'checked':''} onchange="cotAutoFlows.find(x=>x.id==='${f.id}').active=this.checked;renderCotAutopilot();showToast(this.checked?'Activado':'Desactivado')"/><span class="cot-toggle-slider" style="${f.active?'--toggle-color:'+f.color:''}"></span></label></div>
+    <p style="font-size:11px;color:var(--text-muted);line-height:1.4;">${f.desc}</p></div>`).join('');
+}
+
+// Init
+document.addEventListener('DOMContentLoaded',()=>{renderCotRecs();renderCotStats();renderCotList();renderCotConcepts();renderCotAnalytics();renderCotAutopilot();});
+</script>
