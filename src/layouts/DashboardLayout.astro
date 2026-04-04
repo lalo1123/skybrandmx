@@ -1,4 +1,6 @@
 ---
+import HelpCenter from '../components/HelpCenter.astro';
+
 interface Props {
   title?: string;
 }
@@ -7,23 +9,24 @@ const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:6100';
 const currentPath = Astro.url.pathname;
 
 // Nav items configuration
+// Plan tiers: tools=Solo Herramientas, starter=Starter, growth=Growth, enterprise=Enterprise
 const navItems = [
-  { label: 'Resumen', href: '/dashboard', icon: 'overview', section: 'principal' },
-  { label: 'Pedidos', href: '/dashboard/pedidos', icon: 'orders', section: 'modulos', badge: '12' },
-  { label: 'Productos', href: '/dashboard/productos', icon: 'products', section: 'modulos' },
-  { label: 'CRM', href: '/dashboard/crm', icon: 'crm', section: 'modulos' },
-  { label: 'Facturaci\u00f3n', href: '/dashboard/facturacion', icon: 'billing', section: 'modulos' },
-  { label: 'Env\u00edos', href: '/dashboard/envios', icon: 'shipping', section: 'modulos' },
-  { label: 'Email Marketing', href: '/dashboard/email-marketing', icon: 'email', section: 'modulos' },
-  { label: 'Publicidad', href: '/dashboard/ads', icon: 'ads', section: 'modulos' },
-  { label: 'Chat', href: '/dashboard/chat', icon: 'chat', section: 'modulos' },
-  { label: 'Tienda Online', href: '/dashboard/tienda', icon: 'store', section: 'modulos' },
-  { label: 'Automatizaciones', href: '/dashboard/automatizaciones', icon: 'automations', section: 'modulos' },
-  { label: 'Reservaciones', href: '/dashboard/reservaciones', icon: 'calendar', section: 'modulos' },
-  { label: 'Cotizaciones', href: '/dashboard/cotizaciones', icon: 'quotes', section: 'modulos' },
-  { label: 'Reportes', href: '/dashboard/reportes', icon: 'reports', section: 'modulos' },
-  { label: 'Usuarios', href: '/admin', icon: 'users', section: 'admin' },
-  { label: 'Configuraci\u00f3n', href: '/dashboard/configuracion', icon: 'settings', section: 'admin' },
+  { label: 'Resumen', href: '/dashboard', icon: 'overview', section: 'principal', plans: ['tools','starter','growth','enterprise'] },
+  { label: 'Pedidos', href: '/dashboard/pedidos', icon: 'orders', section: 'modulos', badge: '12', plans: ['tools','starter','growth','enterprise'] },
+  { label: 'Productos', href: '/dashboard/productos', icon: 'products', section: 'modulos', plans: ['tools','starter','growth','enterprise'] },
+  { label: 'CRM', href: '/dashboard/crm', icon: 'crm', section: 'modulos', plans: ['starter','growth','enterprise'] },
+  { label: 'Facturaci\u00f3n', href: '/dashboard/facturacion', icon: 'billing', section: 'modulos', plans: ['tools','starter','growth','enterprise'] },
+  { label: 'Env\u00edos', href: '/dashboard/envios', icon: 'shipping', section: 'modulos', plans: ['tools','starter','growth','enterprise'] },
+  { label: 'Email Marketing', href: '/dashboard/email-marketing', icon: 'email', section: 'modulos', plans: ['starter','growth','enterprise'] },
+  { label: 'Publicidad', href: '/dashboard/ads', icon: 'ads', section: 'modulos', plans: ['growth','enterprise'] },
+  { label: 'Chat', href: '/dashboard/chat', icon: 'chat', section: 'modulos', plans: ['growth','enterprise'] },
+  { label: 'Tienda Online', href: '/dashboard/tienda', icon: 'store', section: 'modulos', plans: ['starter','growth','enterprise'] },
+  { label: 'Automatizaciones', href: '/dashboard/automatizaciones', icon: 'automations', section: 'modulos', plans: ['growth','enterprise'] },
+  { label: 'Reservaciones', href: '/dashboard/reservaciones', icon: 'calendar', section: 'modulos', plans: ['starter','growth','enterprise'] },
+  { label: 'Cotizaciones', href: '/dashboard/cotizaciones', icon: 'quotes', section: 'modulos', plans: ['starter','growth','enterprise'] },
+  { label: 'Reportes', href: '/dashboard/reportes', icon: 'reports', section: 'modulos', plans: ['growth','enterprise'] },
+  { label: 'Usuarios', href: '/admin', icon: 'users', section: 'admin', plans: ['starter','growth','enterprise'] },
+  { label: 'Configuraci\u00f3n', href: '/dashboard/configuracion', icon: 'settings', section: 'admin', plans: ['tools','starter','growth','enterprise'] },
 ];
 
 function isActive(href: string): boolean {
@@ -248,7 +251,7 @@ const adsExtraPath = 'M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z';
           <p style="font-size:10px;font-weight:800;color:var(--text-faintest);text-transform:uppercase;letter-spacing:0.1em;">M&oacute;dulos</p>
         </div>
         {navItems.filter(i => i.section === 'modulos').map(item => (
-          <a href={item.href} class={`nav-item ${isActive(item.href) ? 'active' : ''}`}>
+          <a href={item.href} class={`nav-item ${isActive(item.href) ? 'active' : ''}`} data-plans={item.plans?.join(',')}>
             <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={iconPaths[item.icon]} />
               {item.icon === 'ads' && <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={adsExtraPath} />}
@@ -509,6 +512,33 @@ const adsExtraPath = 'M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z';
         document.getElementById('admin-nav').style.display = 'block';
       }
 
+      // Plan-based feature gating
+      const userPlan = localStorage.getItem('skybrand_plan') || user.plan || 'growth'; // default to growth for demo
+      document.querySelectorAll('a[data-plans]').forEach(link => {
+        const allowedPlans = link.getAttribute('data-plans').split(',');
+        if (!allowedPlans.includes(userPlan)) {
+          link.style.opacity = '0.4';
+          link.style.pointerEvents = 'none';
+          link.style.position = 'relative';
+          const badge = document.createElement('span');
+          badge.textContent = 'PRO';
+          badge.style.cssText = 'position:absolute;right:12px;padding:1px 6px;border-radius:4px;background:linear-gradient(135deg,#8b5cf6,#6fcff5);color:#fff;font-size:8px;font-weight:800;letter-spacing:0.5px;';
+          link.appendChild(badge);
+        }
+      });
+
+      // Check onboarding
+      if (!localStorage.getItem('skybrand_onboarding_done')) {
+        const onbPage = document.querySelector('[data-page="onboarding"]');
+        if (!onbPage) {
+          // Redirect to onboarding if not on it already
+          const currentPath = window.location.pathname;
+          if (!currentPath.includes('onboarding')) {
+            // Don't redirect for demo, just show a banner
+          }
+        }
+      }
+
       window._skybrandUser = user;
       window.dispatchEvent(new CustomEvent('skybrand:auth', { detail: user }));
     }
@@ -540,5 +570,6 @@ const adsExtraPath = 'M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z';
       window.location.href = '/login';
     });
   </script>
+  <HelpCenter />
 </body>
 </html>
