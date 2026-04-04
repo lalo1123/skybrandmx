@@ -1,0 +1,801 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Bienvenido">
+  <div id="onb-overlay" class="onb-overlay">
+    <!-- Progress bar -->
+    <div class="onb-progress-bar">
+      <div class="onb-progress-track">
+        <div id="onb-progress-fill" class="onb-progress-fill" style="width:20%"></div>
+      </div>
+      <span id="onb-progress-label" class="onb-progress-label">Paso 1 de 5</span>
+    </div>
+
+    <div class="onb-container">
+
+      <!-- STEP 1: Bienvenido -->
+      <div id="onb-step-1" class="onb-step onb-active">
+        <div class="onb-step-icon">👋</div>
+        <h1 class="onb-title">¡Bienvenido a SkyBrandMX!</h1>
+        <p class="onb-subtitle">¡Hola! Vamos a configurar tu negocio en 2 minutos.</p>
+        <div class="onb-form">
+          <div class="onb-field">
+            <label class="onb-label" for="onb-name">Tu nombre</label>
+            <input id="onb-name" class="onb-input" type="text" placeholder="Ej. María García" autocomplete="name" />
+          </div>
+          <div class="onb-field">
+            <label class="onb-label" for="onb-company">Nombre de tu negocio</label>
+            <input id="onb-company" class="onb-input" type="text" placeholder="Ej. Florería Bella Rosa" autocomplete="organization" />
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: Tipo de negocio -->
+      <div id="onb-step-2" class="onb-step">
+        <div class="onb-step-icon">🏢</div>
+        <h1 class="onb-title">¿Qué tipo de negocio tienes?</h1>
+        <p class="onb-subtitle">Esto nos ayuda a personalizar tu experiencia.</p>
+        <div class="onb-grid-sectors" id="onb-sectors">
+          <button class="onb-sector-card" data-sector="ecommerce">
+            <span class="onb-sector-icon">🛍</span>
+            <span class="onb-sector-name">Tienda en línea</span>
+            <span class="onb-sector-desc">E-commerce, venta de productos online</span>
+          </button>
+          <button class="onb-sector-card" data-sector="restaurant">
+            <span class="onb-sector-icon">🍽</span>
+            <span class="onb-sector-name">Restaurante / Alimentos</span>
+            <span class="onb-sector-desc">Comida, bebidas, servicio de alimentos</span>
+          </button>
+          <button class="onb-sector-card" data-sector="beauty">
+            <span class="onb-sector-icon">💇</span>
+            <span class="onb-sector-name">Salón de belleza / Barbería</span>
+            <span class="onb-sector-desc">Cortes, estilismo, tratamientos</span>
+          </button>
+          <button class="onb-sector-card" data-sector="health">
+            <span class="onb-sector-icon">🏥</span>
+            <span class="onb-sector-name">Salud / Consultorio</span>
+            <span class="onb-sector-desc">Medicina, dental, terapias</span>
+          </button>
+          <button class="onb-sector-card" data-sector="gym">
+            <span class="onb-sector-icon">🏋</span>
+            <span class="onb-sector-name">Gym / Fitness</span>
+            <span class="onb-sector-desc">Gimnasio, clases, entrenamiento</span>
+          </button>
+          <button class="onb-sector-card" data-sector="services">
+            <span class="onb-sector-icon">💼</span>
+            <span class="onb-sector-name">Servicios profesionales</span>
+            <span class="onb-sector-desc">Consultoría, legal, contable</span>
+          </button>
+          <button class="onb-sector-card" data-sector="realestate">
+            <span class="onb-sector-icon">🏠</span>
+            <span class="onb-sector-name">Inmobiliaria</span>
+            <span class="onb-sector-desc">Venta y renta de propiedades</span>
+          </button>
+          <button class="onb-sector-card" data-sector="other">
+            <span class="onb-sector-icon">📦</span>
+            <span class="onb-sector-name">Otro</span>
+            <span class="onb-sector-desc">Mi negocio es diferente</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Tienda en línea -->
+      <div id="onb-step-3" class="onb-step">
+        <div class="onb-step-icon">🛒</div>
+        <h1 class="onb-title">¿Ya tienes tienda en línea?</h1>
+        <p class="onb-subtitle">Podemos conectar tu tienda existente para sincronizar todo.</p>
+        <div class="onb-store-options" id="onb-stores">
+          <button class="onb-store-card" data-store="shopify">
+            <span class="onb-store-logo">🟢</span>
+            <span class="onb-store-name">Sí, uso Shopify</span>
+            <span class="onb-store-action" id="onb-shopify-action">Conectar Shopify</span>
+          </button>
+          <button class="onb-store-card" data-store="woocommerce">
+            <span class="onb-store-logo">🟣</span>
+            <span class="onb-store-name">Sí, uso WooCommerce</span>
+            <span class="onb-store-action" id="onb-woo-action">Conectar WooCommerce</span>
+          </button>
+          <button class="onb-store-card" data-store="mercadolibre">
+            <span class="onb-store-logo">🟡</span>
+            <span class="onb-store-name">Sí, uso Mercado Libre</span>
+            <span class="onb-store-action" id="onb-ml-action">Conectar Mercado Libre</span>
+          </button>
+          <button class="onb-store-card" data-store="none">
+            <span class="onb-store-logo">🆕</span>
+            <span class="onb-store-name">No tengo tienda</span>
+            <span class="onb-store-action">Te ayudamos a crear una</span>
+          </button>
+          <button class="onb-store-card" data-store="other">
+            <span class="onb-store-logo">🔗</span>
+            <span class="onb-store-name">Otra plataforma</span>
+            <span class="onb-store-action">Escribe cuál usas</span>
+          </button>
+        </div>
+        <div id="onb-other-store" class="onb-other-store" style="display:none;">
+          <input id="onb-other-store-input" class="onb-input" type="text" placeholder="Ej. PrestaShop, Magento, Wix..." />
+        </div>
+      </div>
+
+      <!-- STEP 4: Prioridades -->
+      <div id="onb-step-4" class="onb-step">
+        <div class="onb-step-icon">🎯</div>
+        <h1 class="onb-title">¿Qué quieres hacer primero?</h1>
+        <p class="onb-subtitle">Selecciona todo lo que te interese. Puedes cambiar esto después.</p>
+        <div class="onb-priorities" id="onb-priorities">
+          <label class="onb-priority-card">
+            <input type="checkbox" value="orders" class="onb-priority-check" />
+            <span class="onb-priority-icon">📦</span>
+            <span class="onb-priority-text">Gestionar pedidos y envíos</span>
+          </label>
+          <label class="onb-priority-card">
+            <input type="checkbox" value="billing" class="onb-priority-check" />
+            <span class="onb-priority-icon">🧾</span>
+            <span class="onb-priority-text">Facturar automáticamente (SAT)</span>
+          </label>
+          <label class="onb-priority-card">
+            <input type="checkbox" value="email" class="onb-priority-check" />
+            <span class="onb-priority-icon">📧</span>
+            <span class="onb-priority-text">Enviar emails a mis clientes</span>
+          </label>
+          <label class="onb-priority-card">
+            <input type="checkbox" value="chat" class="onb-priority-check" />
+            <span class="onb-priority-icon">📱</span>
+            <span class="onb-priority-text">Responder mensajes (WhatsApp, FB, IG)</span>
+          </label>
+          <label class="onb-priority-card">
+            <input type="checkbox" value="reports" class="onb-priority-check" />
+            <span class="onb-priority-icon">📊</span>
+            <span class="onb-priority-text">Ver reportes de ventas</span>
+          </label>
+          <label class="onb-priority-card">
+            <input type="checkbox" value="ads" class="onb-priority-check" />
+            <span class="onb-priority-icon">🎯</span>
+            <span class="onb-priority-text">Hacer publicidad (Meta, Google)</span>
+          </label>
+          <label class="onb-priority-card">
+            <input type="checkbox" value="reservations" class="onb-priority-check" />
+            <span class="onb-priority-icon">📅</span>
+            <span class="onb-priority-text">Agendar citas / reservaciones</span>
+          </label>
+          <label class="onb-priority-card">
+            <input type="checkbox" value="quotes" class="onb-priority-check" />
+            <span class="onb-priority-icon">💰</span>
+            <span class="onb-priority-text">Enviar cotizaciones</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- STEP 5: Listo -->
+      <div id="onb-step-5" class="onb-step">
+        <div class="onb-step-icon onb-celebration" id="onb-celebration">🎉</div>
+        <h1 class="onb-title">¡Todo listo!</h1>
+        <p class="onb-subtitle" id="onb-summary-text">Ya configuramos tu espacio.</p>
+        <div class="onb-recommendations">
+          <p class="onb-rec-label">Basado en tu negocio, te recomendamos empezar con:</p>
+          <div class="onb-rec-modules" id="onb-rec-modules">
+            <!-- Filled dynamically -->
+          </div>
+        </div>
+        <button id="onb-go-dashboard" class="onb-btn onb-btn-primary onb-btn-large">
+          Ir a mi panel →
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Navigation buttons -->
+    <div class="onb-nav">
+      <button id="onb-back" class="onb-btn onb-btn-ghost" style="visibility:hidden;">← Atrás</button>
+      <button id="onb-skip" class="onb-btn-skip">Saltar configuración</button>
+      <button id="onb-next" class="onb-btn onb-btn-primary">Siguiente →</button>
+    </div>
+  </div>
+
+  <style>
+    /* Full-screen overlay */
+    .onb-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: var(--bg-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-y: auto;
+      animation: onb-fadeIn 0.4s ease;
+    }
+
+    @keyframes onb-fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Progress bar */
+    .onb-progress-bar {
+      width: 100%;
+      max-width: 600px;
+      padding: 24px 24px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .onb-progress-track {
+      flex: 1;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .onb-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-gradient-start), var(--accent-gradient-end));
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+    .onb-progress-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      min-width: 80px;
+      text-align: right;
+    }
+
+    /* Container */
+    .onb-container {
+      flex: 1;
+      width: 100%;
+      max-width: 680px;
+      padding: 32px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Steps */
+    .onb-step {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      width: 100%;
+      animation: onb-slideIn 0.35s ease;
+    }
+    .onb-step.onb-active {
+      display: flex;
+    }
+
+    @keyframes onb-slideIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .onb-step-icon {
+      font-size: 56px;
+      margin-bottom: 16px;
+      line-height: 1;
+    }
+    .onb-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+    .onb-subtitle {
+      font-size: 16px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+      max-width: 440px;
+    }
+
+    /* Form fields */
+    .onb-form {
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .onb-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      text-align: left;
+    }
+    .onb-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .onb-input {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 15px;
+      font-family: inherit;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .onb-input:focus {
+      border-color: var(--accent);
+    }
+    .onb-input::placeholder {
+      color: var(--text-faint);
+    }
+
+    /* Sector grid */
+    .onb-grid-sectors {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+      width: 100%;
+    }
+    .onb-sector-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 18px 10px;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+    .onb-sector-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-hover);
+    }
+    .onb-sector-card.onb-selected {
+      border-color: var(--accent);
+      background: var(--accent-bg);
+      box-shadow: 0 0 0 3px var(--accent-bg2);
+    }
+    .onb-sector-icon { font-size: 28px; line-height: 1; }
+    .onb-sector-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .onb-sector-desc { font-size: 11px; color: var(--text-muted); line-height: 1.3; }
+
+    /* Store option cards */
+    .onb-store-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      max-width: 440px;
+    }
+    .onb-store-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 20px;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      color: var(--text-secondary);
+      text-align: left;
+      width: 100%;
+    }
+    .onb-store-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-hover);
+    }
+    .onb-store-card.onb-selected {
+      border-color: var(--accent);
+      background: var(--accent-bg);
+      box-shadow: 0 0 0 3px var(--accent-bg2);
+    }
+    .onb-store-logo { font-size: 24px; line-height: 1; flex-shrink: 0; }
+    .onb-store-name { font-size: 15px; font-weight: 600; color: var(--text-primary); flex: 1; }
+    .onb-store-action {
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .onb-other-store {
+      margin-top: 12px;
+      width: 100%;
+      max-width: 440px;
+      animation: onb-slideIn 0.25s ease;
+    }
+
+    /* Priorities checklist */
+    .onb-priorities {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+      max-width: 440px;
+    }
+    .onb-priority-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 18px;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .onb-priority-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-hover);
+    }
+    .onb-priority-card:has(.onb-priority-check:checked) {
+      border-color: var(--accent);
+      background: var(--accent-bg);
+    }
+    .onb-priority-check {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--accent);
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .onb-priority-icon { font-size: 20px; line-height: 1; flex-shrink: 0; }
+    .onb-priority-text { font-size: 14px; color: var(--text-primary); font-weight: 500; }
+
+    /* Step 5: Recommendations */
+    .onb-recommendations {
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 24px;
+    }
+    .onb-rec-label {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+    .onb-rec-modules {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .onb-rec-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 16px 20px;
+      background: var(--accent-bg);
+      border: 1px solid var(--accent);
+      border-radius: 14px;
+      min-width: 120px;
+    }
+    .onb-rec-icon { font-size: 28px; line-height: 1; }
+    .onb-rec-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+
+    /* Celebration animation */
+    .onb-celebration {
+      animation: onb-bounce 0.6s ease;
+    }
+    @keyframes onb-bounce {
+      0%   { transform: scale(0.3) rotate(-15deg); opacity: 0; }
+      50%  { transform: scale(1.15) rotate(5deg); }
+      100% { transform: scale(1) rotate(0); opacity: 1; }
+    }
+
+    /* Confetti */
+    .onb-confetti {
+      position: fixed;
+      top: -10px;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      animation: onb-confetti-fall linear forwards;
+      pointer-events: none;
+      z-index: 10001;
+    }
+    @keyframes onb-confetti-fall {
+      0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* Buttons */
+    .onb-nav {
+      width: 100%;
+      max-width: 680px;
+      padding: 16px 24px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .onb-btn {
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 12px 28px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .onb-btn-primary {
+      background: linear-gradient(135deg, var(--accent-gradient-start), var(--accent-gradient-end));
+      color: #fff;
+    }
+    .onb-btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+    .onb-btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .onb-btn-ghost:hover {
+      background: var(--nav-hover);
+      color: var(--text-secondary);
+    }
+    .onb-btn-large {
+      font-size: 17px;
+      padding: 16px 40px;
+      border-radius: 12px;
+    }
+    .onb-btn-skip {
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text-faint);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+      transition: color 0.2s;
+    }
+    .onb-btn-skip:hover {
+      color: var(--text-muted);
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .onb-title { font-size: 22px; }
+      .onb-grid-sectors { grid-template-columns: repeat(2, 1fr); }
+      .onb-rec-modules { flex-direction: column; align-items: center; }
+      .onb-container { padding: 20px 16px; }
+    }
+  </style>
+
+  <script>
+    (function() {
+      // If onboarding already done, remove overlay and bail
+      if (localStorage.getItem('skybrand_onboarding_done') === 'true') {
+        const overlay = document.getElementById('onb-overlay');
+        if (overlay) overlay.remove();
+        return;
+      }
+
+      let currentStep = 1;
+      const totalSteps = 5;
+
+      // State
+      const state = {
+        name: '',
+        company: '',
+        sector: '',
+        store: '',
+        otherStore: '',
+        priorities: []
+      };
+
+      // Prefill name from auth if available
+      try {
+        const token = localStorage.getItem('skybrand_token');
+        if (token) {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          if (payload.name) {
+            const nameInput = document.getElementById('onb-name');
+            if (nameInput) nameInput.value = payload.name;
+          }
+        }
+      } catch(e) {}
+
+      // Elements
+      const steps = [1,2,3,4,5].map(i => document.getElementById('onb-step-' + i));
+      const progressFill = document.getElementById('onb-progress-fill');
+      const progressLabel = document.getElementById('onb-progress-label');
+      const btnBack = document.getElementById('onb-back');
+      const btnNext = document.getElementById('onb-next');
+      const btnSkip = document.getElementById('onb-skip');
+      const btnGo = document.getElementById('onb-go-dashboard');
+
+      function updateUI() {
+        // Show/hide steps
+        steps.forEach((s, i) => {
+          if (s) {
+            s.classList.toggle('onb-active', i + 1 === currentStep);
+          }
+        });
+        // Progress
+        const pct = (currentStep / totalSteps) * 100;
+        progressFill.style.width = pct + '%';
+        progressLabel.textContent = 'Paso ' + currentStep + ' de ' + totalSteps;
+        // Back button
+        btnBack.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+        // Next button
+        if (currentStep === totalSteps) {
+          btnNext.style.display = 'none';
+          btnSkip.style.display = 'none';
+        } else {
+          btnNext.style.display = '';
+          btnSkip.style.display = '';
+        }
+      }
+
+      function goTo(step) {
+        currentStep = Math.max(1, Math.min(totalSteps, step));
+        updateUI();
+        if (currentStep === 5) {
+          showSummary();
+          launchConfetti();
+        }
+      }
+
+      // Navigation
+      btnNext.addEventListener('click', function() {
+        collectCurrentStepData();
+        goTo(currentStep + 1);
+      });
+      btnBack.addEventListener('click', function() {
+        goTo(currentStep - 1);
+      });
+      btnSkip.addEventListener('click', function() {
+        finishOnboarding();
+      });
+      btnGo.addEventListener('click', function() {
+        finishOnboarding();
+      });
+
+      function collectCurrentStepData() {
+        if (currentStep === 1) {
+          state.name = document.getElementById('onb-name').value.trim();
+          state.company = document.getElementById('onb-company').value.trim();
+        }
+        // sectors and stores collected via click handlers
+        if (currentStep === 4) {
+          state.priorities = [];
+          document.querySelectorAll('.onb-priority-check:checked').forEach(function(cb) {
+            state.priorities.push(cb.value);
+          });
+        }
+      }
+
+      // Step 2: Sector selection (single select)
+      document.getElementById('onb-sectors').addEventListener('click', function(e) {
+        const card = e.target.closest('.onb-sector-card');
+        if (!card) return;
+        document.querySelectorAll('.onb-sector-card').forEach(function(c) {
+          c.classList.remove('onb-selected');
+        });
+        card.classList.add('onb-selected');
+        state.sector = card.dataset.sector;
+      });
+
+      // Step 3: Store selection (single select)
+      document.getElementById('onb-stores').addEventListener('click', function(e) {
+        const card = e.target.closest('.onb-store-card');
+        if (!card) return;
+        document.querySelectorAll('.onb-store-card').forEach(function(c) {
+          c.classList.remove('onb-selected');
+        });
+        card.classList.add('onb-selected');
+        state.store = card.dataset.store;
+        // Show/hide other store input
+        const otherDiv = document.getElementById('onb-other-store');
+        otherDiv.style.display = card.dataset.store === 'other' ? 'block' : 'none';
+      });
+
+      // Module recommendation map
+      const moduleMap = {
+        orders:       { icon: '📦', name: 'Pedidos', href: '/dashboard/pedidos' },
+        billing:      { icon: '🧾', name: 'Facturación', href: '/dashboard/facturacion' },
+        email:        { icon: '📧', name: 'Email Marketing', href: '/dashboard/email-marketing' },
+        chat:         { icon: '📱', name: 'Chat', href: '/dashboard/chat' },
+        reports:      { icon: '📊', name: 'Reportes', href: '/dashboard/reportes' },
+        ads:          { icon: '🎯', name: 'Publicidad', href: '/dashboard/ads' },
+        reservations: { icon: '📅', name: 'Reservaciones', href: '/dashboard/reservaciones' },
+        quotes:       { icon: '💰', name: 'Cotizaciones', href: '/dashboard/cotizaciones' }
+      };
+
+      // Sector-based defaults when no priorities selected
+      const sectorDefaults = {
+        ecommerce:   ['orders', 'billing', 'email'],
+        restaurant:  ['orders', 'reservations', 'chat'],
+        beauty:      ['reservations', 'chat', 'email'],
+        health:      ['reservations', 'billing', 'chat'],
+        gym:         ['reservations', 'email', 'reports'],
+        services:    ['quotes', 'billing', 'email'],
+        realestate:  ['chat', 'ads', 'quotes'],
+        other:       ['orders', 'email', 'reports']
+      };
+
+      function showSummary() {
+        collectCurrentStepData();
+
+        // Summary text
+        const parts = [];
+        if (state.company) parts.push('Negocio: ' + state.company);
+        if (state.sector) {
+          const sectorLabels = {
+            ecommerce: 'Tienda en línea', restaurant: 'Restaurante', beauty: 'Salón de belleza',
+            health: 'Salud', gym: 'Gym / Fitness', services: 'Servicios profesionales',
+            realestate: 'Inmobiliaria', other: 'Otro'
+          };
+          parts.push('Sector: ' + (sectorLabels[state.sector] || state.sector));
+        }
+        document.getElementById('onb-summary-text').textContent =
+          parts.length ? parts.join(' · ') : 'Ya configuramos tu espacio.';
+
+        // Recommendations: use priorities or fall back to sector defaults
+        let recs = state.priorities.length > 0
+          ? state.priorities.slice(0, 3)
+          : (sectorDefaults[state.sector] || sectorDefaults.other);
+
+        const container = document.getElementById('onb-rec-modules');
+        container.innerHTML = '';
+        recs.forEach(function(key) {
+          const mod = moduleMap[key];
+          if (!mod) return;
+          const div = document.createElement('div');
+          div.className = 'onb-rec-card';
+          div.innerHTML = '<span class="onb-rec-icon">' + mod.icon + '</span><span class="onb-rec-name">' + mod.name + '</span>';
+          container.appendChild(div);
+        });
+      }
+
+      function launchConfetti() {
+        const colors = ['#6fcff5', '#f472b6', '#facc15', '#4ade80', '#818cf8', '#fb923c'];
+        for (let i = 0; i < 50; i++) {
+          const el = document.createElement('div');
+          el.className = 'onb-confetti';
+          el.style.left = Math.random() * 100 + 'vw';
+          el.style.background = colors[Math.floor(Math.random() * colors.length)];
+          el.style.width = (6 + Math.random() * 8) + 'px';
+          el.style.height = (6 + Math.random() * 8) + 'px';
+          el.style.animationDuration = (2 + Math.random() * 2) + 's';
+          el.style.animationDelay = (Math.random() * 1.2) + 's';
+          document.body.appendChild(el);
+          setTimeout(function() { el.remove(); }, 5000);
+        }
+      }
+
+      function finishOnboarding() {
+        collectCurrentStepData();
+        // Store other store input if selected
+        if (state.store === 'other') {
+          state.otherStore = (document.getElementById('onb-other-store-input').value || '').trim();
+        }
+        // Persist
+        localStorage.setItem('skybrand_onboarding_done', 'true');
+        localStorage.setItem('skybrand_onboarding_data', JSON.stringify(state));
+        // Remove overlay
+        const overlay = document.getElementById('onb-overlay');
+        if (overlay) {
+          overlay.style.transition = 'opacity 0.3s';
+          overlay.style.opacity = '0';
+          setTimeout(function() { overlay.remove(); }, 300);
+        }
+        // Navigate to dashboard
+        window.location.href = '/dashboard';
+      }
+
+      // Init
+      updateUI();
+    })();
+  </script>
+</DashboardLayout>

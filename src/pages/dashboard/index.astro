@@ -61,39 +61,69 @@ const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:6100';
     </div>
   </div>
 
-  <!-- Stats row -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:28px;" class="animate-in delay-1">
-    <div class="stat-card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+  <!-- Smart alerts -->
+  <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;" class="animate-in delay-1">
+    <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.15);">
+      <span style="font-size:24px;">📦</span>
+      <div style="flex:1;"><p style="font-size:13px;font-weight:700;color:var(--text-primary);">4 pedidos pendientes de envío</p><p style="font-size:11px;color:var(--text-muted);">Entre más rápido los envíes, mejor experiencia para tu cliente.</p></div>
+      <a href="/dashboard/pedidos" style="padding:8px 16px;border-radius:8px;border:none;background:#f97316;color:#fff;font-size:11px;font-weight:700;text-decoration:none;">Ver pedidos</a>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);">
+      <span style="font-size:24px;">💬</span>
+      <div style="flex:1;"><p style="font-size:13px;font-weight:700;color:var(--text-primary);">1 mensaje sin contestar en el chat</p><p style="font-size:11px;color:var(--text-muted);">María García te preguntó por la talla de una blusa.</p></div>
+      <a href="/dashboard/chat" style="padding:8px 16px;border-radius:8px;border:none;background:#ef4444;color:#fff;font-size:11px;font-weight:700;text-decoration:none;">Responder</a>
+    </div>
+  </div>
+
+  <!-- Stats row (cross-module) -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:28px;" class="animate-in delay-1">
+    <div class="stat-card" style="padding:18px 20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
         <span class="stat-label">Ingresos</span>
-        <span class="stat-change stat-up">+24.5%</span>
+        <span style="font-size:10px;font-weight:700;color:#22c55e;">▲ +24.5%</span>
       </div>
-      <p class="stat-value" style="color:var(--text-primary);">$0</p>
-      <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">vs. mes anterior</p>
+      <p class="stat-value" style="color:var(--text-primary);">$158,200</p>
+      <p style="font-size:10px;color:var(--text-faint);margin-top:6px;">este mes</p>
     </div>
-    <div class="stat-card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <div class="stat-card" style="padding:18px 20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
         <span class="stat-label">Pedidos</span>
-        <span class="stat-change stat-up">+12%</span>
+        <span style="font-size:10px;font-weight:700;color:#22c55e;">▲ +12%</span>
       </div>
-      <p class="stat-value" style="color:var(--text-primary);">0</p>
-      <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">este mes</p>
+      <p class="stat-value" style="color:var(--text-primary);">87</p>
+      <p style="font-size:10px;color:var(--text-faint);margin-top:6px;">este mes</p>
     </div>
-    <div class="stat-card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <div class="stat-card" style="padding:18px 20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
         <span class="stat-label">Contactos CRM</span>
-        <span class="stat-change stat-up">+31%</span>
+        <span style="font-size:10px;font-weight:700;color:#22c55e;">▲ +31%</span>
       </div>
-      <p class="stat-value" style="color:var(--text-primary);">1</p>
-      <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">activos</p>
+      <p class="stat-value" style="color:var(--text-primary);">2,450</p>
+      <p style="font-size:10px;color:var(--text-faint);margin-top:6px;">activos</p>
     </div>
-    <div class="stat-card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <div class="stat-card" style="padding:18px 20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
         <span class="stat-label">Facturas</span>
-        <span class="stat-change stat-up">+18%</span>
+        <span style="font-size:10px;font-weight:700;color:#22c55e;">▲ +18%</span>
       </div>
-      <p class="stat-value" style="color:var(--text-primary);">0</p>
-      <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">emitidas este mes</p>
+      <p class="stat-value" style="color:var(--text-primary);">42</p>
+      <p style="font-size:10px;color:var(--text-faint);margin-top:6px;">timbradas este mes</p>
+    </div>
+    <div class="stat-card" style="padding:18px 20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span class="stat-label">Emails enviados</span>
+        <span style="font-size:10px;font-weight:700;color:#22c55e;">▲ +28%</span>
+      </div>
+      <p class="stat-value" style="color:var(--accent);">5,880</p>
+      <p style="font-size:10px;color:var(--text-faint);margin-top:6px;">47% apertura</p>
+    </div>
+    <div class="stat-card" style="padding:18px 20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span class="stat-label">ROAS Ads</span>
+        <span style="font-size:10px;font-weight:700;color:#22c55e;">▲ +0.8x</span>
+      </div>
+      <p class="stat-value" style="color:#22c55e;">4.3x</p>
+      <p style="font-size:10px;color:var(--text-faint);margin-top:6px;">retorno publicitario</p>
     </div>
   </div>
 
