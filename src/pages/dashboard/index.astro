@@ -127,36 +127,156 @@ const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:6100';
     </div>
   </div>
 
-  <!-- Quick actions -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;" class="animate-in delay-2">
-    <a href="/dashboard/pedidos" class="stat-card" style="cursor:pointer;transition:border-color 0.2s;text-decoration:none;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="width:40px;height:40px;border-radius:12px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
-        <svg style="width:20px;height:20px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+  <!-- Two-column: Chart + Activity -->
+  <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-bottom:24px;" class="animate-in delay-2">
+    <!-- Sales chart (last 7 days) -->
+    <div class="stat-card" style="padding:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);">Ventas de los &uacute;ltimos 7 d&iacute;as</h4>
+        <span style="font-size:12px;font-weight:700;color:#22c55e;">+24.5% vs semana pasada</span>
       </div>
-      <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:4px;">Pedidos</h4>
-      <p style="font-size:12px;color:var(--text-faint);">Gestiona tus ventas</p>
-    </a>
-    <a href="/dashboard/crm" class="stat-card" style="cursor:pointer;transition:border-color 0.2s;text-decoration:none;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="width:40px;height:40px;border-radius:12px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
-        <svg style="width:20px;height:20px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <div style="height:160px;display:flex;align-items:flex-end;gap:8px;">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;background:var(--accent);border-radius:6px 6px 0 0;height:65px;opacity:0.7;"></div><span style="font-size:10px;color:var(--text-faint);">Vie</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;background:var(--accent);border-radius:6px 6px 0 0;height:90px;opacity:0.75;"></div><span style="font-size:10px;color:var(--text-faint);">S&aacute;b</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;background:var(--accent);border-radius:6px 6px 0 0;height:50px;opacity:0.6;"></div><span style="font-size:10px;color:var(--text-faint);">Dom</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;background:var(--accent);border-radius:6px 6px 0 0;height:110px;opacity:0.8;"></div><span style="font-size:10px;color:var(--text-faint);">Lun</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;background:var(--accent);border-radius:6px 6px 0 0;height:130px;opacity:0.85;"></div><span style="font-size:10px;color:var(--text-faint);">Mar</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;background:var(--accent);border-radius:6px 6px 0 0;height:145px;opacity:0.9;"></div><span style="font-size:10px;color:var(--text-faint);">Mi&eacute;</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;background:linear-gradient(to top,var(--accent),#22c55e);border-radius:6px 6px 0 0;height:160px;opacity:1;position:relative;"><span style="position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:800;color:var(--accent);white-space:nowrap;">$28.4k</span></div><span style="font-size:10px;font-weight:700;color:var(--accent);">Hoy</span></div>
       </div>
-      <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:4px;">CRM</h4>
-      <p style="font-size:12px;color:var(--text-faint);">Contactos y leads</p>
-    </a>
-    <a href="/dashboard/facturacion" class="stat-card" style="cursor:pointer;transition:border-color 0.2s;text-decoration:none;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="width:40px;height:40px;border-radius:12px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
-        <svg style="width:20px;height:20px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z"/></svg>
+    </div>
+
+    <!-- Activity feed -->
+    <div class="stat-card" style="padding:20px;">
+      <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Actividad reciente</h4>
+      <div style="display:flex;flex-direction:column;gap:0;max-height:200px;overflow-y:auto;">
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:16px;">🛒</span>
+          <div style="flex:1;"><p style="font-size:12px;font-weight:600;color:var(--text-primary);">Nuevo pedido SKY-010</p><p style="font-size:10px;color:var(--text-faint);">Jos&eacute; Miguel R&iacute;os &middot; $1,410</p></div>
+          <span style="font-size:10px;color:var(--text-faintest);white-space:nowrap;">Hace 15 min</span>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:16px;">🧾</span>
+          <div style="flex:1;"><p style="font-size:12px;font-weight:600;color:var(--text-primary);">Factura A-008 timbrada</p><p style="font-size:10px;color:var(--text-faint);">Fernando L&oacute;pez &middot; $2,552</p></div>
+          <span style="font-size:10px;color:var(--text-faintest);white-space:nowrap;">Hace 30 min</span>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:16px;">📦</span>
+          <div style="flex:1;"><p style="font-size:12px;font-weight:600;color:var(--text-primary);">Gu&iacute;a DHL generada</p><p style="font-size:10px;color:var(--text-faint);">Carlos Hern&aacute;ndez &middot; DHL987654321</p></div>
+          <span style="font-size:10px;color:var(--text-faintest);white-space:nowrap;">Hace 1h</span>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:16px;">✉️</span>
+          <div style="flex:1;"><p style="font-size:12px;font-weight:600;color:var(--text-primary);">Campa&ntilde;a "Promo Verano" enviada</p><p style="font-size:10px;color:var(--text-faint);">2,450 emails &middot; 47% apertura</p></div>
+          <span style="font-size:10px;color:var(--text-faintest);white-space:nowrap;">Hace 2h</span>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:16px;">⚡</span>
+          <div style="flex:1;"><p style="font-size:12px;font-weight:600;color:var(--text-primary);">5 automatizaciones ejecutadas</p><p style="font-size:10px;color:var(--text-faint);">Facturar + enviar gu&iacute;a + WhatsApp</p></div>
+          <span style="font-size:10px;color:var(--text-faintest);white-space:nowrap;">Hace 3h</span>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px 0;">
+          <span style="font-size:16px;">👤</span>
+          <div style="flex:1;"><p style="font-size:12px;font-weight:600;color:var(--text-primary);">Nuevo contacto en CRM</p><p style="font-size:10px;color:var(--text-faint);">Gabriela Moreno &middot; desde formulario web</p></div>
+          <span style="font-size:10px;color:var(--text-faintest);white-space:nowrap;">Hace 4h</span>
+        </div>
       </div>
-      <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:4px;">Facturaci&oacute;n</h4>
-      <p style="font-size:12px;color:var(--text-faint);">CFDI y complementos</p>
-    </a>
-    <a href="/dashboard/ads" class="stat-card" style="cursor:pointer;transition:border-color 0.2s;text-decoration:none;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="width:40px;height:40px;border-radius:12px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
-        <svg style="width:20px;height:20px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+    </div>
+  </div>
+
+  <!-- Automation summary + Quick actions -->
+  <div style="display:grid;grid-template-columns:1fr 2fr;gap:16px;margin-bottom:24px;" class="animate-in delay-2">
+    <!-- Automations summary -->
+    <div class="stat-card" style="padding:20px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+        <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,rgba(34,197,94,0.15),rgba(111,207,245,0.15));display:flex;align-items:center;justify-content:center;">
+          <svg style="width:16px;height:16px;color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);">Automatizaciones</h4>
       </div>
-      <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:4px;">Ads con IA</h4>
-      <p style="font-size:12px;color:var(--text-faint);">Meta + Google Ads</p>
-    </a>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:8px;background:var(--input-bg);">
+          <span style="font-size:12px;color:var(--text-secondary);">Reglas activas</span>
+          <span style="font-size:16px;font-weight:900;color:#22c55e;">5</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:8px;background:var(--input-bg);">
+          <span style="font-size:12px;color:var(--text-secondary);">Ejecutadas hoy</span>
+          <span style="font-size:16px;font-weight:900;color:var(--accent);">12</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:8px;background:var(--input-bg);">
+          <span style="font-size:12px;color:var(--text-secondary);">Tiempo ahorrado</span>
+          <span style="font-size:16px;font-weight:900;color:#8b5cf6;">~32h/mes</span>
+        </div>
+      </div>
+      <a href="/dashboard/automatizaciones" style="display:block;text-align:center;margin-top:12px;font-size:11px;font-weight:700;color:var(--accent);text-decoration:none;">Ver automatizaciones &rarr;</a>
+    </div>
+
+    <!-- Quick actions grid -->
+    <div>
+      <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:12px;">Accesos r&aacute;pidos</h4>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;">
+        <a href="/dashboard/pedidos" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">🛒</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Pedidos</p>
+          <p style="font-size:10px;color:var(--text-faint);">87 este mes</p>
+        </a>
+        <a href="/dashboard/productos" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">🛍</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Productos</p>
+          <p style="font-size:10px;color:var(--text-faint);">28 activos</p>
+        </a>
+        <a href="/dashboard/crm" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">👤</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">CRM</p>
+          <p style="font-size:10px;color:var(--text-faint);">2,450 contactos</p>
+        </a>
+        <a href="/dashboard/facturacion" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">🧾</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Facturaci&oacute;n</p>
+          <p style="font-size:10px;color:var(--text-faint);">42 timbradas</p>
+        </a>
+        <a href="/dashboard/envios" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">📦</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Env&iacute;os</p>
+          <p style="font-size:10px;color:var(--text-faint);">8 gu&iacute;as</p>
+        </a>
+        <a href="/dashboard/email-marketing" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">✉️</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Email</p>
+          <p style="font-size:10px;color:var(--text-faint);">47% apertura</p>
+        </a>
+        <a href="/dashboard/ads" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">📢</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Publicidad</p>
+          <p style="font-size:10px;color:var(--text-faint);">4.3x ROAS</p>
+        </a>
+        <a href="/dashboard/chat" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">💬</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Chat</p>
+          <p style="font-size:10px;color:var(--text-faint);">5 conversaciones</p>
+        </a>
+        <a href="/dashboard/tienda" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">🏪</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Tienda</p>
+          <p style="font-size:10px;color:var(--text-faint);">1,234 visitas</p>
+        </a>
+        <a href="/dashboard/reservaciones" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">📅</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Citas</p>
+          <p style="font-size:10px;color:var(--text-faint);">5 hoy</p>
+        </a>
+        <a href="/dashboard/cotizaciones" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">📋</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Cotizaciones</p>
+          <p style="font-size:10px;color:var(--text-faint);">2 pendientes</p>
+        </a>
+        <a href="/dashboard/reportes" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">📊</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Reportes</p>
+          <p style="font-size:10px;color:var(--text-faint);">30.7% margen</p>
+        </a>
+      </div>
+    </div>
   </div>
 
   <script define:vars={{ API_URL }}>
