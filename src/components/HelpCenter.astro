@@ -1,602 +1,358 @@
 ---
-// HelpCenter.astro — Floating help center widget for dashboard pages
+// SkyBot — AI Assistant for SkyBrandMX Dashboard
 ---
 
-<div id="help-center-widget">
-  <!-- Floating trigger button -->
-  <button id="help-trigger" class="help-trigger" aria-label="Centro de ayuda" title="Centro de ayuda">
-    <span class="help-trigger-icon">?</span>
+<div id="skybot-widget">
+  <!-- Floating trigger — SkyBrand rocket -->
+  <button id="skybot-trigger" class="skybot-trigger" aria-label="Asistente SkyBot" title="Asistente SkyBot">
+    <svg class="skybot-rocket" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="26" height="26">
+      <g stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2L15 6V14C15 14 15 17 12 17C9 17 9 14 9 14V6L12 2Z"/>
+        <path d="M9 11L6 14H9V11Z" fill="#fff"/>
+        <path d="M15 11L18 14H15V11Z" fill="#fff"/>
+      </g>
+      <path d="M9 17C10.5 20 12 22 12 22C12 22 13.5 20 15 17H9Z" fill="#ff6600" class="skybot-flame"/>
+    </svg>
+    <span class="skybot-pulse"></span>
   </button>
 
-  <!-- Panel backdrop -->
-  <div id="help-backdrop" class="help-backdrop"></div>
-
-  <!-- Slide-up panel -->
-  <div id="help-panel" class="help-panel">
+  <!-- Chat panel -->
+  <div id="skybot-panel" class="skybot-panel" style="display:none;">
     <!-- Header -->
-    <div class="help-header">
-      <div class="help-header-left">
-        <button id="help-back" class="help-back" aria-label="Volver" style="display:none;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
-        <span class="help-header-title" id="help-title">Centro de Ayuda</span>
+    <div class="skybot-header">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,var(--accent-gradient-start,#084D6E),var(--accent,#6fcff5));display:flex;align-items:center;justify-content:center;position:relative;">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
+            <g stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L15 6V14C15 14 15 17 12 17C9 17 9 14 9 14V6L12 2Z"/>
+              <path d="M9 11L6 14H9V11Z" fill="#fff"/><path d="M15 11L18 14H15V11Z" fill="#fff"/>
+            </g>
+            <path d="M9 17C10.5 20 12 22 12 22C12 22 13.5 20 15 17H9Z" fill="#ff6600"/>
+          </svg>
+          <div style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:#22c55e;border:2px solid var(--bg-sidebar);"></div>
+        </div>
+        <div>
+          <p style="font-size:14px;font-weight:900;color:var(--text-primary);letter-spacing:-0.02em;">Sky<span style="color:var(--accent,#6fcff5);">Bot</span></p>
+          <p style="font-size:10px;color:#22c55e;font-weight:600;">Asistente inteligente</p>
+        </div>
       </div>
-      <button id="help-close" class="help-close" aria-label="Cerrar">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      <button onclick="toggleSkybot()" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>
 
-    <!-- Search -->
-    <div class="help-search-wrap">
-      <svg class="help-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-      <input id="help-search" class="help-search" type="text" placeholder="¿Qué necesitas ayuda con?" autocomplete="off" />
+    <!-- Messages -->
+    <div id="skybot-messages" class="skybot-messages">
+      <!-- Welcome message -->
+      <div class="skybot-msg skybot-msg-bot">
+        <div class="skybot-avatar">🚀</div>
+        <div class="skybot-bubble skybot-bubble-bot">
+          <p>¡Hola! Soy <strong>Sky<span style="color:var(--accent,#6fcff5);">Bot</span></strong> 🚀 Tu asistente personal de SkyBrandMX.</p>
+          <p style="margin-top:8px;">Dime qué necesitas y yo lo hago por ti:</p>
+          <div style="display:flex;flex-direction:column;gap:4px;margin-top:8px;">
+            <button onclick="skybotQuick('¿Cómo creo una factura?')" class="skybot-quick">🧾 Crear una factura</button>
+            <button onclick="skybotQuick('Genera una guía de envío para mi último pedido')" class="skybot-quick">📦 Generar guía de envío</button>
+            <button onclick="skybotQuick('Crea una automatización: cuando paguen, facturar y enviar WhatsApp')" class="skybot-quick">⚡ Crear automatización</button>
+            <button onclick="skybotQuick('¿Cómo puedo vender más?')" class="skybot-quick">📈 Consejos para vender más</button>
+            <button onclick="skybotQuick('¿Qué módulos tengo disponibles?')" class="skybot-quick">🔍 Ver mis módulos</button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Article list -->
-    <div id="help-list" class="help-list"></div>
-
-    <!-- Article detail -->
-    <div id="help-detail" class="help-detail" style="display:none;"></div>
-
-    <!-- Footer -->
-    <div class="help-footer">
-      <span>¿No encontraste lo que buscas?</span>
-      <a href="https://wa.me/5525582310?text=Hola%2C%20necesito%20ayuda%20con%20SkyBrandMX" target="_blank" rel="noopener noreferrer" class="help-wa-link">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-        Escríbenos por WhatsApp
-      </a>
+    <!-- Input -->
+    <div class="skybot-input-wrap">
+      <input id="skybot-input" type="text" placeholder="Escribe algo... Ej: Factura para público en general" class="skybot-input" onkeydown="if(event.key==='Enter')skybotSend()"/>
+      <button onclick="skybotSend()" class="skybot-send">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+      </button>
     </div>
   </div>
 </div>
 
 <style>
-  /* --- Trigger button --- */
-  .help-trigger {
-    position: fixed;
-    bottom: 6.5rem;
-    right: 1.5rem;
-    z-index: 9998;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    border: none;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    color: #fff;
-    font-size: 1.35rem;
-    font-weight: 800;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  .skybot-trigger {
+    position:fixed;bottom:1.5rem;right:1.5rem;z-index:9998;
+    width:56px;height:56px;border-radius:50%;border:none;
+    background:linear-gradient(135deg,var(--accent-gradient-start,#084D6E),var(--accent,#6fcff5));
+    color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 24px rgba(0,0,0,0.3);
+    transition:transform 0.3s,box-shadow 0.3s;
+    overflow:visible;
   }
-  .help-trigger:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 28px rgba(99, 102, 241, 0.55);
+  .skybot-trigger:hover { transform:scale(1.1) rotate(5deg);box-shadow:0 6px 30px rgba(0,0,0,0.4); }
+  .skybot-rocket { animation:skybot-float 3s ease-in-out infinite; }
+  .skybot-flame { animation:skybot-flicker 0.3s ease-in-out infinite alternate; }
+  @keyframes skybot-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+  @keyframes skybot-flicker { from{opacity:0.7;transform:scaleY(0.9)} to{opacity:1;transform:scaleY(1.1)} }
+  .skybot-pulse {
+    position:absolute;inset:-4px;border-radius:50%;
+    border:2px solid var(--accent,#6fcff5);opacity:0;
+    animation:skybot-ring 2s ease-out infinite;
   }
-  .help-trigger:active {
-    transform: scale(0.95);
+  @keyframes skybot-ring { 0%{transform:scale(1);opacity:0.6} 100%{transform:scale(1.4);opacity:0} }
+
+  .skybot-panel {
+    position:fixed;bottom:5rem;right:1.5rem;z-index:9999;
+    width:380px;max-height:550px;
+    background:var(--bg-sidebar,#0F172A);
+    border:1px solid var(--border,rgba(255,255,255,0.06));
+    border-radius:16px;overflow:hidden;
+    display:flex;flex-direction:column;
+    box-shadow:0 8px 40px rgba(0,0,0,0.4);
+    animation:skybot-slide-up 0.3s ease;
   }
-  .help-trigger-icon {
-    line-height: 1;
-    margin-top: -1px;
+  @keyframes skybot-slide-up { from { opacity:0;transform:translateY(20px); } to { opacity:1;transform:translateY(0); } }
+
+  .skybot-header {
+    padding:14px 16px;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--bg-card,rgba(255,255,255,0.02));
   }
 
-  /* --- Backdrop --- */
-  .help-backdrop {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 9998;
-    background: rgba(0,0,0,0.25);
-    backdrop-filter: blur(2px);
-  }
-  .help-backdrop.active {
-    display: block;
+  .skybot-messages {
+    flex:1;overflow-y:auto;padding:16px;
+    display:flex;flex-direction:column;gap:12px;
+    max-height:380px;min-height:200px;
   }
 
-  /* --- Panel --- */
-  .help-panel {
-    position: fixed;
-    bottom: 7rem;
-    right: 1.5rem;
-    z-index: 9999;
-    width: 350px;
-    max-height: 500px;
-    background: var(--help-bg, #ffffff);
-    color: var(--help-text, #1e293b);
-    border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    opacity: 0;
-    transform: translateY(20px) scale(0.97);
-    pointer-events: none;
-    transition: opacity 0.25s ease, transform 0.25s ease;
-  }
-  .help-panel.open {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    pointer-events: auto;
-  }
+  .skybot-msg { display:flex;gap:8px;align-items:flex-start; }
+  .skybot-msg-user { flex-direction:row-reverse; }
+  .skybot-avatar { width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0; }
 
-  /* --- Header --- */
-  .help-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 16px;
-    border-bottom: 1px solid var(--help-border, #e2e8f0);
-    flex-shrink: 0;
+  .skybot-bubble {
+    max-width:85%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5;
+    color:var(--text-primary,#fff);
   }
-  .help-header-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  .skybot-bubble-bot {
+    background:var(--input-bg,rgba(255,255,255,0.05));
+    border:1px solid var(--border);border-radius:4px 12px 12px 12px;
   }
-  .help-header-title {
-    font-weight: 700;
-    font-size: 0.95rem;
+  .skybot-bubble-user {
+    background:linear-gradient(135deg,var(--accent-gradient-start,#084D6E),var(--accent,#6fcff5));
+    color:#fff;border-radius:12px 4px 12px 12px;
   }
-  .help-back, .help-close {
-    background: none;
-    border: none;
-    color: var(--help-muted, #64748b);
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.15s, color 0.15s;
-  }
-  .help-back:hover, .help-close:hover {
-    background: var(--help-hover, #f1f5f9);
-    color: var(--help-text, #1e293b);
-  }
+  .skybot-bubble p { margin:0; }
+  .skybot-bubble strong { color:var(--accent,#6fcff5);font-weight:800; }
 
-  /* --- Search --- */
-  .help-search-wrap {
-    position: relative;
-    padding: 10px 16px;
-    flex-shrink: 0;
+  .skybot-quick {
+    width:100%;padding:8px 12px;border-radius:8px;
+    border:1px solid var(--border);background:transparent;
+    color:var(--text-secondary,#e2e8f0);font-size:12px;font-weight:600;
+    cursor:pointer;text-align:left;transition:all 0.15s;
   }
-  .help-search-icon {
-    position: absolute;
-    left: 28px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--help-muted, #94a3b8);
-    pointer-events: none;
-  }
-  .help-search {
-    width: 100%;
-    padding: 9px 12px 9px 36px;
-    border-radius: 10px;
-    border: 1px solid var(--help-border, #e2e8f0);
-    background: var(--help-input-bg, #f8fafc);
-    color: var(--help-text, #1e293b);
-    font-size: 0.85rem;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-  .help-search:focus {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
-  }
-  .help-search::placeholder {
-    color: var(--help-muted, #94a3b8);
-  }
+  .skybot-quick:hover { border-color:var(--accent,#6fcff5);color:var(--accent,#6fcff5);background:var(--accent-bg,rgba(111,207,245,0.08)); }
 
-  /* --- Article list --- */
-  .help-list {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    padding: 4px 8px 8px;
+  .skybot-input-wrap {
+    padding:12px 14px;border-top:1px solid var(--border);
+    display:flex;gap:8px;align-items:center;
+    background:var(--bg-card,rgba(255,255,255,0.02));
   }
-  .help-list::-webkit-scrollbar {
-    width: 4px;
+  .skybot-input {
+    flex:1;padding:10px 14px;border-radius:10px;
+    border:1px solid var(--border);background:var(--input-bg);
+    color:var(--text-primary);font-size:13px;outline:none;
+    transition:border-color 0.2s;
   }
-  .help-list::-webkit-scrollbar-thumb {
-    background: var(--help-border, #cbd5e1);
-    border-radius: 4px;
+  .skybot-input:focus { border-color:var(--accent,#6fcff5); }
+  .skybot-send {
+    width:38px;height:38px;border-radius:10px;border:none;
+    background:linear-gradient(135deg,var(--accent-gradient-start,#084D6E),var(--accent,#6fcff5));
+    color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    transition:opacity 0.2s;flex-shrink:0;
   }
+  .skybot-send:hover { opacity:0.85; }
 
-  .help-article-btn {
-    width: 100%;
-    text-align: left;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border: none;
-    background: none;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 0.84rem;
-    color: var(--help-text, #1e293b);
-    transition: background 0.15s;
-  }
-  .help-article-btn:hover {
-    background: var(--help-hover, #f1f5f9);
-  }
-  .help-article-btn .help-emoji {
-    font-size: 1.15rem;
-    flex-shrink: 0;
-    width: 28px;
-    text-align: center;
-  }
-  .help-article-btn .help-label {
-    line-height: 1.35;
-  }
+  .skybot-typing { display:flex;gap:4px;padding:4px 0; }
+  .skybot-typing span { width:6px;height:6px;border-radius:50%;background:var(--text-faint);animation:skybot-dot 1.4s infinite; }
+  .skybot-typing span:nth-child(2) { animation-delay:0.2s; }
+  .skybot-typing span:nth-child(3) { animation-delay:0.4s; }
+  @keyframes skybot-dot { 0%,80%,100%{opacity:0.3;transform:scale(0.8)} 40%{opacity:1;transform:scale(1.2)} }
 
-  .help-no-results {
-    text-align: center;
-    padding: 24px 16px;
-    color: var(--help-muted, #94a3b8);
-    font-size: 0.84rem;
+  .skybot-action {
+    display:inline-flex;align-items:center;gap:4px;
+    padding:6px 12px;border-radius:8px;border:none;
+    background:linear-gradient(135deg,var(--accent-gradient-start,#084D6E),var(--accent,#6fcff5));color:#fff;
+    font-size:11px;font-weight:700;cursor:pointer;
+    margin-top:8px;transition:opacity 0.2s;
   }
+  .skybot-action:hover { opacity:0.85; }
 
-  /* --- Article detail --- */
-  .help-detail {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    padding: 12px 16px 16px;
-  }
-  .help-detail::-webkit-scrollbar {
-    width: 4px;
-  }
-  .help-detail::-webkit-scrollbar-thumb {
-    background: var(--help-border, #cbd5e1);
-    border-radius: 4px;
-  }
-  .help-detail-title {
-    font-weight: 700;
-    font-size: 0.92rem;
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .help-step {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 12px;
-    font-size: 0.84rem;
-    line-height: 1.5;
-  }
-  .help-step-num {
-    flex-shrink: 0;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    color: #fff;
-    font-size: 0.75rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 1px;
-  }
-  .help-step-text {
-    color: var(--help-text, #1e293b);
-  }
-  .help-tip {
-    margin-top: 8px;
-    padding: 10px 12px;
-    border-radius: 10px;
-    background: var(--help-tip-bg, #f0f0ff);
-    font-size: 0.8rem;
-    color: var(--help-tip-text, #4338ca);
-    line-height: 1.45;
-  }
-
-  /* --- Footer --- */
-  .help-footer {
-    padding: 12px 16px;
-    border-top: 1px solid var(--help-border, #e2e8f0);
-    text-align: center;
-    font-size: 0.78rem;
-    color: var(--help-muted, #94a3b8);
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .help-wa-link {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    color: #25d366;
-    font-weight: 600;
-    text-decoration: none;
-    font-size: 0.8rem;
-    transition: opacity 0.15s;
-  }
-  .help-wa-link:hover {
-    opacity: 0.8;
-  }
-
-  /* --- Dark theme --- */
-  :global(.dark) #help-center-widget,
-  :global([data-theme="dark"]) #help-center-widget {
-    --help-bg: #1e1e2e;
-    --help-text: #e2e8f0;
-    --help-muted: #94a3b8;
-    --help-border: #334155;
-    --help-hover: #2a2a3e;
-    --help-input-bg: #262638;
-    --help-tip-bg: #2e2b5a;
-    --help-tip-text: #a5b4fc;
-  }
-
-  /* Responsive: smaller screens */
-  @media (max-width: 480px) {
-    .help-panel {
-      width: calc(100vw - 2rem);
-      right: 1rem;
-      bottom: 6rem;
-      max-height: 70vh;
-    }
+  @media (max-width:480px) {
+    .skybot-panel { width:calc(100vw - 2rem);right:1rem;bottom:4.5rem; }
   }
 </style>
 
 <script is:inline>
-(function() {
-  // ---- Article data ----
-  const articles = [
-    {
-      id: 'pedido',
-      emoji: '\uD83D\uDCE6',
-      title: '¿Cómo creo un pedido?',
-      steps: [
-        'Ve a la sección <b>Pedidos</b> en el menú lateral.',
-        'Haz clic en el botón <b>"+ Nuevo Pedido"</b> arriba a la derecha.',
-        'Selecciona al cliente o crea uno nuevo. Agrega los productos deseados.',
-        'Revisa el resumen, ajusta cantidades o descuentos si aplica.',
-        'Haz clic en <b>"Crear Pedido"</b> para confirmarlo.'
-      ],
-      tip: '¡Tip! Puedes duplicar pedidos anteriores para ahorrar tiempo.'
-    },
-    {
-      id: 'factura',
-      emoji: '\uD83E\uDDFE',
-      title: '¿Cómo facturo?',
-      steps: [
-        'Abre la sección <b>Facturación</b> desde el menú.',
-        'Haz clic en <b>"+ Nueva Factura"</b>.',
-        'Ingresa los datos fiscales del cliente (RFC, razón social, uso de CFDI).',
-        'Agrega los conceptos de la factura con sus importes.',
-        'Haz clic en <b>"Timbrar"</b> para generar el CFDI ante el SAT.'
-      ],
-      tip: 'Puedes facturar directamente desde un pedido ya existente con un solo clic.'
-    },
-    {
-      id: 'envio',
-      emoji: '\uD83D\uDCE6',
-      title: '¿Cómo genero una guía de envío?',
-      steps: [
-        'Ve a la sección <b>Envíos</b> en el menú.',
-        'Selecciona el pedido que deseas enviar o crea uno nuevo.',
-        'Elige la paquetería y el tipo de servicio (económico, express, etc.).',
-        'Confirma las direcciones de origen y destino.',
-        'Haz clic en <b>"Generar Guía"</b> para obtener la etiqueta de envío.'
-      ],
-      tip: 'Las guías se generan con tarifas preferenciales. ¡Puedes comparar precios entre paqueterías!'
-    },
-    {
-      id: 'email',
-      emoji: '\uD83D\uDCE7',
-      title: '¿Cómo envío una campaña de email?',
-      steps: [
-        'Abre <b>Email Marketing</b> desde el menú lateral.',
-        'Haz clic en <b>"+ Nueva Campaña"</b>.',
-        'Elige una plantilla o crea tu diseño desde cero con el editor visual.',
-        'Selecciona la lista de contactos o segmento a quien enviar.',
-        'Revisa el preview y haz clic en <b>"Enviar"</b> o programa la hora de envío.'
-      ],
-      tip: 'Envía primero un correo de prueba a ti mismo para asegurarte de que se vea bien.'
-    },
-    {
-      id: 'crm',
-      emoji: '\uD83D\uDC64',
-      title: '¿Cómo agrego un contacto al CRM?',
-      steps: [
-        'Ve a la sección <b>CRM</b> en el menú.',
-        'Haz clic en <b>"+ Nuevo Contacto"</b>.',
-        'Llena los datos básicos: nombre, email, teléfono y empresa.',
-        'Asigna una etiqueta o segmento para organizarlo.',
-        'Guarda el contacto. ¡Listo! Ya puedes hacerle seguimiento.'
-      ],
-      tip: 'También puedes importar contactos en bloque desde un archivo CSV.'
-    },
-    {
-      id: 'tienda',
-      emoji: '\uD83C\uDFEA',
-      title: '¿Cómo creo mi tienda online?',
-      steps: [
-        'Abre <b>Tienda Online</b> desde el menú.',
-        'Haz clic en <b>"Configurar Tienda"</b> y elige tu dominio o subdominio.',
-        'Personaliza el diseño: colores, logo y banner principal.',
-        'Agrega tus productos con fotos, precios y descripciones.',
-        'Activa los métodos de pago y envío, y haz clic en <b>"Publicar"</b>.'
-      ],
-      tip: 'Tu tienda se ve increíble en celular automáticamente. ¡Compártela en redes!'
-    },
-    {
-      id: 'cita',
-      emoji: '\uD83D\uDCC5',
-      title: '¿Cómo agendo una cita?',
-      steps: [
-        'Ve a la sección <b>Reservaciones</b> en el menú.',
-        'Haz clic en <b>"+ Nueva Cita"</b>.',
-        'Selecciona el servicio, la fecha y el horario disponible.',
-        'Asigna un cliente existente o ingresa los datos de uno nuevo.',
-        'Confirma la cita. El cliente recibirá una notificación automática.'
-      ],
-      tip: 'Puedes compartir tu link de reservaciones para que los clientes agenden solos.'
-    },
-    {
-      id: 'automatizacion',
-      emoji: '\u26A1',
-      title: '¿Cómo creo una automatización?',
-      steps: [
-        'Abre <b>Automatizaciones</b> desde el menú.',
-        'Haz clic en <b>"+ Nueva Automatización"</b>.',
-        'Elige un disparador: nuevo pedido, nuevo contacto, fecha, etc.',
-        'Configura la acción: enviar email, crear tarea, notificar por WhatsApp, etc.',
-        'Activa la automatización con el switch y listo. ¡Trabaja mientras duermes!'
-      ],
-      tip: 'Empieza con las plantillas prediseñadas — son un excelente punto de partida.'
+// ═══════ SKYBOT AI ASSISTANT ═══════
+function toggleSkybot() {
+  const panel = document.getElementById('skybot-panel');
+  panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+  if (panel.style.display === 'flex') {
+    document.getElementById('skybot-input').focus();
+    scrollBot();
+  }
+}
+
+document.getElementById('skybot-trigger')?.addEventListener('click', toggleSkybot);
+
+function scrollBot() {
+  const el = document.getElementById('skybot-messages');
+  if (el) el.scrollTop = el.scrollHeight;
+}
+
+function addBotMsg(html, actions) {
+  const el = document.getElementById('skybot-messages');
+  const msg = document.createElement('div');
+  msg.className = 'skybot-msg skybot-msg-bot';
+  let actionsHtml = '';
+  if (actions && actions.length) {
+    actionsHtml = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">' +
+      actions.map(a => `<button class="skybot-action" onclick="${a.action}">${a.icon || ''} ${a.label}</button>`).join('') +
+    '</div>';
+  }
+  msg.innerHTML = `<div class="skybot-avatar">🚀</div><div class="skybot-bubble skybot-bubble-bot">${html}${actionsHtml}</div>`;
+  el.appendChild(msg);
+  scrollBot();
+}
+
+function addUserMsg(text) {
+  const el = document.getElementById('skybot-messages');
+  const msg = document.createElement('div');
+  msg.className = 'skybot-msg skybot-msg-user';
+  msg.innerHTML = `<div class="skybot-bubble skybot-bubble-user"><p>${text}</p></div>`;
+  el.appendChild(msg);
+  scrollBot();
+}
+
+function showTyping() {
+  const el = document.getElementById('skybot-messages');
+  const typing = document.createElement('div');
+  typing.className = 'skybot-msg skybot-msg-bot';
+  typing.id = 'skybot-typing';
+  typing.innerHTML = '<div class="skybot-avatar">🚀</div><div class="skybot-bubble skybot-bubble-bot"><div class="skybot-typing"><span></span><span></span><span></span></div></div>';
+  el.appendChild(typing);
+  scrollBot();
+}
+
+function hideTyping() {
+  document.getElementById('skybot-typing')?.remove();
+}
+
+function skybotQuick(text) {
+  addUserMsg(text);
+  processMessage(text);
+}
+
+function skybotSend() {
+  const input = document.getElementById('skybot-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  addUserMsg(text);
+  processMessage(text);
+}
+
+function processMessage(text) {
+  showTyping();
+  const lower = text.toLowerCase();
+
+  setTimeout(() => {
+    hideTyping();
+
+    // ═══════ FACTURACIÓN ═══════
+    if (lower.includes('factura') && (lower.includes('crear') || lower.includes('crea') || lower.includes('generar') || lower.includes('cómo'))) {
+      if (lower.includes('público') || lower.includes('general')) {
+        addBotMsg('<p>¡Claro! Para facturar a <strong>público en general</strong>:</p><p style="margin-top:6px;">Solo ve a Facturación → haz clic en <strong>"Público en general"</strong> y se llenan los datos automáticamente (RFC genérico XAXX010101000). Solo agrega los conceptos y dale "Timbrar".</p>', [
+          { label: 'Ir a Facturación', icon: '🧾', action: "window.location.href='/dashboard/facturacion'" },
+        ]);
+      } else {
+        addBotMsg('<p>Para crear una factura CFDI 4.0:</p><ol style="margin:8px 0 0 16px;font-size:12px;"><li>Ve a <strong>Facturación → Nueva factura</strong></li><li>Llena los datos del cliente (nombre, RFC, régimen fiscal)</li><li>Agrega los conceptos con cantidad y precio</li><li>El IVA se calcula automáticamente</li><li>Dale clic en <strong>"Timbrar ante SAT"</strong></li></ol><p style="margin-top:8px;">También puedes facturar rápido a público en general o desde un pedido existente.</p>', [
+          { label: 'Ir a Facturación', icon: '🧾', action: "window.location.href='/dashboard/facturacion'" },
+          { label: 'Factura rápida', icon: '⚡', action: "window.location.href='/dashboard/facturacion';setTimeout(()=>switchFacTab&&switchFacTab('create'),500)" },
+        ]);
+      }
     }
-  ];
-
-  // ---- DOM refs ----
-  var trigger = document.getElementById('help-trigger');
-  var backdrop = document.getElementById('help-backdrop');
-  var panel = document.getElementById('help-panel');
-  var closeBtn = document.getElementById('help-close');
-  var backBtn = document.getElementById('help-back');
-  var searchInput = document.getElementById('help-search');
-  var listEl = document.getElementById('help-list');
-  var detailEl = document.getElementById('help-detail');
-  var titleEl = document.getElementById('help-title');
-
-  var isOpen = false;
-  var currentArticle = null;
-
-  // ---- Render list ----
-  function renderList(filter) {
-    var q = (filter || '').toLowerCase().trim();
-    var filtered = articles.filter(function(a) {
-      return !q || a.title.toLowerCase().indexOf(q) !== -1;
-    });
-    if (filtered.length === 0) {
-      listEl.innerHTML = '<div class="help-no-results">No encontramos artículos con ese término. Intenta con otra búsqueda.</div>';
-      return;
+    // ═══════ ENVÍOS / GUÍA ═══════
+    else if (lower.includes('guía') || lower.includes('envío') || lower.includes('enviar') || lower.includes('paquete')) {
+      addBotMsg('<p>Para generar una guía de envío:</p><ol style="margin:8px 0 0 16px;font-size:12px;"><li>Ve a <strong>Envíos → Cotizar envío</strong></li><li>Pon el código postal de origen y destino</li><li>Ingresa peso y medidas del paquete</li><li>Comparo precios de 5 paqueterías al instante</li><li>Elige la que más te convenga y se genera la guía</li></ol><p style="margin-top:8px;">También puedo generar guías masivas desde un CSV.</p>', [
+          { label: 'Ir a Envíos', icon: '📦', action: "window.location.href='/dashboard/envios'" },
+        ]);
     }
-    listEl.innerHTML = filtered.map(function(a) {
-      return '<button class="help-article-btn" data-id="' + a.id + '">' +
-        '<span class="help-emoji">' + a.emoji + '</span>' +
-        '<span class="help-label">' + a.title + '</span>' +
-        '</button>';
-    }).join('');
-  }
-
-  // ---- Render detail ----
-  function renderDetail(article) {
-    var html = '<div class="help-detail-title">' +
-      '<span>' + article.emoji + '</span> ' + article.title +
-      '</div>';
-    article.steps.forEach(function(step, i) {
-      html += '<div class="help-step">' +
-        '<span class="help-step-num">' + (i + 1) + '</span>' +
-        '<span class="help-step-text">' + step + '</span>' +
-        '</div>';
-    });
-    if (article.tip) {
-      html += '<div class="help-tip">💡 ' + article.tip + '</div>';
+    // ═══════ AUTOMATIZACIÓN ═══════
+    else if (lower.includes('automatiz') || lower.includes('automátic') || lower.includes('regla') || lower.includes('cuando')) {
+      addBotMsg('<p>¡Las automatizaciones son lo más poderoso de SkyBrandMX! 🚀</p><p style="margin-top:6px;">Puedes crear reglas como:</p><ul style="margin:8px 0 0 16px;font-size:12px;"><li><strong>Cuando paguen</strong> → facturar + generar guía + WhatsApp</li><li><strong>Carrito abandonado</strong> → email en 1h + WhatsApp en 24h</li><li><strong>Nuevo cliente</strong> → email bienvenida + cupón</li></ul><p style="margin-top:8px;">Tienes 12 disparadores y 10 acciones disponibles. También hay plantillas listas que activas con un clic.</p>', [
+          { label: 'Ir a Automatizaciones', icon: '⚡', action: "window.location.href='/dashboard/automatizaciones'" },
+          { label: 'Ver plantillas listas', icon: '📋', action: "window.location.href='/dashboard/automatizaciones';setTimeout(()=>switchAutoTab&&switchAutoTab('templates'),500)" },
+        ]);
     }
-    detailEl.innerHTML = html;
-  }
-
-  // ---- Show / Hide ----
-  function openPanel() {
-    isOpen = true;
-    panel.classList.add('open');
-    backdrop.classList.add('active');
-    trigger.style.display = 'none';
-    showList();
-    searchInput.value = '';
-    renderList('');
-    setTimeout(function() { searchInput.focus(); }, 200);
-  }
-
-  function closePanel() {
-    isOpen = false;
-    panel.classList.remove('open');
-    backdrop.classList.remove('active');
-    trigger.style.display = '';
-    currentArticle = null;
-  }
-
-  function showList() {
-    currentArticle = null;
-    listEl.style.display = '';
-    detailEl.style.display = 'none';
-    backBtn.style.display = 'none';
-    titleEl.textContent = 'Centro de Ayuda';
-  }
-
-  function showDetail(id) {
-    var article = articles.find(function(a) { return a.id === id; });
-    if (!article) return;
-    currentArticle = article;
-    renderDetail(article);
-    listEl.style.display = 'none';
-    detailEl.style.display = '';
-    backBtn.style.display = '';
-    titleEl.textContent = '';
-  }
-
-  // ---- Events ----
-  trigger.addEventListener('click', function(e) {
-    e.stopPropagation();
-    openPanel();
-  });
-
-  closeBtn.addEventListener('click', closePanel);
-  backdrop.addEventListener('click', closePanel);
-
-  backBtn.addEventListener('click', function() {
-    showList();
-    renderList(searchInput.value);
-  });
-
-  listEl.addEventListener('click', function(e) {
-    var btn = e.target.closest('.help-article-btn');
-    if (btn) showDetail(btn.dataset.id);
-  });
-
-  searchInput.addEventListener('input', function() {
-    if (currentArticle) showList();
-    renderList(searchInput.value);
-  });
-
-  // Escape key closes
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && isOpen) closePanel();
-  });
-
-  // Initial render
-  renderList('');
-
-  // ---- Dark mode detection ----
-  // Auto-detect from html class or data attribute
-  function applyThemeVars() {
-    var root = document.documentElement;
-    var isDark = root.classList.contains('dark') || root.getAttribute('data-theme') === 'dark';
-    var widget = document.getElementById('help-center-widget');
-    if (!widget) return;
-    if (isDark) {
-      widget.style.setProperty('--help-bg', '#1e1e2e');
-      widget.style.setProperty('--help-text', '#e2e8f0');
-      widget.style.setProperty('--help-muted', '#94a3b8');
-      widget.style.setProperty('--help-border', '#334155');
-      widget.style.setProperty('--help-hover', '#2a2a3e');
-      widget.style.setProperty('--help-input-bg', '#262638');
-      widget.style.setProperty('--help-tip-bg', '#2e2b5a');
-      widget.style.setProperty('--help-tip-text', '#a5b4fc');
+    // ═══════ VENDER MÁS ═══════
+    else if (lower.includes('vender más') || lower.includes('ventas') || lower.includes('mejorar') || lower.includes('consejos') || lower.includes('crecer')) {
+      addBotMsg('<p>Aquí van mis <strong>5 recomendaciones</strong> para vender más:</p><ol style="margin:8px 0 0 16px;font-size:12px;line-height:1.6;"><li>🛒 <strong>Recupera carritos abandonados</strong> — activa la secuencia automática en Email Marketing</li><li>📢 <strong>Invierte en ads</strong> — tu ROAS es 4.3x, por cada $1 ganas $4.30. Escala las campañas que funcionan</li><li>⭐ <strong>Pide reseñas</strong> — activa el email post-compra en Automatizaciones</li><li>💬 <strong>Responde rápido en el chat</strong> — tienes mensajes sin contestar</li><li>📧 <strong>Envía newsletter semanal</strong> — tus emails tienen 47% de apertura, aprovéchalo</li></ol>', [
+          { label: 'Email Marketing', icon: '✉️', action: "window.location.href='/dashboard/email-marketing'" },
+          { label: 'Publicidad', icon: '📢', action: "window.location.href='/dashboard/ads'" },
+          { label: 'Automatizaciones', icon: '⚡', action: "window.location.href='/dashboard/automatizaciones'" },
+        ]);
     }
-  }
-  applyThemeVars();
+    // ═══════ MÓDULOS ═══════
+    else if (lower.includes('módulo') || lower.includes('herramienta') || lower.includes('disponible') || lower.includes('qué puedo') || lower.includes('funciones')) {
+      addBotMsg('<p>Tienes <strong>14 módulos</strong> disponibles:</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:8px;font-size:11px;"><span>🛒 Pedidos</span><span>🛍 Productos</span><span>👤 CRM</span><span>🧾 Facturación</span><span>📦 Envíos</span><span>✉️ Email Marketing</span><span>📢 Publicidad + IA</span><span>💬 Chat unificado</span><span>🏪 Tienda Online</span><span>⚡ Automatizaciones</span><span>📅 Reservaciones</span><span>📋 Cotizaciones</span><span>📊 Reportes</span><span>⚙ Configuración</span></div><p style="margin-top:8px;font-size:12px;">¿Sobre cuál quieres saber más?</p>');
+    }
+    // ═══════ PEDIDOS ═══════
+    else if (lower.includes('pedido') && (lower.includes('crear') || lower.includes('nuevo') || lower.includes('cómo'))) {
+      addBotMsg('<p>Para crear un pedido manual:</p><ol style="margin:8px 0 0 16px;font-size:12px;"><li>Ve a <strong>Pedidos → Crear pedido</strong></li><li>Ingresa datos del cliente</li><li>Agrega productos con cantidad y precio</li><li>Confirma y listo</li></ol><p style="margin-top:8px;">Los pedidos de tu tienda online (Shopify/WooCommerce) llegan automáticamente.</p>', [
+          { label: 'Ir a Pedidos', icon: '🛒', action: "window.location.href='/dashboard/pedidos'" },
+        ]);
+    }
+    // ═══════ CRM ═══════
+    else if (lower.includes('crm') || lower.includes('contacto') || lower.includes('cliente') && lower.includes('agregar')) {
+      addBotMsg('<p>El CRM te ayuda a organizar tus clientes:</p><ul style="margin:8px 0 0 16px;font-size:12px;"><li>Agrega contactos manualmente o impórtalos desde CSV</li><li>Usa el <strong>Pipeline</strong> para ver en qué etapa están (Lead → Prospecto → Cliente)</li><li>Crea <strong>tareas</strong> para dar seguimiento</li><li>Detecta <strong>duplicados</strong> para limpiar tu base</li></ul>', [
+          { label: 'Ir al CRM', icon: '👤', action: "window.location.href='/dashboard/crm'" },
+        ]);
+    }
+    // ═══════ EMAIL ═══════
+    else if (lower.includes('email') || lower.includes('campaña') || lower.includes('newsletter')) {
+      addBotMsg('<p>En Email Marketing puedes:</p><ul style="margin:8px 0 0 16px;font-size:12px;"><li>Crear campañas con un <strong>wizard paso a paso</strong></li><li>Usar la <strong>IA para generar asuntos</strong></li><li>Diseñar emails con el <strong>editor visual</strong> (drag & drop)</li><li>Activar <strong>secuencias automáticas</strong> (bienvenida, carrito abandonado, etc.)</li><li>Hacer <strong>pruebas A/B</strong></li></ul>', [
+          { label: 'Ir a Email Marketing', icon: '✉️', action: "window.location.href='/dashboard/email-marketing'" },
+        ]);
+    }
+    // ═══════ AYUDA GENERAL ═══════
+    else if (lower.includes('ayuda') || lower.includes('help') || lower.includes('no sé') || lower.includes('cómo funciona')) {
+      addBotMsg('<p>¡Estoy aquí para ayudarte! 😊 Puedes preguntarme cosas como:</p><ul style="margin:8px 0 0 16px;font-size:12px;line-height:1.6;"><li>"¿Cómo creo una factura?"</li><li>"Genera una guía de envío"</li><li>"Crea una automatización para mis pedidos"</li><li>"¿Cómo puedo vender más?"</li><li>"¿Qué módulos tengo?"</li></ul><p style="margin-top:8px;">O si prefieres hablar con una persona, escríbenos por WhatsApp.</p>', [
+          { label: 'WhatsApp soporte', icon: '💬', action: "window.open('https://wa.me/5525582310?text=Hola,%20necesito%20ayuda%20con%20SkyBrandMX','_blank')" },
+        ]);
+    }
+    // ═══════ SALUDO ═══════
+    else if (lower.includes('hola') || lower.includes('hey') || lower.includes('buenos') || lower.includes('buenas')) {
+      addBotMsg('<p>¡Hola! 👋 ¿En qué te puedo ayudar hoy?</p><p style="margin-top:6px;font-size:12px;">Puedes pedirme que haga cosas como crear facturas, generar guías, configurar automatizaciones, o darte consejos para tu negocio.</p>');
+    }
+    // ═══════ GRACIAS ═══════
+    else if (lower.includes('gracias') || lower.includes('thanks')) {
+      addBotMsg('<p>¡De nada! 😊 Aquí estoy siempre que me necesites. ¡Mucho éxito con tu negocio! 🚀</p>');
+    }
+    // ═══════ TIENDA ═══════
+    else if (lower.includes('tienda') && (lower.includes('crear') || lower.includes('online') || lower.includes('cómo'))) {
+      addBotMsg('<p>¡Puedes crear tu tienda online directamente aquí! 🏪</p><p style="margin-top:6px;">No necesitas Shopify ni WordPress. En el módulo <strong>Tienda Online</strong> puedes:</p><ul style="margin:8px 0 0 16px;font-size:12px;"><li>Elegir un diseño (4 temas disponibles)</li><li>Agregar tus productos</li><li>Configurar tu dominio</li><li>¡Publicar!</li></ul>', [
+          { label: 'Crear mi tienda', icon: '🏪', action: "window.location.href='/dashboard/tienda'" },
+        ]);
+    }
+    // ═══════ RESERVACIONES ═══════
+    else if (lower.includes('cita') || lower.includes('reserv') || lower.includes('agenda') || lower.includes('mesa')) {
+      addBotMsg('<p>El módulo de Reservaciones funciona para cualquier negocio que necesite agendar:</p><ul style="margin:8px 0 0 16px;font-size:12px;"><li>🍽 Restaurantes (mesas)</li><li>💇 Salones de belleza (citas)</li><li>🏥 Consultorios (consultas)</li><li>🏋 Gyms (clases)</li><li>💼 Servicios profesionales (reuniones)</li></ul>', [
+          { label: 'Ir a Reservaciones', icon: '📅', action: "window.location.href='/dashboard/reservaciones'" },
+        ]);
+    }
+    // ═══════ DEFAULT ═══════
+    else {
+      addBotMsg('<p>Entiendo que quieres saber sobre: <strong>"' + text.substring(0, 50) + '"</strong></p><p style="margin-top:6px;">Todavía estoy aprendiendo, pero puedo ayudarte con facturación, envíos, automatizaciones, email marketing, CRM, y más. ¿Puedes reformular tu pregunta?</p><p style="margin-top:6px;font-size:12px;">También puedes hablar con nuestro equipo por WhatsApp para ayuda personalizada.</p>', [
+          { label: 'WhatsApp soporte', icon: '💬', action: "window.open('https://wa.me/5525582310?text=Hola,%20necesito%20ayuda%20con%20SkyBrandMX','_blank')" },
+        ]);
+    }
+  }, 800 + Math.random() * 600); // Random delay 0.8-1.4s for realism
+}
 
-  // Observe theme changes
-  var observer = new MutationObserver(applyThemeVars);
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
-})();
+// Close on Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.getElementById('skybot-panel').style.display = 'none';
+});
 </script>

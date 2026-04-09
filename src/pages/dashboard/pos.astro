@@ -1,0 +1,973 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Punto de Venta">
+  <!-- Top bar: sucursal + online/offline + shortcuts -->
+  <div class="stat-card animate-in" style="padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+    <svg style="width:18px;height:18px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+    <label style="font-size:13px;font-weight:700;color:var(--text-secondary);">Sucursal:</label>
+    <select id="pos-sucursal" onchange="posChangeSucursal()" class="pos-input" style="width:auto;cursor:pointer;">
+      <option value="matriz">Matriz CDMX</option>
+      <option value="norte">Sucursal Norte</option>
+      <option value="sur">Sucursal Sur</option>
+    </select>
+    <span class="pos-tip" data-tip="Cambia entre tus sucursales. Cada una tiene su propio inventario y caja.">?</span>
+    <div style="flex:1;"></div>
+    <div id="pos-online-indicator" style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);">
+      <div style="width:8px;height:8px;border-radius:50%;background:#22c55e;"></div>
+      <span id="pos-online-text" style="font-size:11px;font-weight:800;color:#22c55e;">En linea</span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;font-size:10px;color:var(--text-faint);">
+      <span class="pos-kbd">F1</span>Buscar
+      <span class="pos-kbd">F2</span>Cobrar
+      <span class="pos-kbd">ESC</span>Cancelar
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px;">
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="pos-stat-label">Ventas de hoy</p>
+      <p id="pos-stat-ventas" class="pos-stat-val" style="color:#22c55e;">$4,850</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="pos-stat-label">Tickets de hoy</p>
+      <p id="pos-stat-tickets" class="pos-stat-val">8</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="pos-stat-label">Ticket promedio <span class="pos-tip" data-tip="Lo que gasta en promedio cada cliente">?</span></p>
+      <p id="pos-stat-promedio" class="pos-stat-val" style="color:var(--accent);">$606</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="pos-stat-label">Sucursal actual</p>
+      <p id="pos-stat-sucursal" class="pos-stat-val" style="font-size:18px;">Matriz CDMX</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="pos-stat-label">Caja actual</p>
+      <p id="pos-stat-caja" class="pos-stat-val" style="font-size:18px;color:#22c55e;">Abierta</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="pos-stat-label">Usuarios activos</p>
+      <p id="pos-stat-users" class="pos-stat-val" style="color:#8b5cf6;">3</p>
+    </div>
+  </div>
+
+  <!-- Autopilot -->
+  <div class="stat-card animate-in" style="padding:18px 20px;margin-bottom:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;cursor:pointer;" onclick="posToggleAutopilot()">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <svg style="width:18px;height:18px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        <h3 style="font-size:14px;font-weight:800;color:var(--text-primary);">Autopilot del punto de venta</h3>
+        <span id="pos-autopilot-count" style="font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-bg);padding:2px 8px;border-radius:6px;">3/5 activos</span>
+      </div>
+      <svg id="pos-autopilot-chevron" style="width:16px;height:16px;color:var(--text-muted);transition:transform 0.2s;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+    </div>
+    <div id="pos-autopilot-body" style="display:none;flex-direction:column;gap:10px;">
+      <div class="pos-autopilot-row">
+        <div><p class="pos-autopilot-title">Facturar automaticamente al cerrar venta</p><p class="pos-autopilot-desc">Genera la factura electronica (CFDI) en cuanto cobras</p></div>
+        <label class="pos-toggle"><input type="checkbox" onchange="posToggleAuto(this,'auto_cfdi')"><span class="pos-toggle-slider"></span></label>
+      </div>
+      <div class="pos-autopilot-row">
+        <div><p class="pos-autopilot-title">Imprimir ticket automatico</p><p class="pos-autopilot-desc">Imprime el ticket en la impresora termica al cobrar</p></div>
+        <label class="pos-toggle"><input type="checkbox" checked onchange="posToggleAuto(this,'auto_print')"><span class="pos-toggle-slider"></span></label>
+      </div>
+      <div class="pos-autopilot-row">
+        <div><p class="pos-autopilot-title">Descontar del inventario al cobrar</p><p class="pos-autopilot-desc">Resta el stock automaticamente de la sucursal actual</p></div>
+        <label class="pos-toggle"><input type="checkbox" checked onchange="posToggleAuto(this,'auto_stock')"><span class="pos-toggle-slider"></span></label>
+      </div>
+      <div class="pos-autopilot-row">
+        <div><p class="pos-autopilot-title">Abrir/cerrar caja automatico por horario</p><p class="pos-autopilot-desc">Abre la caja al inicio del turno y la cierra al final</p></div>
+        <label class="pos-toggle"><input type="checkbox" onchange="posToggleAuto(this,'auto_caja')"><span class="pos-toggle-slider"></span></label>
+      </div>
+      <div class="pos-autopilot-row">
+        <div><p class="pos-autopilot-title">Alertar cuando stock bajo en sucursal</p><p class="pos-autopilot-desc">Te avisa cuando algun producto esta por agotarse</p></div>
+        <label class="pos-toggle"><input type="checkbox" checked onchange="posToggleAuto(this,'auto_alert')"><span class="pos-toggle-slider"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════ Main POS view: two panels ═════════ -->
+  <div id="pos-help-main" class="pos-help-banner">
+    <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <p style="flex:1;font-size:12px;color:var(--text-secondary);">Toca un producto para agregarlo al carrito. Cuando el cliente este listo, presiona <b>Cobrar</b>. Puedes agregar modificadores, aplicar descuentos y elegir el metodo de pago.</p>
+    <button onclick="posDismissHelp('main')" class="pos-help-close">&times;</button>
+  </div>
+
+  <div class="pos-main-grid">
+    <!-- LEFT: Product grid -->
+    <div class="stat-card animate-in" style="padding:16px;display:flex;flex-direction:column;gap:12px;min-height:560px;">
+      <!-- Search -->
+      <div style="position:relative;">
+        <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input id="pos-search" type="text" placeholder="Buscar producto... (F1)" oninput="posRenderProducts()" class="pos-input" style="padding-left:38px;"/>
+      </div>
+      <!-- Category tabs -->
+      <div id="pos-categories" style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="pos-cat active" data-cat="todos" onclick="posFilterCat('todos')">Todos</button>
+        <button class="pos-cat" data-cat="bebidas" onclick="posFilterCat('bebidas')">Bebidas</button>
+        <button class="pos-cat" data-cat="comidas" onclick="posFilterCat('comidas')">Comidas</button>
+        <button class="pos-cat" data-cat="postres" onclick="posFilterCat('postres')">Postres</button>
+        <button class="pos-cat" data-cat="otros" onclick="posFilterCat('otros')">Otros</button>
+      </div>
+      <!-- Products grid -->
+      <div id="pos-products" class="pos-products-grid"></div>
+    </div>
+
+    <!-- RIGHT: Cart -->
+    <div class="stat-card animate-in" style="padding:16px;display:flex;flex-direction:column;gap:10px;min-height:560px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);">Venta actual</h3>
+        <button onclick="posClearCart()" class="pos-btn-secondary" style="padding:6px 10px;font-size:11px;">Vaciar</button>
+      </div>
+      <!-- Customer selector -->
+      <div>
+        <label class="pos-label">Cliente (opcional)</label>
+        <select id="pos-customer" class="pos-input" style="cursor:pointer;">
+          <option value="">Publico en general</option>
+          <option value="1">Juan Perez Garcia</option>
+          <option value="2">Maria Lopez Hernandez</option>
+          <option value="3">Roberto Sanchez</option>
+        </select>
+      </div>
+      <!-- Cart items -->
+      <div id="pos-cart-items" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;max-height:260px;min-height:120px;"></div>
+      <!-- Totals -->
+      <div style="border-top:1px solid var(--border);padding-top:10px;display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);"><span>Subtotal</span><span id="pos-subtotal">$0.00</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);"><span>Descuento</span><span id="pos-discount-val" style="color:#ef4444;">-$0.00</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);"><span>IVA (16%)</span><span id="pos-iva">$0.00</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:900;color:var(--text-primary);padding-top:6px;border-top:1px dashed var(--border);"><span>Total</span><span id="pos-total">$0.00</span></div>
+      </div>
+      <!-- Payment methods -->
+      <div>
+        <label class="pos-label">Metodo de pago</label>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;">
+          <button id="pos-pay-efectivo" class="pos-pay-btn active" onclick="posSelectPay('efectivo')">
+            <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            Efectivo
+          </button>
+          <button id="pos-pay-tarjeta" class="pos-pay-btn" onclick="posSelectPay('tarjeta')">
+            <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+            Tarjeta
+          </button>
+          <button id="pos-pay-transfer" class="pos-pay-btn" onclick="posSelectPay('transfer')">
+            <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+            Transferencia
+          </button>
+          <button id="pos-pay-qr" class="pos-pay-btn" onclick="posSelectPay('qr')">
+            <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+            QR
+          </button>
+        </div>
+      </div>
+      <!-- Action buttons -->
+      <div style="display:flex;gap:8px;">
+        <button onclick="posOpenDiscount()" class="pos-btn-secondary" style="flex:1;">Descuento</button>
+        <button onclick="posPrintTicket()" class="pos-btn-secondary" style="flex:1;">Ticket</button>
+      </div>
+      <button onclick="posCobrar()" class="pos-btn-cobrar">
+        <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        Cobrar (F2)
+      </button>
+    </div>
+  </div>
+
+  <!-- ═════════ Tabs ═════════ -->
+  <div style="display:flex;gap:4px;margin:28px 0 20px 0;border-bottom:1px solid var(--border);padding-bottom:0;overflow-x:auto;">
+    <button id="pos-tab-ventas" class="pos-tab active" onclick="switchPosTab('ventas')">Ventas del dia</button>
+    <button id="pos-tab-cortes" class="pos-tab" onclick="switchPosTab('cortes')">Cortes de caja</button>
+    <button id="pos-tab-inventario" class="pos-tab" onclick="switchPosTab('inventario')">Inventario por sucursal</button>
+    <button id="pos-tab-turnos" class="pos-tab" onclick="switchPosTab('turnos')">Turnos y cajeros</button>
+  </div>
+
+  <!-- Tab: Ventas del dia -->
+  <div id="pos-panel-ventas">
+    <div id="pos-help-ventas" class="pos-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Todas las ventas del dia. Puedes reimprimir tickets, cancelar ventas o enviarlas por email al cliente.</p>
+      <button onclick="posDismissHelp('ventas')" class="pos-help-close">&times;</button>
+    </div>
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table class="pos-table">
+          <thead>
+            <tr><th>Ticket</th><th>Hora</th><th>Items</th><th>Metodo</th><th>Total</th><th>Acciones</th></tr>
+          </thead>
+          <tbody id="pos-ventas-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Cortes de caja -->
+  <div id="pos-panel-cortes" style="display:none;">
+    <div id="pos-help-cortes" class="pos-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Abre la caja al inicio del turno con el efectivo inicial. Al cerrar, compara el efectivo esperado contra el real para detectar faltantes o sobrantes.</p>
+      <button onclick="posDismissHelp('cortes')" class="pos-help-close">&times;</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:20px;">
+      <div class="stat-card animate-in" style="padding:20px;">
+        <p class="pos-stat-label">Apertura de caja</p>
+        <p style="font-size:22px;font-weight:900;color:var(--text-primary);margin-top:4px;">$2,000.00</p>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">Hoy 08:00 AM</p>
+      </div>
+      <div class="stat-card animate-in" style="padding:20px;">
+        <p class="pos-stat-label">Efectivo esperado</p>
+        <p style="font-size:22px;font-weight:900;color:var(--accent);margin-top:4px;">$4,120.00</p>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">Apertura + ventas en efectivo</p>
+      </div>
+      <div class="stat-card animate-in" style="padding:20px;">
+        <p class="pos-stat-label">Efectivo real en caja</p>
+        <input id="pos-corte-real" type="number" step="0.01" value="4100" class="pos-input" style="font-size:22px;font-weight:900;padding:6px 10px;margin-top:4px;" oninput="posCalcDiferencia()"/>
+        <p id="pos-corte-diff" style="font-size:11px;color:#ef4444;margin-top:4px;">Diferencia: -$20.00</p>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:20px;">
+      <button onclick="posCerrarCaja()" class="pos-btn-primary" style="padding:12px 24px;">Cerrar caja y generar corte</button>
+      <button onclick="posAbrirCaja()" class="pos-btn-secondary" style="padding:12px 24px;">Abrir nueva caja</button>
+    </div>
+    <div class="stat-card animate-in" style="padding:20px;">
+      <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:12px;">Historial de cortes</h4>
+      <div style="overflow-x:auto;">
+        <table class="pos-table">
+          <thead><tr><th>Fecha</th><th>Cajero</th><th>Apertura</th><th>Cierre</th><th>Diferencia</th><th>Estado</th></tr></thead>
+          <tbody id="pos-cortes-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Inventario -->
+  <div id="pos-panel-inventario" style="display:none;">
+    <div id="pos-help-inventario" class="pos-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Stock de productos por sucursal. Si a una sucursal le falta mercancia, usa el boton Transferir para moverla desde otra.</p>
+      <button onclick="posDismissHelp('inventario')" class="pos-help-close">&times;</button>
+    </div>
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table class="pos-table">
+          <thead><tr><th>Producto</th><th>Matriz CDMX</th><th>Suc. Norte</th><th>Suc. Sur</th><th>Total</th><th>Accion</th></tr></thead>
+          <tbody id="pos-inv-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Turnos -->
+  <div id="pos-panel-turnos" style="display:none;">
+    <div id="pos-help-turnos" class="pos-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Consulta quien esta trabajando, cuanto ha vendido cada cajero y sus comisiones.</p>
+      <button onclick="posDismissHelp('turnos')" class="pos-help-close">&times;</button>
+    </div>
+    <div id="pos-turnos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;"></div>
+  </div>
+
+  <!-- ═════════ Modifier modal ═════════ -->
+  <div id="pos-mod-overlay" class="pos-modal-overlay" onclick="posCloseModModal()"></div>
+  <div id="pos-mod-modal" class="pos-modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <h3 id="pos-mod-title" style="font-size:16px;font-weight:900;color:var(--text-primary);">Modificadores</h3>
+      <button onclick="posCloseModModal()" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:none;background:transparent;cursor:pointer;color:var(--text-muted);">
+        <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">Elige los extras para este producto.</p>
+    <div id="pos-mod-list" style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+      <button onclick="posCloseModModal()" class="pos-btn-secondary" style="padding:10px 18px;">Cancelar</button>
+      <button onclick="posConfirmMods()" class="pos-btn-primary" style="padding:10px 22px;">Agregar al carrito</button>
+    </div>
+  </div>
+
+  <!-- ═════════ Discount modal ═════════ -->
+  <div id="pos-disc-overlay" class="pos-modal-overlay" onclick="posCloseDiscount()"></div>
+  <div id="pos-disc-modal" class="pos-modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);">Aplicar descuento</h3>
+      <button onclick="posCloseDiscount()" style="width:28px;height:28px;border:none;background:transparent;cursor:pointer;color:var(--text-muted);">
+        <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div>
+        <label class="pos-label">Tipo</label>
+        <select id="pos-disc-type" class="pos-input" style="cursor:pointer;" onchange="posUpdateDiscountPlaceholder()">
+          <option value="percent">Porcentaje (%)</option>
+          <option value="amount">Monto fijo ($)</option>
+        </select>
+      </div>
+      <div>
+        <label class="pos-label">Valor</label>
+        <input id="pos-disc-value" type="number" step="0.01" min="0" placeholder="10" class="pos-input"/>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button onclick="posCloseDiscount()" class="pos-btn-secondary" style="padding:10px 18px;">Cancelar</button>
+        <button onclick="posApplyDiscount()" class="pos-btn-primary" style="padding:10px 22px;">Aplicar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toasts -->
+  <div id="pos-toast-container" style="position:fixed;top:20px;right:20px;z-index:10000;display:flex;flex-direction:column;gap:8px;"></div>
+
+<style>
+  .pos-stat-label{font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px;}
+  .pos-stat-val{font-size:26px;font-weight:900;color:var(--text-primary);}
+  .pos-tip{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--accent-bg);color:var(--accent);font-size:10px;font-weight:800;cursor:help;position:relative;}
+  .pos-tip:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg-sidebar);border:1px solid var(--border);color:var(--text-secondary);font-size:11px;font-weight:500;padding:8px 12px;border-radius:8px;white-space:normal;width:220px;z-index:100;line-height:1.4;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,0.3);}
+  .pos-kbd{display:inline-block;padding:2px 6px;border-radius:5px;border:1px solid var(--border);background:var(--input-bg);font-family:monospace;font-size:10px;font-weight:800;color:var(--text-secondary);margin-right:4px;}
+  .pos-tab{padding:10px 20px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;}
+  .pos-tab:hover{color:var(--text-secondary);}
+  .pos-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+  .pos-input{width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-weight:500;font-family:inherit;transition:border-color 0.2s;}
+  .pos-input:focus{outline:none;border-color:var(--accent);}
+  .pos-label{display:block;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+  .pos-btn-primary{padding:10px 20px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:800;cursor:pointer;transition:all 0.2s;font-family:inherit;}
+  .pos-btn-primary:hover{opacity:0.9;transform:translateY(-1px);}
+  .pos-btn-secondary{padding:10px 16px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:inherit;}
+  .pos-btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+  .pos-help-banner{display:flex;align-items:flex-start;gap:10px;padding:14px 16px;border-radius:12px;background:var(--accent-bg);border:1px solid rgba(111,207,245,0.15);margin-bottom:16px;}
+  .pos-help-close{border:none;background:transparent;color:var(--text-muted);font-size:18px;cursor:pointer;padding:0 4px;line-height:1;}
+  .pos-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .pos-table th{text-align:left;padding:12px 16px;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border);background:var(--bg-card);}
+  .pos-table td{padding:12px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);vertical-align:middle;}
+  .pos-table tbody tr:hover{background:var(--bg-card-hover);}
+  .pos-badge{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;display:inline-block;}
+  .pos-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;display:none;backdrop-filter:blur(4px);}
+  .pos-modal-overlay.active{display:block;}
+  .pos-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-sidebar);border:1px solid var(--border);border-radius:16px;padding:24px;width:460px;max-width:95vw;max-height:90vh;overflow-y:auto;z-index:9999;display:none;box-shadow:0 8px 40px rgba(0,0,0,0.4);}
+  .pos-modal.active{display:block;}
+  .pos-autopilot-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px;border-radius:10px;background:var(--input-bg);border:1px solid var(--border);}
+  .pos-autopilot-title{font-size:13px;font-weight:700;color:var(--text-secondary);margin-bottom:2px;}
+  .pos-autopilot-desc{font-size:11px;color:var(--text-muted);}
+  .pos-toggle{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;}
+  .pos-toggle input{opacity:0;width:0;height:0;}
+  .pos-toggle-slider{position:absolute;cursor:pointer;inset:0;background:var(--text-faintest);border-radius:24px;transition:0.3s;}
+  .pos-toggle-slider::before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s;}
+  .pos-toggle input:checked+.pos-toggle-slider{background:var(--accent);}
+  .pos-toggle input:checked+.pos-toggle-slider::before{transform:translateX(20px);}
+  .pos-main-grid{display:grid;grid-template-columns:minmax(0,6fr) minmax(0,4fr);gap:16px;}
+  .pos-cat{padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:inherit;}
+  .pos-cat:hover{color:var(--accent);border-color:var(--accent);}
+  .pos-cat.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .pos-products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;overflow-y:auto;padding:4px;}
+  .pos-product-btn{border:1px solid var(--border);border-radius:12px;padding:14px 10px;cursor:pointer;transition:all 0.15s;display:flex;flex-direction:column;align-items:center;gap:6px;min-height:100px;text-align:center;font-family:inherit;color:var(--text-primary);}
+  .pos-product-btn:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,0.2);}
+  .pos-product-btn:active{transform:translateY(0);}
+  .pos-product-name{font-size:12px;font-weight:800;line-height:1.2;}
+  .pos-product-price{font-size:14px;font-weight:900;color:var(--accent);}
+  .pos-product-stock{font-size:9px;color:var(--text-muted);font-weight:700;}
+  .pos-cart-item{padding:10px;border-radius:10px;background:var(--input-bg);border:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+  .pos-cart-item-info{flex:1;min-width:0;}
+  .pos-cart-item-name{font-size:12px;font-weight:800;color:var(--text-primary);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pos-cart-item-mods{font-size:10px;color:var(--text-muted);}
+  .pos-cart-item-qty{display:flex;align-items:center;gap:4px;}
+  .pos-qty-btn{width:24px;height:24px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-weight:800;cursor:pointer;font-family:inherit;}
+  .pos-qty-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .pos-cart-item-price{font-size:13px;font-weight:900;color:var(--accent);min-width:70px;text-align:right;}
+  .pos-cart-empty{text-align:center;padding:30px 10px;color:var(--text-muted);font-size:12px;}
+  .pos-pay-btn{padding:10px 8px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;}
+  .pos-pay-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .pos-pay-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .pos-btn-cobrar{padding:16px;border-radius:12px;border:none;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:16px;font-weight:900;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit;box-shadow:0 4px 16px rgba(34,197,94,0.3);}
+  .pos-btn-cobrar:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(34,197,94,0.4);}
+  .pos-action-btn{border:none;background:transparent;color:var(--text-muted);cursor:pointer;padding:4px;border-radius:6px;transition:all 0.2s;display:inline-flex;align-items:center;}
+  .pos-action-btn:hover{color:var(--accent);background:var(--accent-bg);}
+  @media(max-width:980px){
+    .pos-main-grid{grid-template-columns:1fr;}
+  }
+  @media(max-width:768px){
+    .pos-modal{width:95vw;padding:20px;}
+  }
+</style>
+
+<script is:inline>
+// ═══════ DATA ═══════
+const posProducts = [
+  { id:1,  name:'Cafe americano',      price:45,  category:'bebidas', color:'#92400e', mods:['Extra shot +$10','Leche de almendra +$15','Sin azucar +$0'] },
+  { id:2,  name:'Cafe latte',          price:55,  category:'bebidas', color:'#a16207', mods:['Extra shot +$10','Leche de almendra +$15','Caramelo +$8'] },
+  { id:3,  name:'Cappuccino',          price:60,  category:'bebidas', color:'#78350f', mods:['Extra shot +$10','Canela +$0','Chocolate +$10'] },
+  { id:4,  name:'Te chai',             price:50,  category:'bebidas', color:'#b45309', mods:['Leche +$5','Miel +$5'] },
+  { id:5,  name:'Refresco 600ml',      price:30,  category:'bebidas', color:'#0369a1', mods:[] },
+  { id:6,  name:'Agua mineral',        price:25,  category:'bebidas', color:'#0284c7', mods:[] },
+  { id:7,  name:'Sandwich jamon',      price:85,  category:'comidas', color:'#be185d', mods:['Queso extra +$10','Aguacate +$15','Sin mayonesa +$0'] },
+  { id:8,  name:'Ensalada cesar',      price:120, category:'comidas', color:'#15803d', mods:['Pollo extra +$20','Sin croutones +$0','Aderezo aparte +$0'] },
+  { id:9,  name:'Quiche',              price:95,  category:'comidas', color:'#d97706', mods:['Ensalada guarnicion +$15'] },
+  { id:10, name:'Pastel chocolate',    price:75,  category:'postres', color:'#78350f', mods:['Helado +$20','Crema batida +$10'] },
+  { id:11, name:'Cheesecake',          price:80,  category:'postres', color:'#9a3412', mods:['Frutos rojos +$15','Chocolate +$10'] },
+  { id:12, name:'Croissant',           price:35,  category:'otros',   color:'#ca8a04', mods:['Mantequilla +$0','Mermelada +$5'] }
+];
+
+// Stock per sucursal
+const posStock = {
+  matriz: { 1:45, 2:38, 3:22, 4:15, 5:80, 6:60, 7:12, 8:8, 9:5, 10:6, 11:4, 12:20 },
+  norte:  { 1:30, 2:25, 3:18, 4:12, 5:50, 6:40, 7:8,  8:6, 9:3, 10:4, 11:3, 12:15 },
+  sur:    { 1:20, 2:15, 3:10, 4:8,  5:35, 6:28, 7:5,  8:4, 9:2, 10:3, 11:2, 12:10 }
+};
+
+// Sucursal data
+const posSucursales = {
+  matriz: { name:'Matriz CDMX', ventas:4850, tickets:8,  users:3, cajaOpen:true  },
+  norte:  { name:'Sucursal Norte', ventas:3220, tickets:6,  users:2, cajaOpen:true  },
+  sur:    { name:'Sucursal Sur',   ventas:2180, tickets:4,  users:1, cajaOpen:false }
+};
+
+let posCurrentSucursal = 'matriz';
+let posCurrentCategory = 'todos';
+let posCart = [];
+let posPayMethod = 'efectivo';
+let posDiscount = { type:'percent', value:0 };
+let posPendingProduct = null;
+let posPendingMods = [];
+let posNextTicketNum = 1009;
+
+// Demo sales today
+const posVentasHoy = [
+  { num:1001, hora:'08:45', items:2, metodo:'efectivo', total:105 },
+  { num:1002, hora:'09:12', items:3, metodo:'tarjeta',  total:265 },
+  { num:1003, hora:'10:05', items:1, metodo:'efectivo', total:60 },
+  { num:1004, hora:'10:48', items:4, metodo:'qr',       total:385 },
+  { num:1005, hora:'11:30', items:2, metodo:'tarjeta',  total:155 },
+  { num:1006, hora:'12:15', items:5, metodo:'efectivo', total:520 },
+  { num:1007, hora:'13:02', items:3, metodo:'transfer', total:295 },
+  { num:1008, hora:'13:55', items:6, metodo:'tarjeta',  total:3065 }
+];
+
+// Historical cortes
+const posCortesHistorial = [
+  { fecha:'Ayer',         cajero:'Laura M.',  apertura:2000, cierre:6450, diff:0,    estado:'cuadrado' },
+  { fecha:'Anteayer',     cajero:'Juan P.',   apertura:2000, cierre:5890, diff:-15,  estado:'faltante' },
+  { fecha:'Hace 3 dias',  cajero:'Laura M.',  apertura:2000, cierre:7120, diff:30,   estado:'sobrante' },
+  { fecha:'Hace 4 dias',  cajero:'Miguel R.', apertura:2000, cierre:6780, diff:0,    estado:'cuadrado' }
+];
+
+const posTurnos = [
+  { nombre:'Laura Martinez',  rol:'Cajera principal', turno:'Matutino 08:00-14:00',  ventas:2450, tickets:15, comision:122, activo:true  },
+  { nombre:'Juan Perez',      rol:'Cajero',           turno:'Vespertino 14:00-20:00', ventas:1890, tickets:12, comision:94,  activo:true  },
+  { nombre:'Miguel Ramirez',  rol:'Cajero',           turno:'Vespertino 14:00-20:00', ventas:510,  tickets:4,  comision:25,  activo:true  },
+  { nombre:'Sofia Lopez',     rol:'Cajera',           turno:'Libre hoy',              ventas:0,    tickets:0,  comision:0,   activo:false }
+];
+
+// ═══════ HELPERS ═══════
+function showToast(msg, type){
+  type = type || 'success';
+  const c = document.getElementById('pos-toast-container');
+  if(!c) return;
+  const t = document.createElement('div');
+  const bg = type==='error' ? '#ef4444' : type==='warning' ? '#f97316' : '#22c55e';
+  t.style.cssText = 'padding:12px 20px;border-radius:10px;background:'+bg+';color:#fff;font-size:13px;font-weight:700;font-family:inherit;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(function(){ t.style.opacity='0'; t.style.transition='opacity 0.3s'; setTimeout(function(){ t.remove(); },300); }, 3000);
+}
+window.showToast = window.showToast || showToast;
+
+function posFmt(n){ return '$' + Number(n).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+function posDismissHelp(tab){
+  const el = document.getElementById('pos-help-'+tab);
+  if(el) el.style.display = 'none';
+  try { localStorage.setItem('pos_help_'+tab+'_dismissed','1'); } catch(e){}
+}
+window.posDismissHelp = posDismissHelp;
+
+// ═══════ TABS ═══════
+function switchPosTab(tab){
+  document.querySelectorAll('.pos-tab').forEach(function(t){ t.classList.remove('active'); });
+  const tabBtn = document.getElementById('pos-tab-'+tab);
+  if(tabBtn) tabBtn.classList.add('active');
+  ['ventas','cortes','inventario','turnos'].forEach(function(p){
+    const panel = document.getElementById('pos-panel-'+p);
+    if(panel) panel.style.display = p===tab ? '' : 'none';
+  });
+}
+window.switchPosTab = switchPosTab;
+
+// ═══════ SUCURSAL ═══════
+function posChangeSucursal(){
+  posCurrentSucursal = document.getElementById('pos-sucursal').value;
+  const s = posSucursales[posCurrentSucursal];
+  document.getElementById('pos-stat-ventas').textContent = posFmt(s.ventas);
+  document.getElementById('pos-stat-tickets').textContent = s.tickets;
+  const promedio = s.tickets > 0 ? s.ventas / s.tickets : 0;
+  document.getElementById('pos-stat-promedio').textContent = posFmt(promedio);
+  document.getElementById('pos-stat-sucursal').textContent = s.name;
+  document.getElementById('pos-stat-users').textContent = s.users;
+  const cajaEl = document.getElementById('pos-stat-caja');
+  cajaEl.textContent = s.cajaOpen ? 'Abierta' : 'Cerrada';
+  cajaEl.style.color = s.cajaOpen ? '#22c55e' : '#ef4444';
+  showToast('Cambiaste a ' + s.name);
+  posRenderProducts();
+}
+window.posChangeSucursal = posChangeSucursal;
+
+// ═══════ AUTOPILOT ═══════
+function posToggleAutopilot(){
+  const body = document.getElementById('pos-autopilot-body');
+  const chev = document.getElementById('pos-autopilot-chevron');
+  if(body.style.display === 'none'){
+    body.style.display = 'flex';
+    chev.style.transform = 'rotate(180deg)';
+  } else {
+    body.style.display = 'none';
+    chev.style.transform = 'rotate(0deg)';
+  }
+}
+window.posToggleAutopilot = posToggleAutopilot;
+
+function posToggleAuto(el, key){
+  const active = document.querySelectorAll('#pos-autopilot-body input[type=checkbox]:checked').length;
+  document.getElementById('pos-autopilot-count').textContent = active + '/5 activos';
+  showToast(el.checked ? 'Automatizacion activada' : 'Automatizacion desactivada');
+}
+window.posToggleAuto = posToggleAuto;
+
+// ═══════ PRODUCTS GRID ═══════
+function posFilterCat(cat){
+  posCurrentCategory = cat;
+  document.querySelectorAll('.pos-cat').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-cat') === cat);
+  });
+  posRenderProducts();
+}
+window.posFilterCat = posFilterCat;
+
+function posRenderProducts(){
+  const grid = document.getElementById('pos-products');
+  if(!grid) return;
+  const search = (document.getElementById('pos-search').value || '').toLowerCase();
+  const stock = posStock[posCurrentSucursal];
+  const filtered = posProducts.filter(function(p){
+    if(posCurrentCategory !== 'todos' && p.category !== posCurrentCategory) return false;
+    if(search && p.name.toLowerCase().indexOf(search) < 0) return false;
+    return true;
+  });
+  if(filtered.length === 0){
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--text-muted);font-size:13px;">No hay productos que coincidan con tu busqueda.</div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(function(p){
+    const s = stock[p.id] || 0;
+    const low = s <= 5;
+    return '<button class="pos-product-btn" style="background:linear-gradient(135deg,'+p.color+'22,'+p.color+'11);border-color:'+p.color+'44;" onclick="posAddProduct('+p.id+')">'
+      + '<div class="pos-product-name">'+p.name+'</div>'
+      + '<div class="pos-product-price">'+posFmt(p.price)+'</div>'
+      + '<div class="pos-product-stock" style="color:'+(low?'#ef4444':'var(--text-muted)')+';">Stock: '+s+(low?' (bajo)':'')+'</div>'
+      + '</button>';
+  }).join('');
+}
+window.posRenderProducts = posRenderProducts;
+
+// ═══════ CART ═══════
+function posAddProduct(id){
+  const p = posProducts.find(function(x){ return x.id === id; });
+  if(!p) return;
+  const stock = posStock[posCurrentSucursal][p.id] || 0;
+  if(stock <= 0){
+    showToast('Sin stock en esta sucursal', 'error');
+    return;
+  }
+  if(p.mods && p.mods.length > 0){
+    posPendingProduct = p;
+    posPendingMods = [];
+    posOpenModModal(p);
+  } else {
+    posAddToCart(p, []);
+  }
+}
+window.posAddProduct = posAddProduct;
+
+function posOpenModModal(p){
+  document.getElementById('pos-mod-title').textContent = 'Modificadores: ' + p.name;
+  const list = document.getElementById('pos-mod-list');
+  list.innerHTML = p.mods.map(function(m, i){
+    return '<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:var(--input-bg);border:1px solid var(--border);cursor:pointer;font-size:13px;color:var(--text-secondary);">'
+      + '<input type="checkbox" data-idx="'+i+'" style="accent-color:var(--accent);"/>'
+      + '<span>'+m+'</span></label>';
+  }).join('');
+  document.getElementById('pos-mod-overlay').classList.add('active');
+  document.getElementById('pos-mod-modal').classList.add('active');
+}
+
+function posCloseModModal(){
+  document.getElementById('pos-mod-overlay').classList.remove('active');
+  document.getElementById('pos-mod-modal').classList.remove('active');
+  posPendingProduct = null;
+}
+window.posCloseModModal = posCloseModModal;
+
+function posConfirmMods(){
+  if(!posPendingProduct) return;
+  const selected = [];
+  document.querySelectorAll('#pos-mod-list input[type=checkbox]:checked').forEach(function(cb){
+    const idx = parseInt(cb.getAttribute('data-idx'));
+    selected.push(posPendingProduct.mods[idx]);
+  });
+  posAddToCart(posPendingProduct, selected);
+  posCloseModModal();
+}
+window.posConfirmMods = posConfirmMods;
+
+function posModExtraPrice(mods){
+  let extra = 0;
+  mods.forEach(function(m){
+    const match = m.match(/\+\$(\d+)/);
+    if(match) extra += parseInt(match[1]);
+  });
+  return extra;
+}
+
+function posAddToCart(p, mods){
+  const modKey = mods.slice().sort().join('|');
+  const existing = posCart.find(function(i){ return i.id === p.id && i.modKey === modKey; });
+  if(existing){
+    existing.qty += 1;
+  } else {
+    const unit = p.price + posModExtraPrice(mods);
+    posCart.push({ id:p.id, name:p.name, unit:unit, qty:1, mods:mods, modKey:modKey });
+  }
+  posRenderCart();
+  showToast(p.name + ' agregado');
+}
+
+function posRenderCart(){
+  const box = document.getElementById('pos-cart-items');
+  if(!box) return;
+  if(posCart.length === 0){
+    box.innerHTML = '<div class="pos-cart-empty">Carrito vacio. Toca un producto para agregarlo.</div>';
+  } else {
+    box.innerHTML = posCart.map(function(item, idx){
+      return '<div class="pos-cart-item">'
+        + '<div class="pos-cart-item-info">'
+        +   '<div class="pos-cart-item-name">'+item.name+'</div>'
+        +   (item.mods.length ? '<div class="pos-cart-item-mods">'+item.mods.join(', ')+'</div>' : '')
+        + '</div>'
+        + '<div class="pos-cart-item-qty">'
+        +   '<button class="pos-qty-btn" onclick="posChangeQty('+idx+',-1)">-</button>'
+        +   '<span style="min-width:20px;text-align:center;font-weight:800;color:var(--text-primary);">'+item.qty+'</span>'
+        +   '<button class="pos-qty-btn" onclick="posChangeQty('+idx+',1)">+</button>'
+        + '</div>'
+        + '<div class="pos-cart-item-price">'+posFmt(item.unit * item.qty)+'</div>'
+        + '</div>';
+    }).join('');
+  }
+  posUpdateTotals();
+}
+
+function posChangeQty(idx, delta){
+  if(!posCart[idx]) return;
+  posCart[idx].qty += delta;
+  if(posCart[idx].qty <= 0) posCart.splice(idx, 1);
+  posRenderCart();
+}
+window.posChangeQty = posChangeQty;
+
+function posClearCart(){
+  if(posCart.length === 0) return;
+  posCart = [];
+  posDiscount = { type:'percent', value:0 };
+  posRenderCart();
+  showToast('Carrito vaciado');
+}
+window.posClearCart = posClearCart;
+
+function posUpdateTotals(){
+  let subtotal = 0;
+  posCart.forEach(function(i){ subtotal += i.unit * i.qty; });
+  let discountAmount = 0;
+  if(posDiscount.type === 'percent') discountAmount = subtotal * (posDiscount.value / 100);
+  else discountAmount = posDiscount.value;
+  if(discountAmount > subtotal) discountAmount = subtotal;
+  const afterDiscount = subtotal - discountAmount;
+  const iva = afterDiscount * 0.16;
+  const total = afterDiscount + iva;
+  document.getElementById('pos-subtotal').textContent = posFmt(subtotal);
+  document.getElementById('pos-discount-val').textContent = '-' + posFmt(discountAmount);
+  document.getElementById('pos-iva').textContent = posFmt(iva);
+  document.getElementById('pos-total').textContent = posFmt(total);
+}
+
+// ═══════ PAYMENT ═══════
+function posSelectPay(method){
+  posPayMethod = method;
+  ['efectivo','tarjeta','transfer','qr'].forEach(function(m){
+    const b = document.getElementById('pos-pay-'+m);
+    if(b) b.classList.toggle('active', m === method);
+  });
+}
+window.posSelectPay = posSelectPay;
+
+// ═══════ DISCOUNT ═══════
+function posOpenDiscount(){
+  if(posCart.length === 0){ showToast('El carrito esta vacio', 'warning'); return; }
+  document.getElementById('pos-disc-overlay').classList.add('active');
+  document.getElementById('pos-disc-modal').classList.add('active');
+}
+window.posOpenDiscount = posOpenDiscount;
+
+function posCloseDiscount(){
+  document.getElementById('pos-disc-overlay').classList.remove('active');
+  document.getElementById('pos-disc-modal').classList.remove('active');
+}
+window.posCloseDiscount = posCloseDiscount;
+
+function posUpdateDiscountPlaceholder(){
+  const t = document.getElementById('pos-disc-type').value;
+  document.getElementById('pos-disc-value').placeholder = t === 'percent' ? '10' : '50.00';
+}
+window.posUpdateDiscountPlaceholder = posUpdateDiscountPlaceholder;
+
+function posApplyDiscount(){
+  const type = document.getElementById('pos-disc-type').value;
+  const value = parseFloat(document.getElementById('pos-disc-value').value) || 0;
+  if(value < 0){ showToast('Valor invalido', 'error'); return; }
+  posDiscount = { type:type, value:value };
+  posUpdateTotals();
+  posCloseDiscount();
+  showToast('Descuento aplicado');
+}
+window.posApplyDiscount = posApplyDiscount;
+
+// ═══════ COBRAR ═══════
+function posCobrar(){
+  if(posCart.length === 0){
+    showToast('El carrito esta vacio', 'warning');
+    return;
+  }
+  const totalText = document.getElementById('pos-total').textContent;
+  const itemCount = posCart.reduce(function(a,b){ return a + b.qty; }, 0);
+  // Add to ventas hoy
+  posVentasHoy.unshift({
+    num: posNextTicketNum++,
+    hora: new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}),
+    items: itemCount,
+    metodo: posPayMethod,
+    total: parseFloat(totalText.replace(/[^0-9.-]/g,''))
+  });
+  // Discount stock
+  posCart.forEach(function(item){
+    if(posStock[posCurrentSucursal][item.id] != null){
+      posStock[posCurrentSucursal][item.id] = Math.max(0, posStock[posCurrentSucursal][item.id] - item.qty);
+    }
+  });
+  showToast('Venta cobrada: ' + totalText + ' | Ticket impreso');
+  posCart = [];
+  posDiscount = { type:'percent', value:0 };
+  posRenderCart();
+  posRenderProducts();
+  posRenderVentas();
+  posRenderInventario();
+}
+window.posCobrar = posCobrar;
+
+function posPrintTicket(){
+  if(posCart.length === 0){ showToast('El carrito esta vacio', 'warning'); return; }
+  showToast('Imprimiendo ticket (compatible SAT e-ticket)');
+}
+window.posPrintTicket = posPrintTicket;
+
+// ═══════ VENTAS DEL DIA ═══════
+function posMetodoLabel(m){
+  return m === 'efectivo' ? 'Efectivo' : m === 'tarjeta' ? 'Tarjeta' : m === 'transfer' ? 'Transferencia' : m === 'qr' ? 'QR' : m;
+}
+
+function posRenderVentas(){
+  const body = document.getElementById('pos-ventas-body');
+  if(!body) return;
+  body.innerHTML = posVentasHoy.map(function(v){
+    return '<tr>'
+      + '<td style="font-weight:800;color:var(--text-primary);">#'+v.num+'</td>'
+      + '<td>'+v.hora+'</td>'
+      + '<td>'+v.items+' item'+(v.items===1?'':'s')+'</td>'
+      + '<td><span class="pos-badge" style="background:var(--accent-bg);color:var(--accent);">'+posMetodoLabel(v.metodo)+'</span></td>'
+      + '<td style="font-weight:800;color:#22c55e;">'+posFmt(v.total)+'</td>'
+      + '<td>'
+      +   '<button class="pos-action-btn" title="Reimprimir ticket" onclick="posReimprimir('+v.num+')"><svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg></button>'
+      +   '<button class="pos-action-btn" title="Enviar por email" onclick="posEnviarEmail('+v.num+')"><svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></button>'
+      +   '<button class="pos-action-btn" title="Cancelar venta" onclick="posCancelarVenta('+v.num+')"><svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>'
+      + '</td>'
+      + '</tr>';
+  }).join('');
+}
+
+function posReimprimir(num){ showToast('Ticket #'+num+' reimpreso'); }
+window.posReimprimir = posReimprimir;
+function posEnviarEmail(num){ showToast('Ticket #'+num+' enviado por email'); }
+window.posEnviarEmail = posEnviarEmail;
+function posCancelarVenta(num){ showToast('Venta #'+num+' cancelada', 'warning'); }
+window.posCancelarVenta = posCancelarVenta;
+
+// ═══════ CORTES DE CAJA ═══════
+function posCalcDiferencia(){
+  const real = parseFloat(document.getElementById('pos-corte-real').value) || 0;
+  const esperado = 4120;
+  const diff = real - esperado;
+  const el = document.getElementById('pos-corte-diff');
+  if(diff === 0){
+    el.textContent = 'Diferencia: $0.00 (cuadrado)';
+    el.style.color = '#22c55e';
+  } else if(diff > 0){
+    el.textContent = 'Diferencia: +' + posFmt(diff) + ' (sobrante)';
+    el.style.color = '#f97316';
+  } else {
+    el.textContent = 'Diferencia: ' + posFmt(diff) + ' (faltante)';
+    el.style.color = '#ef4444';
+  }
+}
+window.posCalcDiferencia = posCalcDiferencia;
+
+function posCerrarCaja(){ showToast('Corte generado. Caja cerrada.'); }
+window.posCerrarCaja = posCerrarCaja;
+function posAbrirCaja(){ showToast('Nueva caja abierta con efectivo inicial'); }
+window.posAbrirCaja = posAbrirCaja;
+
+function posRenderCortes(){
+  const body = document.getElementById('pos-cortes-body');
+  if(!body) return;
+  body.innerHTML = posCortesHistorial.map(function(c){
+    let color = '#22c55e', label = 'Cuadrado';
+    if(c.estado === 'faltante'){ color = '#ef4444'; label = 'Faltante'; }
+    else if(c.estado === 'sobrante'){ color = '#f97316'; label = 'Sobrante'; }
+    const diffTxt = c.diff === 0 ? '$0.00' : (c.diff > 0 ? '+' : '') + posFmt(c.diff);
+    return '<tr>'
+      + '<td>'+c.fecha+'</td>'
+      + '<td>'+c.cajero+'</td>'
+      + '<td>'+posFmt(c.apertura)+'</td>'
+      + '<td>'+posFmt(c.cierre)+'</td>'
+      + '<td style="color:'+color+';font-weight:800;">'+diffTxt+'</td>'
+      + '<td><span class="pos-badge" style="background:'+color+'22;color:'+color+';">'+label+'</span></td>'
+      + '</tr>';
+  }).join('');
+}
+
+// ═══════ INVENTARIO ═══════
+function posRenderInventario(){
+  const body = document.getElementById('pos-inv-body');
+  if(!body) return;
+  body.innerHTML = posProducts.map(function(p){
+    const m = posStock.matriz[p.id] || 0;
+    const n = posStock.norte[p.id] || 0;
+    const s = posStock.sur[p.id] || 0;
+    const total = m + n + s;
+    function cell(v){ const low = v <= 5; return '<span style="color:'+(low?'#ef4444':'var(--text-secondary)')+';font-weight:'+(low?'800':'600')+';">'+v+(low?' !':'')+'</span>'; }
+    return '<tr>'
+      + '<td style="font-weight:700;color:var(--text-primary);">'+p.name+'</td>'
+      + '<td>'+cell(m)+'</td>'
+      + '<td>'+cell(n)+'</td>'
+      + '<td>'+cell(s)+'</td>'
+      + '<td style="font-weight:800;color:var(--accent);">'+total+'</td>'
+      + '<td><button class="pos-btn-secondary" style="padding:6px 12px;font-size:11px;" onclick="posTransferir('+p.id+')">Transferir</button></td>'
+      + '</tr>';
+  }).join('');
+}
+
+function posTransferir(id){
+  const p = posProducts.find(function(x){ return x.id === id; });
+  showToast('Transferencia iniciada para ' + (p ? p.name : 'producto'));
+}
+window.posTransferir = posTransferir;
+
+// ═══════ TURNOS ═══════
+function posRenderTurnos(){
+  const grid = document.getElementById('pos-turnos-grid');
+  if(!grid) return;
+  grid.innerHTML = posTurnos.map(function(t){
+    const statusColor = t.activo ? '#22c55e' : 'var(--text-muted)';
+    const statusLabel = t.activo ? 'Trabajando' : 'Libre';
+    const initials = t.nombre.split(' ').map(function(n){ return n[0]; }).slice(0,2).join('');
+    return '<div class="stat-card animate-in" style="padding:18px;">'
+      + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">'
+      +   '<div style="width:44px;height:44px;border-radius:50%;background:var(--accent-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;">'+initials+'</div>'
+      +   '<div style="flex:1;min-width:0;">'
+      +     '<p style="font-size:13px;font-weight:800;color:var(--text-primary);margin-bottom:2px;">'+t.nombre+'</p>'
+      +     '<p style="font-size:11px;color:var(--text-muted);">'+t.rol+'</p>'
+      +   '</div>'
+      +   '<span class="pos-badge" style="background:'+statusColor+'22;color:'+statusColor+';">'+statusLabel+'</span>'
+      + '</div>'
+      + '<p style="font-size:11px;color:var(--text-faint);margin-bottom:10px;">'+t.turno+'</p>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding-top:10px;border-top:1px solid var(--border);">'
+      +   '<div><p style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Ventas</p><p style="font-size:14px;font-weight:900;color:#22c55e;">'+posFmt(t.ventas)+'</p></div>'
+      +   '<div><p style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Tickets</p><p style="font-size:14px;font-weight:900;color:var(--text-primary);">'+t.tickets+'</p></div>'
+      +   '<div><p style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Comision</p><p style="font-size:14px;font-weight:900;color:var(--accent);">'+posFmt(t.comision)+'</p></div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+// ═══════ KEYBOARD SHORTCUTS ═══════
+function posKeyboardHandler(e){
+  if(e.key === 'F1'){
+    e.preventDefault();
+    const s = document.getElementById('pos-search');
+    if(s) s.focus();
+  } else if(e.key === 'F2'){
+    e.preventDefault();
+    posCobrar();
+  } else if(e.key === 'Escape'){
+    // Close modals if open
+    if(document.getElementById('pos-mod-modal').classList.contains('active')){
+      posCloseModModal();
+    } else if(document.getElementById('pos-disc-modal').classList.contains('active')){
+      posCloseDiscount();
+    } else if(posCart.length > 0){
+      posClearCart();
+    }
+  }
+}
+
+// ═══════ ONLINE INDICATOR ═══════
+function posUpdateOnlineStatus(){
+  const ind = document.getElementById('pos-online-indicator');
+  const txt = document.getElementById('pos-online-text');
+  if(!ind || !txt) return;
+  if(navigator.onLine){
+    ind.style.background = 'rgba(34,197,94,0.1)';
+    ind.style.borderColor = 'rgba(34,197,94,0.2)';
+    ind.querySelector('div').style.background = '#22c55e';
+    txt.style.color = '#22c55e';
+    txt.textContent = 'En linea';
+  } else {
+    ind.style.background = 'rgba(249,115,22,0.1)';
+    ind.style.borderColor = 'rgba(249,115,22,0.2)';
+    ind.querySelector('div').style.background = '#f97316';
+    txt.style.color = '#f97316';
+    txt.textContent = 'Sin conexion (modo offline)';
+  }
+}
+
+// ═══════ INIT ═══════
+function posInit(){
+  // Restore dismissed helps
+  try {
+    ['main','ventas','cortes','inventario','turnos'].forEach(function(tab){
+      if(localStorage.getItem('pos_help_'+tab+'_dismissed') === '1'){
+        const el = document.getElementById('pos-help-'+tab);
+        if(el) el.style.display = 'none';
+      }
+    });
+  } catch(e){}
+
+  posRenderProducts();
+  posRenderCart();
+  posRenderVentas();
+  posRenderCortes();
+  posRenderInventario();
+  posRenderTurnos();
+  posUpdateOnlineStatus();
+
+  document.addEventListener('keydown', posKeyboardHandler);
+  window.addEventListener('online', posUpdateOnlineStatus);
+  window.addEventListener('offline', posUpdateOnlineStatus);
+}
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', posInit);
+} else {
+  posInit();
+}
+</script>
+</DashboardLayout>
