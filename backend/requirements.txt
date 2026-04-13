@@ -9,3 +9,5 @@ python-multipart
 cryptography
 passlib[bcrypt]
 python-jose[cryptography]
+httpx
+bcrypt
