@@ -1,0 +1,105 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro';
+import { Icon } from 'astro-icon/components';
+---
+
+<AppLayout title="Facturación SAT 4.0">
+    <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+            <div class="flex items-center gap-2 mb-2">
+                <span class="w-2 h-2 rounded-full bg-[#70D1C6] shadow-[0_0_10px_#70D1C6]"></span>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Cumplimiento Fiscal</p>
+            </div>
+            <h1 class="text-4xl font-black text-slate-950 tracking-tighter">Facturación 4.0</h1>
+            <p class="text-slate-500 font-bold mt-1 text-lg">Emisión inteligente de <span class="text-[#105971]">CFDI y Complementos</span> sin errores.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <button class="px-5 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-black text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm">
+                <Icon name="lucide:download" class="w-4 h-4" />
+                Descargar Masivo
+            </button>
+            <button class="px-5 py-3 bg-[#70D1C6] text-[#081014] rounded-2xl text-sm font-black hover:shadow-xl transition-all flex items-center gap-2">
+                <Icon name="lucide:plus-circle" class="w-4 h-4" />
+                Nueva Factura
+            </button>
+        </div>
+    </div>
+
+    <!-- FISCAL METRICS -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+        <div class="md:col-span-2 bg-gradient-to-br from-[#105971] to-[#081014] p-8 rounded-[2.5rem] text-white relative overflow-hidden group">
+            <div class="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-bl-full pointer-events-none"></div>
+            <p class="text-[10px] font-black uppercase tracking-widest text-[#70D1C6] mb-4">Balance Fiscal Mes</p>
+            <h3 class="text-5xl font-black mb-8 leading-none">$142,500 <span class="text-lg font-bold text-slate-400 uppercase">mxn</span></h3>
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span class="text-[10px] font-black uppercase tracking-widest">Facturado OK</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                    <span class="text-[10px] font-black uppercase tracking-widest">Pendiente</span>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col justify-between">
+            <Icon name="lucide:shield-check" class="w-10 h-10 text-[#70D1C6] mb-4" />
+            <div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status PAC</p>
+                <h4 class="text-xl font-black text-slate-900 leading-tight">Conexión Segura</h4>
+            </div>
+        </div>
+        <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col justify-between">
+            <Icon name="lucide:file-warning" class="w-10 h-10 text-amber-500 mb-4" />
+            <div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Cancelaciones</p>
+                <h4 class="text-xl font-black text-slate-900 leading-tight">3 Solicitudes</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- INVOICE LIST -->
+    <div class="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden">
+        <div class="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/10">
+            <h3 class="text-lg font-black text-slate-900 tracking-tight">Historial de Timbrado</h3>
+            <div class="flex items-center border border-slate-100 rounded-xl px-3 py-1 bg-white">
+                <Icon name="lucide:search" class="w-3.5 h-3.5 text-slate-400 mr-2" />
+                <input type="text" placeholder="UUID o Cliente..." class="text-xs font-bold outline-none bg-transparent py-1 w-32" />
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-100">
+                        <th class="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Receptor</th>
+                        <th class="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">RFC</th>
+                        <th class="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Uso CFDI</th>
+                        <th class="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Monto</th>
+                        <th class="px-8 py-5 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Acción</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="px-8 py-6">
+                            <p class="text-sm font-black text-slate-900">Eduardo Rivera</p>
+                            <p class="text-[10px] text-slate-400 font-bold">Folio: SB-0012</p>
+                        </td>
+                        <td class="px-8 py-6">
+                            <code class="text-[11px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded">RIVE880512A1</code>
+                        </td>
+                        <td class="px-8 py-6">
+                            <span class="text-[10px] font-bold text-slate-500">G03 - Gastos en gral.</span>
+                        </td>
+                        <td class="px-8 py-6 text-right font-black text-slate-900">$1,450.00</td>
+                        <td class="px-8 py-6">
+                            <div class="flex justify-center gap-2">
+                                <button class="p-2 bg-slate-100 rounded-lg hover:bg-[#105971] hover:text-white transition-all"><Icon name="lucide:file-text" class="w-4 h-4" /></button>
+                                <button class="p-2 bg-slate-100 rounded-lg hover:bg-[#FF6B00] hover:text-white transition-all"><Icon name="lucide:code-2" class="w-4 h-4" /></button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</AppLayout>

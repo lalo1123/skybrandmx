@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #F8FAFC;
+    /* brand-bg */
+    @apply text-slate-900 antialiased overflow-x-hidden selection:bg-brand-primary/10;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply text-slate-950 font-bold tracking-tight;
+  }
+}
+
+@layer components {
+  .glass-card {
+    background-color: #FFFFFF;
+    border: 1px solid #F1F5F9;
+    /* slate-100 */
+    border-radius: 2rem;
+    transition: all 0.5s ease;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.03);
+  }
+
+  .glass-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+  }
+
+  .glass-nav {
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid #F1F5F9;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center px-8 py-4 rounded-full font-bold transition-all duration-300 transform active:scale-95 cursor-pointer;
+  }
+
+  .btn-primary {
+    background-color: #084d6e;
+    /* brand-primary */
+    color: #FFFFFF;
+    box-shadow: 0 10px 25px -5px rgba(8, 77, 110, 0.2);
+  }
+
+  .btn-primary:hover {
+    background-color: #063d58;
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px -5px rgba(8, 77, 110, 0.4);
+  }
+
+  .btn-secondary {
+    background-color: #F1F5F9;
+    /* slate-100 */
+    color: #334155;
+    /* slate-700 */
+    border: 1px solid transparent;
+  }
+
+  .btn-secondary:hover {
+    background-color: #E2E8F0;
+    /* slate-200 */
+    transform: translateY(-2px);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(to right, #084d6e, #66cccc, #6fcff5);
+  }
+}

@@ -1,0 +1,106 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Facturación Electrónica SAT 4.0 — SkyBrandMX">
+    <main>
+        <!-- HERO FACTURACIÓN -->
+        <section class="relative pt-40 pb-20 overflow-hidden bg-white">
+            <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center relative z-10">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#105971]/10 border border-[#105971]/20 text-[#105971] text-xs font-black mb-8">
+                        Módulo SAT 4.0
+                    </div>
+                    <h1 class="text-5xl md:text-7xl font-black text-[#081014] tracking-tighter mb-6 leading-tight">
+                        Timbrado <span class="text-[#70D1C6]">automático,</span> 0 errores.
+                    </h1>
+                    <p class="text-lg text-slate-500 font-bold mb-10 leading-relaxed">
+                        Cumple con las regulaciones fiscales de México sin mover un dedo. Nuestra plataforma convierte compras de Shopify y Mercado Libre en CFDI válidos 4.0 al instante.
+                    </p>
+                    <div class="flex gap-4">
+                        <a href="https://web.whatsapp.com/send?phone=5525582310" class="px-8 py-4 border-2 border-[#105971] text-[#105971] rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-[#105971] hover:text-white transition-all shadow-xl hover:-translate-y-1">Ver Portal SAT</a>
+                    </div>
+                </div>
+                <div class="relative">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-[#70D1C6]/30 to-blue-200/30 rounded-full blur-[100px] -z-10"></div>
+                    <div class="bg-white border-2 border-[#70D1C6]/30 rounded-[2.5rem] shadow-2xl p-8 relative">
+                        <!-- Mock Factura -->
+                        <div class="flex items-center justify-between mb-8 pb-6 border-b border-slate-100">
+                            <div>
+                                <h3 class="font-black text-xl text-[#081014] flex items-center gap-2">
+                                    CFDI <span class="text-emerald-500 text-sm bg-emerald-100 px-2 py-0.5 rounded-md">Timbrado Exitoso</span>
+                                </h3>
+                                <p class="text-xs font-bold text-slate-400 mt-1">Folio Fiscal (UUID): 8A3F...-41A8</p>
+                            </div>
+                            <div class="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400">QR</div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                <div class="flex justify-between mb-2">
+                                    <span class="text-xs font-bold text-slate-400">Receptor</span>
+                                    <span class="text-xs font-black text-[#105971]">G03 - Gastos en General</span>
+                                </div>
+                                <p class="font-bold text-sm text-[#081014]">Operaciones Logísticas S.A. de C.V.</p>
+                                <p class="text-xs font-black tracking-wider text-slate-400 uppercase mt-1">RFC: OLO123456789</p>
+                            </div>
+                            <div class="flex gap-4">
+                                <button class="flex-1 py-3 bg-[#105971] text-white text-xs font-black rounded-xl hover:bg-[#084d6e] transition-colors">Descargar PDF</button>
+                                <button class="flex-1 py-3 bg-white border border-slate-200 text-[#081014] text-xs font-black rounded-xl hover:bg-slate-50 transition-colors shadow-sm">Descargar XML</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CARACTERISTICAS FACTURACION -->
+        <section class="py-24 bg-[#F8FAFC]">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl font-black text-[#105971] tracking-tighter mb-4">
+                        Diseñado para Contadores y Directivos
+                    </h2>
+                    <p class="text-slate-500 font-bold max-w-2xl mx-auto text-lg">
+                        Libera a tu equipo de tareas repetitivas y evita multas por errores de captura.
+                    </p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Feature -->
+                    <div class="p-8 bg-white rounded-[2rem] border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all">
+                        <div class="w-14 h-14 bg-[#70D1C6]/20 rounded-xl flex items-center justify-center text-3xl mb-6">⚙️</div>
+                        <h4 class="text-2xl font-black text-[#081014] mb-4">Timbrado en Auto-Piloto</h4>
+                        <p class="text-slate-600 font-bold text-sm leading-relaxed">Conecta tu pasarela (Stripe, Mercado Pago) y emite la factura automáticamente en cuanto se procesa el cobro.</p>
+                    </div>
+
+                    <!-- Feature -->
+                    <div class="p-8 bg-white rounded-[2rem] border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-[#FF6B00]/10 rounded-bl-[100px] -z-10 transition-transform group-hover:scale-150"></div>
+                        <div class="w-14 h-14 bg-[#FF6B00]/10 rounded-xl flex items-center justify-center text-3xl mb-6">💻</div>
+                        <h4 class="text-2xl font-black text-[#081014] mb-4">Portal Cliente</h4>
+                        <p class="text-slate-600 font-bold text-sm leading-relaxed">Dale a tus compradores un link donde pueden ingresar su RFC, número de ticket y descargarse su propia factura 24/7.</p>
+                    </div>
+
+                    <!-- Feature -->
+                    <div class="p-8 bg-white rounded-[2rem] border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all">
+                        <div class="w-14 h-14 bg-[#105971]/10 rounded-xl flex items-center justify-center text-3xl mb-6">📑</div>
+                        <h4 class="text-2xl font-black text-[#081014] mb-4">Complementos (REP)</h4>
+                        <p class="text-slate-600 font-bold text-sm leading-relaxed">Asigna pagos parciales a facturas PPD con clics y genera los Recibos Electrónicos de Pago masivamente sin equivocaciones.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA FINAL FACTURACION -->
+        <section class="py-24 bg-[#081014]">
+            <div class="max-w-4xl mx-auto px-6 text-center">
+                <h2 class="text-4xl md:text-5xl font-black text-white tracking-tighter mb-8">
+                    Evita dolores de cabeza con el SAT.
+                </h2>
+                <div class="flex justify-center flex-wrap gap-4 mt-10">
+                    <a href="/planes" class="px-10 py-5 bg-[#70D1C6] text-[#081014] rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-[#5cbdab] transition-all shadow-[0_0_20px_rgba(112,209,198,0.3)]">Estandarizar mi Facturación</a>
+                </div>
+            </div>
+        </section>
+    </main>
+</Layout>

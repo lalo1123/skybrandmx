@@ -1,0 +1,76 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro';
+import { Icon } from 'astro-icon/components';
+---
+
+<AppLayout title="Configuración de Cuenta">
+    <div class="mb-12">
+        <div class="flex items-center gap-2 mb-2">
+            <span class="w-2 h-2 rounded-full bg-slate-400 shadow-[0_0_10px_rgba(0,0,0,0.1)]"></span>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Preferencias de Usuario</p>
+        </div>
+        <h1 class="text-4xl font-black text-slate-950 tracking-tighter">Configuración</h1>
+        <p class="text-slate-500 font-bold mt-1 text-lg">Personaliza tu experiencia y gestiona la seguridad de tu herramienta.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <!-- LEFT: Settings Navigation -->
+        <div class="space-y-2">
+            <button class="w-full flex items-center gap-4 px-6 py-4 bg-white border border-slate-100 rounded-2xl text-slate-950 font-black text-sm shadow-sm">
+                <Icon name="lucide:user" class="w-5 h-5 text-[#105971]" />
+                Perfil de Usuario
+            </button>
+            <button class="w-full flex items-center gap-4 px-6 py-4 text-slate-400 hover:text-slate-900 font-bold text-sm transition-all text-left">
+                <Icon name="lucide:shield" class="w-5 h-5" />
+                Seguridad y 2FA
+            </button>
+            <button class="w-full flex items-center gap-4 px-6 py-4 text-slate-400 hover:text-slate-900 font-bold text-sm transition-all text-left">
+                <Icon name="lucide:bell" class="w-5 h-5" />
+                Notificaciones
+            </button>
+            <button class="w-full flex items-center gap-4 px-6 py-4 text-slate-400 hover:text-slate-900 font-bold text-sm transition-all text-left">
+                <Icon name="lucide:credit-card" class="w-5 h-5" />
+                Suscripción y Pagos
+            </button>
+        </div>
+
+        <!-- RIGHT: Form / Details -->
+        <div class="lg:col-span-2 space-y-8">
+            <div class="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm">
+                <h3 class="text-2xl font-black text-slate-950 mb-8 tracking-tight">Información de Perfil</h3>
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Nombre Completo</label>
+                            <input type="text" value="Santiago Jimenez" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:outline-none focus:ring-4 focus:ring-[#105971]/5 focus:border-[#105971]/30 transition-all" />
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Correo Electrónico</label>
+                            <input type="email" value="santiago@skybrand.mx" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:outline-none focus:ring-4 focus:ring-[#105971]/5 focus:border-[#105971]/30 transition-all" />
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Empresa</label>
+                        <input type="text" value="SkyBrandMX Solutions S.A. de C.V." class="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:outline-none focus:ring-4 focus:ring-[#105971]/5 focus:border-[#105971]/30 transition-all" />
+                    </div>
+                </div>
+                <div class="mt-10 pt-8 border-t border-slate-50 flex justify-end">
+                    <button class="px-8 py-4 bg-[#105971] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:shadow-xl transition-all">Guardar Cambios</button>
+                </div>
+            </div>
+
+            <div class="bg-orange-50 border border-orange-100 p-8 rounded-[2.5rem] flex items-center justify-between group">
+                <div class="flex items-center gap-6">
+                    <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm">
+                        <Icon name="lucide:sparkles" class="w-7 h-7 text-[#FF6B00]" />
+                    </div>
+                    <div>
+                        <h4 class="font-black text-slate-900 text-lg tracking-tight">Plan Scale Activo</h4>
+                        <p class="text-sm font-bold text-slate-500">Próxima facturación: Oct 24, 2026</p>
+                    </div>
+                </div>
+                <button class="px-6 py-3 bg-white border border-orange-200 text-[#FF6B00] font-black text-xs uppercase tracking-widest rounded-xl hover:bg-[#FF6B00] hover:text-white transition-all">Cambiar Plan</button>
+            </div>
+        </div>
+    </div>
+</AppLayout>

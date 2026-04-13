@@ -1,0 +1,123 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro';
+import { Icon } from 'astro-icon/components';
+---
+
+<AppLayout title="Integraciones y Ecosistema">
+    <div class="mb-12">
+        <div class="flex items-center gap-2 mb-2">
+            <span class="w-2 h-2 rounded-full bg-[#105971] animate-pulse shadow-[0_0_10px_#105971]"></span>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Centro de Conexiones</p>
+        </div>
+        <h1 class="text-4xl font-black text-slate-950 tracking-tighter">Tu Ecosistema</h1>
+        <p class="text-slate-500 font-bold mt-1 text-lg">Administra las llaves de acceso de tus conectores e e-commerce.</p>
+    </div>
+
+    <!-- MAIN CONNECTORS -->
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- INTEGRATION CARD: Shopify -->
+        <div class="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all group overflow-hidden relative">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-bl-full translate-x-4 -translate-y-4 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform"></div>
+            <div class="flex justify-between items-start mb-8">
+                <div class="w-16 h-16 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shadow-sm">
+                    <Icon name="simple-icons:shopify" class="w-10 h-10 text-[#95BF47]" />
+                </div>
+                <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-full border border-emerald-200 uppercase tracking-widest">Activo</span>
+            </div>
+            <h3 class="text-xl font-black text-slate-950 mb-2">Shopify Connector</h3>
+            <p class="text-sm font-bold text-slate-500 leading-relaxed mb-8">Sincronización de órdenes e inventario bidireccional en tiempo real.</p>
+            <button class="w-full py-4 bg-slate-50 text-slate-950 rounded-2xl font-black text-xs uppercase tracking-widest border border-slate-100 group-hover:bg-[#105971] group-hover:text-white group-hover:border-[#105971] transition-all">Configurar API</button>
+        </div>
+
+        <!-- INTEGRATION CARD: WhatsApp -->
+        <div class="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all group overflow-hidden relative">
+            <div class="flex justify-between items-start mb-8">
+                <div class="w-16 h-16 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shadow-sm">
+                    <Icon name="simple-icons:whatsapp" class="w-10 h-10 text-[#25D366]" />
+                </div>
+                <span class="px-3 py-1 bg-amber-100 text-amber-700 text-[10px] font-black rounded-full border border-amber-200 uppercase tracking-widest">Pendiente</span>
+            </div>
+            <h3 class="text-xl font-black text-slate-950 mb-2">WhatsApp Business</h3>
+            <p class="text-sm font-bold text-slate-500 leading-relaxed mb-8">Automatiza notificaciones de envío y atención al cliente.</p>
+            <button class="w-full py-4 bg-[#70D1C6] text-[#081014] rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white transition-all">Vincular Número</button>
+        </div>
+
+        <!-- INTEGRATION CARD: Meta -->
+        <div class="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all group overflow-hidden relative">
+            <div class="flex justify-between items-start mb-8">
+                <div class="flex -space-x-4">
+                    <div class="w-16 h-16 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shadow-sm relative z-10">
+                        <Icon name="simple-icons:facebook" class="w-9 h-9 text-[#1877F2]" />
+                    </div>
+                </div>
+                <span class="px-3 py-1 bg-amber-100 text-amber-700 text-[10px] font-black rounded-full border border-amber-200 uppercase tracking-widest">Pendiente</span>
+            </div>
+            <h3 class="text-xl font-black text-slate-950 mb-2">Meta Ads & Shop</h3>
+            <p class="text-sm font-bold text-slate-500 leading-relaxed mb-8">Sincroniza catálogos para Instagram y Facebook Shopping.</p>
+            <button class="w-full py-4 bg-slate-50 text-slate-950 rounded-2xl font-black text-xs uppercase tracking-widest border border-slate-100 group-hover:bg-[#105971] group-hover:text-white group-hover:border-[#105971] transition-all">Conectar Píxel</button>
+        </div>
+
+        <!-- INTEGRATION CARD: Google Ads -->
+        <div class="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all group overflow-hidden relative">
+            <div class="flex justify-between items-start mb-8">
+                <div class="w-16 h-16 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shadow-sm">
+                    <Icon name="simple-icons:googleads" class="w-10 h-10 text-[#4285F4]" />
+                </div>
+                <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-full border border-emerald-200 uppercase tracking-widest">Conectar</span>
+            </div>
+            <h3 class="text-xl font-black text-slate-950 mb-2">Google Ads</h3>
+            <p class="text-sm font-bold text-slate-500 leading-relaxed mb-8">Retargeting dinámico y medición de conversiones de e-commerce.</p>
+            <button class="w-full py-4 bg-slate-50 text-slate-950 rounded-2xl font-black text-xs uppercase tracking-widest border border-slate-100 group-hover:bg-[#105971] group-hover:text-white group-hover:border-[#105971] transition-all">Vincular Cuenta</button>
+        </div>
+
+        <!-- INTEGRATION CARD: SkyBrand AI Ads -->
+        <div class="bg-gradient-to-br from-[#105971] to-[#081014] p-10 rounded-[3rem] text-white shadow-xl hover:shadow-2xl transition-all group overflow-hidden relative border border-white/10">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-[#70D1C6]/10 rounded-bl-full pointer-events-none"></div>
+            <div class="flex justify-between items-start mb-8">
+                <div class="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center shadow-sm border border-white/20">
+                    <Icon name="lucide:sparkles" class="w-10 h-10 text-[#70D1C6]" />
+                </div>
+                <span class="px-3 py-1 bg-[#70D1C6]/20 text-[#70D1C6] text-[10px] font-black rounded-full border border-[#70D1C6]/30 uppercase tracking-widest">Beta</span>
+            </div>
+            <h3 class="text-xl font-black text-white mb-2">Publicidad con IA</h3>
+            <p class="text-sm font-bold text-slate-400 leading-relaxed mb-8">Crea y optimiza tus anuncios automáticamente en Meta y Google.</p>
+            <button class="w-full py-4 bg-[#70D1C6] text-[#081014] rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white transition-all">Activar Módulo</button>
+        </div>
+
+        <!-- INTEGRATION CARD: SAT -->
+        <div class="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all group overflow-hidden relative">
+            <div class="flex justify-between items-start mb-8">
+                <div class="w-16 h-16 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shadow-sm">
+                   <div class="text-2xl font-black text-[#105971]">SAT</div>
+                </div>
+                <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-full border border-emerald-200 uppercase tracking-widest">Activo</span>
+            </div>
+            <h3 class="text-xl font-black text-slate-950 mb-2">SAT / Facturapi</h3>
+            <p class="text-sm font-bold text-slate-500 leading-relaxed mb-8">Timbrado de facturas CFDI 4.0 automático desde pedidos.</p>
+            <button class="w-full py-4 bg-slate-50 text-slate-950 rounded-2xl font-black text-xs uppercase tracking-widest border border-slate-100 group-hover:bg-[#105971] group-hover:text-white group-hover:border-[#105971] transition-all">Certificados CSD</button>
+        </div>
+
+        <!-- INTEGRATION CARD: FedEx -->
+        <div class="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all group overflow-hidden relative">
+            <div class="flex justify-between items-start mb-8">
+                <div class="w-16 h-16 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shadow-sm">
+                    <Icon name="simple-icons:fedex" class="w-10 h-10 text-[#4D148C]" />
+                </div>
+                <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-full border border-emerald-200 uppercase tracking-widest">Activo</span>
+            </div>
+            <h3 class="text-xl font-black text-slate-950 mb-2">FedEx Express</h3>
+            <p class="text-sm font-bold text-slate-500 leading-relaxed mb-8">Generación de guías y recolección programada nacional.</p>
+            <button class="w-full py-4 bg-slate-50 text-slate-950 rounded-2xl font-black text-xs uppercase tracking-widest border border-slate-100 group-hover:bg-[#105971] group-hover:text-white group-hover:border-[#105971] transition-all">Tarifario</button>
+        </div>
+
+        <!-- PLACEHOLDER ADD NEW -->
+        <div class="p-10 rounded-[3rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-center group hover:border-[#70D1C6] hover:bg-[#70D1C6]/5 transition-all cursor-pointer">
+            <div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mb-6 group-hover:bg-[#70D1C6] group-hover:text-white transition-all">
+                <Icon name="lucide:plus" class="w-8 h-8" />
+            </div>
+            <h3 class="text-xl font-black text-slate-400 group-hover:text-[#105971]">Añadir Nueva App</h3>
+            <p class="text-xs font-bold text-slate-400 mt-2 max-w-[180px]">Amazon, Stripe, WooCommerce y más próximamente.</p>
+        </div>
+    </div>
+</AppLayout>

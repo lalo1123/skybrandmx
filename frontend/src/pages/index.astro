@@ -1,0 +1,757 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SegmentationTabs from '../components/SegmentationTabs.astro';
+import { Icon } from 'astro-icon/components';
+---
+
+<style>
+	@keyframes float {
+		0% { transform: translateY(0px); }
+		50% { transform: translateY(-10px); }
+		100% { transform: translateY(0px); }
+	}
+	.animate-float {
+		animation: float 6s ease-in-out infinite;
+	}
+	.animate-float-delayed {
+		animation: float 8s ease-in-out infinite -2s;
+	}
+</style>
+
+<Layout title="Panel Todo en Uno para PYMES | CRM, Facturación y Envíos — SkyBrandMX">
+
+
+	<main>
+		<!-- HERO SECTION -->
+		<section class="relative pt-40 pb-32 overflow-hidden bg-[#081014]">
+			<!-- Background subtle technological light gradient -->
+			<div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(16,89,113,0.3),transparent_50%)] pointer-events-none"></div>
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(112,209,198,0.05),transparent_40%)] pointer-events-none"></div>
+
+			<div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-20 items-center relative z-10">
+				<div class="flex flex-col items-start">
+					<div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#105971]/30 border border-[#70D1C6]/30 text-[#70D1C6] text-xs font-bold mb-10 shadow-[0_0_15px_rgba(112,209,198,0.1)]">
+						<span class="flex h-2 w-2 rounded-full bg-[#70D1C6] shadow-[0_0_5px_#70D1C6]"></span>
+                        Nuevo: Panel Todo-en-Uno para México
+					</div>
+					<h1 class="text-7xl lg:text-[90px] font-black tracking-tight mb-8 leading-[0.9] text-white">
+						Todo tu negocio en <br/><span class="bg-clip-text text-transparent bg-gradient-to-r from-[#105971] via-[#3a96a6] to-[#70D1C6]">un solo panel.</span>
+					</h1>
+					<p class="text-xl text-slate-400 mb-12 max-w-xl leading-relaxed font-semibold">
+						CRM, facturación SAT, guías de envío y automatización — integrados en una sola plataforma Enterprise diseñada para escalar tu negocio.
+					</p>
+					<div class="flex flex-col sm:flex-row gap-5 mb-14 w-full sm:w-auto">
+						<a href="#pricing" class="px-10 py-5 bg-[#FF6B00] text-white rounded-2xl text-lg font-black shadow-[0_0_20px_rgba(255,107,0,0.5)] hover:shadow-[0_0_35px_rgba(255,107,0,0.7)] hover:-translate-y-1 transition-all text-center flex items-center justify-center gap-2">Prueba Gratis 14 Días</a>
+						<a href="#demo" class="px-10 py-5 bg-transparent border-2 border-slate-700 text-slate-300 rounded-2xl text-lg font-black hover:bg-slate-800 hover:text-white hover:border-slate-500 transition-all transform hover:-translate-y-1 text-center">Agendar Demo</a>
+					</div>
+					<div class="flex items-center gap-4 text-sm font-bold border border-white/5 bg-white/5 px-5 py-3 rounded-2xl backdrop-blur-sm">
+						<div class="flex -space-x-3">
+							<div class="w-10 h-10 rounded-full border-2 border-[#105971] bg-[#0a151b] overflow-hidden flex items-center justify-center text-lg">🧔🏻</div>
+							<div class="w-10 h-10 rounded-full border-2 border-[#105971] bg-[#0a151b] overflow-hidden flex items-center justify-center text-lg">👩🏼‍💻</div>
+							<div class="w-10 h-10 rounded-full border-2 border-[#105971] bg-[#0a151b] overflow-hidden flex items-center justify-center text-sm">📦</div>
+						</div>
+						<span class="text-slate-400">Confiado por <strong class="text-white">+150 PYMES</strong> en México</span>
+					</div>
+				</div>
+
+				<!-- Dashboard Visual / App Mockup (Dark Mode Refined) -->
+				<div class="relative w-full max-w-2xl mx-auto lg:ml-auto">
+					<!-- Floating Elements -->
+					<div class="absolute -right-8 top-[15%] z-20 animate-float">
+						<div class="bg-[#0c1a22] rounded-[1.75rem] p-5 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] flex items-center gap-5 border border-white/10">
+							<div class="w-14 h-14 rounded-3xl bg-[#105971]/20 border border-[#105971]/50 text-[#70D1C6] flex items-center justify-center shadow-[0_0_15px_rgba(16,89,113,0.5)]">
+                                <span class="text-xl">📈</span>
+							</div>
+							<div>
+								<p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Conversión</p>
+								<p class="text-2xl font-black text-white leading-none tracking-tight">+18.4%</p>
+							</div>
+						</div>
+					</div>
+
+					<div class="absolute -left-12 top-[45%] z-20 animate-float-delayed">
+						<div class="bg-[#0c1a22] rounded-[1.75rem] p-5 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] flex items-center gap-5 border border-white/10">
+							<div class="w-14 h-14 rounded-3xl bg-[#FF6B00]/20 border border-[#FF6B00]/50 text-[#FF6B00] flex items-center justify-center shadow-[0_0_15px_rgba(255,107,0,0.3)]">
+                                <span class="text-2xl">⚡</span>
+							</div>
+							<div>
+								<p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Automatización</p>
+								<p class="text-2xl font-black text-white leading-none tracking-tight">Activa</p>
+							</div>
+						</div>
+					</div>
+
+					<div class="glass-card w-full aspect-[16/11] relative overflow-hidden flex flex-col bg-[#0a151b] border-white/10 shadow-[0_0_50px_rgba(16,89,113,0.2)] rounded-[2rem]">
+						<!-- Mockup Header -->
+                        <div class="h-16 border-b border-white/5 px-6 flex items-center justify-between bg-[#081014] text-slate-400">
+							<div class="flex gap-2.5">
+								<div class="w-3 h-3 rounded-full bg-slate-700"></div>
+								<div class="w-3 h-3 rounded-full bg-slate-700"></div>
+								<div class="w-3 h-3 rounded-full bg-slate-700"></div>
+							</div>
+							<div class="flex-1 max-w-sm mx-auto">
+                                <div class="bg-white/5 rounded-xl h-8 flex items-center px-4 gap-3 border border-white/5">
+                                    <span class="text-[11px] text-slate-500 font-semibold tracking-tight mx-auto flex gap-2 items-center"><span class="w-2 h-2 rounded-full bg-[#70D1C6]"></span> app.skybrandmx.mx</span>
+                                </div>
+                            </div>
+							<div class="w-16 flex justify-end">
+                                <div class="w-8 h-8 rounded-full bg-[#105971]/30 flex items-center justify-center text-[10px] font-black italic border border-[#105971]/50 text-[#70D1C6] shadow-sm">SJ</div>
+                            </div>
+						</div>
+						
+						<div class="flex-1 flex overflow-hidden bg-[#0c1a22]">
+                            <!-- Sidebar -->
+							<div class="w-20 flex flex-col items-center py-8 border-r border-white/5 gap-8 bg-[#081014]">
+								<div class="w-10 h-10 rounded-2xl text-white flex items-center justify-center shadow-lg bg-[#105971]/20 border border-[#105971]/50 text-[#70D1C6]">🚀</div>
+								<div class="w-8 h-8 rounded-xl text-slate-500 hover:text-[#70D1C6] flex items-center justify-center transition-colors">💼</div>
+								<div class="w-8 h-8 rounded-xl text-slate-500 hover:text-[#70D1C6] flex items-center justify-center transition-colors">📄</div>
+								<div class="w-8 h-8 rounded-xl text-slate-500 hover:text-[#70D1C6] flex items-center justify-center transition-colors">⚙️</div>
+							</div>
+                            <!-- Main Content Area -->
+							<div class="flex-1 p-8 flex flex-col gap-6 relative">
+                                <!-- Background grid -->
+                                <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:30px_30px] opacity-30 pointer-events-none"></div>
+
+								<div class="flex items-end justify-between relative z-10">
+									<div class="space-y-1">
+										<h3 class="text-2xl font-black text-white tracking-tighter leading-tight">Visión Operativa</h3>
+										<p class="text-[9px] text-[#70D1C6]/80 font-black uppercase tracking-[0.3em] opacity-80">Métricas en tiempo real</p>
+									</div>
+									<div class="bg-[#105971]/20 border border-[#105971]/40 rounded-xl px-4 py-2 shadow-sm text-[8px] font-black text-[#70D1C6] tracking-wider">MARZO 2026</div>
+								</div>
+								
+								<div class="grid grid-cols-2 gap-5 relative z-10">
+									<div class="bg-[#081014]/60 backdrop-blur-md border border-white/5 rounded-[1.75rem] p-6 shadow-xl">
+										<div class="flex justify-between items-start mb-5">
+                                            <div class="w-10 h-10 rounded-xl bg-[#105971]/30 text-[#70D1C6] flex items-center justify-center text-xl border border-[#105971]/50 shadow-inner">💵</div>
+                                            <span class="text-[9px] font-black text-[#70D1C6] bg-[#70D1C6]/10 px-2.5 py-1 rounded-full border border-[#70D1C6]/20">+24.5%</span>
+                                        </div>
+										<p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] mb-1.5 font-black">Ingresos Netos</p>
+										<span class="text-3xl font-black text-white tracking-tighter leading-none">$842.2k</span>
+									</div>
+									<div class="bg-[#081014]/60 backdrop-blur-md border border-white/5 rounded-[1.75rem] p-6 shadow-xl">
+                                        <div class="flex justify-between items-start mb-5">
+                                            <div class="w-10 h-10 rounded-xl bg-[#105971]/30 text-[#70D1C6] flex items-center justify-center text-xl border border-[#105971]/50 shadow-inner">📦</div>
+                                            <span class="text-[9px] font-black text-[#70D1C6] bg-[#70D1C6]/10 px-2.5 py-1 rounded-full border border-[#70D1C6]/20">+12%</span>
+                                        </div>
+										<p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] mb-1.5 font-black">Envíos Exitosos</p>
+										<span class="text-3xl font-black text-white tracking-tighter leading-none">3,128</span>
+									</div>
+								</div>
+
+                                <!-- Progress Bar Mockup Element -->
+                                <div class="bg-[#081014]/60 backdrop-blur-md border border-white/5 rounded-[1.5rem] p-5 shadow-xl relative z-10 w-full mt-auto">
+                                    <div class="flex justify-between text-xs mb-3">
+                                        <span class="font-bold text-slate-300">Capacidad de Servidor</span>
+                                        <span class="text-[#70D1C6] font-black">Optimizada</span>
+                                    </div>
+                                    <div class="w-full h-2 bg-[#0c1a22] rounded-full overflow-hidden border border-white/5">
+                                        <div class="h-full bg-gradient-to-r from-[#105971] to-[#70D1C6] w-[35%] rounded-full shadow-[0_0_10px_#70D1C6]"></div>
+                                    </div>
+                                </div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- INTEGRATIONS MARQUEE TEASER -->
+		<section class="py-24 bg-white border-y border-slate-50 overflow-hidden relative">
+            <div class="max-w-7xl mx-auto px-6 text-center mb-10">
+                <h2 class="text-3xl md:text-5xl font-black text-[#105971] tracking-tighter mb-4">
+                    Conectado con el ecosistema que impulsas
+                </h2>
+                <a href="/integraciones" class="text-[#70D1C6] font-black uppercase text-[10px] tracking-[0.2em] hover:text-[#105971] transition-colors">Ver todas las integraciones →</a>
+            </div>
+
+            <div class="relative w-full">
+                <!-- Fade gradients -->
+                <div class="absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-white to-transparent z-20 pointer-events-none"></div>
+                <div class="absolute inset-y-0 right-0 w-40 bg-gradient-to-l from-white to-transparent z-20 pointer-events-none"></div>
+                
+                <div class="marquee-wrapper overflow-hidden py-12">
+                    <div class="marquee-content flex gap-8 items-center">
+                        <!-- Group 1 -->
+                        <div class="logo-group flex gap-12 items-center">
+                            <div class="logo-card">
+                                <Icon name="simple-icons:shopify" class="h-6 w-auto" />
+                                <span class="logo-text">Shopify</span>
+                            </div>
+                            <div class="logo-card">
+                                <Icon name="simple-icons:stripe" class="h-6 w-auto" />
+                                <span class="logo-text">Stripe</span>
+                            </div>
+                            <div class="logo-card">
+                                <Icon name="simple-icons:mercadopago" class="h-6 w-auto" />
+                                <span class="logo-text">Mercado Pago</span>
+                            </div>
+                            <div class="logo-card">
+                                <Icon name="simple-icons:whatsapp" class="h-6 w-auto" />
+                                <span class="logo-text">WhatsApp</span>
+                            </div>
+                            <div class="logo-card">
+                                <Icon name="simple-icons:amazon" class="h-6 w-auto" />
+                                <span class="logo-text">Amazon</span>
+                            </div>
+                            <div class="logo-card">
+                                <Icon name="simple-icons:dhl" class="h-6 w-auto" />
+                                <span class="logo-text">DHL</span>
+                            </div>
+                            <div class="logo-card">
+                                <Icon name="simple-icons:meta" class="h-6 w-auto" />
+                                <span class="logo-text">Meta</span>
+                            </div>
+                            <div class="logo-card">
+                                <Icon name="simple-icons:mercadopago" class="h-6 w-auto" />
+                                <span class="logo-text">Mercado Libre</span>
+                            </div>
+                            <div class="logo-card">
+                                <Icon name="simple-icons:gmail" class="h-6 w-auto" />
+                                <span class="logo-text">Gmail</span>
+                            </div>
+                            <div class="logo-card">
+                                <div class="bg-[#1D2A4F] text-white text-[10px] font-black px-2 py-1 rounded">SAT</div>
+                                <span class="logo-text">SAT (4.0)</span>
+                            </div>
+                        </div>
+                        <!-- Group 2 (Duplicate for seamless loop) -->
+                        <div class="logo-group flex gap-12 items-center">
+                            <div class="logo-card">
+                                <Icon name="simple-icons:shopify" class="h-6 w-auto" />
+                                <span class="logo-text">Shopify</span>
+                            </div>
+                            <div class="logo-card">
+                                <Icon name="simple-icons:stripe" class="h-6 w-auto" />
+                                <span class="logo-text">Stripe</span>
+                            </div>
+                            <div class="logo-card">
+                                <Icon name="simple-icons:mercadopago" class="h-6 w-auto" />
+                                <span class="logo-text">Mercado Pago</span>
+                            </div>
+                            <div class="logo-card">
+                                <Icon name="simple-icons:whatsapp" class="h-6 w-auto" />
+                                <span class="logo-text">WhatsApp</span>
+                            </div>
+                            <div class="logo-card">
+                                <Icon name="simple-icons:amazon" class="h-6 w-auto" />
+                                <span class="logo-text">Amazon</span>
+                            </div>
+                            <div class="logo-card">
+                                <Icon name="simple-icons:dhl" class="h-6 w-auto" />
+                                <span class="logo-text">DHL</span>
+                            </div>
+                            <div class="logo-card">
+                                <Icon name="simple-icons:meta" class="h-6 w-auto" />
+                                <span class="logo-text">Meta</span>
+                            </div>
+                            <div class="logo-card">
+                                <Icon name="simple-icons:mercadopago" class="h-6 w-auto" />
+                                <span class="logo-text">Mercado Libre</span>
+                            </div>
+                            <div class="logo-card">
+                                <Icon name="simple-icons:gmail" class="h-6 w-auto" />
+                                <span class="logo-text">Gmail</span>
+                            </div>
+                            <div class="logo-card">
+                                <div class="bg-[#1D2A4F] text-white text-[10px] font-black px-2 py-1 rounded">SAT</div>
+                                <span class="logo-text">SAT (4.0)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+		</section>
+
+		<!-- PROBLEM / SOLUTION REDESIGN -->
+		<section id="solucion" class="py-32 bg-white relative overflow-hidden">
+            <div class="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#F8FAFC] to-transparent pointer-events-none"></div>
+			<div class="max-w-7xl mx-auto px-6 text-center relative z-10">
+                <h2 class="text-4xl md:text-7xl font-black mb-12 tracking-tighter text-[#105971] leading-tight transition-all duration-700">
+                    ¿Cansado de pagar por <br/><span class="text-[#FF6B00]">6 herramientas</span> que no se hablan?
+                </h2>
+
+                <!-- Tab Selector Segmented B2B -->
+                <div class="flex justify-center mb-16">
+                    <div class="inline-flex p-1.5 bg-[#F1F5F9] border border-slate-200 rounded-2xl shadow-inner relative overflow-hidden group">
+                        <button 
+                            class="solucion-tab active px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-500 relative z-10"
+                            data-segment="pymes"
+                        >
+                            PYMES
+                        </button>
+                        <button 
+                            class="solucion-tab px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest text-slate-500 hover:text-[#105971] transition-all duration-500 relative z-10"
+                            data-segment="medianas"
+                        >
+                            Medianas
+                        </button>
+                        <button 
+                            class="solucion-tab px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest text-slate-500 hover:text-[#105971] transition-all duration-500 relative z-10"
+                            data-segment="enterprise"
+                        >
+                            Enterprise
+                        </button>
+                    </div>
+                </div>
+
+				<div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto relative min-h-[600px]">
+                    <!-- Chaos Card (Friction & Tension) -->
+					<div id="chaos-card" class="p-10 md:p-14 text-left rounded-[3rem] border border-red-50 bg-[#F1F5F9] transition-all duration-700 hover:shadow-xl hover:border-red-100 flex flex-col justify-between">
+						<div>
+                            <div class="flex items-center gap-5 mb-10">
+                                <span class="w-16 h-16 rounded-2xl bg-red-100/50 text-red-500 flex items-center justify-center text-3xl shadow-sm border border-red-200/50">✕</span> 
+                                <h3 class="text-3xl font-black text-slate-800 tracking-tight">Caos Fragmentado</h3>
+                            </div>
+                            <ul id="chaos-list" class="space-y-6">
+                                <!-- Dynamic Content -->
+                            </ul>
+                        </div>
+                        <div class="mt-12 pt-8 border-t border-slate-200 opacity-50">
+                            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-red-800/60 leading-relaxed italic">Atascado en procesos manuales y costos ocultos.</p>
+                        </div>
+					</div>
+
+                    <!-- Solution Card (Peace & Technology) -->
+					<div id="solution-card" class="p-10 md:p-14 text-left rounded-[3rem] bg-white border border-slate-100 shadow-[0_45px_100px_-20px_rgba(16,89,113,0.1)] transition-all duration-700 hover:shadow-[0_60px_120px_-25px_rgba(16,89,113,0.15)] relative overflow-hidden group flex flex-col justify-between">
+                        <div class="absolute inset-0 bg-gradient-to-br from-white via-white to-[#70D1C6]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+                        
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-5 mb-10">
+                                <span class="w-16 h-16 rounded-2xl bg-[#70D1C6]/10 text-[#70D1C6] flex items-center justify-center text-3xl shadow-sm border border-[#70D1C6]/20">✓</span> 
+                                <h3 class="text-3xl font-black text-[#105971] tracking-tight">La Solución SkyBrand</h3>
+                            </div>
+                            <ul id="solution-list" class="space-y-6">
+                                <!-- Dynamic Content -->
+                            </ul>
+                        </div>
+
+                        <div class="mt-12 pt-8 border-t border-slate-50 relative z-10">
+                            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-[#70D1C6] leading-relaxed italic">Tecnología Enterprise que trabaja por ti.</p>
+                        </div>
+					</div>
+				</div>
+			</div>
+
+            <!-- Client-side logic for the solution cards -->
+            <script is:inline>
+                const segmentData = {
+                    pymes: {
+                        chaos: [
+                            "Pagas suscripciones separadas para web, email y CRM.",
+                            "Copias y pegas a mano los datos para generar una guía de envío.",
+                            "Pierdes ventas porque los mensajes de WhatsApp e Instagram se mezclan.",
+                            "Hacer una factura en el portal del SAT te toma demasiado tiempo.",
+                            "No tienes claridad de qué anuncios de Meta o Google realmente venden."
+                        ],
+                        solution: [
+                            "Una sola suscripción que reemplaza más de 5 herramientas.",
+                            "Generación masiva de guías multi-paquetería con 1 solo clic.",
+                            "Bandeja omnicanal: Todo tu chat en un solo embudo ordenado.",
+                            "Facturación SAT 4.0 automatizada directamente desde el pedido.",
+                            "Dashboards de marketing que miden el ROI de cada centavo invertido."
+                        ]
+                    },
+                    medianas: {
+                        chaos: [
+                            "Tu equipo de ventas choca entre sí y los leads se enfrían.",
+                            "El inventario físico de tu almacén no cuadra con tu tienda online.",
+                            "Dependes de Excel para intentar cruzar reportes de diferentes áreas.",
+                            "Cuellos de botella en atención al cliente fuera de horario laboral.",
+                            "El seguimiento de carritos abandonados se hace manual o no se hace."
+                        ],
+                        solution: [
+                            "Pipelines inteligentes que asignan leads a tus vendedores automáticamente.",
+                            "Sincronización de inventario en tiempo real en todos tus canales.",
+                            "Analítica centralizada con reportes visuales al instante.",
+                            "Chatbots con IA que atienden y califican prospectos 24/7.",
+                            "Flujos de Email y SMS Marketing automatizados que venden por ti."
+                        ]
+                    },
+                    enterprise: {
+                        chaos: [
+                            "Tu sistema legacy (AS400/ERP) está totalmente aislado del e-commerce.",
+                            "Los pedidos de mayoreo (B2B) requieren llamadas, correos y procesos manuales.",
+                            "Falta de gobernanza: todos los empleados tienen el mismo nivel de acceso.",
+                            "Rupturas de stock por no tener alertas tempranas para resurtir.",
+                            "Soporte técnico saturado sin medición de tiempos de respuesta."
+                        ],
+                        solution: [
+                            "Integración API bidireccional nativa con tu ERP y bases de datos actuales.",
+                            "Portal B2B de auto-servicio con precios ocultos y reglas de volumen.",
+                            "Workspaces con permisos granulares y registro de auditoría.",
+                            "Órdenes de compra automatizadas a proveedores basadas en stock mínimo.",
+                            "Sistema Helpdesk Pro con SLAs y asignación de tickets automatizada."
+                        ]
+                    }
+                };
+
+                function updateSolucionTabs() {
+                    const tabs = document.querySelectorAll('.solucion-tab');
+                    const chaosList = document.getElementById('chaos-list');
+                    const solutionList = document.getElementById('solution-list');
+                    const cards = [document.getElementById('chaos-card'), document.getElementById('solution-card')];
+
+                    tabs.forEach(tab => {
+                        tab.addEventListener('click', () => {
+                            const segment = tab.getAttribute('data-segment');
+                            
+                            // UI Update
+                            tabs.forEach(t => {
+                                t.classList.remove('active', 'bg-[#105971]', 'text-white', 'shadow-lg');
+                                t.classList.add('text-slate-500');
+                            });
+                            tab.classList.add('active', 'bg-[#105971]', 'text-white', 'shadow-lg');
+                            tab.classList.remove('text-slate-500');
+
+                            // Content Update with Animation
+                            cards.forEach(c => {
+                                if (c) {
+                                    c.style.opacity = '0';
+                                    c.style.transform = 'translateY(20px)';
+                                }
+                            });
+                            
+                            setTimeout(() => {
+                                const data = segmentData[segment];
+                                
+                                if (chaosList) chaosList.innerHTML = data.chaos.map(text => `
+                                    <li class="flex items-start gap-5 group/item transition-all duration-300">
+                                        <div class="mt-2.5 w-2 h-2 rounded-full bg-red-400 group-hover/item:bg-red-600 group-hover/item:scale-125 transition-all shrink-0"></div>
+                                        <p class="text-slate-600 font-bold leading-relaxed text-sm md:text-base">${text}</p>
+                                    </li>
+                                `).join('');
+
+                                if (solutionList) solutionList.innerHTML = data.solution.map(text => `
+                                    <li class="flex items-start gap-5 group/item transition-all duration-300">
+                                        <div class="mt-2.5 w-2 h-2 rounded-full bg-[#70D1C6] group-hover/item:bg-[#105971] group-hover/item:scale-125 transition-all shrink-0"></div>
+                                        <p class="text-slate-700 font-black leading-relaxed text-sm md:text-base">${text}</p>
+                                    </li>
+                                `).join('');
+
+                                cards.forEach(c => {
+                                    if (c) {
+                                        c.style.opacity = '1';
+                                        c.style.transform = 'translateY(0)';
+                                    }
+                                });
+                            }, 300);
+                        });
+                    });
+
+                    // Trigger first tab
+                    if (tabs[0]) tabs[0].click();
+                }
+
+                // Run setup
+                updateSolucionTabs();
+                document.addEventListener('astro:page-load', updateSolucionTabs);
+            </script>
+		</section>
+
+		<SegmentationTabs />
+		<!-- TESTIMONIALS TEASER -->
+		<section class="py-32 bg-white relative overflow-hidden">
+            <div class="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#F8FAFC] to-transparent pointer-events-none"></div>
+            <div class="max-w-7xl mx-auto px-6 relative z-10">
+                <div class="text-center max-w-4xl mx-auto mb-20">
+                    <h2 class="text-5xl md:text-7xl font-black tracking-tighter mb-8 text-[#105971]">
+                        Empresas que ya <span class="text-[#FF6B00]">escalaron sus ventas</span>
+                    </h2>
+                    <p class="text-xl text-slate-600 font-bold mb-10">Historias reales de transformación digital B2B.</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-10 max-w-5xl mx-auto">
+                    <!-- Testimonial 1 -->
+                    <div class="bg-white p-12 rounded-[3.5rem] border border-slate-100 shadow-[0_20px_50px_-15px_rgba(16,89,113,0.08)] transition-all duration-700 flex flex-col justify-between group">
+                        <p class="text-[#105971] text-xl font-bold leading-relaxed mb-10">
+                            "Su estrategia y uso de automatización han aumentado nuestro tráfico y conversiones de manera impresionante."
+                        </p>
+                        <div class="flex items-center gap-5 pt-8 border-t border-slate-50">
+                            <div class="w-12 h-12 rounded-2xl bg-[#105971]/5 flex items-center justify-center text-[#105971] font-black">NF</div>
+                            <div>
+                                <h4 class="font-black text-slate-900 text-sm">Nancy Fabiola</h4>
+                                <p class="text-slate-500 text-[9px] font-black uppercase tracking-widest">CEO CSTEC</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Testimonial 2 -->
+                    <div class="bg-white p-12 rounded-[3.5rem] border border-slate-100 shadow-[0_20px_50px_-15px_rgba(16,89,113,0.08)] transition-all duration-700 flex flex-col justify-between group">
+                        <p class="text-[#105971] text-xl font-bold leading-relaxed mb-10">
+                            "Nuestros productos llegan a más hogares y mascotas felices gracias a la logística automatizada."
+                        </p>
+                        <div class="flex items-center gap-5 pt-8 border-t border-slate-50">
+                            <div class="w-12 h-12 rounded-2xl bg-[#105971]/5 flex items-center justify-center text-[#105971] font-black">KV</div>
+                            <div>
+                                <h4 class="font-black text-slate-900 text-sm">Karla Villicaña</h4>
+                                <p class="text-slate-500 text-[9px] font-black uppercase tracking-widest">CEO KITTY SCRATCH</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-16 text-center">
+                    <a href="/casos-exito" class="inline-flex items-center gap-3 bg-[#105971] text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#70D1C6] transition-all">
+                        Ver todos los casos de éxito
+                        <span>→</span>
+                    </a>
+                </div>
+            </div>
+		</section>
+
+
+
+		<!-- FAQ SECTION -->
+		<section id="faq" class="py-32 max-w-7xl mx-auto px-6 font-sans bg-white">
+            <div class="text-center mb-20">
+				<h2 class="text-4xl md:text-6xl font-black tracking-tighter mb-8 text-slate-950">Respuestas <span class="text-gradient">Inmediatas</span></h2>
+                <p class="text-xl text-slate-600 font-bold">Todo lo que necesitas saber para dar el salto.</p>
+            </div>
+            
+            <div class="max-w-4xl mx-auto">
+                <div class="space-y-4">
+                    <!-- FAQ 1 -->
+                    <div class="faq-item group bg-white border border-slate-100 rounded-[2rem] overflow-hidden transition-all duration-500 hover:border-[#70D1C6]/30 hover:shadow-[0_20px_40px_-15px_rgba(16,89,113,0.05)]">
+                        <button class="faq-trigger w-full px-10 py-8 flex items-center justify-between text-left focus:outline-none">
+                            <span class="text-xl font-black text-[#105971] transition-colors duration-300 group-hover:text-[#70D1C6]">¿Necesito ser programador?</span>
+                            <div class="faq-icon w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center transition-all duration-500 group-hover:bg-[#70D1C6]/10">
+                                <span class="text-2xl font-light text-[#105971] group-hover:text-[#70D1C6] transition-transform duration-500">+</span>
+                            </div>
+                        </button>
+                        <div class="faq-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                            <div class="px-10 pb-8">
+                                <p class="text-slate-600 leading-relaxed font-bold text-lg">No. SkyBrandMX es una solución "No-Code" para el usuario final. Nosotros configuramos el motor y tú solo manejas los controles desde un panel intuitivo.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ 2 -->
+                    <div class="faq-item group bg-white border border-slate-100 rounded-[2rem] overflow-hidden transition-all duration-500 hover:border-[#70D1C6]/30 hover:shadow-[0_20px_40px_-15px_rgba(16,89,113,0.05)]">
+                        <button class="faq-trigger w-full px-10 py-8 flex items-center justify-between text-left focus:outline-none">
+                            <span class="text-xl font-black text-[#105971] transition-colors duration-300 group-hover:text-[#70D1C6]">¿Es válido ante el SAT?</span>
+                            <div class="faq-icon w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center transition-all duration-500 group-hover:bg-[#70D1C6]/10">
+                                <span class="text-2xl font-light text-[#105971] group-hover:text-[#70D1C6] transition-transform duration-500">+</span>
+                            </div>
+                        </button>
+                        <div class="faq-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                            <div class="px-10 pb-8">
+                                <p class="text-slate-600 leading-relaxed font-bold text-lg">Totalmente. El módulo cumple con CFDI 4.0 y está avalado por PACs oficiales en México, garantizando que cada factura sea legal y segura.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ 3 -->
+                    <div class="faq-item group bg-white border border-slate-100 rounded-[2rem] overflow-hidden transition-all duration-500 hover:border-[#70D1C6]/30 hover:shadow-[0_20px_40px_-15px_rgba(16,89,113,0.05)]">
+                        <button class="faq-trigger w-full px-10 py-8 flex items-center justify-between text-left focus:outline-none">
+                            <span class="text-xl font-black text-[#105971] transition-colors duration-300 group-hover:text-[#70D1C6]">¿Cómo mejoran mis tarifas de envío?</span>
+                            <div class="faq-icon w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center transition-all duration-500 group-hover:bg-[#70D1C6]/10">
+                                <span class="text-2xl font-light text-[#105971] group-hover:text-[#70D1C6] transition-transform duration-500">+</span>
+                            </div>
+                        </button>
+                        <div class="faq-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                            <div class="px-10 pb-8">
+                                <p class="text-slate-600 leading-relaxed font-bold text-lg">Al ser una red de cientos de negocios, negociamos volúmenes que una PYME sola no podría. Esas tarifas preferenciales se te pasan directamente a ti.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ 4 -->
+                    <div class="faq-item group bg-white border border-slate-100 rounded-[2rem] overflow-hidden transition-all duration-500 hover:border-[#70D1C6]/30 hover:shadow-[0_20px_40px_-15px_rgba(16,89,113,0.05)]">
+                        <button class="faq-trigger w-full px-10 py-8 flex items-center justify-between text-left focus:outline-none">
+                            <span class="text-xl font-black text-[#105971] transition-colors duration-300 group-hover:text-[#70D1C6]">¿Se integra con mi tienda actual?</span>
+                            <div class="faq-icon w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center transition-all duration-500 group-hover:bg-[#70D1C6]/10">
+                                <span class="text-2xl font-light text-[#105971] group-hover:text-[#70D1C6] transition-transform duration-500">+</span>
+                            </div>
+                        </button>
+                        <div class="faq-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                            <div class="px-10 pb-8">
+                                <p class="text-slate-600 leading-relaxed font-bold text-lg">Sí. Si ya tienes Shopify o WooCommerce, instalamos un "puente" que envía toda tu data al panel de SkyBrandMX automáticamente.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ 5 -->
+                    <div class="faq-item group bg-white border border-slate-100 rounded-[2rem] overflow-hidden transition-all duration-500 hover:border-[#70D1C6]/30 hover:shadow-[0_20px_40px_-15px_rgba(16,89,113,0.05)]">
+                        <button class="faq-trigger w-full px-10 py-8 flex items-center justify-between text-left focus:outline-none">
+                            <span class="text-xl font-black text-[#105971] transition-colors duration-300 group-hover:text-[#70D1C6]">¿Hay contratos o plazos forzosos?</span>
+                            <div class="faq-icon w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center transition-all duration-500 group-hover:bg-[#70D1C6]/10">
+                                <span class="text-2xl font-light text-[#105971] group-hover:text-[#70D1C6] transition-transform duration-500">+</span>
+                            </div>
+                        </button>
+                        <div class="faq-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                            <div class="px-10 pb-8">
+                                <p class="text-slate-600 leading-relaxed font-bold text-lg">No. Todos nuestros planes (excepto desarrollos Enterprise a la medida) son mes a mes. Puedes cancelar tu suscripción al panel cuando lo decidas sin penalizaciones.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ 6 -->
+                    <div class="faq-item group bg-white border border-slate-100 rounded-[2rem] overflow-hidden transition-all duration-500 hover:border-[#70D1C6]/30 hover:shadow-[0_20px_40px_-15px_rgba(16,89,113,0.05)]">
+                        <button class="faq-trigger w-full px-10 py-8 flex items-center justify-between text-left focus:outline-none">
+                            <span class="text-xl font-black text-[#105971] transition-colors duration-300 group-hover:text-[#70D1C6]">Ya tengo página web, ¿puedo usar solo el panel?</span>
+                            <div class="faq-icon w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center transition-all duration-500 group-hover:bg-[#70D1C6]/10">
+                                <span class="text-2xl font-light text-[#105971] group-hover:text-[#70D1C6] transition-transform duration-500">+</span>
+                            </div>
+                        </button>
+                        <div class="faq-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                            <div class="px-10 pb-8">
+                                <p class="text-slate-600 leading-relaxed font-bold text-lg">¡Por supuesto! Para eso diseñamos el Plan Plug & Play. Te damos las llaves del software y lo conectamos a tu ecosistema actual.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ 7 -->
+                    <div class="faq-item group bg-white border border-slate-100 rounded-[2rem] overflow-hidden transition-all duration-500 hover:border-[#70D1C6]/30 hover:shadow-[0_20px_40px_-15px_rgba(16,89,113,0.05)]">
+                        <button class="faq-trigger w-full px-10 py-8 flex items-center justify-between text-left focus:outline-none">
+                            <span class="text-xl font-black text-[#105971] transition-colors duration-300 group-hover:text-[#70D1C6]">¿Ofrecen soporte técnico en español?</span>
+                            <div class="faq-icon w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center transition-all duration-500 group-hover:bg-[#70D1C6]/10">
+                                <span class="text-2xl font-light text-[#105971] group-hover:text-[#70D1C6] transition-transform duration-500">+</span>
+                            </div>
+                        </button>
+                        <div class="faq-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                            <div class="px-10 pb-8">
+                                <p class="text-slate-600 leading-relaxed font-bold text-lg">Sí. Olvídate de los bots en inglés. Cuentas con soporte técnico dedicado por WhatsApp y correo para resolver cualquier incidencia con tu panel o facturación.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NEW FINAL CTA BLOCK -->
+                <div class="mt-32 text-center p-16 rounded-[4rem] bg-[#105971]/5 border border-[#105971]/10 relative overflow-hidden group">
+                    <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-[#FF6B00] to-transparent opacity-30"></div>
+                    <div class="relative z-10">
+                        <h3 class="text-3xl md:text-5xl font-black text-[#105971] mb-10 tracking-tight leading-tight">Únete a las empresas que ya <br/><span class="text-[#FF6B00]">centralizaron su operación.</span></h3>
+                        <div class="flex flex-col sm:flex-row justify-center gap-6">
+                            <a href="/planes" class="px-10 py-5 bg-[#FF6B00] text-white text-xl font-black rounded-2xl shadow-[0_20px_40px_-10px_rgba(255,107,0,0.4)] hover:shadow-[0_30px_60px_-12px_rgba(255,107,0,0.6)] hover:-translate-y-1 transition-all duration-500 flex items-center justify-center gap-4">
+                                Ver Planes
+                                <span class="text-2xl">→</span>
+                            </a>
+                            <a href="https://web.whatsapp.com/send?phone=5525582310" class="px-10 py-5 bg-white border-2 border-[#105971]/20 text-[#105971] text-xl font-black rounded-2xl hover:bg-slate-50 transition-all duration-500 flex items-center justify-center">
+                                Hablar con Ventas
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactivity Script for Accordion -->
+            <script is:inline>
+                function setupAccordion() {
+                    const triggers = document.querySelectorAll('.faq-trigger');
+                    
+                    triggers.forEach(trigger => {
+                        trigger.addEventListener('click', () => {
+                            const item = trigger.closest('.faq-item');
+                            const content = item.querySelector('.faq-content');
+                            const icon = trigger.querySelector('.faq-icon span');
+                            const isOpen = item.classList.contains('active-faq');
+                            
+                            // Close others
+                            document.querySelectorAll('.faq-item').forEach(other => {
+                                other.classList.remove('active-faq');
+                                other.querySelector('.faq-content').style.maxHeight = '0';
+                                other.querySelector('.faq-icon span').innerText = '+';
+                                other.querySelector('.faq-icon span').style.transform = 'rotate(0deg)';
+                            });
+                            
+                            if (!isOpen) {
+                                item.classList.add('active-faq');
+                                content.style.maxHeight = content.scrollHeight + 'px';
+                                icon.innerText = '−';
+                                icon.style.transform = 'rotate(180deg)';
+                            }
+                        });
+                    });
+                }
+                
+                setupAccordion();
+                document.addEventListener('astro:page-load', setupAccordion);
+            </script>
+		</section>
+        
+        <!-- DIRECT CALL TO ACTION -->
+        <section class="py-40 relative overflow-hidden bg-[#081014] text-white">
+            <!-- Technological Halo/Glow Effect -->
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(16,89,113,0.5),transparent_60%)] mix-blend-screen pointer-events-none"></div>
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(112,209,198,0.1),transparent_40%)] mix-blend-screen pointer-events-none"></div>
+            
+            <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
+                <h2 class="text-6xl md:text-8xl font-black tracking-tighter mb-10 leading-tight text-white drop-shadow-2xl">
+                    Deja de operar a ciegas. <br/>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] to-[#ff8c33]">Toma el control hoy.</span>
+                </h2>
+                
+                <p class="text-2xl text-slate-300 mb-16 font-bold max-w-2xl mx-auto">
+                    Agenda una consultoría de factibilidad sin costo o inicia tu prueba de 14 días.
+                </p>
+                
+                <div class="flex flex-col sm:flex-row justify-center gap-6">
+                    <!-- Primary Orange Button (High Conversion) -->
+                    <a href="/planes" class="px-12 py-5 bg-[#FF6B00] text-white text-xl font-black rounded-2xl shadow-[0_0_40px_-10px_rgba(255,107,0,0.6)] hover:shadow-[0_0_60px_-10px_rgba(255,107,0,0.8)] hover:-translate-y-1 transition-all duration-300 border border-[#FF6B00]/50 flex items-center justify-center gap-3">
+                        Reclamar 14 días gratis
+                        <span class="text-2xl opacity-80">🚀</span>
+                    </a>
+                    
+                    <!-- Secondary Ghost Button (Teal/Cian Hover) -->
+                    <a href="https://web.whatsapp.com/send?phone=5525582310" class="px-12 py-5 bg-transparent border-2 border-slate-700 text-slate-300 text-xl font-black rounded-2xl hover:border-[#70D1C6] hover:text-[#70D1C6] hover:bg-[#70D1C6]/5 transition-all duration-300 flex items-center justify-center gap-3 group">
+                        <!-- Simple FontAwesome-like WhatsApp Path -->
+                        <svg class="w-6 h-6 fill-current transition-transform group-hover:scale-110" viewBox="0 0 24 24">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                        </svg>
+                        Hablar con Ventas
+                    </a>
+                </div>
+            </div>
+        </section>
+	</main>
+
+	</footer>
+</Layout>
+
+<style>
+    @keyframes marquee {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+    }
+
+    .marquee-content {
+        animation: marquee 40s linear infinite;
+        width: fit-content;
+    }
+
+    .marquee-content:hover {
+        animation-play-state: paused;
+    }
+
+    .logo-card {
+        @apply flex items-center justify-center gap-3 px-6 py-4 bg-white rounded-2xl border border-slate-100 shadow-sm transition-all duration-500 w-max;
+        @apply grayscale opacity-40;
+    }
+
+    .logo-card svg {
+        @apply h-6 w-auto transition-transform duration-500;
+    }
+
+    .logo-card:hover {
+        @apply grayscale-0 opacity-100 -translate-y-1 shadow-xl border-brand-primary/10 bg-slate-50;
+    }
+
+    .logo-text {
+        @apply text-base font-black text-slate-400 tracking-tight transition-colors duration-500;
+    }
+
+    .logo-card:hover .logo-text {
+        @apply text-[#0d4d6d];
+    }
+
+    .logo-card:hover svg {
+        @apply scale-110;
+    }
+
+    .solucion-tab.active {
+        background-color: #105971;
+        color: white;
+        box-shadow: 0 10px 25px -5px rgba(16, 89, 113, 0.3);
+    }
+</style>

@@ -1,0 +1,192 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { Icon } from 'astro-icon/components';
+---
+
+<Layout title="Acceso — SkyBrandMX">
+    <div class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden bg-[#081014]">
+        <!-- Background Effects -->
+        <div class="absolute top-1/4 -left-20 w-96 h-96 bg-[#70D1C6]/10 rounded-full blur-[120px] animate-pulse"></div>
+        <div class="absolute bottom-1/4 -right-20 w-96 h-96 bg-[#FF6B00]/10 rounded-full blur-[120px] animate-pulse-slow"></div>
+
+        <div class="relative z-10 w-full max-w-md px-6">
+            <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-10 shadow-2xl overflow-hidden group">
+                <!-- Inner Glow -->
+                <div class="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-[#70D1C6]/20 to-transparent rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+
+                <div class="text-center mb-10">
+                    <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-[#105971] to-[#081014] border border-white/10 mb-6 shadow-2xl transform hover:rotate-6 transition-transform">
+                        <Icon name="lucide:shield-lock" id="form-icon" class="w-10 h-10 text-[#70D1C6]" />
+                    </div>
+                    <h1 id="form-title" class="text-3xl font-black text-white tracking-tighter mb-2">Acceso al Panel</h1>
+                    <p id="form-subtitle" class="text-slate-400 font-bold text-sm">Gestiona tu ecosistema SkyBrandMX</p>
+                </div>
+
+                <div class="flex bg-white/5 rounded-2xl p-1 mb-8">
+                    <button id="toggle-login" class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest text-[#70D1C6] rounded-xl bg-white/10 shadow-lg transition-all">Entrar</button>
+                    <button id="toggle-register" class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500 rounded-xl hover:text-slate-300 transition-all">Registrarse</button>
+                </div>
+
+                <form id="auth-form" class="space-y-6">
+                    <div id="name-field" class="hidden space-y-2">
+                        <label for="name" class="text-[10px] font-black uppercase tracking-widest text-[#70D1C6] ml-4">Nombre Completo</label>
+                        <div class="relative">
+                            <Icon name="lucide:user" class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                            <input 
+                                type="text" 
+                                id="name" 
+                                name="full_name" 
+                                placeholder="Tu Nombre"
+                                class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-14 pr-6 text-white font-bold placeholder:text-slate-600 focus:outline-none focus:border-[#70D1C6]/50 focus:bg-white/10 transition-all"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="email" class="text-[10px] font-black uppercase tracking-widest text-[#70D1C6] ml-4">Email Corporativo</label>
+                        <div class="relative">
+                            <Icon name="lucide:mail" class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                            <input 
+                                type="email" 
+                                id="email" 
+                                name="email" 
+                                required 
+                                placeholder="admin@skybrandmx.com"
+                                class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-14 pr-6 text-white font-bold placeholder:text-slate-600 focus:outline-none focus:border-[#70D1C6]/50 focus:bg-white/10 transition-all"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="password" class="text-[10px] font-black uppercase tracking-widest text-[#70D1C6] ml-4">Contraseña Maestra</label>
+                        <div class="relative">
+                            <Icon name="lucide:lock" class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                required 
+                                placeholder="••••••••••••"
+                                class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-14 pr-6 text-white font-bold placeholder:text-slate-600 focus:outline-none focus:border-[#70D1C6]/50 focus:bg-white/10 transition-all"
+                            />
+                        </div>
+                    </div>
+
+                    <p id="error-message" class="hidden text-red-400 text-xs font-bold text-center"></p>
+
+                    <button 
+                        type="submit" 
+                        id="submit-btn"
+                        class="w-full py-5 bg-[#FF6B00] text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-orange-500/20 hover:shadow-orange-500/40 hover:-translate-y-1 active:translate-y-0 transition-all"
+                    >
+                        Entrar al Sistema
+                    </button>
+                    
+                    <div class="flex items-center justify-between mt-8 pt-8 border-t border-white/5">
+                        <a href="#" class="text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest transition-colors">¿Olvidaste el acceso?</a>
+                        <div class="flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 rounded-full bg-[#70D1C6] shadow-[0_0_8px_#70D1C6]"></span>
+                            <span class="text-[10px] font-black text-[#70D1C6] uppercase tracking-widest">Servidor Activo</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</Layout>
+
+<script>
+    let isRegister = false;
+    const form = document.getElementById('auth-form') as HTMLFormElement;
+    const errorMsg = document.getElementById('error-message');
+    const toggleLogin = document.getElementById('toggle-login');
+    const toggleRegister = document.getElementById('toggle-register');
+    const nameField = document.getElementById('name-field');
+    const submitBtn = document.getElementById('submit-btn');
+    const formTitle = document.getElementById('form-title');
+    const formSubtitle = document.getElementById('form-subtitle');
+
+    const updateForm = (register: boolean) => {
+        isRegister = register;
+        if (register) {
+            nameField?.classList.remove('hidden');
+            toggleRegister?.classList.add('bg-white/10', 'text-[#70D1C6]', 'shadow-lg');
+            toggleRegister?.classList.remove('text-slate-500');
+            toggleLogin?.classList.remove('bg-white/10', 'text-[#70D1C6]', 'shadow-lg');
+            toggleLogin?.classList.add('text-slate-500');
+            submitBtn && (submitBtn.innerText = 'Crear Cuenta');
+            formTitle && (formTitle.innerText = 'Crea tu Cuenta');
+            formSubtitle && (formSubtitle.innerText = 'Únete al ecosistema SkyBrandMX');
+        } else {
+            nameField?.classList.add('hidden');
+            toggleLogin?.classList.add('bg-white/10', 'text-[#70D1C6]', 'shadow-lg');
+            toggleLogin?.classList.remove('text-slate-500');
+            toggleRegister?.classList.remove('bg-white/10', 'text-[#70D1C6]', 'shadow-lg');
+            toggleRegister?.classList.add('text-slate-500');
+            submitBtn && (submitBtn.innerText = 'Entrar al Sistema');
+            formTitle && (formTitle.innerText = 'Acceso al Panel');
+            formSubtitle && (formSubtitle.innerText = 'Gestiona tu ecosistema SkyBrandMX');
+        }
+    };
+
+    toggleLogin?.addEventListener('click', () => updateForm(false));
+    toggleRegister?.addEventListener('click', () => updateForm(true));
+
+    form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if(!errorMsg) return;
+        
+        errorMsg.classList.add('hidden');
+        const formData = new FormData(form);
+        const dataJson = Object.fromEntries(formData.entries());
+        
+        const endpoint = isRegister ? '/api/v1/auth/register' : '/api/v1/auth/login';
+        
+        try {
+            let response;
+            if (isRegister) {
+                response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dataJson)
+                });
+            } else {
+                // OAuth2 login standard espera x-www-form-urlencoded
+                const loginBody = new URLSearchParams();
+                loginBody.append('username', dataJson.email as string);
+                loginBody.append('password', dataJson.password as string);
+                
+                response = await fetch(endpoint, {
+                    method: 'POST',
+                    body: loginBody
+                });
+            }
+
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('token', data.access_token);
+                localStorage.setItem('workspace_id', data.workspace_id);
+                localStorage.setItem('user_id', data.user_id);
+                
+                window.location.href = '/app/dashboard';
+            } else {
+                const errorData = await response.json();
+                errorMsg.innerText = errorData.detail || 'Error en la autenticación.';
+                errorMsg.classList.remove('hidden');
+            }
+        } catch (error) {
+            errorMsg.innerText = 'No se pudo conectar con el servidor.';
+            errorMsg.classList.remove('hidden');
+        }
+    });
+</script>
+
+<style>
+    @keyframes pulse-slow {
+        0%, 100% { opacity: 0.3; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.1); }
+    }
+    .animate-pulse-slow {
+        animation: pulse-slow 8s infinite ease-in-out;
+    }
+</style>

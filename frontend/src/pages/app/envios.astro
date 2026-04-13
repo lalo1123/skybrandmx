@@ -1,0 +1,119 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro';
+import { Icon } from 'astro-icon/components';
+---
+
+<AppLayout title="Envíos y Logística">
+    <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+            <div class="flex items-center gap-2 mb-2">
+                <span class="w-2 h-2 rounded-full bg-[#105971] shadow-[0_0_10px_#105971]"></span>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Gestión de Operaciones</p>
+            </div>
+            <h1 class="text-4xl font-black text-slate-950 tracking-tighter">Control Logístico</h1>
+            <p class="text-slate-500 font-bold mt-1 text-lg">Optimiza tus entregas con el <span class="text-[#FF6B00]">multi-paquetería inteligente</span>.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <button class="px-5 py-3 bg-[#081014] text-white rounded-2xl text-sm font-black hover:bg-slate-800 transition-all flex items-center gap-2 shadow-lg">
+                <Icon name="lucide:file-text" class="w-4 h-4" />
+                Generar Guías Masivas
+            </button>
+        </div>
+    </div>
+
+    <!-- SHIPPING STATS -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">En Tránsito</p>
+            <div class="flex items-end justify-between">
+                <h3 class="text-3xl font-black text-slate-900">42</h3>
+                <Icon name="lucide:truck" class="w-8 h-8 text-[#105971] opacity-20" />
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Por Recolectar</p>
+            <div class="flex items-end justify-between">
+                <h3 class="text-3xl font-black text-slate-900">12</h3>
+                <Icon name="lucide:package-search" class="w-8 h-8 text-[#FF6B00] opacity-20" />
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Entregados (Hoy)</p>
+            <div class="flex items-end justify-between">
+                <h3 class="text-3xl font-black text-slate-900">85</h3>
+                <Icon name="lucide:check-circle-2" class="w-8 h-8 text-emerald-600 opacity-20" />
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Ahorro Mensual</p>
+            <div class="flex items-end justify-between">
+                <h3 class="text-3xl font-black text-[#105971] tracking-tight">$3,420</h3>
+                <span class="text-[10px] font-black text-emerald-600 mb-1">+5%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- TRACKING GRID -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden">
+            <div class="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/20">
+                <h3 class="text-lg font-black text-slate-900 tracking-tight">Envíos Recientes</h3>
+                <Icon name="lucide:refresh-cw" class="w-4 h-4 text-slate-300 hover:text-[#105971] transition-colors cursor-pointer" />
+            </div>
+            <div class="p-4 space-y-4">
+                <!-- Shipping Item 1 -->
+                <div class="p-6 bg-slate-50/50 rounded-3xl border border-slate-100 flex items-center justify-between group hover:bg-white hover:shadow-xl transition-all">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-xl">📦</div>
+                        <div>
+                            <p class="text-sm font-black text-slate-900">#GU-882103</p>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">FedEx • 2.5 kg</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="px-3 py-1 bg-blue-100 text-blue-700 text-[10px] font-black rounded-full uppercase tracking-widest">En Ruta</span>
+                        <p class="text-[10px] text-slate-400 font-bold mt-1">Llega mañana</p>
+                    </div>
+                </div>
+                <!-- Shipping Item 2 -->
+                <div class="p-6 bg-slate-50/50 rounded-3xl border border-slate-100 flex items-center justify-between group hover:bg-white hover:shadow-xl transition-all">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-xl">🚚</div>
+                        <div>
+                            <p class="text-sm font-black text-slate-900">#GU-882104</p>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Estafeta • 1.0 kg</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="px-3 py-1 bg-amber-100 text-amber-700 text-[10px] font-black rounded-full uppercase tracking-widest">Recolectando</span>
+                        <p class="text-[10px] text-slate-400 font-bold mt-1">Hoy 4:00 PM</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARRIERS CONNECTED -->
+        <div class="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-[#105971]/5 rounded-bl-full"></div>
+            <h3 class="text-lg font-black text-slate-900 mb-8">Paqueterías Activas</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="p-6 bg-slate-50 border border-slate-100 rounded-3xl flex flex-col items-center text-center">
+                    <Icon name="simple-icons:fedex" class="w-12 h-12 text-[#4D148C] mb-3" />
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tarifa: Preferente</p>
+                </div>
+                <div class="p-6 bg-slate-50 border border-slate-100 rounded-3xl flex flex-col items-center text-center">
+                    <Icon name="simple-icons:dhl" class="w-12 h-12 text-[#D40511] mb-3" />
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tarifa: Express</p>
+                </div>
+                <div class="p-6 bg-slate-50 border border-slate-100 rounded-3xl flex flex-col items-center text-center">
+                    <div class="w-12 h-12 bg-white rounded-lg flex items-center justify-center mb-3 shadow-sm font-black text-[#FF6B00]">99</div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">99 Minutos</p>
+                </div>
+                <div class="p-6 bg-slate-50 border border-slate-100 rounded-3xl flex flex-col items-center text-center group cursor-pointer hover:bg-[#105971] transition-all">
+                    <Icon name="lucide:plus" class="w-12 h-12 text-slate-200 group-hover:text-white mb-3" />
+                    <p class="text-[10px] font-black text-slate-400 group-hover:text-white uppercase tracking-widest">Conectar Más</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</AppLayout>

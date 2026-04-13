@@ -1,0 +1,603 @@
+---
+---
+
+<script>
+    function setupTabs() {
+        const tabs = document.querySelectorAll('.segment-pill');
+        const panes = document.querySelectorAll('.tab-pane');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const target = tab.getAttribute('data-target');
+
+                // Update Pills UI
+                tabs.forEach(t => {
+                    t.classList.remove('active');
+                    t.classList.add('text-slate-500');
+                    (t as HTMLElement).style.backgroundColor = '';
+                    (t as HTMLElement).style.color = '';
+                    (t as HTMLElement).style.boxShadow = '';
+                });
+                
+                tab.classList.add('active');
+                tab.classList.remove('text-slate-500');
+
+                // Update Content
+                panes.forEach(p => {
+                    p.classList.add('hidden');
+                    p.classList.remove('active');
+                });
+
+                const activePane = document.getElementById(target as string);
+                if (activePane) {
+                    activePane.classList.remove('hidden');
+                    activePane.classList.add('active');
+                }
+            });
+        });
+    }
+
+    // Initialize on page load
+    setupTabs();
+    
+    // Support Astro View Transitions if any
+    document.addEventListener('astro:page-load', setupTabs);
+</script>
+
+<section class="py-24 px-6 bg-[#F8FAFC] relative overflow-hidden" id="planes">
+    <!-- Top divider/gradient for smooth transition -->
+    <div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#F8FAFC] to-transparent"></div>
+    
+    <div class="max-w-7xl mx-auto relative z-10">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl md:text-5xl font-black tracking-tighter mb-6 text-[#105971]">
+                Soluciones a la medida de <span class="text-[#FF6B00]">tu crecimiento.</span>
+            </h2>
+            <p class="text-slate-600 max-w-2xl mx-auto text-lg font-bold">
+                Selecciona el perfil de tu empresa para ver cómo SkyBrandMX puede transformar tu operación.
+            </p>
+        </div>
+
+        <!-- Segmentation Pills -->
+        <div class="flex justify-center mb-20">
+            <div class="inline-flex p-1.5 bg-white border border-slate-200 rounded-full shadow-xl">
+                <button 
+                    class="segment-pill active px-6 py-3 rounded-full text-sm font-bold transition-all duration-300"
+                    data-target="pymes"
+                >
+                    PYMES y Emprendedores
+                </button>
+                <button 
+                    class="segment-pill px-6 py-3 rounded-full text-sm font-bold text-slate-500 hover:text-slate-900 transition-all duration-300"
+                    data-target="medium"
+                >
+                    Medianas Empresas
+                </button>
+                <button 
+                    class="segment-pill px-6 py-3 rounded-full text-sm font-bold text-slate-500 hover:text-slate-900 transition-all duration-300"
+                    data-target="enterprise"
+                >
+                    Enterprise
+                </button>
+            </div>
+        </div>
+
+        <!-- Content Containers -->
+        <div id="segment-content">
+            <!-- PYMES Tab -->
+            <div id="pymes" class="tab-pane active animate-in space-y-16">
+                <!-- Features Grid -->
+                <div>
+                    <div class="flex items-center gap-4 mb-10">
+                        <div class="h-px flex-1 bg-slate-200"></div>
+                        <h3 class="text-sm font-black uppercase tracking-[0.3em] text-slate-400">Herramientas PYME</h3>
+                        <div class="h-px flex-1 bg-slate-200"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="feature-card p-8 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500 group">
+                            <div class="w-14 h-14 rounded-2xl bg-[#084d6e]/5 text-[#084d6e] flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">🌐</div>
+                            <h4 class="text-xl font-black text-slate-950 mb-3">Diseño Web y Dominio</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed font-bold">Tu página web profesional, hosting rápido y dominio propio en un solo lugar.</p>
+                        </div>
+
+                        <div class="feature-card p-8 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500 group">
+                            <div class="w-14 h-14 rounded-2xl bg-[#084d6e]/5 text-[#084d6e] flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">🔍</div>
+                            <h4 class="text-xl font-black text-slate-950 mb-3">Posicionamiento SEO</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed font-bold">Optimización para que Google te encuentre antes que a tu competencia.</p>
+                        </div>
+
+                        <div class="feature-card p-8 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500 group">
+                            <div class="w-14 h-14 rounded-2xl bg-[#084d6e]/5 text-[#084d6e] flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">📈</div>
+                            <h4 class="text-xl font-black text-slate-950 mb-3">CRM Inteligente</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed font-bold">Gestiona tus clientes, prospectos y embudos de venta fácilmente.</p>
+                        </div>
+                        
+                        <div class="feature-card p-8 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500 group">
+                            <div class="w-14 h-14 rounded-2xl bg-[#084d6e]/5 text-[#084d6e] flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">🤖</div>
+                            <h4 class="text-xl font-black text-slate-950 mb-3">Ads con IA</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed font-bold">Lanza campañas en Meta/Google automatizadas.</p>
+                        </div>
+                        
+                        <div class="feature-card p-8 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500 group">
+                            <div class="w-14 h-14 rounded-2xl bg-[#084d6e]/5 text-[#084d6e] flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">📦</div>
+                            <h4 class="text-xl font-black text-slate-950 mb-3">Guías a un Clic</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed font-bold">Logística y envíos integrados.</p>
+                        </div>
+                        
+                        <div class="feature-card p-8 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500 group">
+                            <div class="w-14 h-14 rounded-2xl bg-[#084d6e]/5 text-[#084d6e] flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">🧾</div>
+                            <h4 class="text-xl font-black text-slate-950 mb-3">Facturación SAT 4.0</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed font-bold">Timbrado automático de tus ventas.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Integrated Pricing -->
+                <div>
+                    <div class="flex items-center gap-4 mb-10">
+                        <div class="h-px flex-1 bg-slate-200"></div>
+                        <h3 class="text-sm font-black uppercase tracking-[0.3em] text-slate-400">Planes para PYMES</h3>
+                        <div class="h-px flex-1 bg-slate-200"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <!-- Plan Creador -->
+                        <div class="pricing-card p-10 bg-white border border-slate-100 rounded-[2.5rem] shadow-[0_15px_40px_-15px_rgba(0,0,0,0.05)] flex flex-col hover:-translate-y-2 hover:shadow-[0_40px_70px_-20px_rgba(0,0,0,0.1)] transition-all duration-500">
+                            <div class="mb-8">
+                                <h5 class="text-xl font-black text-[#105971] mb-2">Plan Creador</h5>
+                                <p class="text-sm text-slate-500 font-bold leading-relaxed mb-6">Ideal para lanzar tu primer ecosistema digital con todo incluido.</p>
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-4xl font-black text-[#105971]">$2,500</span>
+                                    <span class="text-slate-500 font-bold">MXN/mes</span>
+                                </div>
+                            </div>
+                            <ul class="space-y-4 mb-10 flex-1">
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Diseño Web desde cero Premium
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Dominio personalizado y Hosting 1 año
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> SEO On-page para visibilidad en Google
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Acceso al CRM (3 Usuarios)
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> 100 Guías de envío/mes prepagadas
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Soporte técnico vía Tickets
+                                </li>
+                            </ul>
+                            <a href="/planes" class="w-full text-center px-6 py-4 border-2 border-[#105971] text-[#105971] rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#105971] hover:text-white transition-all">Empezar Ahora</a>
+                        </div>
+                        
+                        <!-- Plan Evolucion -->
+                        <div class="pricing-card p-10 bg-white border-2 border-[#FF6B00] rounded-[2.5rem] shadow-[0_25px_60px_-15px_rgba(255,107,0,0.15)] flex flex-col relative overflow-hidden scale-105 z-10 hover:-translate-y-2 hover:shadow-[0_45px_100px_-20px_rgba(255,107,0,0.25)] transition-all duration-500">
+                            <div class="absolute top-0 right-0 bg-[#FF6B00] text-white text-[10px] font-black px-5 py-2 rounded-bl-2xl uppercase tracking-widest">Favorito de PYMES</div>
+                            <div class="mb-8">
+                                <h5 class="text-xl font-black text-[#105971] mb-2">Plan Evolución</h5>
+                                <p class="text-sm text-slate-500 font-bold leading-relaxed mb-6">Escala tu negocio con automatización avanzada y diseño premium.</p>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-5xl font-black text-[#105971]">$4,500</span>
+                                    <span class="text-slate-500 font-bold">MXN/mes</span>
+                                </div>
+                            </div>
+                            <ul class="space-y-4 mb-10 flex-1">
+                                <li class="flex items-center gap-3 text-sm font-black text-[#105971]">
+                                    <span class="text-[#FF6B00] text-lg font-black italic">✔️</span> Rediseño de Página Web Premium incluido
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-black text-[#105971]">
+                                    <span class="text-[#FF6B00] text-lg font-black italic">✔️</span> CRM Inteligente (Embudo de ventas automatizado)
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-black text-[#105971]">
+                                    <span class="text-[#FF6B00] text-lg font-black italic">✔️</span> Conexión a tu tienda (Shopify / WooCommerce)
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-black text-[#105971]">
+                                    <span class="text-[#FF6B00] text-lg font-black italic">✔️</span> Creación de Guías de Envío a 1 clic
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-black text-[#105971]">
+                                    <span class="text-[#FF6B00] text-lg font-black italic">✔️</span> Facturación SAT 4.0 ilimitada
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-black text-[#105971]">
+                                    <span class="text-[#FF6B00] text-lg font-black italic">✔️</span> Ads con IA (Meta y Google automatizados)
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-black text-[#105971]">
+                                    <span class="text-[#FF6B00] text-lg font-black italic">✔️</span> Soporte prioritario vía WhatsApp
+                                </li>
+                            </ul>
+                            <a href="/planes" class="w-full text-center px-6 py-4 bg-[#FF6B00] text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-[#E66000] transition-all shadow-xl shadow-orange-200">Impulsar Crecimiento</a>
+                        </div>
+                        
+                        <!-- Plan Plug & Play -->
+                        <div class="pricing-card p-10 bg-white border border-slate-100 rounded-[2.5rem] shadow-[0_15px_40px_-15px_rgba(0,0,0,0.05)] flex flex-col hover:-translate-y-2 hover:shadow-[0_40px_70px_-20px_rgba(0,0,0,0.1)] transition-all duration-500">
+                            <div class="mb-8">
+                                <h5 class="text-xl font-black text-[#105971] mb-2">Plan Plug & Play</h5>
+                                <p class="text-sm text-slate-500 font-bold leading-relaxed mb-6">Conecta tu infraestructura actual a nuestro motor de crecimiento.</p>
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-4xl font-black text-[#105971]">$1,500</span>
+                                    <span class="text-slate-500 font-bold">MXN/mes</span>
+                                </div>
+                            </div>
+                            <ul class="space-y-4 mb-10 flex-1">
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Integración Total con tu tienda o web actual
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Marketing Automatizado (Email & SMS)
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Logística Multi-paquetería integrada
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Gestión Central de Inventarios y CRM
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Facturación SAT 4.0 automatizada
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Asistencia técnica y actualizaciones constantes
+                                </li>
+                            </ul>
+                            <a href="/planes" class="w-full text-center px-6 py-4 border-2 border-[#105971] text-[#105971] rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#105971] hover:text-white transition-all">Activar Acceso</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medium Tab -->
+            <div id="medium" class="tab-pane hidden animate-in space-y-16">
+                <!-- Features Grid -->
+                <div>
+                    <div class="flex items-center gap-4 mb-10">
+                        <div class="h-px flex-1 bg-slate-200"></div>
+                        <h3 class="text-sm font-black uppercase tracking-[0.3em] text-slate-400">Escala tu Operación</h3>
+                        <div class="h-px flex-1 bg-slate-200"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="feature-card p-8 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500 group">
+                            <div class="w-14 h-14 rounded-2xl bg-[#084d6e]/5 text-[#084d6e] flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">📱</div>
+                            <h4 class="text-xl font-black text-slate-950 mb-3">Bandeja Omnicanal Multiusuario</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed font-bold">Unifica WhatsApp, Instagram, Messenger y Web. Todo tu equipo de ventas atendiendo desde un solo lugar.</p>
+                        </div>
+                        
+                        <div class="feature-card p-8 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500 group">
+                            <div class="w-14 h-14 rounded-2xl bg-[#084d6e]/5 text-[#084d6e] flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">📈</div>
+                            <h4 class="text-xl font-black text-slate-950 mb-3">CRM y Pipelines Inteligentes</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed font-bold">Automatiza seguimientos, asigna leads a tus vendedores y nunca pierdas un cierre.</p>
+                        </div>
+                        
+                        <div class="feature-card p-8 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500 group">
+                            <div class="w-14 h-14 rounded-2xl bg-[#084d6e]/5 text-[#084d6e] flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">💬</div>
+                            <h4 class="text-xl font-black text-slate-950 mb-3">Chatbots IA 24/7</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed font-bold">Califica prospectos y resuelve dudas operativas incluso de madrugada.</p>
+                        </div>
+
+                        <div class="feature-card p-8 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500 group">
+                            <div class="w-14 h-14 rounded-2xl bg-[#084d6e]/5 text-[#084d6e] flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">🔄</div>
+                            <h4 class="text-xl font-black text-slate-950 mb-3">Inventario Sincronizado (Sync)</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed font-bold">Conecta tu almacén físico con tus tiendas (Shopify/WooCommerce) en tiempo real.</p>
+                        </div>
+                        
+                        <div class="feature-card p-8 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500 group">
+                            <div class="w-14 h-14 rounded-2xl bg-[#084d6e]/5 text-[#084d6e] flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">📧</div>
+                            <h4 class="text-xl font-black text-slate-950 mb-3">Marketing Automation</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed font-bold">Crea flujos complejos de Email y SMS para recuperación de carritos y fidelización.</p>
+                        </div>
+
+                        <div class="feature-card p-8 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500 group">
+                            <div class="w-14 h-14 rounded-2xl bg-[#084d6e]/5 text-[#084d6e] flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">🚀</div>
+                            <h4 class="text-xl font-black text-slate-950 mb-3">Logística y SAT a Escala</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed font-bold">Generación masiva de guías y timbrado CFDI 4.0 automatizado para altos volúmenes.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing -->
+                 <div>
+                    <div class="flex items-center gap-4 mb-10">
+                        <div class="h-px flex-1 bg-slate-200"></div>
+                        <h3 class="text-sm font-black uppercase tracking-[0.3em] text-slate-400">Inversión para Medianas Empresas</h3>
+                        <div class="h-px flex-1 bg-slate-200"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <!-- Plan Impulso (Creador) -->
+                        <div class="pricing-card p-10 bg-white border border-slate-100 rounded-[2.5rem] shadow-[0_15px_40px_-15px_rgba(0,0,0,0.05)] flex flex-col hover:-translate-y-2 hover:shadow-[0_40px_70px_-20px_rgba(0,0,0,0.1)] transition-all duration-500">
+                            <div class="mb-8">
+                                <h5 class="text-xl font-black text-[#105971] mb-2">Plan Impulso</h5>
+                                <p class="text-sm text-slate-500 font-bold leading-relaxed mb-6">Optimizado para equipos en crecimiento que necesitan control.</p>
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-4xl font-black text-[#105971]">$5,500</span>
+                                    <span class="text-slate-500 font-bold">MXN/mes</span>
+                                </div>
+                            </div>
+                            <ul class="space-y-4 mb-10 flex-1">
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Landing Pages de Alta Conversión ilimitadas
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> CRM Avanzado para 10 Usuarios
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Bandeja Omnicanal (WhatsApp/FB/IG)
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Chatbots de Calificación con IA
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> 500 Guías de envío/mes prepagadas
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Reportes de Ventas en Tiempo Real
+                                </li>
+                            </ul>
+                            <a href="/planes" class="w-full text-center px-6 py-4 border-2 border-[#105971] text-[#105971] rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#105971] hover:text-white transition-all">Solicitar Información</a>
+                        </div>
+                        
+                        <!-- Plan Escalabilidad (Evolucion) -->
+                        <div class="pricing-card p-10 bg-white border-2 border-[#FF6B00] rounded-[2.5rem] shadow-[0_25px_60px_-15px_rgba(255,107,0,0.15)] flex flex-col relative overflow-hidden scale-105 z-10 hover:-translate-y-2 hover:shadow-[0_45px_100px_-20px_rgba(255,107,0,0.25)] transition-all duration-500">
+                            <div class="absolute top-0 right-0 bg-[#FF6B00] text-white text-[10px] font-black px-5 py-2 rounded-bl-2xl uppercase tracking-widest">Máximo Valor</div>
+                            <div class="mb-8">
+                                <h5 class="text-xl font-black text-[#105971] mb-2">Plan Escalabilidad</h5>
+                                <p class="text-sm text-slate-500 font-bold leading-relaxed mb-6">El motor completo para dominar tu sector comercial.</p>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-5xl font-black text-[#105971]">$9,500</span>
+                                    <span class="text-slate-500 font-bold">MXN/mes</span>
+                                </div>
+                            </div>
+                            <ul class="space-y-4 mb-10 flex-1">
+                                <li class="flex items-center gap-3 text-sm font-black text-[#105971]">
+                                    <span class="text-[#FF6B00] text-lg font-black italic">✔️</span> Rediseño Web Corporativo Full-Responsive
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-black text-[#105971]">
+                                    <span class="text-[#FF6B00] text-lg font-black italic">✔️</span> Usuarios Ilimitados en todo el panel
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-black text-[#105971]">
+                                    <span class="text-[#FF6B00] text-lg font-black italic">✔️</span> Inventario Sync (Físico vs Digital)
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-black text-[#105971]">
+                                    <span class="text-[#FF6B00] text-lg font-black italic">✔️</span> Marketing Automation (Email/SMS/Push)
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-black text-[#105971]">
+                                    <span class="text-[#FF6B00] text-lg font-black italic">✔️</span> Facturación SAT 4.0 ilimitada (Masiva)
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-black text-[#105971]">
+                                    <span class="text-[#FF6B00] text-lg font-black italic">✔️</span> BI Dashboards de Predicción Comercial
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-black text-[#105971]">
+                                    <span class="text-[#FF6B00] text-lg font-black italic">✔️</span> Account Manager Dedicado
+                                </li>
+                            </ul>
+                            <a href="/planes" class="w-full text-center px-6 py-4 bg-[#FF6B00] text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-[#E66000] transition-all shadow-xl shadow-orange-200">Impulsar Ahora</a>
+                        </div>
+                        
+                        <!-- Plan Connect (Plug & Play) -->
+                        <div class="pricing-card p-10 bg-white border border-slate-100 rounded-[2.5rem] shadow-[0_15px_40px_-15px_rgba(0,0,0,0.05)] flex flex-col hover:-translate-y-2 hover:shadow-[0_40px_70px_-20px_rgba(0,0,0,0.1)] transition-all duration-500">
+                            <div class="mb-8">
+                                <h5 class="text-xl font-black text-[#105971] mb-2">Plan Connect</h5>
+                                <p class="text-sm text-slate-500 font-bold leading-relaxed mb-6">Integración premium con tu infraestructura existente.</p>
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-4xl font-black text-[#105971]">$3,500</span>
+                                    <span class="text-slate-500 font-bold">MXN/mes</span>
+                                </div>
+                            </div>
+                            <ul class="space-y-4 mb-10 flex-1">
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Conexión API a tu ERP / Plataforma
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Bandeja y CRM Completo Multi-agente
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Logística automatizada masiva
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Soporte técnico nivel 2 (Prioritario)
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Enlaces de Pago centralizados
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Hosting y Dominio Corporativo
+                                </li>
+                            </ul>
+                            <a href="/planes" class="w-full text-center px-6 py-4 border-2 border-[#105971] text-[#105971] rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#105971] hover:text-white transition-all">Activar Conexión</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enterprise Tab -->
+            <div id="enterprise" class="tab-pane hidden animate-in space-y-16">
+                <!-- Features Grid -->
+                <div>
+                    <div class="flex items-center gap-4 mb-10">
+                        <div class="h-px flex-1 bg-slate-200"></div>
+                        <h3 class="text-sm font-black uppercase tracking-[0.3em] text-slate-400">Control Corporativo</h3>
+                        <div class="h-px flex-1 bg-slate-200"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="feature-card p-8 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500 group">
+                            <div class="w-14 h-14 rounded-2xl bg-[#084d6e]/5 text-[#084d6e] flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">🏢</div>
+                            <h4 class="text-xl font-black text-slate-950 mb-3">Portal B2B y Mayoreo</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed font-bold">Catálogos con precios ocultos, niveles de descuento por volumen y pedidos directos para distribuidores.</p>
+                        </div>
+                        
+                        <div class="feature-card p-8 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500 group">
+                            <div class="w-14 h-14 rounded-2xl bg-[#084d6e]/5 text-[#084d6e] flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">🔐</div>
+                            <h4 class="text-xl font-black text-slate-950 mb-3">Gobernanza y Workspaces</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed font-bold">Roles granulares. Limita quién ve la facturación y quién ve el almacén. Logs de auditoría para cada movimiento.</p>
+                        </div>
+                        
+                        <div class="feature-card p-8 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500 group">
+                            <div class="w-14 h-14 rounded-2xl bg-[#084d6e]/5 text-[#084d6e] flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">🔄</div>
+                            <h4 class="text-xl font-black text-slate-950 mb-3">Sincronización ERP (AS400/SAP)</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed font-bold">Conecta tus sistemas legacy con el e-commerce moderno sin perder un solo dato de inventario en tiempo real.</p>
+                        </div>
+
+                        <div class="feature-card p-8 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500 group">
+                            <div class="w-14 h-14 rounded-2xl bg-[#084d6e]/5 text-[#084d6e] flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">🎫</div>
+                            <h4 class="text-xl font-black text-slate-950 mb-3">Helpdesk Pro (Tickets)</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed font-bold">Sistema avanzado de soporte al cliente con SLAs y asignación automática de agentes.</p>
+                        </div>
+                        
+                        <div class="feature-card p-8 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500 group">
+                            <div class="w-14 h-14 rounded-2xl bg-[#084d6e]/5 text-[#084d6e] flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">📦</div>
+                            <h4 class="text-xl font-black text-slate-950 mb-3">Suministro Inteligente</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed font-bold">Órdenes de compra automáticas a proveedores cuando el stock baja del límite configurado.</p>
+                        </div>
+
+                        <div class="feature-card p-8 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500 group">
+                            <div class="w-14 h-14 rounded-2xl bg-[#084d6e]/5 text-[#084d6e] flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">📊</div>
+                            <h4 class="text-xl font-black text-slate-950 mb-3">Dashboards Financieros Avanzados</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed font-bold">BI (Business Intelligence) integrado para proyecciones de stock y ROI en tiempo real.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing -->
+                <div>
+                    <div class="flex items-center gap-4 mb-10">
+                        <div class="h-px flex-1 bg-slate-200"></div>
+                        <h3 class="text-sm font-black uppercase tracking-[0.3em] text-slate-400">Soluciones Enterprise</h3>
+                        <div class="h-px flex-1 bg-slate-200"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <!-- Plan Custom (Creador) -->
+                        <div class="pricing-card p-10 bg-white border border-slate-100 rounded-[2.5rem] shadow-[0_15px_40px_-15px_rgba(0,0,0,0.05)] flex flex-col hover:-translate-y-2 hover:shadow-[0_40px_70px_-20px_rgba(0,0,0,0.1)] transition-all duration-500">
+                            <div class="mb-8">
+                                <h5 class="text-xl font-black text-[#105971] mb-2">Plan Custom Core</h5>
+                                <p class="text-sm text-slate-500 font-bold leading-relaxed mb-6">Desarrollo a la medida para líderes de industria.</p>
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-2xl font-black text-[#105971] italic">Cotización a medida</span>
+                                </div>
+                            </div>
+                            <ul class="space-y-4 mb-10 flex-1">
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Desarrollo de Ecosistema Digital Completo
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Portal B2B con precios por volumen
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Servidores Dedicados (Garantía 99.9% uptime)
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Suministro Inteligente de Stock
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Soporte 24/7 con SLA Corporativo
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Implementación técnica supervisada
+                                </li>
+                            </ul>
+                            <a href="https://web.whatsapp.com/send?phone=5525582310" class="w-full text-center px-6 py-4 border-2 border-[#105971] text-[#105971] rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#105971] hover:text-white transition-all">Hablar con un Experto</a>
+                        </div>
+                        
+                        <!-- Plan Transformación (Evolucion) -->
+                        <div class="pricing-card p-10 bg-white border-2 border-[#FF6B00] rounded-[2.5rem] shadow-[0_25px_60px_-15px_rgba(255,107,0,0.15)] flex flex-col relative overflow-hidden scale-105 z-10 hover:-translate-y-2 hover:shadow-[0_45px_100px_-20px_rgba(255,107,0,0.25)] transition-all duration-500">
+                            <div class="absolute top-0 right-0 bg-[#FF6B00] text-white text-[10px] font-black px-5 py-2 rounded-bl-2xl uppercase tracking-widest">Estrategia Total</div>
+                            <div class="mb-8">
+                                <h5 class="text-xl font-black text-[#105971] mb-2">Plan Transformación</h5>
+                                <p class="text-sm text-slate-500 font-bold leading-relaxed mb-6">Migración técnica masiva y modernización operativa.</p>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-2xl font-black text-[#105971] italic">Cotización a medida</span>
+                                </div>
+                            </div>
+                            <ul class="space-y-4 mb-10 flex-1">
+                                <li class="flex items-center gap-3 text-sm font-black text-[#105971]">
+                                    <span class="text-[#FF6B00] text-lg font-black italic">✔️</span> Migración Completa de Sistemas Legacy
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-black text-[#105971]">
+                                    <span class="text-[#FF6B00] text-lg font-black italic">✔️</span> Integración Bidireccional SAP / AS400 / ERP
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-black text-[#105971]">
+                                    <span class="text-[#FF6B00] text-lg font-black italic">✔️</span> Workspaces ilimitados y Gobernanza 
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-black text-[#105971]">
+                                    <span class="text-[#FF6B00] text-lg font-black italic">✔️</span> Helpdesk Nivel 3 con Tickets Infinitos
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-black text-[#105971]">
+                                    <span class="text-[#FF6B00] text-lg font-black italic">✔️</span> Auditoría Completa de Logs de Seguridad
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-black text-[#105971]">
+                                    <span class="text-[#FF6B00] text-lg font-black italic">✔️</span> Formación Presencial para Equipos
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-black text-[#105971]">
+                                    <span class="text-[#FF6B00] text-lg font-black italic">✔️</span> Consultoría en Marketing de Alto Nivel
+                                </li>
+                            </ul>
+                            <a href="https://web.whatsapp.com/send?phone=5525582310" class="w-full text-center px-6 py-4 bg-[#FF6B00] text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-[#E66000] transition-all shadow-xl shadow-orange-200">Iniciar Transformación</a>
+                        </div>
+                        
+                        <!-- Plan API Infra (Plug & Play) -->
+                        <div class="pricing-card p-10 bg-white border border-slate-100 rounded-[2.5rem] shadow-[0_15px_40px_-15_rgba(0,0,0,0.05)] flex flex-col hover:-translate-y-2 hover:shadow-[0_40px_70px_-20px_rgba(0,0,0,0.1)] transition-all duration-500">
+                            <div class="mb-8">
+                                <h5 class="text-xl font-black text-[#105971] mb-2">Plan Infraestructura API</h5>
+                                <p class="text-sm text-slate-500 font-bold leading-relaxed mb-6">Motor SaaS de clase mundial para equipos internos de TI.</p>
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-4xl font-black text-[#105971]">$15,000</span>
+                                    <span class="text-slate-500 font-bold">MXN/mes</span>
+                                </div>
+                            </div>
+                            <ul class="space-y-4 mb-10 flex-1">
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Acceso ilimitado a la infraestructura API
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Conexión robusta a cualquier ERP actual
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Control de gobernanza y roles granulares
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Timbrado SAT 4.0 a través de API
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Soporte Técnico Especializado Nivel 3
+                                </li>
+                                <li class="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <span class="text-[#70D1C6] text-lg font-black italic">✔️</span> Documentación técnica personalizada
+                                </li>
+                            </ul>
+                            <a href="https://web.whatsapp.com/send?phone=5525582310" class="w-full text-center px-6 py-4 border-2 border-[#105971] text-[#105971] rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#105971] hover:text-white transition-all">Activar Infraestructura</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .feature-card {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    }
+    
+    .pricing-card {
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .segment-pill.active {
+        background-color: #084d6e;
+        color: white;
+        box-shadow: 0 10px 20px rgba(8, 77, 110, 0.2);
+    }
+
+    .animate-in {
+        animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>

@@ -1,0 +1,133 @@
+---
+// src/layouts/AppLayout.astro
+import { Icon } from 'astro-icon/components';
+import '../styles/tailwind.css';
+
+interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<title>{title} | SkyBrandMX App</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+	</head>
+	<body class="bg-[#F8FAFC] text-slate-900 antialiased selection:bg-[#70D1C6]/30">
+		<div class="flex min-h-screen">
+			<!-- SIDEBAR -->
+			<aside class="fixed inset-y-0 left-0 w-72 bg-[#081014] text-white z-50 flex flex-col border-r border-white/5">
+				<div class="p-8">
+					<div class="group relative inline-block" aria-label="SkybrandMX">
+						<span class="font-black text-2xl tracking-tighter text-white"><span>SKYBR</span><span class="bg-gradient-to-br from-[#6fcff5] to-white bg-clip-text text-transparent">A</span><span class="bg-gradient-to-br from-[#6fcff5] to-white bg-clip-text text-transparent">N</span><span>DM</span><span class="bg-gradient-to-br from-[#6fcff5] to-white bg-clip-text text-transparent">X</span></span>
+						<div class="absolute -bottom-1 left-0 h-[3px] w-1/3 rounded-full bg-gradient-to-r from-[#70D1C6] to-[#105971]"></div>
+					</div>
+				</div>
+
+				<nav class="flex-1 px-4 space-y-1.5 overflow-y-auto">
+                    <p class="px-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 mt-2">Menú Principal</p>
+					<a href="/app/dashboard" class="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white/5 text-white font-bold transition-all border border-white/5">
+						<Icon name="lucide:layout-dashboard" class="w-5 h-5 text-[#70D1C6]" />
+						Inicio
+					</a>
+					<a href="/app/crm" class="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-400 hover:text-white hover:bg-white/5 font-bold transition-all group">
+						<Icon name="lucide:users" class="w-5 h-5 group-hover:text-[#70D1C6]" />
+						CRM y Ventas
+					</a>
+					<a href="/app/envios" class="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-400 hover:text-white hover:bg-white/5 font-bold transition-all group">
+						<Icon name="lucide:package" class="w-5 h-5 group-hover:text-[#70D1C6]" />
+						Envíos y Guías
+					</a>
+					<a href="/app/facturacion" class="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-400 hover:text-white hover:bg-white/5 font-bold transition-all group">
+						<Icon name="lucide:file-text" class="w-5 h-5 group-hover:text-[#70D1C6]" />
+						Facturación SAT
+					</a>
+                    <p class="px-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 mt-8">Configuración</p>
+					<a href="/app/integraciones" class="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-400 hover:text-white hover:bg-white/5 font-bold transition-all group">
+						<Icon name="lucide:layers" class="w-5 h-5 group-hover:text-[#70D1C6]" />
+						Integraciones
+					</a>
+					<a href="/app/configuracion" class="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-400 hover:text-white hover:bg-white/5 font-bold transition-all group">
+						<Icon name="lucide:settings" class="w-5 h-5 group-hover:text-[#70D1C6]" />
+						Configuración
+					</a>
+				</nav>
+
+				<div class="p-6">
+					<div class="flex items-center gap-3 p-4 bg-white/5 rounded-[1.5rem] border border-white/5 backdrop-blur-sm">
+						<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#70D1C6] to-[#105971] flex items-center justify-center font-black text-sm text-white shadow-lg">SJ</div>
+						<div class="flex-1 overflow-hidden">
+							<p class="text-[11px] font-black truncate leading-tight">Santiago Jimenez</p>
+							<p class="text-[9px] text-[#70D1C6] font-black uppercase tracking-widest mt-0.5">Plan Scale</p>
+						</div>
+                        <Icon name="lucide:log-out" class="w-4 h-4 text-slate-500 hover:text-rose-500 transition-colors cursor-pointer" />
+					</div>
+				</div>
+			</aside>
+
+			<!-- MAIN AREA -->
+			<div class="flex-1 ml-72 flex flex-col">
+				<!-- TOPBAR -->
+				<header class="h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 px-8 flex items-center justify-between sticky top-0 z-40">
+					<div class="flex-1 max-w-xl">
+						<div class="relative group">
+							<Icon name="lucide:search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 transition-colors group-focus-within:text-[#105971]" />
+							<input type="text" placeholder="Buscar clientes, pedidos, facturas..." class="w-full pl-12 pr-4 py-2.5 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-[#105971]/5 focus:border-[#105971]/30 focus:bg-white transition-all placeholder:text-slate-400" />
+						</div>
+					</div>
+
+					<div class="flex items-center gap-6">
+						<div class="flex items-center gap-2">
+                            <button class="relative p-2.5 text-slate-400 hover:text-[#105971] hover:bg-slate-50 rounded-xl transition-all group">
+                                <Icon name="lucide:bell" class="w-5 h-5" />
+                                <span class="absolute top-2.5 right-2.5 w-2 h-2 bg-[#FF6B00] rounded-full border-2 border-white ring-2 ring-orange-100"></span>
+                            </button>
+                            <button class="relative p-2.5 text-slate-400 hover:text-[#105971] hover:bg-slate-50 rounded-xl transition-all group">
+                                <Icon name="lucide:help-circle" class="w-5 h-5" />
+                            </button>
+                        </div>
+						<div class="h-8 w-px bg-slate-100"></div>
+						<div class="flex items-center gap-4">
+							<div class="text-right hidden sm:block">
+								<p class="text-xs font-black text-slate-900 leading-tight">Santiago Jimenez</p>
+								<p class="text-[9px] text-[#70D1C6] font-black uppercase tracking-widest mt-0.5">PRO ADMIN</p>
+							</div>
+							<div class="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center border-2 border-white shadow-xl shadow-slate-200/50 overflow-hidden group cursor-pointer">
+								<img src="https://ui-avatars.com/api/?name=Santiago+Jimenez&background=105971&color=fff&bold=true&rounded=true" alt="Avatar" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+							</div>
+						</div>
+					</div>
+				</header>
+
+				<!-- CONTENT -->
+				<main class="p-8 lg:p-12">
+					<slot />
+				</main>
+			</div>
+		</div>
+        <script>
+            // Protected Routes Check
+            document.addEventListener('DOMContentLoaded', () => {
+                const token = localStorage.getItem('token');
+                if (!token && !window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/soluciones') && !window.location.pathname.startsWith('/modulos') && window.location.pathname.startsWith('/app')) {
+                    window.location.href = '/login';
+                }
+            });
+
+            // Logout Functionality
+            const logoutBtn = document.querySelector('.lucide-log-out') as HTMLElement || document.querySelector('[name="lucide:log-out"]');
+            logoutBtn?.addEventListener('click', () => {
+                localStorage.clear();
+                window.location.href = '/login';
+            });
+        </script>
+	</body>
+</html>

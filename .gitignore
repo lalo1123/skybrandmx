@@ -22,3 +22,14 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+*.db
+
+# Backend logs/debug
+backend/error.log
+backend/trace.txt
+backend/test_import.py
