@@ -1,21 +1,58 @@
 version: '3.8'
 
 services:
-  landing-page:
+  frontend:
     build:
-      context: .
+      context: ./frontend
       dockerfile: Dockerfile
-    container_name: skybrandmx-landing
+    container_name: skybrandmx-frontend
     restart: always
     ports:
       - "80:80"
+    depends_on:
+      - backend
     networks:
       - skybrand-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: skybrandmx-backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://skybrand:${DB_PASSWORD:-skybrand123}@db:5432/skybrandmx
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-serratos@skybrandmx.com}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-changeme}
+      - SECRET_KEY=${SECRET_KEY:-change-this-in-production}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - skybrand-network
+
+  db:
+    image: postgres:16-alpine
+    container_name: skybrandmx-db
+    restart: always
+    environment:
+      - POSTGRES_USER=skybrand
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-skybrand123}
+      - POSTGRES_DB=skybrandmx
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skybrand -d skybrandmx"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - skybrand-network
+
+volumes:
+  postgres_data:
 
 networks:
   skybrand-network:

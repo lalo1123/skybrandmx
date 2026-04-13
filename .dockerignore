@@ -1,0 +1,14 @@
+node_modules
+frontend/node_modules
+frontend/dist
+backend/venv
+backend/__pycache__
+backend/**/__pycache__
+backend/*.db
+backend/.env
+backend/error.log
+backend/trace.txt
+.git
+.claude
+*.md
+*.sql
