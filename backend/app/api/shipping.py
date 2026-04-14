@@ -3,6 +3,7 @@ Shipping API — SkyBrandMX
 Cotizar, generar guías, rastrear, etiquetas
 """
 import logging
+import httpx
 from datetime import datetime
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
@@ -644,3 +645,75 @@ async def notify_client(
     except Exception as e:
         logger.error(f"Error sending notification: {e}")
         return {"status": "success", "message": f"Notificación enviada a {s.dest_email} (simulado)"}
+
+
+# ═══════ SEPOMEX — ZIP CODE LOOKUP ═══════
+
+@router.get("/zipcode/{cp}")
+async def lookup_zipcode(cp: str):
+    """Lookup Mexican ZIP code — returns colonies, city, state, municipality"""
+    if not cp or len(cp) != 5 or not cp.isdigit():
+        raise HTTPException(400, "Código postal debe ser de 5 dígitos")
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            # Try Sepomex Nitro Studio API (free)
+            res = await client.get(f"https://sepomex.nitrostudio.com.mx/api/v2/cp/{cp}.json")
+            if res.status_code == 200:
+                data = res.json()
+                if data.get("error"):
+                    return {"cp": cp, "found": False, "colonies": [], "city": "", "state": "", "municipality": ""}
+
+                colonies = []
+                city = ""
+                state = ""
+                municipality = ""
+
+                if isinstance(data, list):
+                    for item in data:
+                        colonies.append(item.get("d_asenta", item.get("colonia", "")))
+                        if not city: city = item.get("d_ciudad", item.get("ciudad", ""))
+                        if not state: state = item.get("d_estado", item.get("estado", ""))
+                        if not municipality: municipality = item.get("D_mnpio", item.get("municipio", ""))
+                elif isinstance(data, dict):
+                    entries = data.get("response", data.get("colonias", [data]))
+                    if isinstance(entries, list):
+                        for item in entries:
+                            col = item.get("d_asenta", item.get("colonia", item.get("response", {}).get("colonia", "")))
+                            if col: colonies.append(col)
+                            if not city: city = item.get("d_ciudad", item.get("ciudad", item.get("response", {}).get("ciudad", "")))
+                            if not state: state = item.get("d_estado", item.get("estado", item.get("response", {}).get("estado", "")))
+                            if not municipality: municipality = item.get("D_mnpio", item.get("municipio", item.get("response", {}).get("municipio", "")))
+
+                # Remove duplicates
+                colonies = list(dict.fromkeys(colonies))
+
+                return {
+                    "cp": cp,
+                    "found": bool(colonies or city or state),
+                    "colonies": colonies,
+                    "city": city,
+                    "state": state,
+                    "municipality": municipality,
+                }
+
+    except Exception as e:
+        logger.error(f"Sepomex lookup error: {e}")
+
+    # Fallback: common CPs hardcoded
+    common_cps = {
+        "03100": {"colonies": ["Del Valle Centro", "Del Valle Norte", "Del Valle Sur"], "city": "Ciudad de México", "state": "Ciudad de México", "municipality": "Benito Juárez"},
+        "06700": {"colonies": ["Roma Norte", "Roma Sur"], "city": "Ciudad de México", "state": "Ciudad de México", "municipality": "Cuauhtémoc"},
+        "44100": {"colonies": ["Centro", "Americana"], "city": "Guadalajara", "state": "Jalisco", "municipality": "Guadalajara"},
+        "64000": {"colonies": ["Centro"], "city": "Monterrey", "state": "Nuevo León", "municipality": "Monterrey"},
+        "64060": {"colonies": ["Obispado", "Chepevera"], "city": "Monterrey", "state": "Nuevo León", "municipality": "Monterrey"},
+        "72000": {"colonies": ["Centro Histórico"], "city": "Puebla", "state": "Puebla", "municipality": "Puebla"},
+        "76000": {"colonies": ["Centro"], "city": "Querétaro", "state": "Querétaro", "municipality": "Querétaro"},
+        "77500": {"colonies": ["SM 4", "SM 5", "Centro"], "city": "Cancún", "state": "Quintana Roo", "municipality": "Benito Juárez"},
+    }
+
+    if cp in common_cps:
+        info = common_cps[cp]
+        return {"cp": cp, "found": True, **info}
+
+    return {"cp": cp, "found": False, "colonies": [], "city": "", "state": "", "municipality": ""}
