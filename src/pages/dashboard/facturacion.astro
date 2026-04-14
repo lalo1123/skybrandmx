@@ -294,6 +294,9 @@ const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:6100';
   .fac-label { font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:4px;display:block; }
   .fac-input { width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;transition:border-color 0.2s; }
   .fac-input:focus { border-color:var(--accent); }
+  .fac-input option, select.fac-input option { background:var(--bg-sidebar,#0F172A);color:var(--text-primary,#fff); }
+  select.fac-input { appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%2364748b' viewBox='0 0 24 24'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px; }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
   .fac-btn-primary { padding:12px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s; }
   .fac-btn-primary:hover { opacity:0.85; }
   .fac-btn-secondary { padding:12px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-primary);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s; }
@@ -349,7 +352,7 @@ const facAutoFlows = [
   { id:'auto_complement', name:'Complemento de pago', desc:'Genera complemento de pago automáticamente cuando el cliente paga una factura PPD', icon:'💰', color:'#8b5cf6', active:false },
 ];
 
-const statusMap = { active:{l:'Vigente',c:'#6fcff5',b:'rgba(111,207,245,0.1)'}, paid:{l:'Pagada',c:'#22c55e',b:'rgba(34,197,94,0.1)'}, cancelled:{l:'Cancelada',c:'#ef4444',b:'rgba(239,68,68,0.1)'}, draft:{l:'Borrador',c:'#64748b',b:'rgba(100,116,139,0.1)'} };
+const statusMap = { active:{l:'Vigente',c:'#6fcff5',b:'rgba(111,207,245,0.1)'}, stamped:{l:'Timbrada',c:'#22c55e',b:'rgba(34,197,94,0.1)'}, paid:{l:'Pagada',c:'#22c55e',b:'rgba(34,197,94,0.1)'}, cancelled:{l:'Cancelada',c:'#ef4444',b:'rgba(239,68,68,0.1)'}, draft:{l:'Borrador',c:'#64748b',b:'rgba(100,116,139,0.1)'}, error:{l:'Error',c:'#ef4444',b:'rgba(239,68,68,0.1)'}, stamping:{l:'Timbrando...',c:'#eab308',b:'rgba(234,179,8,0.1)'} };
 
 let facConcepts = [{ desc:'', qty:1, price:0, key:'' }];
 
@@ -406,10 +409,11 @@ function renderInvoices(){
     <td style="padding:14px 16px;"><span style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;color:${st.c};background:${st.b};">${st.l}</span></td>
     <td style="padding:14px 16px;font-size:12px;color:var(--text-muted);">${i.date}</td>
     <td style="padding:14px 16px;text-align:center;"><div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
-      <button onclick="showToast('PDF descargado')" class="fac-tbl-btn">PDF</button>
-      <button onclick="showToast('XML descargado')" class="fac-tbl-btn">XML</button>
-      ${i.email?`<button onclick="showToast('Factura reenviada a ${i.email}')" class="fac-tbl-btn" style="border-color:#6fcff5;color:#6fcff5;">Reenviar</button>`:''}
-      ${i.status==='active'?`<button onclick="facCancelInvoice(${i.id})" class="fac-tbl-btn" style="border-color:#ef4444;color:#ef4444;">Cancelar</button>`:''}
+      ${i.status!=='error'&&i.status!=='draft'?`<button onclick="showToast('PDF descargado')" class="fac-tbl-btn">PDF</button><button onclick="showToast('XML descargado')" class="fac-tbl-btn">XML</button>`:''}
+      ${i.email&&i.status!=='error'?`<button onclick="showToast('Factura reenviada a ${i.email}')" class="fac-tbl-btn" style="border-color:#6fcff5;color:#6fcff5;">Reenviar</button>`:''}
+      ${i.status==='active'||i.status==='stamped'?`<button onclick="facCancelInvoice(${i.id})" class="fac-tbl-btn" style="border-color:#ef4444;color:#ef4444;">Cancelar</button>`:''}
+      ${i.status==='error'?`<button onclick="facRetryStamp(${i.id})" class="fac-tbl-btn" style="border-color:#f97316;color:#f97316;">Reintentar</button><span style="display:block;font-size:10px;color:#ef4444;margin-top:4px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${i.errorMsg||''}">${i.errorMsg||'Error desconocido'}</span>`:''}
+      ${i.status==='draft'?`<button onclick="facRetryStamp(${i.id})" class="fac-tbl-btn" style="border-color:#22c55e;color:#22c55e;">Timbrar</button>`:''}
     </div></td>
   </tr>`;}).join('');
 }
@@ -419,12 +423,14 @@ function facCancelInvoice(id){if(!confirm('¿Cancelar esta factura ante el SAT? 
 // ═══════ CREATE INVOICE ═══════
 function renderConcepts(){
   const el=document.getElementById('fac-concepts');
+  const inputStyle='width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:12px;outline:none;';
+  const labelStyle='font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:4px;display:block;';
   el.innerHTML=facConcepts.map((c,i)=>`
     <div style="display:flex;gap:8px;align-items:end;">
-      <div style="flex:3;"><label class="fac-label">Descripción</label><input type="text" placeholder="Ej: Servicio de diseño web" class="fac-input" style="font-size:12px;" value="${c.desc}" onchange="facConcepts[${i}].desc=this.value"/></div>
-      <div style="flex:1;"><label class="fac-label">Cantidad</label><input type="number" min="1" class="fac-input" style="font-size:12px;" value="${c.qty}" onchange="facConcepts[${i}].qty=parseInt(this.value)||1;facUpdateTotals()"/></div>
-      <div style="flex:1;"><label class="fac-label">Precio unit.</label><input type="number" min="0" class="fac-input" style="font-size:12px;" value="${c.price}" onchange="facConcepts[${i}].price=parseFloat(this.value)||0;facUpdateTotals()"/></div>
-      <div style="flex:1;"><label class="fac-label">Clave SAT <span class="fac-tip" data-tip="Código del catálogo del SAT para este producto/servicio. Si no sabes, usa 01010101 (No existe en el catálogo).">?</span></label><input type="text" class="fac-input" style="font-size:11px;" value="${c.key||'01010101'}" onchange="facConcepts[${i}].key=this.value" placeholder="01010101"/></div>
+      <div style="flex:3;"><label style="${labelStyle}">Descripción</label><input type="text" placeholder="Ej: Servicio de diseño web" style="${inputStyle}" value="${c.desc}" onchange="facConcepts[${i}].desc=this.value"/></div>
+      <div style="flex:1;"><label style="${labelStyle}">Cantidad</label><input type="number" min="1" style="${inputStyle}" value="${c.qty}" onchange="facConcepts[${i}].qty=parseInt(this.value)||1;facUpdateTotals()"/></div>
+      <div style="flex:1;"><label style="${labelStyle}">Precio unit.</label><input type="number" min="0" style="${inputStyle}" value="${c.price}" onchange="facConcepts[${i}].price=parseFloat(this.value)||0;facUpdateTotals()"/></div>
+      <div style="flex:1;"><label style="${labelStyle}">Clave SAT</label><input type="text" style="${inputStyle}font-size:11px;" value="${c.key||'01010101'}" onchange="facConcepts[${i}].key=this.value" placeholder="01010101"/></div>
       ${facConcepts.length>1?`<button onclick="facConcepts.splice(${i},1);renderConcepts();facUpdateTotals()" style="width:32px;height:38px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-faint);cursor:pointer;font-size:14px;">✕</button>`:''}
     </div>`).join('');
   facUpdateTotals();
@@ -438,17 +444,121 @@ function facUpdateTotals(){
   document.getElementById('fac-grand-total').textContent='$'+(sub+iva).toLocaleString(undefined,{minimumFractionDigits:2});
 }
 
-function facCreateInvoice(action){
+function facValidateBeforeCreate(){
   const name=document.getElementById('fac-c-name').value.trim();
   const rfc=document.getElementById('fac-c-rfc').value.trim().toUpperCase();
-  if(!name||!rfc){alert('Completa nombre y RFC del cliente');return;}
-  if(!facConcepts.some(c=>c.desc&&c.price>0)){alert('Agrega al menos un concepto con precio');return;}
-  const sub=facConcepts.reduce((s,c)=>s+(c.price*c.qty),0);const iva=Math.round(sub*0.16*100)/100;
-  if(action==='preview'){alert(`Vista previa:\n\nCliente: ${name}\nRFC: ${rfc}\nSubtotal: $${sub.toLocaleString()}\nIVA: $${iva.toLocaleString()}\nTotal: $${(sub+iva).toLocaleString()} MXN\n\n(La vista previa PDF estará disponible con el backend)`);return;}
+  const regimen=document.getElementById('fac-c-regimen').value;
+  const cp=document.getElementById('fac-c-cp').value.trim();
+  const errors=[];
+  if(!name)errors.push('Falta el nombre o razón social del cliente');
+  if(!rfc)errors.push('Falta el RFC del cliente');
+  else{
+    const isGeneric=rfc==='XAXX010101000'||rfc==='XEXX010101000';
+    const isPF=/^[A-ZÑ&]{4}\d{6}[A-Z0-9]{3}$/.test(rfc);
+    const isPM=/^[A-ZÑ&]{3}\d{6}[A-Z0-9]{3}$/.test(rfc);
+    if(!isGeneric&&!isPF&&!isPM)errors.push('El RFC no tiene un formato válido. Persona física = 13 caracteres, persona moral = 12');
+  }
+  if(!regimen)errors.push('Selecciona el régimen fiscal del cliente');
+  if(!cp)errors.push('Falta el código postal fiscal');
+  else if(!/^\d{5}$/.test(cp))errors.push('El código postal debe ser de exactamente 5 dígitos');
+  if(!facConcepts.some(c=>c.desc&&c.price>0))errors.push('Agrega al menos un concepto con descripción y precio');
+  facConcepts.forEach((c,i)=>{
+    if(c.desc&&c.price<=0)errors.push(`Concepto ${i+1} "${c.desc}" no tiene precio`);
+    if(c.price>0&&!c.desc)errors.push(`Concepto ${i+1} tiene precio pero no descripción`);
+  });
+  return errors;
+}
+
+function facShowErrors(errors){
+  const html='<div id="fac-error-box" style="padding:14px 18px;border-radius:10px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);margin-bottom:16px;">'+
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><svg style="width:16px;height:16px;color:#ef4444;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>'+
+    '<p style="font-size:13px;font-weight:700;color:#ef4444;">Corrige estos errores antes de continuar:</p></div>'+
+    '<ul style="margin:0 0 0 24px;font-size:12px;color:var(--text-secondary);line-height:1.8;">'+errors.map(e=>'<li>'+e+'</li>').join('')+'</ul></div>';
+  const existing=document.getElementById('fac-error-box');
+  if(existing)existing.remove();
+  const container=document.getElementById('fac-panel-create');
+  const form=container.querySelector('.stat-card');
+  form.insertAdjacentHTML('afterbegin',html);
+  form.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function facCreateInvoice(action){
+  // Remove previous errors
+  document.getElementById('fac-error-box')?.remove();
+
+  const name=document.getElementById('fac-c-name').value.trim();
+  const rfc=document.getElementById('fac-c-rfc').value.trim().toUpperCase();
+  const sub=facConcepts.reduce((s,c)=>s+(c.price*c.qty),0);
+  const iva=Math.round(sub*0.16*100)/100;
+
+  // Preview mode
+  if(action==='preview'){
+    const regName=document.getElementById('fac-c-regimen').selectedOptions[0]?.text||'';
+    const usoName=document.getElementById('fac-c-uso').selectedOptions[0]?.text||'';
+    alert(`Vista previa CFDI 4.0:\n\nCliente: ${name}\nRFC: ${rfc}\nRégimen: ${regName}\nUso CFDI: ${usoName}\n\nConceptos:\n${facConcepts.filter(c=>c.desc).map((c,i)=>`  ${i+1}. ${c.desc} x${c.qty} = $${(c.price*c.qty).toLocaleString()}`).join('\n')}\n\nSubtotal: $${sub.toLocaleString()}\nIVA (16%): $${iva.toLocaleString()}\nTotal: $${(sub+iva).toLocaleString()} MXN`);
+    return;
+  }
+
+  // Validate (except drafts which can be incomplete)
+  if(action!=='draft'){
+    const errors=facValidateBeforeCreate();
+    if(errors.length){facShowErrors(errors);return;}
+  } else {
+    if(!name){alert('Al menos ingresa el nombre del cliente para guardar borrador');return;}
+  }
+
+  // Show loading state on button
+  const stampBtn=document.querySelector('[onclick*="facCreateInvoice(\'stamp\')"]');
+  const origText=stampBtn?.innerHTML;
+  if(stampBtn&&action==='stamp'){
+    stampBtn.innerHTML='<span style="display:flex;align-items:center;justify-content:center;gap:6px;"><svg style="width:16px;height:16px;animation:spin 1s linear infinite;" viewBox="0 0 24 24" fill="none"><circle style="opacity:0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path style="opacity:0.75;" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Timbrando ante el SAT...</span>';
+    stampBtn.disabled=true;
+    stampBtn.style.opacity='0.7';
+  }
+
   const folio='A-'+String(demoInvoices.length+1).padStart(3,'0');
-  demoInvoices.unshift({id:Date.now(),folio,client:name,rfc,subtotal:sub,iva,total:sub+iva,status:action==='draft'?'draft':'active',payment:document.getElementById('fac-forma').selectedOptions[0]?.text?.split(' - ')[1]||'Transferencia',date:'2026-04-02',uso:document.getElementById('fac-c-uso').value,email:document.getElementById('fac-c-email').value});
-  switchFacTab('invoices');renderInvoices();renderFacStats();renderFacRecs();
-  showToast(action==='draft'?'Borrador guardado':`Factura ${folio} timbrada ante el SAT`);
+  const newInvoice={id:Date.now(),folio,client:name,rfc,subtotal:sub,iva,total:sub+iva,status:action==='draft'?'draft':'stamping',payment:document.getElementById('fac-forma').selectedOptions[0]?.text?.split(' - ')[1]||'Transferencia',date:new Date().toISOString().split('T')[0],uso:document.getElementById('fac-c-uso').value,email:document.getElementById('fac-c-email').value,errorMsg:null};
+  demoInvoices.unshift(newInvoice);
+
+  if(action==='draft'){
+    switchFacTab('invoices');renderInvoices();renderFacStats();
+    showToast('Borrador guardado. Podrás timbrarlo después.');
+    return;
+  }
+
+  // Simulate stamping (with delay for realism)
+  switchFacTab('invoices');renderInvoices();
+
+  setTimeout(()=>{
+    // Simulate: 80% success, 20% error (for demo)
+    const success=Math.random()>0.2;
+    if(success){
+      newInvoice.status='stamped';
+      newInvoice.errorMsg=null;
+      showToast(`✅ Factura ${folio} timbrada exitosamente ante el SAT`);
+    } else {
+      newInvoice.status='error';
+      newInvoice.errorMsg='Error: El RFC del receptor no se encontró en la lista del SAT (EFOS). Verifica que el RFC sea correcto.';
+      showToast('❌ Error al timbrar. Revisa los detalles en la tabla.');
+    }
+    renderInvoices();renderFacStats();renderFacRecs();
+
+    // Restore button
+    if(stampBtn){stampBtn.innerHTML=origText;stampBtn.disabled=false;stampBtn.style.opacity='1';}
+  },2000);
+}
+
+function facRetryStamp(id){
+  const inv=demoInvoices.find(x=>x.id===id);
+  if(!inv)return;
+  inv.status='stamping';inv.errorMsg=null;
+  renderInvoices();
+  showToast('Reintentando timbrado...');
+  setTimeout(()=>{
+    inv.status='stamped';inv.errorMsg=null;
+    renderInvoices();renderFacStats();
+    showToast(`✅ Factura ${inv.folio} timbrada exitosamente`);
+  },1500);
 }
 
 // ═══════ CREDITS ═══════
