@@ -68,7 +68,7 @@ const adsExtraPath = 'M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z';
 ---
 
 <!doctype html>
-<html lang="es">
+<html lang="es" style="color-scheme:dark;">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -156,6 +156,17 @@ const adsExtraPath = 'M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z';
     .module-card.coming-soon { opacity: 0.5; cursor: default; }
     .module-card.coming-soon:hover { transform: none; border-color: var(--border); }
     .module-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 16px; }
+
+    /* Custom dropdown */
+    .sky-dd { position: relative; }
+    .sky-dd-btn { padding: 10px 36px 10px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text-primary); font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; transition: border-color 0.2s; white-space: nowrap; overflow: hidden; }
+    .sky-dd-btn:hover { border-color: var(--accent); }
+    .sky-dd-btn svg { flex-shrink: 0; color: var(--text-faint); }
+    .sky-dd-text { overflow: hidden; text-overflow: ellipsis; }
+    .sky-dd-list { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--bg-sidebar); border: 1px solid var(--border); border-radius: 10px; padding: 4px; z-index: 100; max-height: 240px; overflow-y: auto; box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+    .sky-dd-item { padding: 8px 12px; border-radius: 6px; font-size: 13px; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
+    .sky-dd-item:hover { background: var(--nav-hover); color: var(--text-primary); }
+    .sky-dd-item.sky-dd-active { background: var(--accent-bg); color: var(--accent); font-weight: 700; }
 
     /* Activity list */
     .activity-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border); }
@@ -409,6 +420,7 @@ const adsExtraPath = 'M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z';
 
     window.setThemeMode = function(mode, save = true) {
       document.documentElement.setAttribute('data-theme', mode);
+      document.documentElement.style.colorScheme = mode === 'light' ? 'light' : 'dark';
       const sun = document.getElementById('icon-sun');
       const moon = document.getElementById('icon-moon');
       const modeDark = document.getElementById('mode-dark');
@@ -575,6 +587,86 @@ const adsExtraPath = 'M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z';
       localStorage.removeItem('skybrand_token');
       window.location.href = '/login';
     });
+
+    // ═══════ CUSTOM DROPDOWN — inline styles for Astro compatibility ═══════
+    const _ddStyles = {
+      wrap: 'position:relative;',
+      btn: 'padding:10px 36px 10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;white-space:nowrap;overflow:hidden;transition:border-color 0.2s;',
+      list: 'position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg-sidebar);border:1px solid var(--border);border-radius:10px;padding:4px;z-index:100;max-height:240px;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,0.3);',
+      item: 'padding:8px 12px;border-radius:6px;font-size:13px;color:var(--text-secondary);cursor:pointer;transition:background 0.15s;',
+      itemHover: 'background:var(--nav-hover);color:var(--text-primary);',
+      itemActive: 'background:var(--accent-bg);color:var(--accent);font-weight:700;',
+    };
+
+    function initCustomDropdowns() {
+      document.querySelectorAll('select:not([data-cd])').forEach(sel => {
+        sel.setAttribute('data-cd', '1');
+        const isAuto = sel.style.width === 'auto';
+        const w = document.createElement('div');
+        w.style.cssText = _ddStyles.wrap + (isAuto ? 'display:inline-block;' : 'width:100%;');
+
+        const btn = document.createElement('div');
+        btn.style.cssText = _ddStyles.btn;
+        const txtSpan = document.createElement('span');
+        txtSpan.style.cssText = 'overflow:hidden;text-overflow:ellipsis;';
+        txtSpan.textContent = sel.options[sel.selectedIndex]?.text || '';
+        btn.appendChild(txtSpan);
+        const arrow = document.createElement('span');
+        arrow.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="color:var(--text-faint);flex-shrink:0;"><path d="M19 9l-7 7-7-7"/></svg>';
+        arrow.style.cssText = 'flex-shrink:0;display:flex;';
+        btn.appendChild(arrow);
+
+        const list = document.createElement('div');
+        list.style.cssText = _ddStyles.list + 'display:none;';
+
+        Array.from(sel.options).forEach((opt, i) => {
+          const item = document.createElement('div');
+          item.style.cssText = _ddStyles.item + (i === sel.selectedIndex ? _ddStyles.itemActive : '');
+          item.textContent = opt.text;
+          item.onmouseenter = () => { if (!item._active) item.style.cssText = _ddStyles.item + _ddStyles.itemHover; };
+          item.onmouseleave = () => { item.style.cssText = _ddStyles.item + (item._active ? _ddStyles.itemActive : ''); };
+          item.onclick = (e) => {
+            e.stopPropagation();
+            sel.selectedIndex = i;
+            sel.dispatchEvent(new Event('change', { bubbles: true }));
+            txtSpan.textContent = opt.text;
+            list.querySelectorAll('div').forEach(x => { x._active = false; x.style.cssText = _ddStyles.item; });
+            item._active = true;
+            item.style.cssText = _ddStyles.item + _ddStyles.itemActive;
+            list.style.display = 'none';
+          };
+          if (i === sel.selectedIndex) item._active = true;
+          list.appendChild(item);
+        });
+
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const open = list.style.display !== 'none';
+          document.querySelectorAll('[data-skylist]').forEach(l => l.style.display = 'none');
+          list.style.display = open ? 'none' : 'block';
+        };
+        list.setAttribute('data-skylist', '1');
+
+        sel.style.cssText += ';position:absolute;opacity:0;pointer-events:none;width:0;height:0;';
+        sel.parentNode.insertBefore(w, sel);
+        w.appendChild(btn);
+        w.appendChild(list);
+        w.appendChild(sel);
+
+        sel.addEventListener('change', () => {
+          txtSpan.textContent = sel.options[sel.selectedIndex]?.text || '';
+        });
+      });
+    }
+
+    document.addEventListener('click', () => {
+      document.querySelectorAll('[data-skylist]').forEach(l => l.style.display = 'none');
+    });
+
+    setTimeout(initCustomDropdowns, 500);
+    let _ddTimer;
+    const _ddObs = new MutationObserver(() => { clearTimeout(_ddTimer); _ddTimer = setTimeout(initCustomDropdowns, 300); });
+    _ddObs.observe(document.body, { childList: true, subtree: true });
   </script>
   <HelpCenter />
 </body>
