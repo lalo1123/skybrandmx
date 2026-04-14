@@ -104,9 +104,50 @@ const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:6100';
       <div class="stat-card animate-in" style="padding:24px;">
         <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);margin-bottom:16px;">Datos del envío</h3>
         <div style="display:flex;flex-direction:column;gap:14px;">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-            <div><label class="env-label">CP Origen</label><input id="env-q-origin" type="text" value="03100" class="env-input" placeholder="Ej: 03100"/></div>
-            <div><label class="env-label">CP Destino</label><input id="env-q-dest" type="text" class="env-input" placeholder="Ej: 44100"/></div>
+          <!-- ORIGEN -->
+          <div style="border:1px solid var(--border);border-radius:12px;padding:14px;">
+            <p style="font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">📍 Origen (de dónde sale)</p>
+            <div style="display:grid;grid-template-columns:120px 1fr;gap:10px;margin-bottom:10px;">
+              <div><label class="env-label">CP</label><input id="env-q-origin" type="text" value="03100" maxlength="5" class="env-input" placeholder="03100" oninput="envLookupCP('origin',this.value)"/></div>
+              <div><label class="env-label">Colonia <span id="env-origin-loading" style="display:none;font-size:10px;color:var(--accent);">cargando...</span></label><select id="env-q-origin-col" class="env-input" style="cursor:pointer;"><option value="">Escribe el CP para cargar</option></select></div>
+            </div>
+            <div id="env-origin-address" style="display:none;display:flex;flex-direction:column;gap:10px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div><label class="env-label">Ciudad</label><input id="env-q-origin-city" type="text" class="env-input" readonly style="opacity:0.7;"/></div>
+                <div><label class="env-label">Estado</label><input id="env-q-origin-state" type="text" class="env-input" readonly style="opacity:0.7;"/></div>
+              </div>
+              <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;">
+                <div><label class="env-label">Calle</label><input id="env-q-origin-street" type="text" class="env-input" placeholder="Av. Insurgentes Sur"/></div>
+                <div><label class="env-label">No. Ext.</label><input id="env-q-origin-ext" type="text" class="env-input" placeholder="1234"/></div>
+                <div><label class="env-label">No. Int.</label><input id="env-q-origin-int" type="text" class="env-input" placeholder="(opcional)"/></div>
+              </div>
+              <div><label class="env-label">Nombre de quien envía</label><input id="env-q-origin-name" type="text" class="env-input" placeholder="Ej: SkyBrandMX" value="SkyBrandMX"/></div>
+              <div><label class="env-label">Teléfono</label><input id="env-q-origin-phone" type="tel" class="env-input" placeholder="55 1234 5678"/></div>
+            </div>
+          </div>
+          <!-- DESTINO -->
+          <div style="border:1px solid var(--border);border-radius:12px;padding:14px;">
+            <p style="font-size:11px;font-weight:800;color:#f97316;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">📦 Destino (a dónde llega)</p>
+            <div style="display:grid;grid-template-columns:120px 1fr;gap:10px;margin-bottom:10px;">
+              <div><label class="env-label">CP</label><input id="env-q-dest" type="text" maxlength="5" class="env-input" placeholder="44100" oninput="envLookupCP('dest',this.value)"/></div>
+              <div><label class="env-label">Colonia <span id="env-dest-loading" style="display:none;font-size:10px;color:var(--accent);">cargando...</span></label><select id="env-q-dest-col" class="env-input" style="cursor:pointer;"><option value="">Escribe el CP para cargar</option></select></div>
+            </div>
+            <div id="env-dest-address" style="display:none;display:flex;flex-direction:column;gap:10px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div><label class="env-label">Ciudad</label><input id="env-q-dest-city" type="text" class="env-input" readonly style="opacity:0.7;"/></div>
+                <div><label class="env-label">Estado</label><input id="env-q-dest-state" type="text" class="env-input" readonly style="opacity:0.7;"/></div>
+              </div>
+              <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;">
+                <div><label class="env-label">Calle</label><input id="env-q-dest-street" type="text" class="env-input" placeholder="Calle Morelos"/></div>
+                <div><label class="env-label">No. Ext.</label><input id="env-q-dest-ext" type="text" class="env-input" placeholder="567"/></div>
+                <div><label class="env-label">No. Int.</label><input id="env-q-dest-int" type="text" class="env-input" placeholder="(opcional)"/></div>
+              </div>
+              <div><label class="env-label">Nombre de quien recibe</label><input id="env-q-dest-name" type="text" class="env-input" placeholder="Ej: Carlos Hernández"/></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div><label class="env-label">Teléfono</label><input id="env-q-dest-phone" type="tel" class="env-input" placeholder="33 1234 5678"/></div>
+                <div><label class="env-label">Email (para enviar rastreo)</label><input id="env-q-dest-email" type="email" class="env-input" placeholder="cliente@email.com"/></div>
+              </div>
+            </div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
             <div><label class="env-label">Largo (cm)</label><input id="env-q-largo" type="number" value="30" class="env-input"/></div>
@@ -582,6 +623,76 @@ function renderEnvAutopilot(){
 }
 
 // ═══════ PESO VOLUMÉTRICO ═══════
+// ═══════ SEPOMEX CP LOOKUP ═══════
+var _cpTimers = {};
+function envLookupCP(type, cp) {
+  clearTimeout(_cpTimers[type]);
+  if (!cp || cp.length !== 5) return;
+  _cpTimers[type] = setTimeout(async function() {
+    var loading = document.getElementById('env-' + type + '-loading');
+    if (loading) loading.style.display = 'inline';
+
+    try {
+      var res = await fetch('http://localhost:6100/api/v1/shipping/zipcode/' + cp);
+      var data = await res.json();
+
+      if (data.found) {
+        // Fill colony dropdown
+        var colSel = document.getElementById('env-q-' + type + '-col');
+        if (colSel) {
+          colSel.innerHTML = '';
+          if (data.colonies && data.colonies.length > 1) {
+            colSel.innerHTML = '<option value="">Selecciona colonia...</option>';
+          }
+          (data.colonies || []).forEach(function(c) {
+            var opt = document.createElement('option');
+            opt.value = c; opt.textContent = c;
+            colSel.appendChild(opt);
+          });
+          if (data.colonies && data.colonies.length === 1) colSel.value = data.colonies[0];
+        }
+        // Fill city/state
+        var cityEl = document.getElementById('env-q-' + type + '-city');
+        var stateEl = document.getElementById('env-q-' + type + '-state');
+        if (cityEl) cityEl.value = data.city || data.municipality || '';
+        if (stateEl) stateEl.value = data.state || '';
+
+        // Show address fields
+        var addrDiv = document.getElementById('env-' + type + '-address');
+        if (addrDiv) addrDiv.style.display = 'flex';
+
+        showToast('CP ' + cp + ': ' + (data.city || '') + ', ' + (data.state || ''));
+      } else {
+        showToast('CP ' + cp + ' no encontrado');
+      }
+    } catch(e) {
+      // Fallback for common CPs
+      var fallback = {
+        '03100': { colonies: ['Del Valle Centro','Del Valle Norte','Del Valle Sur'], city: 'Ciudad de México', state: 'CDMX' },
+        '06700': { colonies: ['Roma Norte','Roma Sur'], city: 'Ciudad de México', state: 'CDMX' },
+        '44100': { colonies: ['Centro','Americana'], city: 'Guadalajara', state: 'Jalisco' },
+        '64060': { colonies: ['Obispado'], city: 'Monterrey', state: 'Nuevo León' },
+      };
+      if (fallback[cp]) {
+        var d = fallback[cp];
+        var colSel = document.getElementById('env-q-' + type + '-col');
+        if (colSel) { colSel.innerHTML = d.colonies.map(function(c){return '<option value="'+c+'">'+c+'</option>';}).join(''); }
+        var cityEl = document.getElementById('env-q-' + type + '-city');
+        var stateEl = document.getElementById('env-q-' + type + '-state');
+        if (cityEl) cityEl.value = d.city;
+        if (stateEl) stateEl.value = d.state;
+        var addrDiv = document.getElementById('env-' + type + '-address');
+        if (addrDiv) addrDiv.style.display = 'flex';
+      }
+    } finally {
+      if (loading) loading.style.display = 'none';
+    }
+  }, 500);
+}
+
+// Auto-lookup origin CP on load
+setTimeout(function() { envLookupCP('origin', '03100'); }, 1000);
+
 function envCalcVolumetric(){
   const l=parseFloat(document.getElementById('env-q-largo')?.value)||30;
   const w=parseFloat(document.getElementById('env-q-ancho')?.value)||20;
