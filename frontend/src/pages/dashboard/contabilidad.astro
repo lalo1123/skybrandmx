@@ -1,0 +1,783 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Contabilidad">
+  <!-- Smart Recommendations -->
+  <div id="con-smart-recs" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;"></div>
+
+  <!-- Main Help Banner -->
+  <div id="con-help-main" class="con-help-banner" style="margin-bottom:20px;">
+    <svg style="width:18px;height:18px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <div style="flex:1;">
+      <p style="font-size:13px;font-weight:800;color:var(--text-primary);margin-bottom:3px;">Contabilidad sin complicaciones</p>
+      <p style="font-size:12px;color:var(--text-secondary);line-height:1.5;">Aqui llevas las cuentas de tu negocio: lo que entra, lo que sale y lo que le debes al SAT. Nosotros clasificamos todo automaticamente y te preparamos tus declaraciones. No necesitas saber contabilidad.</p>
+    </div>
+    <button onclick="conDismissHelp('main')" class="con-help-close">&times;</button>
+  </div>
+
+  <!-- Stats bar (6 stats) -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px;">
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="con-stat-label">Ingresos del mes</p>
+      <p class="con-stat-val" style="color:#22c55e;">$158,200</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="con-stat-label">Gastos del mes</p>
+      <p class="con-stat-val" style="color:#ef4444;">$109,600</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="con-stat-label">Utilidad neta <span class="con-tip" data-tip="Lo que realmente ganas despues de todos los gastos">?</span></p>
+      <p class="con-stat-val" style="color:var(--accent);">$48,600</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="con-stat-label">IVA por pagar <span class="con-tip" data-tip="IVA que debes declarar al SAT este mes">?</span></p>
+      <p class="con-stat-val" style="color:#f97316;">$7,776</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="con-stat-label">ISR estimado <span class="con-tip" data-tip="Impuesto Sobre la Renta - lo que le pagas al SAT sobre tus ganancias">?</span></p>
+      <p class="con-stat-val" style="color:#8b5cf6;">$14,580</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="con-stat-label">Proxima declaracion <span class="con-tip" data-tip="Fecha limite para presentar tu declaracion mensual al SAT">?</span></p>
+      <p class="con-stat-val" style="color:#ef4444;font-size:22px;">15 dias</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;overflow-x:auto;">
+    <button id="con-tab-resumen" class="con-tab active" onclick="switchConTab('resumen')">Resumen</button>
+    <button id="con-tab-catalogo" class="con-tab" onclick="switchConTab('catalogo')">Catalogo de cuentas</button>
+    <button id="con-tab-polizas" class="con-tab" onclick="switchConTab('polizas')">Polizas / Movimientos</button>
+    <button id="con-tab-impuestos" class="con-tab" onclick="switchConTab('impuestos')">Impuestos (SAT)</button>
+    <button id="con-tab-reportes" class="con-tab" onclick="switchConTab('reportes')">Reportes fiscales</button>
+    <button id="con-tab-conciliacion" class="con-tab" onclick="switchConTab('conciliacion')">Conciliacion</button>
+  </div>
+
+  <!-- ══════════ Tab: Resumen ══════════ -->
+  <div id="con-panel-resumen">
+    <div id="con-help-resumen" class="con-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">El estado de resultados muestra cuanto ganaste (ingresos), cuanto gastaste (gastos) y cuanto te quedo (utilidad) en cada mes.</p>
+      <button onclick="conDismissHelp('resumen')" class="con-help-close">&times;</button>
+    </div>
+
+    <div class="stat-card animate-in" style="padding:24px;margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <h3 style="font-size:15px;font-weight:800;color:var(--text-primary);">Estado de resultados (P&amp;L)</h3>
+          <p style="font-size:12px;color:var(--text-muted);">Resumen mes por mes</p>
+        </div>
+        <button onclick="showToast('Descargando estado de resultados...')" class="con-btn-secondary" style="padding:8px 14px;">Descargar PDF</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="border-bottom:1px solid var(--border);">
+            <th class="con-th">Concepto</th>
+            <th class="con-th" style="text-align:right;">Enero</th>
+            <th class="con-th" style="text-align:right;">Febrero</th>
+            <th class="con-th" style="text-align:right;">Marzo</th>
+            <th class="con-th" style="text-align:right;">Abril</th>
+          </tr></thead>
+          <tbody id="con-pl-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Utilidad mensual</h4>
+        <div id="con-chart-util" style="height:180px;display:flex;align-items:flex-end;gap:10px;"></div>
+      </div>
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Margen de utilidad <span class="con-tip" data-tip="Porcentaje que representa tu utilidad de tus ingresos totales">?</span></h4>
+        <div style="text-align:center;padding:20px 0;">
+          <p style="font-size:48px;font-weight:900;color:var(--accent);">30.7%</p>
+          <p style="font-size:12px;color:var(--text-muted);margin-top:4px;">de cada peso vendido, $0.30 es ganancia</p>
+          <div style="margin-top:16px;padding:12px;border-radius:10px;background:var(--input-bg);">
+            <p style="font-size:11px;color:var(--text-muted);">Comparacion con mes pasado</p>
+            <p style="font-size:13px;font-weight:700;color:#ef4444;margin-top:4px;">▼ 2% vs mes anterior</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Catalogo de cuentas ══════════ -->
+  <div id="con-panel-catalogo" style="display:none;">
+    <div id="con-help-catalogo" class="con-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">El catalogo de cuentas es la lista oficial del SAT con todas las categorias para clasificar tus movimientos. Cada cuenta tiene un codigo y tipo.</p>
+      <button onclick="conDismissHelp('catalogo')" class="con-help-close">&times;</button>
+    </div>
+
+    <div class="stat-card animate-in" style="padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;position:relative;">
+        <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input id="con-cat-search" type="text" placeholder="Buscar cuenta por codigo o nombre..." oninput="renderCatalogo()" class="con-input" style="padding-left:38px;"/>
+      </div>
+      <select id="con-cat-filter" onchange="renderCatalogo()" class="con-input" style="width:auto;cursor:pointer;">
+        <option value="">Todos los tipos</option>
+        <option value="Activo">Activo</option>
+        <option value="Pasivo">Pasivo</option>
+        <option value="Capital">Capital</option>
+        <option value="Ingresos">Ingresos</option>
+        <option value="Gastos">Gastos</option>
+      </select>
+      <button onclick="showToast('Importando catalogo oficial del SAT...')" class="con-btn-primary" style="padding:10px 16px;">Sincronizar con SAT</button>
+    </div>
+
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="border-bottom:1px solid var(--border);">
+            <th class="con-th">Codigo</th>
+            <th class="con-th">Nombre de cuenta</th>
+            <th class="con-th">Tipo</th>
+            <th class="con-th" style="text-align:right;">Saldo</th>
+          </tr></thead>
+          <tbody id="con-cat-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Polizas / Movimientos ══════════ -->
+  <div id="con-panel-polizas" style="display:none;">
+    <div id="con-help-polizas" class="con-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Una poliza es un registro contable de una operacion (entrada o salida de dinero). Aqui ves todos los movimientos de tu negocio.</p>
+      <button onclick="conDismissHelp('polizas')" class="con-help-close">&times;</button>
+    </div>
+
+    <div class="stat-card animate-in" style="padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;position:relative;">
+        <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input id="con-pol-search" type="text" placeholder="Buscar por concepto..." oninput="renderPolizas()" class="con-input" style="padding-left:38px;"/>
+      </div>
+      <select id="con-pol-filter" onchange="renderPolizas()" class="con-input" style="width:auto;cursor:pointer;">
+        <option value="">Todos los tipos</option>
+        <option value="Ingreso">Ingreso</option>
+        <option value="Egreso">Egreso</option>
+        <option value="Diario">Diario</option>
+      </select>
+      <button onclick="conOpenNewPoliza()" class="con-btn-primary" style="padding:10px 16px;display:flex;align-items:center;gap:6px;">
+        <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Nueva poliza
+      </button>
+    </div>
+
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="border-bottom:1px solid var(--border);">
+            <th class="con-th">Fecha</th>
+            <th class="con-th">Tipo</th>
+            <th class="con-th">Concepto</th>
+            <th class="con-th">Cuenta</th>
+            <th class="con-th" style="text-align:right;">Cargo</th>
+            <th class="con-th" style="text-align:right;">Abono</th>
+            <th class="con-th" style="text-align:right;">Saldo</th>
+          </tr></thead>
+          <tbody id="con-pol-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Impuestos (SAT) ══════════ -->
+  <div id="con-panel-impuestos" style="display:none;">
+    <div id="con-help-impuestos" class="con-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Aqui calculamos cuanto debes pagarle al SAT este mes: IVA, ISR y tus proximas declaraciones. Todo listo para presentar.</p>
+      <button onclick="conDismissHelp('impuestos')" class="con-help-close">&times;</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-bottom:16px;">
+      <!-- IVA Calculator -->
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:4px;">Calculadora de IVA</h4>
+        <p style="font-size:11px;color:var(--text-muted);margin-bottom:14px;">IVA trasladado menos IVA acreditable</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;justify-content:space-between;padding:10px 12px;border-radius:8px;background:var(--input-bg);">
+            <span style="font-size:12px;color:var(--text-muted);">IVA trasladado <span class="con-tip" data-tip="El IVA que cobraste en tus facturas emitidas">?</span></span>
+            <span style="font-size:13px;font-weight:800;color:#22c55e;">$25,312</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:10px 12px;border-radius:8px;background:var(--input-bg);">
+            <span style="font-size:12px;color:var(--text-muted);">IVA acreditable <span class="con-tip" data-tip="El IVA que pagaste en tus compras y gastos, se resta del trasladado">?</span></span>
+            <span style="font-size:13px;font-weight:800;color:#ef4444;">$17,536</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:12px;border-radius:10px;background:var(--accent-bg);border:1px solid var(--accent);">
+            <span style="font-size:13px;font-weight:800;color:var(--text-primary);">IVA a pagar al SAT</span>
+            <span style="font-size:16px;font-weight:900;color:var(--accent);">$7,776</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ISR -->
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:4px;">ISR estimado del mes</h4>
+        <p style="font-size:11px;color:var(--text-muted);margin-bottom:14px;">Impuesto Sobre la Renta</p>
+        <div style="text-align:center;padding:16px 0;">
+          <p style="font-size:36px;font-weight:900;color:#8b5cf6;">$14,580</p>
+          <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">30% sobre utilidad de $48,600</p>
+        </div>
+        <div style="padding:10px 12px;border-radius:8px;background:var(--input-bg);margin-top:10px;">
+          <p style="font-size:11px;color:var(--text-muted);">Regimen: Simplificado de Confianza (RESICO)</p>
+        </div>
+      </div>
+
+      <!-- DIOT -->
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:4px;">
+          DIOT preview
+          <span class="con-tip" data-tip="Declaracion Informativa de Operaciones con Terceros - un reporte mensual al SAT de tus compras con proveedores">?</span>
+        </h4>
+        <p style="font-size:11px;color:var(--text-muted);margin-bottom:14px;">Declaracion informativa de compras</p>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);">Proveedores registrados</span><span style="font-weight:700;color:var(--text-primary);">12</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);">Operaciones del mes</span><span style="font-weight:700;color:var(--text-primary);">28</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);">Total compras</span><span style="font-weight:700;color:var(--text-primary);">$109,600</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);">IVA acreditable</span><span style="font-weight:700;color:var(--text-primary);">$17,536</span></div>
+        </div>
+        <button onclick="showToast('Generando DIOT del mes...')" class="con-btn-primary" style="width:100%;margin-top:14px;padding:10px;">Generar DIOT</button>
+      </div>
+
+      <!-- Carta Porte -->
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:4px;">
+          Carta Porte 3.1
+          <span class="con-tip" data-tip="Documento obligatorio cuando transportas mercancia. Se agrega al CFDI.">?</span>
+        </h4>
+        <p style="font-size:11px;color:var(--text-muted);margin-bottom:14px;">Complemento para traslado de mercancia</p>
+        <div style="padding:14px;border-radius:10px;background:var(--input-bg);margin-bottom:14px;">
+          <p style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Generadas este mes</p>
+          <p style="font-size:24px;font-weight:900;color:var(--accent);">3</p>
+        </div>
+        <button onclick="showToast('Abriendo generador de Carta Porte 3.1...')" class="con-btn-primary" style="width:100%;padding:10px;">Generar Carta Porte</button>
+      </div>
+    </div>
+
+    <!-- Proximas fechas -->
+    <div class="stat-card animate-in" style="padding:20px;">
+      <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:14px;">Proximas fechas de declaracion</h4>
+      <div id="con-fechas-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Reportes fiscales ══════════ -->
+  <div id="con-panel-reportes" style="display:none;">
+    <div id="con-help-reportes" class="con-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Descarga los reportes que te pide tu contador o el SAT. Estan listos para presentar, en el formato oficial.</p>
+      <button onclick="conDismissHelp('reportes')" class="con-help-close">&times;</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:20px;" id="con-reportes-grid"></div>
+
+    <div class="stat-card animate-in" style="padding:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+      <div style="width:44px;height:44px;border-radius:12px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg style="width:22px;height:22px;color:var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <p style="font-size:14px;font-weight:800;color:var(--text-primary);">Enviar paquete completo a mi contador</p>
+        <p style="font-size:12px;color:var(--text-muted);">Empacamos todos los reportes del mes y los enviamos por email</p>
+      </div>
+      <button onclick="conSendToContador()" class="con-btn-primary" style="padding:12px 20px;">Enviar a mi contador</button>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Conciliacion ══════════ -->
+  <div id="con-panel-conciliacion" style="display:none;">
+    <div id="con-help-conciliacion" class="con-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">La conciliacion bancaria empareja los movimientos de tu banco con las facturas y gastos que registraste. Asi te aseguras que todo cuadre.</p>
+      <button onclick="conDismissHelp('conciliacion')" class="con-help-close">&times;</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:20px;">
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:10px;">Conectar cuenta bancaria</h4>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">Sincroniza automaticamente tus movimientos via Belvo (BBVA, Santander, Banorte, HSBC, Banamex).</p>
+        <button onclick="showToast('Abriendo conexion bancaria (Belvo)...')" class="con-btn-primary" style="width:100%;padding:10px;">Conectar banco</button>
+      </div>
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:10px;">Subir estado de cuenta (CSV)</h4>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">Sube el archivo CSV o Excel de tu estado de cuenta y los emparejamos automaticamente.</p>
+        <label class="con-btn-secondary" style="display:block;text-align:center;padding:10px;cursor:pointer;">
+          Seleccionar archivo
+          <input type="file" accept=".csv,.xls,.xlsx" onchange="conUploadStatement(this)" style="display:none;"/>
+        </label>
+      </div>
+    </div>
+
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+      <div style="padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px;">
+        <div>
+          <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);">Movimientos bancarios recientes</h4>
+          <p style="font-size:11px;color:var(--text-muted);">3 emparejados, 2 sin emparejar</p>
+        </div>
+        <button onclick="conAutoMatch()" class="con-btn-primary" style="padding:8px 14px;">Auto-emparejar</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="border-bottom:1px solid var(--border);">
+            <th class="con-th">Fecha</th>
+            <th class="con-th">Descripcion banco</th>
+            <th class="con-th" style="text-align:right;">Monto</th>
+            <th class="con-th">Estado</th>
+            <th class="con-th">Emparejado con</th>
+            <th class="con-th" style="text-align:center;">Accion</th>
+          </tr></thead>
+          <tbody id="con-conc-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Autopilot -->
+  <div class="stat-card animate-in" style="padding:0;margin-top:20px;overflow:hidden;">
+    <button onclick="conToggleSection('con-autopilot-content')" class="con-collapse-header">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,rgba(34,197,94,0.15),rgba(111,207,245,0.15));display:flex;align-items:center;justify-content:center;">
+          <svg style="width:14px;height:14px;color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <div style="text-align:left;">
+          <p style="font-size:13px;font-weight:700;color:var(--text-primary);">Piloto automatico de contabilidad</p>
+          <p style="font-size:11px;color:var(--text-faint);">Registra y clasifica tus movimientos sin que muevas un dedo</p>
+        </div>
+      </div>
+      <svg style="width:16px;height:16px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+    </button>
+    <div id="con-autopilot-content" style="display:none;padding:20px;">
+      <div id="con-autopilot-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
+    </div>
+  </div>
+</DashboardLayout>
+
+<style>
+  .con-stat-label { font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px; }
+  .con-stat-val { font-size:26px;font-weight:900;color:var(--text-primary); }
+  .con-tab { padding:10px 20px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap; }
+  .con-tab.active { color:var(--accent);border-bottom-color:var(--accent); }
+  .con-th { padding:14px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px; }
+  .con-td { padding:12px 16px;font-size:13px;color:var(--text-primary); }
+  .con-label { font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:4px;display:block; }
+  .con-input { width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;transition:border-color 0.2s; }
+  .con-input:focus { border-color:var(--accent); }
+  .con-btn-primary { border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s; }
+  .con-btn-primary:hover { opacity:0.85; }
+  .con-btn-secondary { border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-primary);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s; }
+  .con-btn-secondary:hover { background:var(--nav-hover);border-color:var(--accent); }
+  .con-help-banner { display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;background:var(--accent-bg);border:1px solid rgba(111,207,245,0.15);margin-bottom:16px; }
+  .con-help-close { border:none;background:transparent;color:var(--text-faint);cursor:pointer;font-size:16px;padding:0 4px; }
+  .con-tip { display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--input-bg);color:var(--text-faint);font-size:10px;font-weight:800;cursor:help;position:relative;flex-shrink:0; }
+  .con-tip:hover::after { content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--bg-sidebar);border:1px solid var(--border);color:var(--text-secondary);padding:10px 14px;border-radius:10px;font-size:12px;font-weight:500;white-space:normal;width:280px;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.3);line-height:1.5;pointer-events:none; }
+  .con-tip:hover::before { content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--border);z-index:101; }
+  .con-collapse-header { width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border:none;background:transparent;cursor:pointer;transition:background 0.15s; }
+  .con-collapse-header:hover { background:var(--nav-hover); }
+  .con-toggle-wrap { position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0; }
+  .con-toggle-wrap input { opacity:0;width:0;height:0; }
+  .con-toggle-slider { position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:22px;transition:0.3s; }
+  .con-toggle-slider::before { content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s; }
+  .con-toggle-wrap input:checked + .con-toggle-slider { background:#22c55e; }
+  .con-toggle-wrap input:checked + .con-toggle-slider::before { transform:translateX(18px); }
+  .con-report-card { padding:18px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);transition:all 0.2s;cursor:pointer; }
+  .con-report-card:hover { border-color:var(--accent);transform:translateY(-2px); }
+</style>
+
+<script is:inline>
+// ═══════ DEMO DATA ═══════
+const demoPL = [
+  { concept:'Ingresos', ene:142000, feb:151500, mar:155800, abr:158200, type:'ingreso' },
+  { concept:'Costo de ventas', ene:-58000, feb:-62000, mar:-64500, abr:-65800, type:'gasto' },
+  { concept:'Utilidad bruta', ene:84000, feb:89500, mar:91300, abr:92400, type:'subtotal' },
+  { concept:'Gastos de operacion', ene:-38000, feb:-41000, mar:-42800, abr:-43800, type:'gasto' },
+  { concept:'Utilidad neta', ene:46000, feb:48500, mar:48500, abr:48600, type:'total' }
+];
+
+const demoCatalogo = [
+  { code:'1101', name:'Caja', type:'Activo', balance:12500 },
+  { code:'1102', name:'Bancos - BBVA', type:'Activo', balance:184320 },
+  { code:'1103', name:'Bancos - Santander', type:'Activo', balance:42180 },
+  { code:'1201', name:'Clientes', type:'Activo', balance:58400 },
+  { code:'1204', name:'IVA acreditable', type:'Activo', balance:17536 },
+  { code:'1301', name:'Inventario de mercancias', type:'Activo', balance:95000 },
+  { code:'2101', name:'Proveedores', type:'Pasivo', balance:45200 },
+  { code:'2102', name:'Acreedores diversos', type:'Pasivo', balance:12800 },
+  { code:'2104', name:'IVA trasladado por pagar', type:'Pasivo', balance:25312 },
+  { code:'2105', name:'ISR por pagar', type:'Pasivo', balance:14580 },
+  { code:'3101', name:'Capital social', type:'Capital', balance:150000 },
+  { code:'3201', name:'Utilidades acumuladas', type:'Capital', balance:162500 },
+  { code:'4101', name:'Ventas', type:'Ingresos', balance:158200 },
+  { code:'4102', name:'Servicios', type:'Ingresos', balance:22000 },
+  { code:'5101', name:'Costo de ventas', type:'Gastos', balance:65800 },
+  { code:'5201', name:'Sueldos y salarios', type:'Gastos', balance:28000 },
+  { code:'5202', name:'Renta', type:'Gastos', balance:8500 },
+  { code:'5203', name:'Servicios publicos', type:'Gastos', balance:3200 },
+  { code:'5204', name:'Publicidad', type:'Gastos', balance:4100 }
+];
+
+const demoPolizas = [
+  { fecha:'2026-04-07', tipo:'Ingreso', concepto:'Venta factura A-007', cuenta:'1102 Bancos BBVA', cargo:7540, abono:0, saldo:184320 },
+  { fecha:'2026-04-06', tipo:'Egreso', concepto:'Pago renta local abril', cuenta:'5202 Renta', cargo:0, abono:8500, saldo:176780 },
+  { fecha:'2026-04-05', tipo:'Ingreso', concepto:'Venta factura A-006', cuenta:'1101 Caja', cargo:986, abono:0, saldo:185280 },
+  { fecha:'2026-04-04', tipo:'Egreso', concepto:'Pago proveedor Distrib. SA', cuenta:'2101 Proveedores', cargo:0, abono:18500, saldo:184294 },
+  { fecha:'2026-04-03', tipo:'Diario', concepto:'Provision ISR del mes', cuenta:'2105 ISR por pagar', cargo:0, abono:14580, saldo:202794 },
+  { fecha:'2026-04-02', tipo:'Ingreso', concepto:'Venta factura A-004', cuenta:'1102 Bancos BBVA', cargo:2088, abono:0, saldo:217374 },
+  { fecha:'2026-04-01', tipo:'Egreso', concepto:'Nomina primera quincena', cuenta:'5201 Sueldos', cargo:0, abono:14000, saldo:215286 },
+  { fecha:'2026-04-01', tipo:'Diario', concepto:'Registro IVA trasladado', cuenta:'2104 IVA por pagar', cargo:0, abono:7776, saldo:229286 }
+];
+
+const demoConciliacion = [
+  { fecha:'2026-04-07', desc:'DEP EFECTIVO CLIENTE', monto:7540, estado:'matched', match:'Factura A-007' },
+  { fecha:'2026-04-06', desc:'TRANSF SPEI RENTA LOCAL', monto:-8500, estado:'matched', match:'Gasto Renta abril' },
+  { fecha:'2026-04-05', desc:'DEPOSITO VENTANILLA', monto:986, estado:'matched', match:'Factura A-006' },
+  { fecha:'2026-04-04', desc:'TRANSF PROV DISTRIB', monto:-18500, estado:'unmatched', match:null },
+  { fecha:'2026-04-03', desc:'COMISION MENSUAL BANCO', monto:-320, estado:'unmatched', match:null }
+];
+
+const demoReportes = [
+  { id:'balance', name:'Balance General', desc:'Activos, pasivos y capital', icon:'⚖️', color:'#6fcff5' },
+  { id:'estado', name:'Estado de Resultados', desc:'Ingresos, gastos y utilidad', icon:'📊', color:'#22c55e' },
+  { id:'libro-mayor', name:'Libro Mayor', desc:'Todos los movimientos por cuenta', icon:'📚', color:'#8b5cf6' },
+  { id:'libro-diario', name:'Libro Diario', desc:'Todas las polizas en orden cronologico', icon:'📓', color:'#f97316' },
+  { id:'diot', name:'DIOT (TXT)', desc:'Archivo oficial para el SAT', icon:'📄', color:'#ef4444' },
+  { id:'cfdi-emitidos', name:'CFDI emitidos', desc:'Lista de facturas del mes', icon:'🧾', color:'#14b8a6' },
+  { id:'cfdi-recibidos', name:'CFDI recibidos', desc:'Lista de facturas de proveedores', icon:'📥', color:'#ec4899' }
+];
+
+const demoFechas = [
+  { fecha:'17 de abril', dias:15, concepto:'Declaracion mensual IVA e ISR', color:'#ef4444' },
+  { fecha:'17 de abril', dias:15, concepto:'DIOT del mes de marzo', color:'#f97316' },
+  { fecha:'30 de abril', dias:28, concepto:'Declaracion informativa anual', color:'#8b5cf6' }
+];
+
+const conAutopilotOptions = [
+  { id:'auto_factura', name:'Registrar factura emitida', desc:'Registra automaticamente cada factura que emitas', icon:'🧾', color:'#22c55e', active:true },
+  { id:'auto_pago', name:'Registrar pago recibido', desc:'Registra automaticamente cada pago que recibas', icon:'💰', color:'#6fcff5', active:true },
+  { id:'auto_poliza', name:'Generar poliza al timbrar', desc:'Crea la poliza contable al timbrar una factura', icon:'📝', color:'#8b5cf6', active:true },
+  { id:'auto_alerta', name:'Alerta antes del 17', desc:'Te recuerda la fecha limite de declaracion del SAT', icon:'🔔', color:'#f97316', active:true },
+  { id:'auto_contador', name:'Enviar reporte mensual', desc:'Envia automaticamente el paquete mensual a tu contador', icon:'📧', color:'#ec4899', active:false }
+];
+
+// ═══════ HELPERS ═══════
+function conDismissHelp(t) {
+  const el = document.getElementById('con-help-' + t);
+  if (el) el.style.display = 'none';
+  try { localStorage.setItem('con_help_' + t + '_dismissed', '1'); } catch(e){}
+}
+
+function conRestoreHelp() {
+  ['main','resumen','catalogo','polizas','impuestos','reportes','conciliacion'].forEach(t => {
+    try {
+      if (localStorage.getItem('con_help_' + t + '_dismissed') === '1') {
+        const el = document.getElementById('con-help-' + t);
+        if (el) el.style.display = 'none';
+      }
+    } catch(e){}
+  });
+}
+
+function conToggleSection(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function showToast(msg) {
+  const ex = document.getElementById('con-toast');
+  if (ex) ex.remove();
+  const t = document.createElement('div');
+  t.id = 'con-toast';
+  t.textContent = msg;
+  Object.assign(t.style, {
+    position: 'fixed', bottom: '24px', right: '24px',
+    background: '#22c55e', color: '#fff', padding: '12px 24px',
+    borderRadius: '10px', fontSize: '13px', fontWeight: '700',
+    zIndex: '9999', boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
+  });
+  document.body.appendChild(t);
+  setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transition = 'opacity 0.3s';
+    setTimeout(() => t.remove(), 300);
+  }, 3000);
+}
+
+function switchConTab(tab) {
+  document.querySelectorAll('.con-tab').forEach(t => t.classList.remove('active'));
+  const tabBtn = document.getElementById('con-tab-' + tab);
+  if (tabBtn) tabBtn.classList.add('active');
+  ['resumen','catalogo','polizas','impuestos','reportes','conciliacion'].forEach(p => {
+    const el = document.getElementById('con-panel-' + p);
+    if (el) el.style.display = p === tab ? '' : 'none';
+  });
+}
+
+function fmt(n) {
+  if (n === 0 || n === null || n === undefined) return '$0';
+  const neg = n < 0;
+  const abs = Math.abs(n);
+  return (neg ? '-$' : '$') + abs.toLocaleString('en-US');
+}
+
+// ═══════ SMART RECS ═══════
+function renderConRecs() {
+  const el = document.getElementById('con-smart-recs');
+  if (!el) return;
+  const recs = [
+    {
+      icon: '📅', color: '#ef4444',
+      title: 'Se acerca la declaracion mensual del SAT',
+      desc: 'Tienes hasta el 17 de abril para presentar tu declaracion de IVA e ISR. Total a pagar: $22,356.',
+      btn: 'Ver impuestos',
+      action: "switchConTab('impuestos')"
+    },
+    {
+      icon: '📉', color: '#f97316',
+      title: 'Tu margen de utilidad bajo 2% vs mes pasado',
+      desc: 'Pasaste de 32.7% a 30.7%. Revisa tus gastos de operacion que subieron $1,000.',
+      btn: 'Ver resumen',
+      action: "switchConTab('resumen')"
+    }
+  ];
+  el.innerHTML = recs.map(r =>
+    '<div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;background:' + r.color + '08;border:1px solid ' + r.color + '20;">' +
+    '<span style="font-size:24px;flex-shrink:0;">' + r.icon + '</span>' +
+    '<div style="flex:1;"><p style="font-size:13px;font-weight:700;color:var(--text-primary);">' + r.title + '</p>' +
+    '<p style="font-size:11px;color:var(--text-muted);margin-top:2px;">' + r.desc + '</p></div>' +
+    '<button onclick="' + r.action + '" style="padding:8px 16px;border-radius:8px;border:none;background:' + r.color + ';color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">' + r.btn + '</button>' +
+    '<button onclick="this.parentElement.remove()" style="border:none;background:transparent;color:var(--text-faint);cursor:pointer;font-size:14px;padding:0 4px;">✕</button>' +
+    '</div>'
+  ).join('');
+}
+
+// ═══════ RESUMEN (P&L) ═══════
+function renderPL() {
+  const tbody = document.getElementById('con-pl-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = demoPL.map(row => {
+    let colorStyle = 'color:var(--text-primary);';
+    let weight = '500';
+    if (row.type === 'ingreso') { colorStyle = 'color:#22c55e;'; weight = '700'; }
+    if (row.type === 'gasto') { colorStyle = 'color:#ef4444;'; }
+    if (row.type === 'subtotal') { colorStyle = 'color:var(--text-primary);'; weight = '800'; }
+    if (row.type === 'total') { colorStyle = 'color:var(--accent);'; weight = '900'; }
+    const bg = row.type === 'total' ? 'background:var(--accent-bg);' : '';
+    return '<tr style="border-bottom:1px solid var(--border);' + bg + '">' +
+      '<td class="con-td" style="font-weight:' + weight + ';">' + row.concept + '</td>' +
+      '<td class="con-td" style="text-align:right;font-weight:' + weight + ';' + colorStyle + '">' + fmt(row.ene) + '</td>' +
+      '<td class="con-td" style="text-align:right;font-weight:' + weight + ';' + colorStyle + '">' + fmt(row.feb) + '</td>' +
+      '<td class="con-td" style="text-align:right;font-weight:' + weight + ';' + colorStyle + '">' + fmt(row.mar) + '</td>' +
+      '<td class="con-td" style="text-align:right;font-weight:' + weight + ';' + colorStyle + '">' + fmt(row.abr) + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+function renderUtilChart() {
+  const el = document.getElementById('con-chart-util');
+  if (!el) return;
+  const totals = demoPL.find(r => r.type === 'total');
+  if (!totals) return;
+  const vals = [
+    { label: 'Ene', val: totals.ene },
+    { label: 'Feb', val: totals.feb },
+    { label: 'Mar', val: totals.mar },
+    { label: 'Abr', val: totals.abr }
+  ];
+  const max = Math.max.apply(null, vals.map(v => v.val));
+  el.innerHTML = vals.map(v => {
+    const h = Math.max(10, (v.val / max) * 140);
+    return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">' +
+      '<div style="font-size:10px;font-weight:700;color:var(--text-muted);">' + fmt(v.val) + '</div>' +
+      '<div style="width:100%;height:' + h + 'px;background:linear-gradient(180deg,var(--accent),rgba(111,207,245,0.4));border-radius:6px 6px 0 0;"></div>' +
+      '<div style="font-size:11px;color:var(--text-faint);font-weight:600;">' + v.label + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ═══════ CATALOGO ═══════
+function renderCatalogo() {
+  const tbody = document.getElementById('con-cat-tbody');
+  if (!tbody) return;
+  const search = (document.getElementById('con-cat-search').value || '').toLowerCase();
+  const filter = document.getElementById('con-cat-filter').value;
+  let data = demoCatalogo.filter(c =>
+    (!search || c.code.toLowerCase().includes(search) || c.name.toLowerCase().includes(search)) &&
+    (!filter || c.type === filter)
+  );
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="padding:40px;text-align:center;color:var(--text-faint);">No se encontraron cuentas</td></tr>';
+    return;
+  }
+  const typeColors = {
+    'Activo': '#22c55e', 'Pasivo': '#ef4444', 'Capital': '#8b5cf6',
+    'Ingresos': '#6fcff5', 'Gastos': '#f97316'
+  };
+  tbody.innerHTML = data.map(c => {
+    const color = typeColors[c.type] || 'var(--text-muted)';
+    return '<tr style="border-bottom:1px solid var(--border);">' +
+      '<td class="con-td" style="font-weight:800;color:var(--accent);font-family:monospace;">' + c.code + '</td>' +
+      '<td class="con-td">' + c.name + '</td>' +
+      '<td class="con-td"><span style="padding:4px 10px;border-radius:6px;background:' + color + '15;color:' + color + ';font-size:11px;font-weight:700;">' + c.type + '</span></td>' +
+      '<td class="con-td" style="text-align:right;font-weight:700;">' + fmt(c.balance) + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+// ═══════ POLIZAS ═══════
+function renderPolizas() {
+  const tbody = document.getElementById('con-pol-tbody');
+  if (!tbody) return;
+  const search = (document.getElementById('con-pol-search').value || '').toLowerCase();
+  const filter = document.getElementById('con-pol-filter').value;
+  let data = demoPolizas.filter(p =>
+    (!search || p.concepto.toLowerCase().includes(search)) &&
+    (!filter || p.tipo === filter)
+  );
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-faint);">No hay polizas</td></tr>';
+    return;
+  }
+  const tipoColors = {
+    'Ingreso': '#22c55e', 'Egreso': '#ef4444', 'Diario': '#8b5cf6'
+  };
+  tbody.innerHTML = data.map(p => {
+    const color = tipoColors[p.tipo] || 'var(--text-muted)';
+    return '<tr style="border-bottom:1px solid var(--border);">' +
+      '<td class="con-td" style="color:var(--text-muted);">' + p.fecha + '</td>' +
+      '<td class="con-td"><span style="padding:4px 10px;border-radius:6px;background:' + color + '15;color:' + color + ';font-size:11px;font-weight:700;">' + p.tipo + '</span></td>' +
+      '<td class="con-td">' + p.concepto + '</td>' +
+      '<td class="con-td" style="font-size:12px;color:var(--text-muted);">' + p.cuenta + '</td>' +
+      '<td class="con-td" style="text-align:right;color:' + (p.cargo > 0 ? '#22c55e' : 'var(--text-faint)') + ';font-weight:' + (p.cargo > 0 ? '700' : '400') + ';">' + (p.cargo > 0 ? fmt(p.cargo) : '-') + '</td>' +
+      '<td class="con-td" style="text-align:right;color:' + (p.abono > 0 ? '#ef4444' : 'var(--text-faint)') + ';font-weight:' + (p.abono > 0 ? '700' : '400') + ';">' + (p.abono > 0 ? fmt(p.abono) : '-') + '</td>' +
+      '<td class="con-td" style="text-align:right;font-weight:800;">' + fmt(p.saldo) + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+function conOpenNewPoliza() {
+  showToast('Abriendo formulario de nueva poliza...');
+}
+
+// ═══════ FECHAS ═══════
+function renderFechas() {
+  const el = document.getElementById('con-fechas-list');
+  if (!el) return;
+  el.innerHTML = demoFechas.map(f =>
+    '<div style="display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:10px;background:' + f.color + '08;border:1px solid ' + f.color + '20;">' +
+    '<div style="width:42px;height:42px;border-radius:10px;background:' + f.color + '15;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+    '<span style="font-size:16px;font-weight:900;color:' + f.color + ';">' + f.dias + '</span></div>' +
+    '<div style="flex:1;"><p style="font-size:13px;font-weight:800;color:var(--text-primary);">' + f.concepto + '</p>' +
+    '<p style="font-size:11px;color:var(--text-muted);">Vence: ' + f.fecha + ' (en ' + f.dias + ' dias)</p></div>' +
+    '<button onclick="showToast(\'Preparando declaracion...\')" style="padding:8px 14px;border-radius:8px;border:1px solid ' + f.color + ';background:transparent;color:' + f.color + ';font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">Preparar</button>' +
+    '</div>'
+  ).join('');
+}
+
+// ═══════ REPORTES ═══════
+function renderReportes() {
+  const el = document.getElementById('con-reportes-grid');
+  if (!el) return;
+  el.innerHTML = demoReportes.map(r =>
+    '<div class="con-report-card" onclick="conDownloadReport(\'' + r.id + '\', \'' + r.name + '\')">' +
+    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">' +
+    '<div style="width:40px;height:40px;border-radius:10px;background:' + r.color + '15;display:flex;align-items:center;justify-content:center;font-size:20px;">' + r.icon + '</div>' +
+    '<div style="flex:1;"><p style="font-size:13px;font-weight:800;color:var(--text-primary);">' + r.name + '</p>' +
+    '<p style="font-size:11px;color:var(--text-muted);">' + r.desc + '</p></div></div>' +
+    '<button style="width:100%;padding:8px;border-radius:8px;border:1px solid ' + r.color + ';background:transparent;color:' + r.color + ';font-size:11px;font-weight:700;cursor:pointer;">Descargar</button>' +
+    '</div>'
+  ).join('');
+}
+
+function conDownloadReport(id, name) {
+  showToast('Descargando ' + name + '...');
+}
+
+function conSendToContador() {
+  showToast('Paquete enviado a tu contador');
+}
+
+// ═══════ CONCILIACION ═══════
+function renderConciliacion() {
+  const tbody = document.getElementById('con-conc-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = demoConciliacion.map((c, idx) => {
+    const isMatched = c.estado === 'matched';
+    const color = isMatched ? '#22c55e' : '#f97316';
+    const label = isMatched ? 'Emparejado' : 'Sin emparejar';
+    const monto = c.monto < 0 ? '-' + fmt(Math.abs(c.monto)).replace('-', '') : fmt(c.monto);
+    const montoColor = c.monto < 0 ? '#ef4444' : '#22c55e';
+    const action = isMatched
+      ? '<button onclick="showToast(\'Desvinculando...\')" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;">Desvincular</button>'
+      : '<button onclick="conMatchItem(' + idx + ')" style="padding:5px 10px;border-radius:6px;border:1px solid var(--accent);background:transparent;color:var(--accent);font-size:11px;cursor:pointer;">Emparejar</button>';
+    return '<tr style="border-bottom:1px solid var(--border);">' +
+      '<td class="con-td" style="color:var(--text-muted);">' + c.fecha + '</td>' +
+      '<td class="con-td" style="font-size:12px;">' + c.desc + '</td>' +
+      '<td class="con-td" style="text-align:right;font-weight:800;color:' + montoColor + ';">' + monto + '</td>' +
+      '<td class="con-td"><span style="padding:4px 10px;border-radius:6px;background:' + color + '15;color:' + color + ';font-size:11px;font-weight:700;">' + label + '</span></td>' +
+      '<td class="con-td" style="font-size:12px;color:var(--text-muted);">' + (c.match || '-') + '</td>' +
+      '<td class="con-td" style="text-align:center;">' + action + '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+function conAutoMatch() {
+  showToast('Analizando movimientos y emparejando automaticamente...');
+  setTimeout(() => {
+    demoConciliacion.forEach(c => {
+      if (c.estado === 'unmatched' && c.desc.indexOf('PROV') !== -1) {
+        c.estado = 'matched';
+        c.match = 'Gasto Distrib. SA';
+      }
+    });
+    renderConciliacion();
+    showToast('1 movimiento emparejado');
+  }, 1000);
+}
+
+function conMatchItem(idx) {
+  showToast('Abriendo selector de factura/gasto...');
+}
+
+function conUploadStatement(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  showToast('Procesando ' + file.name + '...');
+}
+
+// ═══════ AUTOPILOT ═══════
+function renderAutopilot() {
+  const el = document.getElementById('con-autopilot-list');
+  if (!el) return;
+  el.innerHTML = conAutopilotOptions.map(a =>
+    '<div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);">' +
+    '<div style="width:36px;height:36px;border-radius:10px;background:' + a.color + '15;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">' + a.icon + '</div>' +
+    '<div style="flex:1;min-width:0;"><p style="font-size:12px;font-weight:800;color:var(--text-primary);">' + a.name + '</p>' +
+    '<p style="font-size:10px;color:var(--text-muted);margin-top:2px;line-height:1.4;">' + a.desc + '</p></div>' +
+    '<label class="con-toggle-wrap"><input type="checkbox" ' + (a.active ? 'checked' : '') + ' onchange="conToggleAuto(\'' + a.id + '\', this.checked)"><span class="con-toggle-slider"></span></label>' +
+    '</div>'
+  ).join('');
+}
+
+function conToggleAuto(id, val) {
+  const opt = conAutopilotOptions.find(o => o.id === id);
+  if (opt) opt.active = val;
+  showToast(val ? 'Automatizacion activada' : 'Automatizacion desactivada');
+}
+
+// ═══════ INIT ═══════
+document.addEventListener('DOMContentLoaded', function() {
+  conRestoreHelp();
+  renderConRecs();
+  renderPL();
+  renderUtilChart();
+  renderCatalogo();
+  renderPolizas();
+  renderFechas();
+  renderReportes();
+  renderConciliacion();
+  renderAutopilot();
+});
+</script>

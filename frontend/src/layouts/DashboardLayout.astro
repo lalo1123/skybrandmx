@@ -1,0 +1,673 @@
+---
+import HelpCenter from '../components/HelpCenter.astro';
+
+interface Props {
+  title?: string;
+}
+const { title = 'Resumen' } = Astro.props;
+const API_URL = import.meta.env.PUBLIC_API_URL || '';
+const currentPath = Astro.url.pathname;
+
+// Nav items configuration
+// Plan tiers: tools=Solo Herramientas, starter=Starter, growth=Growth, enterprise=Enterprise
+const navItems = [
+  { label: 'Resumen', href: '/dashboard', icon: 'overview', section: 'principal', plans: ['tools','starter','growth','enterprise'] },
+  { label: 'Pedidos', href: '/dashboard/pedidos', icon: 'orders', section: 'modulos', badge: '12', plans: ['tools','starter','growth','enterprise'] },
+  { label: 'Productos', href: '/dashboard/productos', icon: 'products', section: 'modulos', plans: ['tools','starter','growth','enterprise'] },
+  { label: 'POS', href: '/dashboard/pos', icon: 'pos', section: 'modulos', plans: ['starter','growth','enterprise'] },
+  { label: 'CRM', href: '/dashboard/crm', icon: 'crm', section: 'modulos', plans: ['starter','growth','enterprise'] },
+  { label: 'Facturaci\u00f3n', href: '/dashboard/facturacion', icon: 'billing', section: 'modulos', plans: ['tools','starter','growth','enterprise'] },
+  { label: 'Contabilidad', href: '/dashboard/contabilidad', icon: 'accounting', section: 'modulos', plans: ['growth','enterprise'] },
+  { label: 'Compras', href: '/dashboard/compras', icon: 'purchases', section: 'modulos', plans: ['starter','growth','enterprise'] },
+  { label: 'Env\u00edos', href: '/dashboard/envios', icon: 'shipping', section: 'modulos', plans: ['tools','starter','growth','enterprise'] },
+  { label: 'Email Marketing', href: '/dashboard/email-marketing', icon: 'email', section: 'modulos', plans: ['starter','growth','enterprise'] },
+  { label: 'Publicidad', href: '/dashboard/ads', icon: 'ads', section: 'modulos', plans: ['growth','enterprise'] },
+  { label: 'Chat', href: '/dashboard/chat', icon: 'chat', section: 'modulos', plans: ['growth','enterprise'] },
+  { label: 'Tienda Online', href: '/dashboard/tienda', icon: 'store', section: 'modulos', plans: ['starter','growth','enterprise'] },
+  { label: 'Automatizaciones', href: '/dashboard/automatizaciones', icon: 'automations', section: 'modulos', plans: ['growth','enterprise'] },
+  { label: 'Reservaciones', href: '/dashboard/reservaciones', icon: 'calendar', section: 'modulos', plans: ['starter','growth','enterprise'] },
+  { label: 'Cotizaciones', href: '/dashboard/cotizaciones', icon: 'quotes', section: 'modulos', plans: ['starter','growth','enterprise'] },
+  { label: 'Reportes', href: '/dashboard/reportes', icon: 'reports', section: 'modulos', plans: ['growth','enterprise'] },
+  { label: 'Usuarios', href: '/admin', icon: 'users', section: 'admin', plans: ['starter','growth','enterprise'] },
+  { label: 'Configuraci\u00f3n', href: '/dashboard/configuracion', icon: 'settings', section: 'admin', plans: ['tools','starter','growth','enterprise'] },
+];
+
+function isActive(href: string): boolean {
+  if (href === '/dashboard') {
+    return currentPath === '/dashboard' || currentPath === '/dashboard/';
+  }
+  return currentPath.startsWith(href);
+}
+
+const iconPaths: Record<string, string> = {
+  overview: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z',
+  orders: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
+  crm: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z',
+  billing: 'M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z',
+  shipping: 'M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0',
+  email: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+  ads: 'M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z',
+  automations: 'M13 10V3L4 14h7v7l9-11h-7z',
+  products: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
+  chat: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
+  store: 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z',
+  quotes: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+  calendar: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+  pos: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z',
+  accounting: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+  purchases: 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z',
+  reports: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+  users: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z',
+  settings: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
+};
+
+// Settings icon has an extra circle path
+const settingsExtraPath = 'M15 12a3 3 0 11-6 0 3 3 0 016 0z';
+// Ads icon has an extra path
+const adsExtraPath = 'M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z';
+---
+
+<!doctype html>
+<html lang="es" style="color-scheme:dark;">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <title>{title} — SkyBrandMX</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* CSS Variables for theming */
+    :root {
+      --bg-main: #0B1120;
+      --bg-sidebar: #0F172A;
+      --bg-card: rgba(255,255,255,0.02);
+      --bg-card-hover: rgba(255,255,255,0.04);
+      --bg-topbar: rgba(11,17,32,0.8);
+      --border: rgba(255,255,255,0.06);
+      --border-hover: rgba(255,255,255,0.1);
+      --text-primary: #ffffff;
+      --text-secondary: #e2e8f0;
+      --text-muted: #64748b;
+      --text-faint: #475569;
+      --text-faintest: #334155;
+      --accent: #6fcff5;
+      --accent-bg: rgba(111,207,245,0.08);
+      --accent-bg2: rgba(111,207,245,0.15);
+      --accent-gradient-start: #084D6E;
+      --accent-gradient-end: #6fcff5;
+      --scrollbar: rgba(255,255,255,0.1);
+      --nav-hover: rgba(255,255,255,0.04);
+      --input-bg: rgba(255,255,255,0.05);
+    }
+
+    [data-theme="light"] {
+      --bg-main: #f1f5f9;
+      --bg-sidebar: #ffffff;
+      --bg-card: #ffffff;
+      --bg-card-hover: #f8fafc;
+      --bg-topbar: rgba(255,255,255,0.85);
+      --border: #e2e8f0;
+      --border-hover: #cbd5e1;
+      --text-primary: #0f172a;
+      --text-secondary: #1e293b;
+      --text-muted: #64748b;
+      --text-faint: #94a3b8;
+      --text-faintest: #cbd5e1;
+      --accent: #084D6E;
+      --accent-bg: rgba(8,77,110,0.06);
+      --accent-bg2: rgba(8,77,110,0.12);
+      --accent-gradient-start: #084D6E;
+      --accent-gradient-end: #6fcff5;
+      --scrollbar: rgba(0,0,0,0.1);
+      --nav-hover: rgba(0,0,0,0.04);
+      --input-bg: #f1f5f9;
+    }
+
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-main); color: var(--text-secondary); -webkit-font-smoothing: antialiased; transition: background 0.3s, color 0.3s; }
+
+    /* Sidebar */
+    .sidebar { width: 260px; height: 100vh; position: fixed; left: 0; top: 0; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 40; transition: transform 0.3s, background 0.3s; }
+    .sidebar-hidden { transform: translateX(-100%); }
+    .main-content { margin-left: 260px; min-height: 100vh; transition: margin-left 0.3s; }
+    .main-full { margin-left: 0; }
+
+    /* Nav items */
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s; text-decoration: none; }
+    .nav-item:hover { background: var(--nav-hover); color: var(--text-secondary); }
+    .nav-item.active { background: var(--accent-bg); color: var(--accent); }
+    .nav-item.active .nav-icon { color: var(--accent); }
+    .nav-icon { width: 20px; height: 20px; color: var(--text-faint); transition: color 0.2s; }
+    .nav-badge { font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 999px; background: var(--accent-bg2); color: var(--accent); margin-left: auto; }
+
+    /* Cards */
+    .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; transition: all 0.3s; }
+    .stat-card:hover { background: var(--bg-card-hover); border-color: var(--border-hover); transform: translateY(-2px); }
+    .stat-value { font-size: 32px; font-weight: 900; letter-spacing: -0.02em; line-height: 1; }
+    .stat-label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-change { font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 2px; padding: 2px 8px; border-radius: 999px; }
+    .stat-up { background: rgba(34,197,94,0.1); color: #22c55e; }
+    .stat-down { background: rgba(239,68,68,0.1); color: #ef4444; }
+
+    /* Module card */
+    .module-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; }
+    .module-card:hover { background: var(--bg-card-hover); border-color: var(--accent); transform: translateY(-2px); }
+    .module-card.coming-soon { opacity: 0.5; cursor: default; }
+    .module-card.coming-soon:hover { transform: none; border-color: var(--border); }
+    .module-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 16px; }
+
+    /* Custom dropdown */
+    .sky-dd { position: relative; }
+    .sky-dd-btn { padding: 10px 36px 10px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text-primary); font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; transition: border-color 0.2s; white-space: nowrap; overflow: hidden; }
+    .sky-dd-btn:hover { border-color: var(--accent); }
+    .sky-dd-btn svg { flex-shrink: 0; color: var(--text-faint); }
+    .sky-dd-text { overflow: hidden; text-overflow: ellipsis; }
+    .sky-dd-list { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--bg-sidebar); border: 1px solid var(--border); border-radius: 10px; padding: 4px; z-index: 100; max-height: 240px; overflow-y: auto; box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+    .sky-dd-item { padding: 8px 12px; border-radius: 6px; font-size: 13px; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
+    .sky-dd-item:hover { background: var(--nav-hover); color: var(--text-primary); }
+    .sky-dd-item.sky-dd-active { background: var(--accent-bg); color: var(--accent); font-weight: 700; }
+
+    /* Activity list */
+    .activity-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+
+    /* Chart placeholder */
+    .chart-bar { border-radius: 6px 6px 0 0; transition: height 0.6s ease; }
+
+    /* Top bar */
+    .topbar { position: sticky; top: 0; z-index: 30; background: var(--bg-topbar); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between; transition: background 0.3s; }
+
+    /* Theme toggle */
+    .theme-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px; border: 1px solid var(--border); background: transparent; cursor: pointer; color: var(--text-muted); transition: all 0.2s; }
+    .theme-btn:hover { background: var(--nav-hover); color: var(--accent); border-color: var(--accent); }
+
+    /* Theme panel */
+    .theme-panel { position: fixed; top: 0; right: -340px; width: 340px; height: 100vh; background: var(--bg-sidebar); border-left: 1px solid var(--border); z-index: 50; transition: right 0.3s; overflow-y: auto; }
+    .theme-panel.open { right: 0; }
+    .theme-panel-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 45; }
+    .theme-panel-overlay.active { display: block; }
+    .color-swatch { width: 36px; height: 36px; border-radius: 10px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; }
+    .color-swatch:hover { transform: scale(1.1); }
+    .color-swatch.selected { border-color: var(--text-primary); box-shadow: 0 0 0 2px var(--bg-main); }
+
+    /* Mobile menu toggle */
+    .mobile-toggle { display: none; }
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main-content { margin-left: 0 !important; }
+      .mobile-toggle { display: flex; }
+      .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 35; }
+      .mobile-overlay.active { display: block; }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-in { animation: fadeIn 0.4s ease forwards; }
+    .delay-1 { animation-delay: 0.05s; opacity: 0; }
+    .delay-2 { animation-delay: 0.1s; opacity: 0; }
+    .delay-3 { animation-delay: 0.15s; opacity: 0; }
+    .delay-4 { animation-delay: 0.2s; opacity: 0; }
+  </style>
+</head>
+<body>
+  <!-- Loading -->
+  <div id="loading" style="min-height:100vh;display:flex;align-items:center;justify-content:center;">
+    <div style="text-align:center;">
+      <div style="width:32px;height:32px;border:2px solid #6fcff5;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px;"></div>
+      <p style="color:#64748b;font-size:13px;font-weight:600;">Cargando panel...</p>
+    </div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+  </div>
+
+  <!-- Dashboard (hidden until auth) -->
+  <div id="dashboard" style="display:none;">
+    <!-- Mobile overlay -->
+    <div id="mobile-overlay" class="mobile-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <!-- Logo -->
+      <div style="padding:24px 20px 20px;border-bottom:1px solid var(--border);">
+        <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+          <svg style="height:28px;width:28px;color:#6fcff5;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L15 6V14C15 14 15 17 12 17C9 17 9 14 9 14V6L12 2Z"></path>
+              <path d="M9 11L6 14H9V11Z" fill="currentColor"></path>
+              <path d="M15 11L18 14H15V11Z" fill="currentColor"></path>
+            </g>
+            <path d="M9 17C10.5 20 12 22 12 22C12 22 13.5 20 15 17H9Z" fill="#ff6600"></path>
+          </svg>
+          <div>
+            <div style="font-weight:900;font-size:16px;letter-spacing:-0.02em;color:var(--text-primary);">SKYBR<span style="color:#6fcff5;">AN</span>DM<span style="color:#6fcff5;">X</span></div>
+            <div style="height:2px;width:55%;border-radius:999px;background:linear-gradient(to right,#6fcff5,#105971);margin-top:2px;"></div>
+          </div>
+        </a>
+      </div>
+
+      <!-- Navigation -->
+      <nav style="flex:1;padding:16px 12px;overflow-y:auto;">
+        <div style="margin-bottom:8px;padding:0 16px;">
+          <p style="font-size:10px;font-weight:800;color:var(--text-faintest);text-transform:uppercase;letter-spacing:0.1em;">Principal</p>
+        </div>
+        {navItems.filter(i => i.section === 'principal').map(item => (
+          <a href={item.href} class={`nav-item ${isActive(item.href) ? 'active' : ''}`}>
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={iconPaths[item.icon]} /></svg>
+            {item.label}
+            {item.badge && <span class="nav-badge">{item.badge}</span>}
+          </a>
+        ))}
+
+        <div style="margin:20px 0 8px;padding:0 16px;">
+          <p style="font-size:10px;font-weight:800;color:var(--text-faintest);text-transform:uppercase;letter-spacing:0.1em;">M&oacute;dulos</p>
+        </div>
+        {navItems.filter(i => i.section === 'modulos').map(item => (
+          <a href={item.href} class={`nav-item ${isActive(item.href) ? 'active' : ''}`} data-plans={item.plans?.join(',')}>
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={iconPaths[item.icon]} />
+              {item.icon === 'ads' && <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={adsExtraPath} />}
+              {item.icon === 'settings' && <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={settingsExtraPath} />}
+            </svg>
+            {item.label}
+            {item.badge && <span class="nav-badge">{item.badge}</span>}
+          </a>
+        ))}
+
+        <div id="admin-nav" style="display:none;">
+          <div style="margin:20px 0 8px;padding:0 16px;">
+            <p style="font-size:10px;font-weight:800;color:var(--text-faintest);text-transform:uppercase;letter-spacing:0.1em;">Admin</p>
+          </div>
+          {navItems.filter(i => i.section === 'admin').map(item => (
+            <a href={item.href} class={`nav-item ${isActive(item.href) ? 'active' : ''}`}>
+              <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={iconPaths[item.icon]} />
+                {item.icon === 'settings' && <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={settingsExtraPath} />}
+              </svg>
+              {item.label}
+            </a>
+          ))}
+        </div>
+      </nav>
+
+      <!-- User section -->
+      <div style="padding:16px 12px;border-top:1px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:12px;padding:8px 12px;">
+          <div id="user-avatar" style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#084D6E,#6fcff5);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#fff;flex-shrink:0;">A</div>
+          <div style="flex:1;min-width:0;">
+            <p id="sidebar-name" style="font-size:13px;font-weight:700;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Admin</p>
+            <p id="sidebar-email" style="font-size:11px;color:var(--text-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">admin@skybrandmx.com</p>
+          </div>
+          <button id="logout-btn" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:none;background:transparent;cursor:pointer;color:#64748b;transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.1)';this.style.color='#ef4444'" onmouseout="this.style.background='transparent';this.style.color='#64748b'" title="Cerrar sesi&oacute;n">
+            <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <div class="main-content" id="main-content">
+      <!-- Top bar -->
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:16px;">
+          <button class="mobile-toggle" id="menu-toggle" onclick="toggleSidebar()" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:transparent;cursor:pointer;color:#94a3b8;">
+            <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+          <div>
+            <h1 id="page-title" style="font-size:18px;font-weight:900;color:var(--text-primary);letter-spacing:-0.02em;">{title}</h1>
+            <p id="page-date" style="font-size:12px;color:var(--text-faint);font-weight:500;"></p>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <!-- Theme toggle (dark/light) -->
+          <button id="theme-mode-btn" class="theme-btn" title="Cambiar tema">
+            <svg id="icon-sun" style="width:18px;height:18px;display:none;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            <svg id="icon-moon" style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+          </button>
+          <!-- Customize colors -->
+          <button id="theme-panel-btn" class="theme-btn" title="Personalizar colores">
+            <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+          </button>
+          <!-- Notifications -->
+          <button class="theme-btn" title="Notificaciones" style="position:relative;">
+            <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            <div style="position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--accent);border:2px solid var(--bg-main);"></div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Page content container -->
+      <div style="padding:28px 32px;">
+        <slot />
+      </div>
+    </div>
+  </div>
+
+  <!-- Theme customization panel -->
+  <div id="theme-panel-overlay" class="theme-panel-overlay" onclick="closeThemePanel()"></div>
+  <div id="theme-panel" class="theme-panel">
+    <div style="padding:24px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+        <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);">Personalizar</h3>
+        <button onclick="closeThemePanel()" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:none;background:transparent;cursor:pointer;color:var(--text-muted);">
+          <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Mode -->
+      <div style="margin-bottom:28px;">
+        <p style="font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">Modo</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button id="mode-dark" onclick="setThemeMode('dark')" style="padding:12px;border-radius:12px;border:2px solid var(--border);background:var(--bg-card);cursor:pointer;transition:all 0.2s;text-align:center;">
+            <svg style="width:24px;height:24px;color:var(--text-muted);margin:0 auto 6px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+            <p style="font-size:12px;font-weight:700;color:var(--text-secondary);">Oscuro</p>
+          </button>
+          <button id="mode-light" onclick="setThemeMode('light')" style="padding:12px;border-radius:12px;border:2px solid var(--border);background:var(--bg-card);cursor:pointer;transition:all 0.2s;text-align:center;">
+            <svg style="width:24px;height:24px;color:var(--text-muted);margin:0 auto 6px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            <p style="font-size:12px;font-weight:700;color:var(--text-secondary);">Claro</p>
+          </button>
+        </div>
+      </div>
+
+      <!-- Accent color -->
+      <div style="margin-bottom:28px;">
+        <p style="font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">Color de acento</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <button class="color-swatch" style="background:#6fcff5;" onclick="setAccentColor('#6fcff5','#084D6E')" title="Cyan (default)"></button>
+          <button class="color-swatch" style="background:#22c55e;" onclick="setAccentColor('#22c55e','#166534')" title="Verde"></button>
+          <button class="color-swatch" style="background:#3b82f6;" onclick="setAccentColor('#3b82f6','#1e40af')" title="Azul"></button>
+          <button class="color-swatch" style="background:#8b5cf6;" onclick="setAccentColor('#8b5cf6','#5b21b6')" title="Morado"></button>
+          <button class="color-swatch" style="background:#ec4899;" onclick="setAccentColor('#ec4899','#9d174d')" title="Rosa"></button>
+          <button class="color-swatch" style="background:#f97316;" onclick="setAccentColor('#f97316','#9a3412')" title="Naranja"></button>
+          <button class="color-swatch" style="background:#eab308;" onclick="setAccentColor('#eab308','#854d0e')" title="Amarillo"></button>
+          <button class="color-swatch" style="background:#ef4444;" onclick="setAccentColor('#ef4444','#991b1b')" title="Rojo"></button>
+        </div>
+      </div>
+
+      <!-- Custom brand color -->
+      <div style="margin-bottom:28px;">
+        <p style="font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">Color personalizado de tu marca</p>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="color" id="custom-color" value="#6fcff5" style="width:44px;height:44px;border:none;border-radius:10px;cursor:pointer;background:transparent;padding:0;" />
+          <div style="flex:1;">
+            <input type="text" id="custom-color-hex" value="#6fcff5" placeholder="#hex" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-weight:600;font-family:monospace;" />
+          </div>
+          <button onclick="applyCustomColor()" style="padding:10px 16px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:800;cursor:pointer;">Aplicar</button>
+        </div>
+      </div>
+
+      <!-- Reset -->
+      <button onclick="resetTheme()" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+        Restaurar valores predeterminados
+      </button>
+    </div>
+  </div>
+
+  <script define:vars={{ API_URL }}>
+    // ===== THEME SYSTEM =====
+    function loadTheme() {
+      const mode = localStorage.getItem('skybrand_theme_mode') || 'dark';
+      const accent = localStorage.getItem('skybrand_accent') || '#6fcff5';
+      const accentDark = localStorage.getItem('skybrand_accent_dark') || '#084D6E';
+      setThemeMode(mode, false);
+      if (accent !== '#6fcff5') setAccentColor(accent, accentDark, false);
+    }
+
+    window.setThemeMode = function(mode, save = true) {
+      document.documentElement.setAttribute('data-theme', mode);
+      document.documentElement.style.colorScheme = mode === 'light' ? 'light' : 'dark';
+      const sun = document.getElementById('icon-sun');
+      const moon = document.getElementById('icon-moon');
+      const modeDark = document.getElementById('mode-dark');
+      const modeLight = document.getElementById('mode-light');
+      if (mode === 'light') {
+        if (sun) sun.style.display = 'block';
+        if (moon) moon.style.display = 'none';
+        if (modeDark) { modeDark.style.borderColor = 'var(--border)'; modeLight.style.borderColor = 'var(--accent)'; }
+      } else {
+        if (sun) sun.style.display = 'none';
+        if (moon) moon.style.display = 'block';
+        if (modeDark) { modeDark.style.borderColor = 'var(--accent)'; modeLight.style.borderColor = 'var(--border)'; }
+      }
+      if (save) localStorage.setItem('skybrand_theme_mode', mode);
+    };
+
+    window.setAccentColor = function(color, darkColor, save = true) {
+      const r = document.documentElement;
+      r.style.setProperty('--accent', color);
+      r.style.setProperty('--accent-bg', color + '14');
+      r.style.setProperty('--accent-bg2', color + '26');
+      r.style.setProperty('--accent-gradient-start', darkColor || color);
+      r.style.setProperty('--accent-gradient-end', color);
+      document.querySelectorAll('.color-swatch').forEach(s => {
+        s.classList.toggle('selected', s.style.background === color || s.style.backgroundColor === color);
+      });
+      if (save) {
+        localStorage.setItem('skybrand_accent', color);
+        localStorage.setItem('skybrand_accent_dark', darkColor || color);
+      }
+    };
+
+    window.applyCustomColor = function() {
+      const hex = document.getElementById('custom-color-hex')?.value || document.getElementById('custom-color')?.value;
+      if (hex && /^#[0-9a-fA-F]{6}$/.test(hex)) {
+        setAccentColor(hex, hex);
+      }
+    };
+
+    document.getElementById('custom-color')?.addEventListener('input', (e) => {
+      document.getElementById('custom-color-hex').value = e.target.value;
+    });
+    document.getElementById('custom-color-hex')?.addEventListener('change', (e) => {
+      if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) {
+        document.getElementById('custom-color').value = e.target.value;
+      }
+    });
+
+    window.resetTheme = function() {
+      localStorage.removeItem('skybrand_theme_mode');
+      localStorage.removeItem('skybrand_accent');
+      localStorage.removeItem('skybrand_accent_dark');
+      document.documentElement.removeAttribute('data-theme');
+      document.documentElement.style.removeProperty('--accent');
+      document.documentElement.style.removeProperty('--accent-bg');
+      document.documentElement.style.removeProperty('--accent-bg2');
+      document.documentElement.style.removeProperty('--accent-gradient-start');
+      document.documentElement.style.removeProperty('--accent-gradient-end');
+      setThemeMode('dark', false);
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+    };
+
+    // Theme panel toggle
+    document.getElementById('theme-panel-btn')?.addEventListener('click', () => {
+      document.getElementById('theme-panel')?.classList.add('open');
+      document.getElementById('theme-panel-overlay')?.classList.add('active');
+    });
+    window.closeThemePanel = function() {
+      document.getElementById('theme-panel')?.classList.remove('open');
+      document.getElementById('theme-panel-overlay')?.classList.remove('active');
+    };
+
+    // Theme mode quick toggle
+    document.getElementById('theme-mode-btn')?.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      setThemeMode(current === 'light' ? 'dark' : 'light');
+    });
+
+    // Load saved theme
+    loadTheme();
+
+    // Set date
+    const dateEl = document.getElementById('page-date');
+    if (dateEl) {
+      dateEl.textContent = new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    // Mobile sidebar
+    window.toggleSidebar = function() {
+      document.getElementById('sidebar')?.classList.toggle('open');
+      document.getElementById('mobile-overlay')?.classList.toggle('active');
+    };
+
+    // Auth check
+    function initDashboard(user) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+
+      const name = user.full_name || user.email.split('@')[0];
+      const initials = name.charAt(0).toUpperCase();
+
+      document.getElementById('sidebar-name').textContent = name;
+      document.getElementById('sidebar-email').textContent = user.email;
+      document.getElementById('user-avatar').textContent = initials;
+
+      if (user.is_admin) {
+        document.getElementById('admin-nav').style.display = 'block';
+      }
+
+      // Plan-based feature gating
+      const userPlan = localStorage.getItem('skybrand_plan') || user.plan || 'growth'; // default to growth for demo
+      document.querySelectorAll('a[data-plans]').forEach(link => {
+        const allowedPlans = link.getAttribute('data-plans').split(',');
+        if (!allowedPlans.includes(userPlan)) {
+          link.style.opacity = '0.4';
+          link.style.pointerEvents = 'none';
+          link.style.position = 'relative';
+          const badge = document.createElement('span');
+          badge.textContent = 'PRO';
+          badge.style.cssText = 'position:absolute;right:12px;padding:1px 6px;border-radius:4px;background:linear-gradient(135deg,#8b5cf6,#6fcff5);color:#fff;font-size:8px;font-weight:800;letter-spacing:0.5px;';
+          link.appendChild(badge);
+        }
+      });
+
+      // Check onboarding
+      if (!localStorage.getItem('skybrand_onboarding_done')) {
+        const onbPage = document.querySelector('[data-page="onboarding"]');
+        if (!onbPage) {
+          // Redirect to onboarding if not on it already
+          const currentPath = window.location.pathname;
+          if (!currentPath.includes('onboarding')) {
+            // Don't redirect for demo, just show a banner
+          }
+        }
+      }
+
+      window._skybrandUser = user;
+      window.dispatchEvent(new CustomEvent('skybrand:auth', { detail: user }));
+    }
+
+    const token = localStorage.getItem('skybrand_token');
+    if (!token) {
+      window.location.href = '/login';
+    } else if (token === 'demo') {
+      // Demo mode: skip API entirely
+      initDashboard({ full_name: 'Usuario Demo', email: 'demo@skybrandmx.com', is_admin: true });
+    } else {
+      fetch(`${API_URL}/api/v1/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      })
+        .then(res => {
+          if (!res.ok) throw new Error('Unauthorized');
+          return res.json();
+        })
+        .then(user => initDashboard(user))
+        .catch(() => {
+          localStorage.removeItem('skybrand_token');
+          window.location.href = '/login';
+        });
+    }
+
+    // Logout
+    document.getElementById('logout-btn')?.addEventListener('click', () => {
+      localStorage.removeItem('skybrand_token');
+      window.location.href = '/login';
+    });
+
+    // ═══════ CUSTOM DROPDOWN — inline styles for Astro compatibility ═══════
+    const _ddStyles = {
+      wrap: 'position:relative;',
+      btn: 'padding:10px 36px 10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;white-space:nowrap;overflow:hidden;transition:border-color 0.2s;',
+      list: 'position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg-sidebar);border:1px solid var(--border);border-radius:10px;padding:4px;z-index:100;max-height:240px;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,0.3);',
+      item: 'padding:8px 12px;border-radius:6px;font-size:13px;color:var(--text-secondary);cursor:pointer;transition:background 0.15s;',
+      itemHover: 'background:var(--nav-hover);color:var(--text-primary);',
+      itemActive: 'background:var(--accent-bg);color:var(--accent);font-weight:700;',
+    };
+
+    function initCustomDropdowns() {
+      document.querySelectorAll('select:not([data-cd])').forEach(sel => {
+        sel.setAttribute('data-cd', '1');
+        const isAuto = sel.style.width === 'auto';
+        const w = document.createElement('div');
+        w.style.cssText = _ddStyles.wrap + (isAuto ? 'display:inline-block;' : 'width:100%;');
+
+        const btn = document.createElement('div');
+        btn.style.cssText = _ddStyles.btn;
+        const txtSpan = document.createElement('span');
+        txtSpan.style.cssText = 'overflow:hidden;text-overflow:ellipsis;';
+        txtSpan.textContent = sel.options[sel.selectedIndex]?.text || '';
+        btn.appendChild(txtSpan);
+        const arrow = document.createElement('span');
+        arrow.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="color:var(--text-faint);flex-shrink:0;"><path d="M19 9l-7 7-7-7"/></svg>';
+        arrow.style.cssText = 'flex-shrink:0;display:flex;';
+        btn.appendChild(arrow);
+
+        const list = document.createElement('div');
+        list.style.cssText = _ddStyles.list + 'display:none;';
+
+        Array.from(sel.options).forEach((opt, i) => {
+          const item = document.createElement('div');
+          item.style.cssText = _ddStyles.item + (i === sel.selectedIndex ? _ddStyles.itemActive : '');
+          item.textContent = opt.text;
+          item.onmouseenter = () => { if (!item._active) item.style.cssText = _ddStyles.item + _ddStyles.itemHover; };
+          item.onmouseleave = () => { item.style.cssText = _ddStyles.item + (item._active ? _ddStyles.itemActive : ''); };
+          item.onclick = (e) => {
+            e.stopPropagation();
+            sel.selectedIndex = i;
+            sel.dispatchEvent(new Event('change', { bubbles: true }));
+            txtSpan.textContent = opt.text;
+            list.querySelectorAll('div').forEach(x => { x._active = false; x.style.cssText = _ddStyles.item; });
+            item._active = true;
+            item.style.cssText = _ddStyles.item + _ddStyles.itemActive;
+            list.style.display = 'none';
+          };
+          if (i === sel.selectedIndex) item._active = true;
+          list.appendChild(item);
+        });
+
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const open = list.style.display !== 'none';
+          document.querySelectorAll('[data-skylist]').forEach(l => l.style.display = 'none');
+          list.style.display = open ? 'none' : 'block';
+        };
+        list.setAttribute('data-skylist', '1');
+
+        sel.style.cssText += ';position:absolute;opacity:0;pointer-events:none;width:0;height:0;';
+        sel.parentNode.insertBefore(w, sel);
+        w.appendChild(btn);
+        w.appendChild(list);
+        w.appendChild(sel);
+
+        sel.addEventListener('change', () => {
+          txtSpan.textContent = sel.options[sel.selectedIndex]?.text || '';
+        });
+      });
+    }
+
+    document.addEventListener('click', () => {
+      document.querySelectorAll('[data-skylist]').forEach(l => l.style.display = 'none');
+    });
+
+    setTimeout(initCustomDropdowns, 500);
+    let _ddTimer;
+    const _ddObs = new MutationObserver(() => { clearTimeout(_ddTimer); _ddTimer = setTimeout(initCustomDropdowns, 300); });
+    _ddObs.observe(document.body, { childList: true, subtree: true });
+  </script>
+  <HelpCenter />
+</body>
+</html>

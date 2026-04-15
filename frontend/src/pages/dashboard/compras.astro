@@ -1,0 +1,617 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Compras">
+  <div id="com-smart-recs" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;"></div>
+
+  <!-- Stats -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px;">
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="com-stat-label">Gastos del mes</p>
+      <p id="com-stat-monthexp" class="com-stat-val">--</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="com-stat-label">Por pagar <span class="com-tip" data-tip="Facturas de proveedores que debes pagar (cuentas por pagar).">?</span></p>
+      <p id="com-stat-topay" class="com-stat-val" style="color:#f97316;">--</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="com-stat-label">Proveedores activos</p>
+      <p id="com-stat-suppliers" class="com-stat-val">--</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="com-stat-label">Pedidos pendientes <span class="com-tip" data-tip="Órdenes de compra enviadas a proveedor que aún no has recibido.">?</span></p>
+      <p id="com-stat-pending" class="com-stat-val" style="color:var(--accent);">--</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="com-stat-label">Balance bancario</p>
+      <p id="com-stat-balance" class="com-stat-val" style="color:#22c55e;">--</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="com-stat-label">Conciliadas hoy <span class="com-tip" data-tip="Movimientos bancarios que ya relacionaste con una factura o gasto">?</span></p>
+      <p id="com-stat-reconciled" class="com-stat-val">--</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;overflow-x:auto;">
+    <button id="com-tab-pos" class="com-tab active" onclick="switchComTab('pos')">Órdenes de compra</button>
+    <button id="com-tab-suppliers" class="com-tab" onclick="switchComTab('suppliers')">Proveedores</button>
+    <button id="com-tab-invoices" class="com-tab" onclick="switchComTab('invoices')">Facturas de proveedor</button>
+    <button id="com-tab-expenses" class="com-tab" onclick="switchComTab('expenses')">Gastos</button>
+    <button id="com-tab-recon" class="com-tab" onclick="switchComTab('recon')">Conciliación bancaria</button>
+    <button id="com-tab-analytics" class="com-tab" onclick="switchComTab('analytics')">Analítica</button>
+  </div>
+
+  <!-- Tab: Purchase Orders -->
+  <div id="com-panel-pos">
+    <div id="com-help-pos" class="com-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Una <strong>orden de compra</strong> es el documento con el que le pides mercancía a un proveedor. Al recibir los productos, se convierte en una factura por pagar.</p>
+      <button onclick="document.getElementById('com-help-pos').style.display='none'" class="com-help-close">&times;</button>
+    </div>
+    <div class="stat-card animate-in" style="padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;position:relative;">
+        <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input id="com-po-search" type="text" placeholder="Buscar por proveedor, folio..." oninput="renderComPOs()" class="com-input" style="padding-left:38px;"/>
+      </div>
+      <select id="com-po-filter" onchange="renderComPOs()" class="com-input" style="width:auto;cursor:pointer;">
+        <option value="">Todos los estados</option>
+        <option value="draft">Borrador</option>
+        <option value="sent">Enviada</option>
+        <option value="received">Recibida</option>
+        <option value="paid">Pagada</option>
+      </select>
+      <button onclick="showToast('Abriendo nueva orden de compra')" class="com-btn-primary" style="display:flex;align-items:center;gap:6px;padding:10px 20px;">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Nueva OC
+      </button>
+    </div>
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="border-bottom:1px solid var(--border);">
+            <th class="com-th">#</th><th class="com-th">Proveedor</th><th class="com-th">Fecha</th>
+            <th class="com-th" style="text-align:right;">Monto</th><th class="com-th">Estado</th>
+            <th class="com-th" style="text-align:center;">Acciones</th>
+          </tr></thead>
+          <tbody id="com-pos-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Suppliers -->
+  <div id="com-panel-suppliers" style="display:none;">
+    <div class="com-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Administra tus proveedores, sus datos fiscales (RFC) y condiciones de pago. El total del año se actualiza con cada factura recibida.</p>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap;">
+      <p style="font-size:13px;color:var(--text-muted);">Total: <strong id="com-sup-count" style="color:var(--text-primary);">0</strong> proveedores</p>
+      <button onclick="openComSupplierModal()" class="com-btn-primary" style="padding:10px 20px;">+ Nuevo proveedor</button>
+    </div>
+    <div id="com-suppliers-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;"></div>
+  </div>
+
+  <!-- Tab: Received Invoices -->
+  <div id="com-panel-invoices" style="display:none;">
+    <div class="com-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Un <strong>CFDI recibido</strong> es una factura electrónica que te emite tu proveedor. Súbela aquí para deducir impuestos y llevar tu contabilidad al día.</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <p style="flex:1;font-size:12px;color:var(--text-muted);">Sube CFDI o arrastra XML aquí.</p>
+      <button onclick="showToast('Importando XML desde SAT')" class="com-btn-secondary" style="padding:9px 16px;">Importar desde SAT</button>
+      <button onclick="showToast('Abriendo cargador de CFDI')" class="com-btn-primary" style="padding:9px 16px;">+ Subir factura</button>
+    </div>
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="border-bottom:1px solid var(--border);">
+            <th class="com-th">Folio</th><th class="com-th">Proveedor</th><th class="com-th">RFC</th>
+            <th class="com-th">Fecha</th><th class="com-th" style="text-align:right;">Total</th>
+            <th class="com-th">Estado</th><th class="com-th" style="text-align:center;">Acciones</th>
+          </tr></thead>
+          <tbody id="com-inv-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Expenses -->
+  <div id="com-panel-expenses" style="display:none;">
+    <div class="com-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Los gastos son salidas de dinero sin factura formal: tickets, vales, servicios, viáticos. Regístralos para llevar un control real de tu flujo.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 2fr;gap:16px;margin-bottom:20px;">
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:13px;font-weight:800;color:var(--text-primary);margin-bottom:14px;">Por categoría</h4>
+        <div id="com-exp-cats"></div>
+      </div>
+      <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+        <div style="padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">
+          <h4 style="font-size:13px;font-weight:800;color:var(--text-primary);">Últimos gastos</h4>
+          <button onclick="showToast('Abriendo captura de gasto')" class="com-btn-primary" style="padding:8px 14px;font-size:12px;">+ Gasto</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead><tr style="border-bottom:1px solid var(--border);"><th class="com-th">Fecha</th><th class="com-th">Descripción</th><th class="com-th">Categoría</th><th class="com-th" style="text-align:right;">Monto</th></tr></thead>
+            <tbody id="com-exp-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Bank Reconciliation -->
+  <div id="com-panel-recon" style="display:none;">
+    <div class="com-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);"><strong>Conciliación bancaria</strong>: emparejar cada movimiento del banco con una factura o gasto registrado. Así sabes que tu contabilidad cuadra con lo que pasó en la cuenta real.</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <p style="flex:1;min-width:180px;font-size:12px;color:var(--text-muted);">Conecta tu banco para importar movimientos automáticamente.</p>
+      <button onclick="openComBankModal()" class="com-btn-secondary" style="padding:9px 14px;">Conectar banco</button>
+      <button onclick="showToast('Subiendo estado de cuenta CSV')" class="com-btn-secondary" style="padding:9px 14px;">Subir estado de cuenta (CSV)</button>
+      <button onclick="comAutoReconcile()" class="com-btn-primary" style="padding:9px 14px;">Auto-conciliar</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <!-- LEFT: Bank transactions -->
+      <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <h4 style="font-size:13px;font-weight:800;color:var(--text-primary);">Movimientos del banco</h4>
+            <p style="font-size:11px;color:var(--text-faint);margin-top:2px;">BBVA ****3421 · Saldo: <span id="com-bank-balance" style="color:#22c55e;font-weight:700;">$0</span></p>
+          </div>
+          <span id="com-bank-unmatched" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(249,115,22,0.1);color:#f97316;">0 pendientes</span>
+        </div>
+        <div id="com-bank-list" style="max-height:560px;overflow-y:auto;"></div>
+      </div>
+      <!-- RIGHT: Internal records -->
+      <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <h4 style="font-size:13px;font-weight:800;color:var(--text-primary);">Tus facturas y gastos</h4>
+            <p style="font-size:11px;color:var(--text-faint);margin-top:2px;">Haz clic para emparejar con el movimiento seleccionado</p>
+          </div>
+          <span id="com-rec-selected" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:var(--accent-bg);color:var(--accent);display:none;">Movimiento seleccionado</span>
+        </div>
+        <div id="com-records-list" style="max-height:560px;overflow-y:auto;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Analytics -->
+  <div id="com-panel-analytics" style="display:none;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Top proveedores</h4>
+        <div id="com-chart-top"></div>
+      </div>
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Gastos por categoría</h4>
+        <div id="com-chart-cats"></div>
+      </div>
+      <div class="stat-card animate-in" style="padding:20px;grid-column:1/-1;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Gastos por mes</h4>
+        <div id="com-chart-monthly" style="height:180px;display:flex;align-items:flex-end;gap:6px;"></div>
+      </div>
+      <div class="stat-card animate-in" style="padding:20px;grid-column:1/-1;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Análisis de términos de pago</h4>
+        <div id="com-chart-terms" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Autopilot -->
+  <div class="stat-card animate-in" style="padding:0;margin-top:20px;overflow:hidden;">
+    <button onclick="comToggle('com-auto-content')" class="com-collapse-header">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,rgba(34,197,94,0.15),rgba(111,207,245,0.15));display:flex;align-items:center;justify-content:center;">
+          <svg style="width:14px;height:14px;color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <div style="text-align:left;"><p style="font-size:13px;font-weight:700;color:var(--text-primary);">Piloto automático</p><p style="font-size:11px;color:var(--text-faint);">Automatiza registros, conciliación y alertas</p></div>
+      </div>
+      <svg style="width:16px;height:16px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+    </button>
+    <div id="com-auto-content" style="display:none;padding:20px;">
+      <div id="com-auto-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
+    </div>
+  </div>
+
+  <!-- Supplier modal -->
+  <div id="com-sup-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;padding:20px;">
+    <div class="stat-card" style="max-width:520px;width:100%;padding:24px;max-height:90vh;overflow-y:auto;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <h3 id="com-sup-modal-title" style="font-size:17px;font-weight:900;color:var(--text-primary);">Nuevo proveedor</h3>
+        <button onclick="closeComSupplierModal()" style="border:none;background:transparent;color:var(--text-faint);cursor:pointer;font-size:20px;">&times;</button>
+      </div>
+      <div style="display:grid;gap:12px;">
+        <div><label class="com-label">Nombre / Razón social *</label><input id="com-sup-name" type="text" placeholder="Ej: Distribuidora Centro SA" class="com-input"/></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div><label class="com-label">RFC</label><input id="com-sup-rfc" type="text" placeholder="DCE820101AB1" class="com-input"/></div>
+          <div><label class="com-label">Contacto</label><input id="com-sup-contact" type="text" placeholder="Nombre" class="com-input"/></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div><label class="com-label">Email</label><input id="com-sup-email" type="email" placeholder="compras@proveedor.com" class="com-input"/></div>
+          <div><label class="com-label">Teléfono</label><input id="com-sup-phone" type="tel" placeholder="55 1234 5678" class="com-input"/></div>
+        </div>
+        <div><label class="com-label">Términos de pago</label><select id="com-sup-terms" class="com-input" style="cursor:pointer;"><option value="Contado">Contado</option><option value="15 días" selected>15 días</option><option value="30 días">30 días</option><option value="45 días">45 días</option><option value="60 días">60 días</option></select></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button onclick="closeComSupplierModal()" class="com-btn-secondary" style="flex:1;">Cancelar</button>
+        <button onclick="saveComSupplier()" class="com-btn-primary" style="flex:1;">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bank connect modal -->
+  <div id="com-bank-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;padding:20px;">
+    <div class="stat-card" style="max-width:460px;width:100%;padding:24px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <h3 style="font-size:17px;font-weight:900;color:var(--text-primary);">Conectar banco</h3>
+        <button onclick="closeComBankModal()" style="border:none;background:transparent;color:var(--text-faint);cursor:pointer;font-size:20px;">&times;</button>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Selecciona tu banco para importar movimientos de forma automática.</p>
+      <div id="com-bank-options" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
+      <button onclick="closeComBankModal()" class="com-btn-secondary" style="width:100%;margin-top:16px;">Cancelar</button>
+    </div>
+  </div>
+</DashboardLayout>
+
+<style>
+  .com-stat-label { font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px; }
+  .com-stat-val { font-size:26px;font-weight:900;color:var(--text-primary); }
+  .com-tab { padding:10px 18px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap; }
+  .com-tab.active { color:var(--accent);border-bottom-color:var(--accent); }
+  .com-th { padding:14px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px; }
+  .com-label { font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:4px;display:block; }
+  .com-input { width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;transition:border-color 0.2s; }
+  .com-input:focus { border-color:var(--accent); }
+  .com-btn-primary { padding:10px 16px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s; }
+  .com-btn-primary:hover { opacity:0.85; }
+  .com-btn-secondary { padding:10px 16px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-primary);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s; }
+  .com-btn-secondary:hover { background:var(--nav-hover); }
+  .com-tbl-btn { padding:5px 9px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;transition:all 0.15s; }
+  .com-tbl-btn:hover { border-color:var(--accent);color:var(--accent); }
+  .com-help-banner { display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;background:var(--accent-bg);border:1px solid rgba(111,207,245,0.15);margin-bottom:16px; }
+  .com-help-close { border:none;background:transparent;color:var(--text-faint);cursor:pointer;font-size:16px;padding:0 4px; }
+  .com-tip { display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--input-bg);color:var(--text-faint);font-size:10px;font-weight:800;cursor:help;position:relative;flex-shrink:0; }
+  .com-tip:hover::after { content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--bg-sidebar);border:1px solid var(--border);color:var(--text-secondary);padding:10px 14px;border-radius:10px;font-size:12px;font-weight:500;white-space:normal;width:260px;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.3);line-height:1.5;pointer-events:none; }
+  .com-collapse-header { width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border:none;background:transparent;cursor:pointer;transition:background 0.15s; }
+  .com-collapse-header:hover { background:var(--nav-hover); }
+  .com-toggle-wrap { position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0; }
+  .com-toggle-wrap input { opacity:0;width:0;height:0; }
+  .com-toggle-slider { position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:22px;transition:0.3s; }
+  .com-toggle-slider::before { content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s; }
+  .com-toggle-wrap input:checked + .com-toggle-slider { background:var(--toggle-color, #22c55e); }
+  .com-toggle-wrap input:checked + .com-toggle-slider::before { transform:translateX(18px); }
+  .com-bank-row { padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;display:flex;align-items:center;gap:12px; }
+  .com-bank-row:hover { background:var(--nav-hover); }
+  .com-bank-row.selected { background:var(--accent-bg); }
+  .com-rec-row { padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;display:flex;align-items:center;gap:12px; }
+  .com-rec-row:hover { background:var(--nav-hover); }
+  .com-rec-row.matched { opacity:0.55; }
+</style>
+
+<script is:inline>
+// ============ DEMO DATA ============
+const demoPOs = [
+  { id:1, folio:'OC-001', supplier:'Distribuidora Centro SA', date:'2026-03-28', amount:45000, status:'received' },
+  { id:2, folio:'OC-002', supplier:'Textiles del Bajío', date:'2026-03-30', amount:28500, status:'sent' },
+  { id:3, folio:'OC-003', supplier:'Insumos Oaxaca', date:'2026-04-01', amount:15200, status:'paid' },
+  { id:4, folio:'OC-004', supplier:'Servicios CDMX', date:'2026-04-02', amount:8900, status:'draft' },
+  { id:5, folio:'OC-005', supplier:'Mercancías del Norte', date:'2026-04-03', amount:32100, status:'sent' },
+  { id:6, folio:'OC-006', supplier:'Distribuidora Centro SA', date:'2026-04-05', amount:18700, status:'received' },
+];
+
+const demoSuppliers = [
+  { id:1, name:'Distribuidora Centro SA', rfc:'DCE820101AB1', contact:'Luis Hernández', email:'compras@distcentro.mx', phone:'55 5512 3456', terms:'30 días', yearTotal:45000 },
+  { id:2, name:'Textiles del Bajío', rfc:'TBA901215CD2', contact:'Patricia Ramírez', email:'ventas@textilesbajio.mx', phone:'477 234 5678', terms:'15 días', yearTotal:28500 },
+  { id:3, name:'Insumos Oaxaca', rfc:'IOA880520EF3', contact:'Carlos Méndez', email:'pedidos@insumosoax.com', phone:'951 345 6789', terms:'Contado', yearTotal:15200 },
+  { id:4, name:'Servicios CDMX', rfc:'SCM950810GH4', contact:'Ana Torres', email:'facturacion@servcdmx.mx', phone:'55 4567 8901', terms:'30 días', yearTotal:8900 },
+  { id:5, name:'Mercancías del Norte', rfc:'MNO870615IJ5', contact:'Jorge Villarreal', email:'contacto@mercnorte.mx', phone:'81 2345 6789', terms:'45 días', yearTotal:32100 },
+];
+
+const demoInvoices = [
+  { id:1, folio:'A-1245', supplier:'Distribuidora Centro SA', rfc:'DCE820101AB1', date:'2026-03-28', total:45000, status:'paid' },
+  { id:2, folio:'B-0089', supplier:'Textiles del Bajío', rfc:'TBA901215CD2', date:'2026-03-30', total:28500, status:'pending' },
+  { id:3, folio:'F-5521', supplier:'Insumos Oaxaca', rfc:'IOA880520EF3', date:'2026-04-01', total:15200, status:'paid' },
+  { id:4, folio:'A-0342', supplier:'Servicios CDMX', rfc:'SCM950810GH4', date:'2026-04-02', total:8900, status:'partial' },
+  { id:5, folio:'F-1178', supplier:'Mercancías del Norte', rfc:'MNO870615IJ5', date:'2026-04-03', total:32100, status:'pending' },
+  { id:6, folio:'A-1289', supplier:'Distribuidora Centro SA', rfc:'DCE820101AB1', date:'2026-04-04', total:12800, status:'pending' },
+  { id:7, folio:'B-0102', supplier:'Textiles del Bajío', rfc:'TBA901215CD2', date:'2026-04-05', total:9450, status:'paid' },
+  { id:8, folio:'G-7712', supplier:'Papelería Morelos', rfc:'PMO010101KL6', date:'2026-04-06', total:2350, status:'pending' },
+];
+
+const demoExpenses = [
+  { id:1, date:'2026-04-06', desc:'Gasolina camioneta reparto', category:'Transporte', amount:1850 },
+  { id:2, date:'2026-04-05', desc:'Comida reunión cliente', category:'Viáticos', amount:680 },
+  { id:3, date:'2026-04-05', desc:'CFE local principal', category:'Servicios', amount:3450 },
+  { id:4, date:'2026-04-04', desc:'Papelería oficina', category:'Oficina', amount:520 },
+  { id:5, date:'2026-04-03', desc:'Internet Telmex', category:'Servicios', amount:999 },
+  { id:6, date:'2026-04-03', desc:'Uber para entrega urgente', category:'Transporte', amount:280 },
+  { id:7, date:'2026-04-02', desc:'Café y galletas para oficina', category:'Oficina', amount:410 },
+  { id:8, date:'2026-04-01', desc:'Hospedaje viaje Monterrey', category:'Viáticos', amount:1850 },
+  { id:9, date:'2026-03-30', desc:'Agua garrafones', category:'Servicios', amount:320 },
+  { id:10, date:'2026-03-29', desc:'Gasolina vendedor', category:'Transporte', amount:1200 },
+];
+
+const demoBankTx = [
+  { id:1, date:'2026-04-06', desc:'TRANSFERENCIA DISTCENTRO SA', amount:-45000, balance:182340, matched:true },
+  { id:2, date:'2026-04-06', desc:'DEPOSITO CLIENTE GONZALEZ', amount:18500, balance:227340, matched:true },
+  { id:3, date:'2026-04-05', desc:'PAGO CFE SERVICIO', amount:-3450, balance:208840, matched:false },
+  { id:4, date:'2026-04-05', desc:'COMISION BANCARIA', amount:-120, balance:212290, matched:false },
+  { id:5, date:'2026-04-04', desc:'TRANSFERENCIA TEXTILESBAJIO', amount:-9450, balance:212410, matched:false },
+  { id:6, date:'2026-04-03', desc:'PAGO TELMEX INTERNET', amount:-999, balance:221860, matched:false },
+  { id:7, date:'2026-04-02', desc:'PAGO SERVCDMX FACTURA', amount:-4450, balance:222859, matched:false },
+  { id:8, date:'2026-04-01', desc:'DEPOSITO EFECTIVO TIENDA', amount:12500, balance:227309, matched:true },
+];
+
+const comAutoFlows = [
+  { id:'ticket', name:'Registrar gasto al subir ticket/factura', desc:'Cuando subas un XML o foto de ticket, creamos el gasto automáticamente.', icon:'📄', color:'#6fcff5', active:true },
+  { id:'alert', name:'Alertar 3 días antes de vencimiento', desc:'Te avisamos por email antes de que venza una factura por pagar.', icon:'🔔', color:'#f97316', active:true },
+  { id:'autorec', name:'Auto-conciliar con facturas idénticas', desc:'Empareja automáticamente movimientos del banco con facturas que tengan el mismo monto y proveedor.', icon:'🔄', color:'#22c55e', active:false },
+  { id:'recurring', name:'Pagar recurrentes automáticamente (servicios)', desc:'Paga luz, internet y servicios fijos de forma automática cada mes.', icon:'⚡', color:'#8b5cf6', active:false },
+  { id:'report', name:'Reporte semanal de compras', desc:'Recibe cada lunes un resumen con gastos, cuentas por pagar y proveedores principales.', icon:'📊', color:'#eab308', active:true },
+];
+
+const poStatusMap = { draft:{l:'Borrador',c:'#eab308',b:'rgba(234,179,8,0.1)'}, sent:{l:'Enviada',c:'#6fcff5',b:'rgba(111,207,245,0.1)'}, received:{l:'Recibida',c:'#8b5cf6',b:'rgba(139,92,246,0.1)'}, paid:{l:'Pagada',c:'#22c55e',b:'rgba(34,197,94,0.1)'} };
+const invStatusMap = { pending:{l:'Pendiente',c:'#f97316',b:'rgba(249,115,22,0.1)'}, paid:{l:'Pagada',c:'#22c55e',b:'rgba(34,197,94,0.1)'}, partial:{l:'Parcial',c:'#eab308',b:'rgba(234,179,8,0.1)'} };
+const categoryColors = { 'Transporte':'#6fcff5', 'Viáticos':'#f97316', 'Servicios':'#22c55e', 'Oficina':'#8b5cf6' };
+const banks = [ {n:'BBVA',c:'#004481'}, {n:'Santander',c:'#ec0000'}, {n:'Banorte',c:'#eb0029'}, {n:'HSBC',c:'#db0011'} ];
+
+let comSelectedBankTx = null;
+let comEditingSupplier = null;
+
+// ============ HELPERS ============
+function showToast(msg){
+  const ex=document.getElementById('com-toast');if(ex)ex.remove();
+  const t=document.createElement('div');t.id='com-toast';t.textContent=msg;
+  Object.assign(t.style,{position:'fixed',bottom:'24px',right:'24px',background:'#22c55e',color:'#fff',padding:'12px 24px',borderRadius:'10px',fontSize:'13px',fontWeight:'700',zIndex:'9999',boxShadow:'0 4px 20px rgba(0,0,0,0.3)'});
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(()=>t.remove(),300);},3000);
+}
+function switchComTab(tab){
+  document.querySelectorAll('.com-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('com-tab-'+tab).classList.add('active');
+  ['pos','suppliers','invoices','expenses','recon','analytics'].forEach(p=>{
+    const el=document.getElementById('com-panel-'+p);if(el)el.style.display=p===tab?'':'none';
+  });
+  if(tab==='analytics')renderComAnalytics();
+}
+function comToggle(id){const el=document.getElementById(id);el.style.display=el.style.display==='none'?'block':'none';}
+function fmt(n){return '$'+Math.round(n).toLocaleString();}
+
+// ============ STATS ============
+function renderComStats(){
+  const monthExp = demoExpenses.reduce((s,e)=>s+e.amount,0) + demoInvoices.filter(i=>i.status==='paid').reduce((s,i)=>s+i.total,0);
+  document.getElementById('com-stat-monthexp').textContent = fmt(monthExp);
+  const topay = demoInvoices.filter(i=>i.status!=='paid').reduce((s,i)=>s+i.total,0);
+  document.getElementById('com-stat-topay').textContent = fmt(topay);
+  document.getElementById('com-stat-suppliers').textContent = demoSuppliers.length;
+  document.getElementById('com-stat-pending').textContent = demoPOs.filter(p=>p.status==='sent').length;
+  document.getElementById('com-stat-balance').textContent = fmt(182340);
+  document.getElementById('com-stat-reconciled').textContent = demoBankTx.filter(t=>t.matched).length;
+}
+
+// ============ RECS ============
+function renderComRecs(){
+  const el=document.getElementById('com-smart-recs');if(!el)return;
+  const recs=[
+    { icon:'💸', color:'#f97316', title:'3 facturas de proveedor por pagar esta semana', desc:'Revisa y programa los pagos para no caer en mora.', btn:'Ver facturas', action:"switchComTab('invoices')" },
+    { icon:'🔄', color:'#6fcff5', title:'Tienes 5 movimientos bancarios sin conciliar', desc:'Empareja los movimientos del banco con tus facturas.', btn:'Conciliar', action:"switchComTab('recon')" },
+  ];
+  el.innerHTML=recs.map(r=>`<div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;background:${r.color}08;border:1px solid ${r.color}20;"><span style="font-size:24px;flex-shrink:0;">${r.icon}</span><div style="flex:1;"><p style="font-size:13px;font-weight:700;color:var(--text-primary);">${r.title}</p><p style="font-size:11px;color:var(--text-muted);margin-top:2px;">${r.desc}</p></div><button onclick="${r.action}" style="padding:8px 16px;border-radius:8px;border:none;background:${r.color};color:#fff;font-size:11px;font-weight:700;cursor:pointer;">${r.btn}</button><button onclick="this.closest('div[style]').remove()" style="border:none;background:transparent;color:var(--text-faint);cursor:pointer;font-size:14px;">✕</button></div>`).join('');
+}
+
+// ============ PURCHASE ORDERS ============
+function renderComPOs(){
+  const tbody=document.getElementById('com-pos-tbody');if(!tbody)return;
+  const search=(document.getElementById('com-po-search').value||'').toLowerCase();
+  const sf=document.getElementById('com-po-filter').value;
+  let data=[...demoPOs];
+  if(search)data=data.filter(p=>p.supplier.toLowerCase().includes(search)||p.folio.toLowerCase().includes(search));
+  if(sf)data=data.filter(p=>p.status===sf);
+  if(!data.length){tbody.innerHTML='<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-faint);">Sin resultados</td></tr>';return;}
+  tbody.innerHTML=data.map(p=>{const st=poStatusMap[p.status];return `<tr style="border-bottom:1px solid var(--border);">
+    <td style="padding:14px 16px;font-weight:700;color:var(--accent);font-size:12px;">${p.folio}</td>
+    <td style="padding:14px 16px;font-weight:700;color:var(--text-primary);">${p.supplier}</td>
+    <td style="padding:14px 16px;font-size:12px;color:var(--text-muted);">${p.date}</td>
+    <td style="padding:14px 16px;text-align:right;font-weight:800;color:var(--text-primary);">${fmt(p.amount)}</td>
+    <td style="padding:14px 16px;"><span style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;color:${st.c};background:${st.b};">${st.l}</span></td>
+    <td style="padding:14px 16px;text-align:center;"><div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
+      <button onclick="showToast('PDF de ${p.folio} descargado')" class="com-tbl-btn">PDF</button>
+      ${p.status==='draft'?`<button onclick="comAdvancePO(${p.id},'sent')" class="com-tbl-btn" style="border-color:#6fcff5;color:#6fcff5;">Enviar</button>`:''}
+      ${p.status==='sent'?`<button onclick="comAdvancePO(${p.id},'received')" class="com-tbl-btn" style="border-color:#8b5cf6;color:#8b5cf6;">Recibir</button>`:''}
+      ${p.status==='received'?`<button onclick="comAdvancePO(${p.id},'paid')" class="com-tbl-btn" style="border-color:#22c55e;color:#22c55e;">Pagar</button>`:''}
+    </div></td>
+  </tr>`;}).join('');
+}
+function comAdvancePO(id,next){const p=demoPOs.find(x=>x.id===id);if(!p)return;p.status=next;renderComPOs();renderComStats();showToast('Estado actualizado a '+poStatusMap[next].l);}
+
+// ============ SUPPLIERS ============
+function renderComSuppliers(){
+  const el=document.getElementById('com-suppliers-grid');if(!el)return;
+  document.getElementById('com-sup-count').textContent=demoSuppliers.length;
+  el.innerHTML=demoSuppliers.map(s=>`<div class="stat-card" style="padding:18px;">
+    <div style="display:flex;align-items:start;justify-content:space-between;margin-bottom:12px;gap:8px;">
+      <div style="flex:1;min-width:0;">
+        <p style="font-size:14px;font-weight:800;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.name}</p>
+        <p style="font-size:11px;color:var(--text-faint);font-family:monospace;">${s.rfc}</p>
+      </div>
+      <button onclick="editComSupplier(${s.id})" class="com-tbl-btn">Editar</button>
+    </div>
+    <div style="display:grid;gap:6px;font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:6px;"><span style="color:var(--text-faint);min-width:60px;">Contacto:</span><span style="color:var(--text-secondary);">${s.contact}</span></div>
+      <div style="display:flex;align-items:center;gap:6px;"><span style="color:var(--text-faint);min-width:60px;">Email:</span><span style="color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;">${s.email}</span></div>
+      <div style="display:flex;align-items:center;gap:6px;"><span style="color:var(--text-faint);min-width:60px;">Tel:</span><span style="color:var(--text-secondary);">${s.phone}</span></div>
+      <div style="display:flex;align-items:center;gap:6px;"><span style="color:var(--text-faint);min-width:60px;">Términos:</span><span style="color:var(--accent);font-weight:700;">${s.terms}</span></div>
+    </div>
+    <div style="padding-top:12px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:11px;color:var(--text-faint);text-transform:uppercase;font-weight:700;">Compras 2026</span>
+      <span style="font-size:15px;font-weight:900;color:var(--text-primary);">${fmt(s.yearTotal)}</span>
+    </div>
+  </div>`).join('');
+}
+function openComSupplierModal(){comEditingSupplier=null;document.getElementById('com-sup-modal-title').textContent='Nuevo proveedor';['name','rfc','contact','email','phone'].forEach(f=>document.getElementById('com-sup-'+f).value='');document.getElementById('com-sup-terms').value='15 días';document.getElementById('com-sup-modal').style.display='flex';}
+function editComSupplier(id){const s=demoSuppliers.find(x=>x.id===id);if(!s)return;comEditingSupplier=id;document.getElementById('com-sup-modal-title').textContent='Editar proveedor';document.getElementById('com-sup-name').value=s.name;document.getElementById('com-sup-rfc').value=s.rfc;document.getElementById('com-sup-contact').value=s.contact;document.getElementById('com-sup-email').value=s.email;document.getElementById('com-sup-phone').value=s.phone;document.getElementById('com-sup-terms').value=s.terms;document.getElementById('com-sup-modal').style.display='flex';}
+function closeComSupplierModal(){document.getElementById('com-sup-modal').style.display='none';}
+function saveComSupplier(){
+  const name=document.getElementById('com-sup-name').value.trim();if(!name){alert('Falta el nombre');return;}
+  const data={name,rfc:document.getElementById('com-sup-rfc').value.trim(),contact:document.getElementById('com-sup-contact').value.trim(),email:document.getElementById('com-sup-email').value.trim(),phone:document.getElementById('com-sup-phone').value.trim(),terms:document.getElementById('com-sup-terms').value};
+  if(comEditingSupplier){const s=demoSuppliers.find(x=>x.id===comEditingSupplier);Object.assign(s,data);showToast('Proveedor actualizado');}
+  else{demoSuppliers.push({id:Date.now(),...data,yearTotal:0});showToast('Proveedor agregado');}
+  closeComSupplierModal();renderComSuppliers();renderComStats();
+}
+
+// ============ INVOICES ============
+function renderComInvoices(){
+  const tbody=document.getElementById('com-inv-tbody');if(!tbody)return;
+  tbody.innerHTML=demoInvoices.map(i=>{const st=invStatusMap[i.status];return `<tr style="border-bottom:1px solid var(--border);">
+    <td style="padding:14px 16px;font-weight:700;color:var(--accent);font-size:12px;">${i.folio}</td>
+    <td style="padding:14px 16px;font-weight:700;color:var(--text-primary);">${i.supplier}</td>
+    <td style="padding:14px 16px;font-size:11px;font-family:monospace;color:var(--text-muted);">${i.rfc}</td>
+    <td style="padding:14px 16px;font-size:12px;color:var(--text-muted);">${i.date}</td>
+    <td style="padding:14px 16px;text-align:right;font-weight:800;color:var(--text-primary);">${fmt(i.total)}</td>
+    <td style="padding:14px 16px;"><span style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;color:${st.c};background:${st.b};">${st.l}</span></td>
+    <td style="padding:14px 16px;text-align:center;"><div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
+      <button onclick="showToast('XML descargado')" class="com-tbl-btn">XML</button>
+      <button onclick="showToast('PDF descargado')" class="com-tbl-btn">PDF</button>
+      ${i.status!=='paid'?`<button onclick="comPayInvoice(${i.id})" class="com-tbl-btn" style="border-color:#22c55e;color:#22c55e;">Pagar</button>`:''}
+    </div></td>
+  </tr>`;}).join('');
+}
+function comPayInvoice(id){const i=demoInvoices.find(x=>x.id===id);if(!i)return;i.status='paid';renderComInvoices();renderComStats();showToast('Factura marcada como pagada');}
+
+// ============ EXPENSES ============
+function renderComExpenses(){
+  const tbody=document.getElementById('com-exp-tbody');if(!tbody)return;
+  tbody.innerHTML=demoExpenses.map(e=>`<tr style="border-bottom:1px solid var(--border);">
+    <td style="padding:12px 16px;font-size:12px;color:var(--text-muted);">${e.date}</td>
+    <td style="padding:12px 16px;font-weight:600;color:var(--text-primary);">${e.desc}</td>
+    <td style="padding:12px 16px;"><span style="padding:3px 9px;border-radius:5px;font-size:11px;font-weight:700;color:${categoryColors[e.category]||'#6fcff5'};background:${(categoryColors[e.category]||'#6fcff5')}15;">${e.category}</span></td>
+    <td style="padding:12px 16px;text-align:right;font-weight:800;color:var(--text-primary);">${fmt(e.amount)}</td>
+  </tr>`).join('');
+
+  const cats={};demoExpenses.forEach(e=>{cats[e.category]=(cats[e.category]||0)+e.amount;});
+  const total=Object.values(cats).reduce((s,v)=>s+v,0)||1;
+  document.getElementById('com-exp-cats').innerHTML=Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([k,v])=>{
+    const pct=Math.round(v/total*100);const color=categoryColors[k]||'#6fcff5';
+    return `<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:12px;font-weight:700;color:var(--text-secondary);">${k}</span><span style="font-size:12px;font-weight:800;color:var(--text-primary);">${fmt(v)}</span></div><div style="height:6px;background:var(--input-bg);border-radius:3px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:${color};"></div></div></div>`;
+  }).join('');
+}
+
+// ============ BANK RECONCILIATION ============
+function renderComReconciliation(){
+  const bankEl=document.getElementById('com-bank-list');if(!bankEl)return;
+  const balance=demoBankTx[0]?demoBankTx[0].balance:0;
+  document.getElementById('com-bank-balance').textContent=fmt(balance);
+  const unmatched=demoBankTx.filter(t=>!t.matched).length;
+  document.getElementById('com-bank-unmatched').textContent=unmatched+' pendientes';
+
+  bankEl.innerHTML=demoBankTx.map(t=>{
+    const sign=t.amount<0?'#ef4444':'#22c55e';
+    const sel=comSelectedBankTx===t.id?'selected':'';
+    return `<div class="com-bank-row ${sel}" onclick="comSelectBankTx(${t.id})">
+      <div style="width:8px;height:8px;border-radius:50%;background:${t.matched?'#22c55e':'#f97316'};flex-shrink:0;"></div>
+      <div style="flex:1;min-width:0;">
+        <p style="font-size:12px;font-weight:700;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.desc}</p>
+        <p style="font-size:10px;color:var(--text-faint);">${t.date} · ${t.matched?'Conciliado':'Pendiente'}</p>
+      </div>
+      <p style="font-size:13px;font-weight:800;color:${sign};flex-shrink:0;">${t.amount<0?'-':'+'}${fmt(Math.abs(t.amount))}</p>
+    </div>`;
+  }).join('');
+
+  const recEl=document.getElementById('com-records-list');
+  const records=[
+    ...demoInvoices.filter(i=>i.status!=='paid').map(i=>({type:'inv',id:'inv-'+i.id,name:i.supplier,desc:'Factura '+i.folio,date:i.date,amount:i.total,matched:false})),
+    ...demoExpenses.slice(0,6).map(e=>({type:'exp',id:'exp-'+e.id,name:e.desc,desc:e.category,date:e.date,amount:e.amount,matched:false})),
+  ];
+  recEl.innerHTML=records.map(r=>`<div class="com-rec-row" onclick="comMatchRecord('${r.id}',${r.amount})">
+    <span style="font-size:16px;">${r.type==='inv'?'📄':'💳'}</span>
+    <div style="flex:1;min-width:0;">
+      <p style="font-size:12px;font-weight:700;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.name}</p>
+      <p style="font-size:10px;color:var(--text-faint);">${r.desc} · ${r.date}</p>
+    </div>
+    <p style="font-size:13px;font-weight:800;color:var(--text-primary);flex-shrink:0;">${fmt(r.amount)}</p>
+  </div>`).join('');
+}
+function comSelectBankTx(id){
+  const t=demoBankTx.find(x=>x.id===id);if(!t)return;
+  if(t.matched){showToast('Este movimiento ya está conciliado');return;}
+  comSelectedBankTx=id;
+  document.getElementById('com-rec-selected').style.display='inline-block';
+  renderComReconciliation();
+}
+function comMatchRecord(recId,amount){
+  if(!comSelectedBankTx){showToast('Primero selecciona un movimiento del banco');return;}
+  const t=demoBankTx.find(x=>x.id===comSelectedBankTx);if(!t)return;
+  if(Math.abs(Math.abs(t.amount)-amount)>1){
+    if(!confirm('Los montos no coinciden exactamente. ¿Conciliar de todas formas?'))return;
+  }
+  t.matched=true;comSelectedBankTx=null;
+  document.getElementById('com-rec-selected').style.display='none';
+  renderComReconciliation();renderComStats();
+  showToast('Movimiento conciliado');
+}
+function comAutoReconcile(){
+  let count=0;
+  demoBankTx.forEach(t=>{if(!t.matched){t.matched=true;count++;}});
+  renderComReconciliation();renderComStats();
+  showToast(count+' movimientos conciliados automáticamente');
+}
+function openComBankModal(){
+  document.getElementById('com-bank-modal').style.display='flex';
+  document.getElementById('com-bank-options').innerHTML=banks.map(b=>`<button onclick="comConnectBank('${b.n}')" style="padding:16px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-weight:800;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='${b.c}';this.style.color='${b.c}'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-primary)'">${b.n}</button>`).join('');
+}
+function closeComBankModal(){document.getElementById('com-bank-modal').style.display='none';}
+function comConnectBank(name){closeComBankModal();showToast('Redirigiendo al portal de '+name);}
+
+// ============ ANALYTICS ============
+function renderComAnalytics(){
+  // Top proveedores
+  const sorted=[...demoSuppliers].sort((a,b)=>b.yearTotal-a.yearTotal);
+  const max=sorted[0]?sorted[0].yearTotal:1;
+  document.getElementById('com-chart-top').innerHTML=sorted.map(s=>`<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:12px;font-weight:700;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%;">${s.name}</span><span style="font-size:12px;font-weight:800;color:var(--text-primary);">${fmt(s.yearTotal)}</span></div><div style="height:6px;background:var(--input-bg);border-radius:3px;overflow:hidden;"><div style="width:${(s.yearTotal/max)*100}%;height:100%;background:var(--accent);"></div></div></div>`).join('');
+
+  // Por categoría
+  const cats={};demoExpenses.forEach(e=>{cats[e.category]=(cats[e.category]||0)+e.amount;});
+  const total=Object.values(cats).reduce((s,v)=>s+v,0)||1;
+  document.getElementById('com-chart-cats').innerHTML=`<div style="display:flex;height:24px;border-radius:12px;overflow:hidden;margin-bottom:14px;">${Object.entries(cats).map(([k,v])=>`<div style="width:${(v/total)*100}%;background:${categoryColors[k]||'#6fcff5'};" title="${k}: ${fmt(v)}"></div>`).join('')}</div>${Object.entries(cats).map(([k,v])=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:10px;height:10px;border-radius:3px;background:${categoryColors[k]||'#6fcff5'};"></div><span style="font-size:12px;color:var(--text-secondary);">${k}</span></div><span style="font-size:13px;font-weight:800;color:var(--text-primary);">${fmt(v)}</span></div>`).join('')}`;
+
+  // Monthly
+  const months=['Nov','Dic','Ene','Feb','Mar','Abr'],vals=[78000,92000,65000,88000,105000,129000],mV=Math.max(...vals);
+  document.getElementById('com-chart-monthly').innerHTML=months.map((m,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;background:var(--accent);border-radius:4px 4px 0 0;height:${(vals[i]/mV)*150}px;opacity:0.8;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'" title="${fmt(vals[i])}"><span style="position:relative;top:-16px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:var(--text-faint);white-space:nowrap;display:block;text-align:center;">$${(vals[i]/1000).toFixed(0)}k</span></div><span style="font-size:10px;color:var(--text-faint);font-weight:600;">${m}</span></div>`).join('');
+
+  // Payment terms
+  const terms={};demoSuppliers.forEach(s=>{terms[s.terms]=(terms[s.terms]||0)+1;});
+  document.getElementById('com-chart-terms').innerHTML=Object.entries(terms).map(([k,v])=>`<div style="padding:14px;border-radius:10px;background:var(--input-bg);border:1px solid var(--border);text-align:center;"><p style="font-size:20px;font-weight:900;color:var(--accent);">${v}</p><p style="font-size:11px;color:var(--text-muted);margin-top:2px;font-weight:600;">${k}</p></div>`).join('');
+}
+
+// ============ AUTOPILOT ============
+function renderComAutopilot(){
+  const el=document.getElementById('com-auto-list');if(!el)return;
+  el.innerHTML=comAutoFlows.map(f=>`<div style="padding:16px;border-radius:12px;border:1px solid ${f.active?f.color+'30':'var(--border)'};background:${f.active?f.color+'08':'var(--input-bg)'};">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">
+      <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;"><span style="font-size:18px;flex-shrink:0;">${f.icon}</span><span style="font-size:13px;font-weight:800;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;">${f.name}</span></div>
+      <label class="com-toggle-wrap"><input type="checkbox" ${f.active?'checked':''} onchange="comAutoFlows.find(x=>x.id==='${f.id}').active=this.checked;renderComAutopilot();showToast(this.checked?'Activado':'Desactivado')"/><span class="com-toggle-slider" style="${f.active?'--toggle-color:'+f.color:''}"></span></label>
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);line-height:1.4;">${f.desc}</p></div>`).join('');
+}
+
+// ============ INIT ============
+document.addEventListener('DOMContentLoaded',()=>{
+  renderComRecs();
+  renderComStats();
+  renderComPOs();
+  renderComSuppliers();
+  renderComInvoices();
+  renderComExpenses();
+  renderComReconciliation();
+  renderComAutopilot();
+});
+</script>
+

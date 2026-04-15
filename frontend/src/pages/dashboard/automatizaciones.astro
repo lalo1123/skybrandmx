@@ -1,0 +1,421 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+const API_URL = import.meta.env.PUBLIC_API_URL || '';
+---
+
+<DashboardLayout title="Automatizaciones">
+  <!-- Smart Recommendations -->
+  <div id="auto-smart-recs" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;"></div>
+
+  <!-- Stats bar -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px;">
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="auto-stat-label">Reglas activas</p>
+      <p id="auto-stat-active" class="auto-stat-val" style="color:#22c55e;">--</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="auto-stat-label">Ejecutadas hoy</p>
+      <p id="auto-stat-today" class="auto-stat-val" style="color:var(--accent);">--</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="auto-stat-label">Ejecutadas este mes</p>
+      <p id="auto-stat-month" class="auto-stat-val">--</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="auto-stat-label">Tasa de éxito <span class="auto-tip" data-tip="De todas las automatizaciones que se ejecutaron, ¿cuántas funcionaron sin errores?">?</span></p>
+      <p id="auto-stat-success" class="auto-stat-val" style="color:#22c55e;">--</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="auto-stat-label">Errores <span class="auto-tip" data-tip="Automatizaciones que fallaron. Revisa los logs para ver qué pasó.">?</span></p>
+      <p id="auto-stat-errors" class="auto-stat-val" style="color:#ef4444;">--</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="auto-stat-label">Tiempo ahorrado <span class="auto-tip" data-tip="Estimación de cuántas horas de trabajo manual te ahorran tus automatizaciones al mes">?</span></p>
+      <p id="auto-stat-saved" class="auto-stat-val" style="color:#8b5cf6;">--</p>
+    </div>
+  </div>
+
+  <!-- Help banner -->
+  <div id="auto-help" class="auto-help-banner">
+    <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <p style="flex:1;font-size:12px;color:var(--text-secondary);">Las automatizaciones hacen cosas por ti automáticamente. Ejemplo: cuando alguien compra → se genera factura → se envía guía → se notifica al cliente. Todo sin que hagas nada.</p>
+    <button onclick="document.getElementById('auto-help').style.display='none';localStorage.setItem('auto_help_dismissed','1')" class="auto-help-close">&times;</button>
+  </div>
+
+  <!-- Tabs -->
+  <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;overflow-x:auto;">
+    <button id="auto-tab-rules" class="auto-tab active" onclick="switchAutoTab('rules')">Mis reglas</button>
+    <button id="auto-tab-templates" class="auto-tab" onclick="switchAutoTab('templates')">Plantillas listas</button>
+    <button id="auto-tab-logs" class="auto-tab" onclick="switchAutoTab('logs')">Historial</button>
+  </div>
+
+  <!-- ══════════ Tab: Mis reglas ══════════ -->
+  <div id="auto-panel-rules">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div></div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="autoTest()" class="auto-btn-secondary" style="display:flex;align-items:center;gap:6px;padding:10px 16px;">
+          <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
+          Probar evento
+        </button>
+        <button onclick="openAutoWizard()" class="auto-btn-primary" style="display:flex;align-items:center;gap:6px;padding:10px 20px;">
+          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Nueva regla
+        </button>
+      </div>
+    </div>
+    <div id="auto-rules-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+  </div>
+
+  <!-- ══════════ Tab: Plantillas listas ══════════ -->
+  <div id="auto-panel-templates" style="display:none;">
+    <div class="auto-help-banner" style="margin-bottom:16px;">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Estas son automatizaciones ya armadas. Solo actívalas con un clic y empiezan a funcionar.</p>
+    </div>
+    <div id="auto-templates-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;"></div>
+  </div>
+
+  <!-- ══════════ Tab: Historial ══════════ -->
+  <div id="auto-panel-logs" style="display:none;">
+    <div id="auto-logs-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+
+  <!-- ══════════ Modal: Create Rule Wizard ══════════ -->
+  <div id="auto-modal-wizard" class="auto-modal-overlay" style="display:none;">
+    <div class="auto-modal-box" style="max-width:640px;">
+      <!-- Progress -->
+      <div style="display:flex;align-items:center;gap:0;margin-bottom:24px;">
+        <div id="auto-wiz-step-1" class="auto-wiz-step active"><span class="auto-wiz-num">1</span><span class="auto-wiz-label">Disparador</span></div>
+        <div class="auto-wiz-conn" id="auto-wiz-conn-1"></div>
+        <div id="auto-wiz-step-2" class="auto-wiz-step"><span class="auto-wiz-num">2</span><span class="auto-wiz-label">Acciones</span></div>
+        <div class="auto-wiz-conn" id="auto-wiz-conn-2"></div>
+        <div id="auto-wiz-step-3" class="auto-wiz-step"><span class="auto-wiz-num">3</span><span class="auto-wiz-label">Guardar</span></div>
+      </div>
+      <!-- Step 1 -->
+      <div id="auto-wiz-panel-1" class="auto-wiz-panel">
+        <h3 style="font-size:17px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">¿Cuándo se debe activar?</h3>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Elige el evento que dispara esta automatización.</p>
+        <div id="auto-trigger-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
+      </div>
+      <!-- Step 2 -->
+      <div id="auto-wiz-panel-2" class="auto-wiz-panel" style="display:none;">
+        <h3 style="font-size:17px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">¿Qué debe hacer?</h3>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Agrega las acciones que quieres que se ejecuten automáticamente.</p>
+        <div id="auto-selected-actions" style="margin-bottom:16px;display:flex;flex-direction:column;gap:8px;"></div>
+        <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;margin-bottom:8px;">Acciones disponibles</p>
+        <div id="auto-action-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
+      </div>
+      <!-- Step 3 -->
+      <div id="auto-wiz-panel-3" class="auto-wiz-panel" style="display:none;">
+        <h3 style="font-size:17px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">Ponle nombre a tu regla</h3>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Un nombre que te ayude a recordar qué hace.</p>
+        <div><label class="auto-label">Nombre</label><input id="auto-wiz-name" type="text" placeholder="Ej: Facturar y enviar guía cuando paguen" class="auto-input"/></div>
+        <div id="auto-wiz-summary" style="margin-top:16px;padding:16px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);"></div>
+      </div>
+      <!-- Nav -->
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button id="auto-wiz-back" onclick="autoWizBack()" class="auto-btn-secondary" style="flex:1;display:none;">← Anterior</button>
+        <button id="auto-wiz-next" onclick="autoWizNext()" class="auto-btn-primary" style="flex:1;">Siguiente →</button>
+        <button id="auto-wiz-save" onclick="autoWizSave()" class="auto-btn-primary" style="flex:1;display:none;background:#22c55e;">Guardar regla</button>
+        <button onclick="document.getElementById('auto-modal-wizard').style.display='none'" style="position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;">&times;</button>
+      </div>
+    </div>
+  </div>
+</DashboardLayout>
+
+<style>
+  .auto-stat-label { font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px; }
+  .auto-stat-val { font-size:28px;font-weight:900;color:var(--text-primary); }
+  .auto-tab { padding:10px 20px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap; }
+  .auto-tab.active { color:var(--accent);border-bottom-color:var(--accent); }
+  .auto-label { font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:4px;display:block; }
+  .auto-input { width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;transition:border-color 0.2s; }
+  .auto-input:focus { border-color:var(--accent); }
+  .auto-btn-primary { padding:12px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s; }
+  .auto-btn-primary:hover { opacity:0.85; }
+  .auto-btn-secondary { padding:12px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-primary);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s; }
+  .auto-btn-secondary:hover { background:var(--nav-hover); }
+  .auto-help-banner { display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;background:var(--accent-bg);border:1px solid rgba(111,207,245,0.15);margin-bottom:16px; }
+  .auto-help-close { border:none;background:transparent;color:var(--text-faint);cursor:pointer;font-size:16px;padding:0 4px; }
+  .auto-tip { display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--input-bg);color:var(--text-faint);font-size:10px;font-weight:800;cursor:help;position:relative;flex-shrink:0; }
+  .auto-tip:hover::after { content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--bg-sidebar);border:1px solid var(--border);color:var(--text-secondary);padding:10px 14px;border-radius:10px;font-size:12px;font-weight:500;white-space:normal;width:260px;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.3);line-height:1.5;pointer-events:none; }
+  .auto-tip:hover::before { content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--border);z-index:101; }
+  .auto-modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center; }
+  .auto-modal-box { background:var(--bg-sidebar);border:1px solid var(--border);border-radius:16px;padding:28px;width:90%;max-height:90vh;overflow-y:auto;position:relative; }
+  .auto-wiz-step { display:flex;align-items:center;gap:6px;flex:1; }
+  .auto-wiz-num { width:28px;height:28px;border-radius:50%;background:var(--input-bg);color:var(--text-faint);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;transition:all 0.3s; }
+  .auto-wiz-label { font-size:11px;font-weight:600;color:var(--text-faint);transition:color 0.3s; }
+  .auto-wiz-step.active .auto-wiz-num { background:var(--accent);color:#fff; }
+  .auto-wiz-step.active .auto-wiz-label { color:var(--accent); }
+  .auto-wiz-step.done .auto-wiz-num { background:#22c55e;color:#fff; }
+  .auto-wiz-step.done .auto-wiz-label { color:#22c55e; }
+  .auto-wiz-conn { flex:0 0 20px;height:2px;background:var(--border);transition:background 0.3s; }
+  .auto-wiz-conn.done { background:#22c55e; }
+  .auto-wiz-panel { min-height:200px; }
+  .auto-trigger-card { padding:16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);cursor:pointer;transition:all 0.2s;text-align:center; }
+  .auto-trigger-card:hover { border-color:var(--accent); }
+  .auto-trigger-card.selected { border-color:var(--accent);background:var(--accent-bg); }
+  .auto-toggle-wrap { position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0; }
+  .auto-toggle-wrap input { opacity:0;width:0;height:0; }
+  .auto-toggle-slider { position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:22px;transition:0.3s; }
+  .auto-toggle-slider::before { content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s; }
+  .auto-toggle-wrap input:checked + .auto-toggle-slider { background:#22c55e; }
+  .auto-toggle-wrap input:checked + .auto-toggle-slider::before { transform:translateX(18px); }
+</style>
+
+<script is:inline>
+// ═══════ DEMO DATA ═══════
+const triggers = [
+  { id:'order.created', label:'Nuevo pedido', desc:'Cuando alguien hace un pedido', icon:'🛒' },
+  { id:'order.paid', label:'Pedido pagado', desc:'Cuando se confirma el pago', icon:'💳' },
+  { id:'order.shipped', label:'Pedido enviado', desc:'Cuando se genera la guía', icon:'📦' },
+  { id:'order.delivered', label:'Pedido entregado', desc:'Cuando el cliente recibe', icon:'✅' },
+  { id:'order.cancelled', label:'Pedido cancelado', desc:'Cuando se cancela un pedido', icon:'❌' },
+  { id:'customer.created', label:'Nuevo cliente', desc:'Cuando alguien se registra', icon:'👤' },
+  { id:'invoice.created', label:'Factura generada', desc:'Cuando se timbra una factura', icon:'🧾' },
+  { id:'cart.abandoned', label:'Carrito abandonado', desc:'Cuando no completan la compra', icon:'🛒' },
+  { id:'payment.failed', label:'Pago fallido', desc:'Cuando un pago es rechazado', icon:'⚠' },
+  { id:'return.requested', label:'Devolución solicitada', desc:'Cuando piden devolver algo', icon:'↩️' },
+  { id:'scheduled', label:'Programado', desc:'A una hora/día que tú elijas', icon:'⏰' },
+  { id:'manual', label:'Manual', desc:'Solo cuando tú lo actives', icon:'👆' },
+];
+
+const actions = [
+  { id:'send_email', label:'Enviar email', icon:'✉️', color:'#6fcff5' },
+  { id:'send_whatsapp', label:'Enviar WhatsApp', icon:'💬', color:'#25D366' },
+  { id:'create_invoice', label:'Generar factura', icon:'🧾', color:'#22c55e' },
+  { id:'create_shipment', label:'Generar guía envío', icon:'📦', color:'#8b5cf6' },
+  { id:'update_crm', label:'Actualizar CRM', icon:'👤', color:'#6fcff5' },
+  { id:'add_tag', label:'Agregar etiqueta', icon:'🏷', color:'#eab308' },
+  { id:'create_task', label:'Crear tarea', icon:'📋', color:'#f97316' },
+  { id:'webhook', label:'Llamar webhook', icon:'🔗', color:'#64748b' },
+  { id:'wait', label:'Esperar tiempo', icon:'⏱', color:'#8b5cf6' },
+  { id:'condition', label:'Condición (si/entonces)', icon:'🔀', color:'#ec4899' },
+];
+
+const demoRules = [
+  { id:1, name:'Facturar y notificar al pagar', trigger:'order.paid', actions:['create_invoice','send_email','send_whatsapp'], active:true, runs:156, lastRun:'Hace 2 horas', errors:2 },
+  { id:2, name:'Generar guía de envío automática', trigger:'order.paid', actions:['create_shipment','send_email'], active:true, runs:142, lastRun:'Hace 3 horas', errors:1 },
+  { id:3, name:'Bienvenida a nuevos clientes', trigger:'customer.created', actions:['send_email','send_whatsapp','add_tag'], active:true, runs:89, lastRun:'Ayer', errors:0 },
+  { id:4, name:'Recuperar carritos abandonados', trigger:'cart.abandoned', actions:['wait','send_email','wait','send_whatsapp'], active:true, runs:234, lastRun:'Hace 1 hora', errors:5 },
+  { id:5, name:'Pedir reseña post-entrega', trigger:'order.delivered', actions:['wait','send_email'], active:false, runs:45, lastRun:'Hace 5 días', errors:0 },
+  { id:6, name:'Alerta pago fallido', trigger:'payment.failed', actions:['send_whatsapp','create_task'], active:true, runs:12, lastRun:'Hace 1 día', errors:0 },
+];
+
+const demoTemplates = [
+  { id:1, name:'Flujo completo de venta', desc:'Pedido → Factura → Guía → Email confirmación → WhatsApp rastreo → Reseña 5 días después', trigger:'order.paid', actions:['create_invoice','create_shipment','send_email','send_whatsapp','wait','send_email'], icon:'🚀', color:'#22c55e', popular:true },
+  { id:2, name:'Recuperación de carrito', desc:'Espera 1 hora → Email recordatorio → Espera 24h → WhatsApp con cupón 10%', trigger:'cart.abandoned', actions:['wait','send_email','wait','send_whatsapp'], icon:'🛒', color:'#f97316', popular:true },
+  { id:3, name:'Onboarding nuevo cliente', desc:'Email bienvenida → Espera 2 días → Tips de uso → Espera 5 días → Oferta especial', trigger:'customer.created', actions:['send_email','wait','send_email','wait','send_email'], icon:'👋', color:'#6fcff5', popular:false },
+  { id:4, name:'Alerta de devolución', desc:'Notifica por WhatsApp al admin → Crea tarea de seguimiento → Email al cliente confirmando', trigger:'return.requested', actions:['send_whatsapp','create_task','send_email'], icon:'↩️', color:'#ef4444', popular:false },
+  { id:5, name:'Seguimiento post-compra', desc:'Espera 5 días después de entrega → Pide reseña → Si no responde, reenvía en 3 días', trigger:'order.delivered', actions:['wait','send_email','wait','send_email'], icon:'⭐', color:'#eab308', popular:false },
+  { id:6, name:'Reporte semanal automático', desc:'Cada lunes envía resumen de ventas, envíos y facturas por email', trigger:'scheduled', actions:['send_email'], icon:'📊', color:'#8b5cf6', popular:false },
+];
+
+const demoLogs = [
+  { id:1, rule:'Facturar y notificar al pagar', trigger:'order.paid', status:'success', steps:3, date:'2026-04-02 14:30', detail:'Factura A-008 generada, email enviado, WhatsApp enviado' },
+  { id:2, rule:'Generar guía de envío', trigger:'order.paid', status:'success', steps:2, date:'2026-04-02 14:30', detail:'Guía EST445566 generada, email con rastreo enviado' },
+  { id:3, rule:'Recuperar carritos abandonados', trigger:'cart.abandoned', status:'success', steps:2, date:'2026-04-02 13:15', detail:'Email recordatorio enviado a lucia@hotmail.com' },
+  { id:4, rule:'Bienvenida a nuevos clientes', trigger:'customer.created', status:'success', steps:3, date:'2026-04-02 11:00', detail:'Email + WhatsApp + tag "nuevo" asignado' },
+  { id:5, rule:'Recuperar carritos abandonados', trigger:'cart.abandoned', status:'error', steps:1, date:'2026-04-02 10:45', detail:'Error: email rebotó (buzón lleno)' },
+  { id:6, rule:'Alerta pago fallido', trigger:'payment.failed', status:'success', steps:2, date:'2026-04-01 18:20', detail:'WhatsApp enviado al admin, tarea creada' },
+  { id:7, rule:'Facturar y notificar al pagar', trigger:'order.paid', status:'success', steps:3, date:'2026-04-01 16:00', detail:'Factura A-007 generada' },
+  { id:8, rule:'Generar guía de envío', trigger:'order.paid', status:'error', steps:1, date:'2026-04-01 16:00', detail:'Error: dirección incompleta, no se generó guía' },
+];
+
+let autoWizStep=1, autoWizTrigger=null, autoWizActions=[];
+
+// ═══════ HELPERS ═══════
+function showToast(msg){const ex=document.getElementById('auto-toast');if(ex)ex.remove();const t=document.createElement('div');t.id='auto-toast';t.textContent=msg;Object.assign(t.style,{position:'fixed',bottom:'24px',right:'24px',background:'#22c55e',color:'#fff',padding:'12px 24px',borderRadius:'10px',fontSize:'13px',fontWeight:'700',zIndex:'9999',boxShadow:'0 4px 20px rgba(0,0,0,0.3)'});document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(()=>t.remove(),300);},3000);}
+function switchAutoTab(tab){document.querySelectorAll('.auto-tab').forEach(t=>t.classList.remove('active'));document.getElementById('auto-tab-'+tab).classList.add('active');['rules','templates','logs'].forEach(p=>document.getElementById('auto-panel-'+p).style.display=p===tab?'':'none');}
+
+// ═══════ STATS ═══════
+function renderAutoStats(){
+  document.getElementById('auto-stat-active').textContent=demoRules.filter(r=>r.active).length;
+  document.getElementById('auto-stat-today').textContent=demoLogs.filter(l=>l.date.startsWith('2026-04-02')).length;
+  document.getElementById('auto-stat-month').textContent=demoRules.reduce((s,r)=>s+r.runs,0);
+  const total=demoLogs.length;const ok=demoLogs.filter(l=>l.status==='success').length;
+  document.getElementById('auto-stat-success').textContent=total>0?Math.round(ok/total*100)+'%':'--';
+  document.getElementById('auto-stat-errors').textContent=demoLogs.filter(l=>l.status==='error').length;
+  document.getElementById('auto-stat-saved').textContent='~32h';
+}
+
+// ═══════ SMART RECS ═══════
+function renderAutoRecs(){
+  const el=document.getElementById('auto-smart-recs');if(!el)return;const recs=[];
+  const errors=demoLogs.filter(l=>l.status==='error'&&l.date.startsWith('2026-04-02'));
+  if(errors.length>0)recs.push({icon:'⚠',color:'#ef4444',title:`${errors.length} automatización(es) fallaron hoy`,desc:'Revisa el historial para ver qué pasó.',btn:'Ver historial',action:"switchAutoTab('logs')"});
+  const inactive=demoRules.filter(r=>!r.active);
+  if(inactive.length>0)recs.push({icon:'⏸',color:'#f97316',title:`${inactive.length} regla(s) desactivada(s)`,desc:'Tienes reglas que no están funcionando. ¿Las activas?',btn:'Ver reglas',action:"switchAutoTab('rules')"});
+  if(!recs.length){el.style.display='none';return;}
+  el.style.display='flex';
+  el.innerHTML=recs.map(r=>`<div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;background:${r.color}08;border:1px solid ${r.color}20;"><span style="font-size:24px;flex-shrink:0;">${r.icon}</span><div style="flex:1;"><p style="font-size:13px;font-weight:700;color:var(--text-primary);">${r.title}</p><p style="font-size:11px;color:var(--text-muted);margin-top:2px;">${r.desc}</p></div><button onclick="${r.action}" style="padding:8px 16px;border-radius:8px;border:none;background:${r.color};color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">${r.btn}</button><button onclick="this.closest('div[style]').remove()" style="border:none;background:transparent;color:var(--text-faint);cursor:pointer;font-size:14px;padding:0 4px;">✕</button></div>`).join('');
+}
+
+// ═══════ RULES LIST ═══════
+function renderRules(){
+  const el=document.getElementById('auto-rules-list');
+  el.innerHTML=demoRules.map(r=>{
+    const trig=triggers.find(t=>t.id===r.trigger);
+    const actIcons=r.actions.map(a=>{const act=actions.find(x=>x.id===a);return act?act.icon:'⚙';}).join(' → ');
+    return`<div class="stat-card" style="padding:18px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
+          <div style="width:44px;height:44px;border-radius:12px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">${trig?.icon||'⚡'}</div>
+          <div style="min-width:0;">
+            <p style="font-size:14px;font-weight:800;color:var(--text-primary);">${r.name}</p>
+            <p style="font-size:11px;color:var(--text-faint);margin-top:2px;">Cuando: ${trig?.label||r.trigger} → ${actIcons}</p>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="text-align:center;"><p style="font-size:14px;font-weight:900;color:var(--text-primary);">${r.runs}</p><p style="font-size:9px;color:var(--text-faint);text-transform:uppercase;">Ejecuciones</p></div>
+          ${r.errors>0?`<div style="text-align:center;"><p style="font-size:14px;font-weight:900;color:#ef4444;">${r.errors}</p><p style="font-size:9px;color:var(--text-faint);text-transform:uppercase;">Errores</p></div>`:''}
+          <span style="font-size:10px;color:var(--text-faint);">${r.lastRun}</span>
+          <label class="auto-toggle-wrap"><input type="checkbox" ${r.active?'checked':''} onchange="demoRules.find(x=>x.id===${r.id}).active=this.checked;renderRules();renderAutoStats();showToast(this.checked?'Regla activada':'Regla desactivada')"/><span class="auto-toggle-slider"></span></label>
+          <button onclick="if(confirm('¿Eliminar esta regla?')){demoRules.splice(demoRules.findIndex(x=>x.id===${r.id}),1);renderRules();renderAutoStats();showToast('Regla eliminada');}" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-faint);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;" onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-faint)'">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════ TEMPLATES ═══════
+function renderAutoTemplates(){
+  const el=document.getElementById('auto-templates-list');
+  el.innerHTML=demoTemplates.map(t=>{
+    const actIcons=t.actions.map(a=>{const act=actions.find(x=>x.id===a);return act?act.icon:'⚙';}).join(' → ');
+    return`<div class="stat-card" style="padding:0;overflow:hidden;">
+      <div style="height:6px;background:${t.color};"></div>
+      <div style="padding:18px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="font-size:24px;">${t.icon}</span>
+          <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);">${t.name}</h4>
+          ${t.popular?'<span style="padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(234,179,8,0.1);color:#eab308;">Popular</span>':''}
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:12px;">${t.desc}</p>
+        <p style="font-size:11px;color:var(--text-faint);margin-bottom:12px;">${actIcons}</p>
+        <button onclick="autoActivateTemplate(${t.id})" style="width:100%;padding:10px;border-radius:10px;border:none;background:${t.color};color:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Activar esta automatización</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function autoActivateTemplate(id){
+  const t=demoTemplates.find(x=>x.id===id);if(!t)return;
+  demoRules.unshift({id:Date.now(),name:t.name,trigger:t.trigger,actions:t.actions,active:true,runs:0,lastRun:'Nunca',errors:0});
+  switchAutoTab('rules');renderRules();renderAutoStats();
+  showToast(`"${t.name}" activado. Ya funciona automáticamente.`);
+}
+
+// ═══════ LOGS ═══════
+function renderLogs(){
+  const el=document.getElementById('auto-logs-list');
+  el.innerHTML=demoLogs.map(l=>{
+    const stColor=l.status==='success'?'#22c55e':'#ef4444';
+    const stLabel=l.status==='success'?'OK':'Error';
+    return`<div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);">
+      <div style="width:10px;height:10px;border-radius:50%;background:${stColor};flex-shrink:0;"></div>
+      <div style="flex:1;min-width:0;">
+        <p style="font-size:13px;font-weight:700;color:var(--text-primary);">${l.rule}</p>
+        <p style="font-size:11px;color:var(--text-faint);">${l.detail}</p>
+      </div>
+      <span style="padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700;color:${stColor};background:${stColor}15;">${stLabel}</span>
+      <span style="font-size:10px;color:var(--text-faintest);white-space:nowrap;">${l.date}</span>
+    </div>`;
+  }).join('');
+}
+
+// ═══════ WIZARD ═══════
+function openAutoWizard(){
+  autoWizStep=1;autoWizTrigger=null;autoWizActions=[];
+  updateAutoWizUI();
+  document.getElementById('auto-modal-wizard').style.display='flex';
+  document.getElementById('auto-wiz-name').value='';
+  // Render triggers
+  document.getElementById('auto-trigger-grid').innerHTML=triggers.map(t=>`
+    <div class="auto-trigger-card" data-id="${t.id}" onclick="autoSelectTrigger('${t.id}')">
+      <span style="font-size:28px;display:block;margin-bottom:6px;">${t.icon}</span>
+      <p style="font-size:13px;font-weight:800;color:var(--text-primary);">${t.label}</p>
+      <p style="font-size:11px;color:var(--text-faint);margin-top:2px;">${t.desc}</p>
+    </div>`).join('');
+  // Render actions
+  document.getElementById('auto-action-grid').innerHTML=actions.map(a=>`
+    <div class="auto-trigger-card" onclick="autoAddAction('${a.id}')">
+      <span style="font-size:24px;display:block;margin-bottom:4px;">${a.icon}</span>
+      <p style="font-size:12px;font-weight:800;color:var(--text-primary);">${a.label}</p>
+    </div>`).join('');
+  renderWizActions();
+}
+
+function autoSelectTrigger(id){
+  autoWizTrigger=id;
+  document.querySelectorAll('.auto-trigger-card').forEach(c=>c.classList.toggle('selected',c.dataset.id===id));
+  setTimeout(()=>{autoWizStep=2;updateAutoWizUI();},300);
+}
+
+function autoAddAction(id){autoWizActions.push(id);renderWizActions();}
+function autoRemoveAction(i){autoWizActions.splice(i,1);renderWizActions();}
+function renderWizActions(){
+  const el=document.getElementById('auto-selected-actions');
+  if(!autoWizActions.length){el.innerHTML='<p style="font-size:12px;color:var(--text-faintest);text-align:center;padding:12px;">Haz clic en las acciones de abajo para agregarlas.</p>';return;}
+  el.innerHTML=autoWizActions.map((a,i)=>{const act=actions.find(x=>x.id===a);return`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);">
+    <span style="width:22px;height:22px;border-radius:6px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--accent);">${i+1}</span>
+    <span style="font-size:16px;">${act?.icon||'⚙'}</span>
+    <span style="font-size:13px;font-weight:700;color:var(--text-primary);flex:1;">${act?.label||a}</span>
+    <button onclick="autoRemoveAction(${i})" style="border:none;background:transparent;color:var(--text-faint);cursor:pointer;font-size:14px;">✕</button>
+  </div>`;}).join('');
+}
+
+function updateAutoWizUI(){
+  for(let i=1;i<=3;i++){
+    const s=document.getElementById('auto-wiz-step-'+i);s.classList.remove('active','done');
+    if(i<autoWizStep)s.classList.add('done');if(i===autoWizStep)s.classList.add('active');
+    document.getElementById('auto-wiz-panel-'+i).style.display=i===autoWizStep?'':'none';
+    if(i<3)document.getElementById('auto-wiz-conn-'+i).classList.toggle('done',i<autoWizStep);
+  }
+  document.getElementById('auto-wiz-back').style.display=autoWizStep>1?'':'none';
+  document.getElementById('auto-wiz-next').style.display=autoWizStep<3?'':'none';
+  document.getElementById('auto-wiz-save').style.display=autoWizStep===3?'':'none';
+  if(autoWizStep===3)renderWizSummary();
+}
+function autoWizNext(){
+  if(autoWizStep===1&&!autoWizTrigger){alert('Selecciona un disparador');return;}
+  if(autoWizStep===2&&!autoWizActions.length){alert('Agrega al menos una acción');return;}
+  if(autoWizStep<3){autoWizStep++;updateAutoWizUI();}
+}
+function autoWizBack(){if(autoWizStep>1){autoWizStep--;updateAutoWizUI();}}
+function renderWizSummary(){
+  const trig=triggers.find(t=>t.id===autoWizTrigger);
+  const actLabels=autoWizActions.map(a=>{const act=actions.find(x=>x.id===a);return(act?.icon||'')+' '+( act?.label||a);}).join(' → ');
+  document.getElementById('auto-wiz-summary').innerHTML=`
+    <div style="display:grid;grid-template-columns:80px 1fr;gap:8px;font-size:12px;">
+      <span style="color:var(--text-faint);font-weight:700;">Cuando:</span><span style="color:var(--text-primary);font-weight:600;">${trig?.icon} ${trig?.label}</span>
+      <span style="color:var(--text-faint);font-weight:700;">Hacer:</span><span style="color:var(--text-primary);">${actLabels}</span>
+    </div>`;
+}
+function autoWizSave(){
+  const name=document.getElementById('auto-wiz-name').value.trim();
+  if(!name){alert('Ponle un nombre a tu regla');return;}
+  demoRules.unshift({id:Date.now(),name,trigger:autoWizTrigger,actions:autoWizActions,active:true,runs:0,lastRun:'Nunca',errors:0});
+  document.getElementById('auto-modal-wizard').style.display='none';
+  renderRules();renderAutoStats();
+  showToast(`"${name}" creada y activada`);
+}
+
+// ═══════ TEST EVENT ═══════
+function autoTest(){
+  const event=prompt('¿Qué evento quieres simular?','Pedido pagado (order.paid)');
+  if(!event)return;
+  const matching=demoRules.filter(r=>r.active);
+  showToast(`Evento simulado. ${matching.length} regla(s) se ejecutaron.`);
+  demoLogs.unshift({id:Date.now(),rule:'(Evento de prueba)',trigger:'test',status:'success',steps:matching.length,date:'2026-04-02 '+new Date().toTimeString().slice(0,5),detail:'Simulación: '+matching.length+' reglas activas ejecutadas'});
+  renderLogs();
+}
+
+// ═══════ INIT ═══════
+document.addEventListener('DOMContentLoaded',()=>{
+  if(localStorage.getItem('auto_help_dismissed'))document.getElementById('auto-help').style.display='none';
+  renderAutoRecs();renderAutoStats();renderRules();renderAutoTemplates();renderLogs();
+});
+document.getElementById('auto-modal-wizard')?.addEventListener('click',function(e){if(e.target===this)this.style.display='none';});
+</script>

@@ -1,0 +1,1050 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+const API_URL = import.meta.env.PUBLIC_API_URL || '';
+---
+
+<DashboardLayout title="Productos">
+  <!-- Smart Recommendations -->
+  <div id="prod-smart-recs" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;"></div>
+
+  <!-- Stats bar -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px;">
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="prod-stat-label">Total productos</p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="prod-stat-total" class="prod-stat-val">--</p></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="prod-stat-label">Valor del inventario <span class="prod-tip" data-tip="Suma del costo de todos los productos multiplicado por su stock actual">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="prod-stat-value" class="prod-stat-val" style="color:#22c55e;">--</p></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="prod-stat-label">Agotados</p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="prod-stat-outofstock" class="prod-stat-val" style="color:#ef4444;">--</p></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="prod-stat-label">Bajo stock <span class="prod-tip" data-tip="Productos con menos de 5 unidades disponibles que necesitan reabastecimiento pronto">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="prod-stat-lowstock" class="prod-stat-val" style="color:#f97316;">--</p></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="prod-stat-label">Categorias</p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="prod-stat-cats" class="prod-stat-val" style="color:var(--accent);">--</p></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="prod-stat-label">Margen promedio <span class="prod-tip" data-tip="Porcentaje de ganancia promedio entre el precio de venta y el costo de cada producto">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="prod-stat-margin" class="prod-stat-val" style="color:#8b5cf6;">--</p></div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;overflow-x:auto;">
+    <button id="prod-tab-catalog" class="prod-tab active" onclick="switchProdTab('catalog')">Catalogo</button>
+    <button id="prod-tab-add" class="prod-tab" onclick="switchProdTab('add')">Agregar producto</button>
+    <button id="prod-tab-categories" class="prod-tab" onclick="switchProdTab('categories')">Categorias</button>
+    <button id="prod-tab-inventory" class="prod-tab" onclick="switchProdTab('inventory')">Inventario</button>
+    <button id="prod-tab-analytics" class="prod-tab" onclick="switchProdTab('analytics')">Analitica</button>
+  </div>
+
+  <!-- ══════════ Tab: Catalogo ══════════ -->
+  <div id="prod-panel-catalog">
+    <div id="prod-help-catalog" class="prod-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Aqui ves todos tus productos. Usa los filtros para buscar por nombre, categoria o estado. Haz clic en un producto para ver sus detalles.</p>
+      <button onclick="prodDismissHelp('catalog')" class="prod-help-close">&times;</button>
+    </div>
+    <div id="prod-empty-catalog" style="display:none;" class="prod-empty-state">
+      <svg style="width:56px;height:56px;color:var(--accent);opacity:0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+      <h3 style="font-size:16px;font-weight:800;color:var(--text-primary);margin:12px 0 6px;">Aun no tienes productos</h3>
+      <p style="font-size:13px;color:var(--text-muted);max-width:360px;line-height:1.5;">Agrega tu primer producto para empezar a vender en tu tienda.</p>
+      <button onclick="switchProdTab('add')" class="prod-btn-primary" style="margin-top:16px;padding:12px 28px;">Agregar mi primer producto</button>
+    </div>
+    <!-- Toolbar -->
+    <div id="prod-toolbar" class="stat-card animate-in" style="padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;position:relative;">
+        <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input id="prod-search" type="text" placeholder="Buscar por nombre, SKU..." oninput="prodFilterCatalog()" class="prod-input" style="padding-left:38px;"/>
+      </div>
+      <select id="prod-filter-cat" onchange="prodFilterCatalog()" class="prod-input" style="width:auto;cursor:pointer;">
+        <option value="">Todas las categorias</option>
+        <option value="Ropa">Ropa</option>
+        <option value="Accesorios">Accesorios</option>
+        <option value="Artesanias">Artesanias</option>
+        <option value="Bebidas">Bebidas</option>
+        <option value="Hogar">Hogar</option>
+      </select>
+      <select id="prod-filter-status" onchange="prodFilterCatalog()" class="prod-input" style="width:auto;cursor:pointer;">
+        <option value="">Todos los estados</option>
+        <option value="activo">Activo</option>
+        <option value="agotado">Agotado</option>
+        <option value="borrador">Borrador</option>
+      </select>
+      <button onclick="switchProdTab('add')" class="prod-btn-primary" style="display:flex;align-items:center;gap:6px;padding:10px 20px;">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Agregar producto
+      </button>
+      <div style="position:relative;" id="prod-more-wrap">
+        <button onclick="prodToggleMore()" class="prod-btn-secondary" style="padding:10px 14px;display:flex;align-items:center;gap:4px;">Mas <svg style="width:12px;height:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+        <div id="prod-more-menu" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;background:var(--bg-sidebar);border:1px solid var(--border);border-radius:10px;padding:6px;min-width:160px;z-index:50;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+          <button onclick="showToast('CSV exportado');prodToggleMore()" class="prod-dropdown-item">Exportar CSV</button>
+          <button onclick="showToast('Importacion iniciada');prodToggleMore()" class="prod-dropdown-item">Importar productos</button>
+        </div>
+      </div>
+    </div>
+    <!-- Product grid -->
+    <div id="prod-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;"></div>
+  </div>
+
+  <!-- ══════════ Tab: Agregar producto ══════════ -->
+  <div id="prod-panel-add" style="display:none;">
+    <div id="prod-help-add" class="prod-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Llena la informacion de tu producto. Los campos con * son obligatorios. La IA te ayuda a generar descripciones y titulos SEO.</p>
+      <button onclick="prodDismissHelp('add')" class="prod-help-close">&times;</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <!-- Left column: basic info -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="stat-card animate-in" style="padding:20px;">
+          <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Informacion basica</h4>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div><label class="prod-label">Nombre del producto *</label><input id="prod-add-name" type="text" placeholder="Ej: Blusa bordada Oaxaca" class="prod-input"/></div>
+            <div><label class="prod-label">Descripcion</label><textarea id="prod-add-desc" rows="4" placeholder="Describe tu producto con detalle..." class="prod-input" style="resize:vertical;"></textarea></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div><label class="prod-label">Categoria *</label>
+                <select id="prod-add-cat" class="prod-input" style="cursor:pointer;">
+                  <option value="">Seleccionar...</option>
+                  <option value="Ropa">Ropa</option>
+                  <option value="Accesorios">Accesorios</option>
+                  <option value="Artesanias">Artesanias</option>
+                  <option value="Bebidas">Bebidas</option>
+                  <option value="Hogar">Hogar</option>
+                </select>
+              </div>
+              <div><label class="prod-label">Peso (kg)</label><input id="prod-add-weight" type="number" step="0.1" placeholder="0.5" class="prod-input"/></div>
+            </div>
+          </div>
+        </div>
+        <div class="stat-card animate-in" style="padding:20px;">
+          <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Precios</h4>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+              <div><label class="prod-label">Precio de venta * <span class="prod-tip" data-tip="El precio que ve tu cliente en la tienda">?</span></label><input id="prod-add-price" type="number" step="0.01" placeholder="450.00" class="prod-input" oninput="prodCalcMargin()"/></div>
+              <div><label class="prod-label">Precio comparar <span class="prod-tip" data-tip="Se muestra tachado junto al precio real para dar sensacion de descuento">?</span></label><input id="prod-add-compare" type="number" step="0.01" placeholder="600.00" class="prod-input"/></div>
+              <div><label class="prod-label">Costo <span class="prod-tip" data-tip="Lo que te cuesta a ti. Se usa para calcular tu margen de ganancia">?</span></label><input id="prod-add-cost" type="number" step="0.01" placeholder="180.00" class="prod-input" oninput="prodCalcMargin()"/></div>
+            </div>
+            <div style="padding:12px 16px;border-radius:10px;background:var(--accent-bg);border:1px solid rgba(111,207,245,0.15);display:flex;align-items:center;gap:10px;">
+              <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+              <p style="font-size:12px;color:var(--text-secondary);">Margen de ganancia: <strong id="prod-add-margin" style="color:var(--accent);">--%</strong></p>
+            </div>
+          </div>
+        </div>
+        <div class="stat-card animate-in" style="padding:20px;">
+          <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Inventario</h4>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div><label class="prod-label">SKU <span class="prod-tip" data-tip="Codigo unico para identificar este producto en tu sistema">?</span></label><input id="prod-add-sku" type="text" placeholder="BLU-OAX-001" class="prod-input"/></div>
+              <div><label class="prod-label">Codigo de barras</label><input id="prod-add-barcode" type="text" placeholder="7501234567890" class="prod-input"/></div>
+            </div>
+            <div><label class="prod-label">Stock disponible *</label><input id="prod-add-stock" type="number" placeholder="25" class="prod-input"/></div>
+          </div>
+        </div>
+      </div>
+      <!-- Right column: media, variants, SEO -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="stat-card animate-in" style="padding:20px;">
+          <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Fotos del producto</h4>
+          <div id="prod-add-photos" style="border:2px dashed var(--border);border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:all 0.2s;" onclick="showToast('Subida de fotos disponible pronto')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+            <svg style="width:40px;height:40px;color:var(--text-faint);margin:0 auto 10px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <p style="font-size:13px;font-weight:700;color:var(--text-muted);margin-bottom:4px;">Arrastra fotos aqui o haz clic</p>
+            <p style="font-size:11px;color:var(--text-faint);">PNG, JPG hasta 5MB. Recomendado: 800x800px</p>
+          </div>
+        </div>
+        <div class="stat-card animate-in" style="padding:20px;">
+          <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Variantes</h4>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div><label class="prod-label">Tallas (separadas por coma)</label><input id="prod-add-sizes" type="text" placeholder="CH, M, G, XG" class="prod-input"/></div>
+            <div><label class="prod-label">Colores (separados por coma)</label><input id="prod-add-colors" type="text" placeholder="Rojo, Azul, Negro" class="prod-input"/></div>
+          </div>
+        </div>
+        <!-- Custom fields -->
+        <div class="stat-card animate-in" style="padding:20px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);">Campos personalizados <span class="prod-tip" data-tip="Agrega cualquier información extra que necesites para tu tipo de negocio. Ejemplo: ingredientes, materiales, tiempo de preparación, nivel de dificultad, etc.">?</span></h4>
+            <button onclick="prodAddCustomField()" style="padding:5px 12px;border-radius:6px;border:1px dashed var(--border);background:transparent;color:var(--text-muted);font-size:11px;font-weight:600;cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">+ Agregar campo</button>
+          </div>
+          <div id="prod-custom-fields" style="display:flex;flex-direction:column;gap:10px;">
+            <p style="font-size:11px;color:var(--text-faintest);text-align:center;padding:12px;">Sin campos personalizados. Agrega los que necesites para tu tipo de negocio.</p>
+          </div>
+          <div style="margin-top:12px;padding:10px;border-radius:8px;background:var(--input-bg);">
+            <p style="font-size:11px;font-weight:700;color:var(--text-faint);margin-bottom:6px;">Ejemplos por sector:</p>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <button onclick="prodAddPresetFields('restaurant')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:10px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">🍽 Restaurante</button>
+              <button onclick="prodAddPresetFields('health')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:10px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">🏥 Salud</button>
+              <button onclick="prodAddPresetFields('beauty')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:10px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">💇 Belleza</button>
+              <button onclick="prodAddPresetFields('fitness')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:10px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">🏋 Fitness</button>
+              <button onclick="prodAddPresetFields('education')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:10px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">📚 Educación</button>
+              <button onclick="prodAddPresetFields('realestate')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:10px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">🏠 Inmobiliaria</button>
+            </div>
+          </div>
+        </div>
+        <div class="stat-card animate-in" style="padding:20px;">
+          <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">SEO <span class="prod-tip" data-tip="Optimizacion para que tu producto aparezca en Google cuando lo busquen">?</span></h4>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div><label class="prod-label">Meta titulo</label><input id="prod-add-metatitle" type="text" placeholder="Blusa bordada Oaxaca - Artesanal mexicana" class="prod-input" maxlength="70" oninput="prodUpdateSeoCount('title')"/><p id="prod-seo-title-count" style="font-size:10px;color:var(--text-faint);text-align:right;margin-top:2px;">0/70</p></div>
+            <div><label class="prod-label">Meta descripcion</label><textarea id="prod-add-metadesc" rows="3" placeholder="Hermosa blusa bordada a mano por artesanas oaxaquenas..." class="prod-input" style="resize:vertical;" maxlength="160" oninput="prodUpdateSeoCount('desc')"></textarea><p id="prod-seo-desc-count" style="font-size:10px;color:var(--text-faint);text-align:right;margin-top:2px;">0/160</p></div>
+          </div>
+        </div>
+        <button onclick="prodSaveProduct()" class="prod-btn-primary" style="padding:14px;font-size:14px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;">
+          <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          Guardar producto
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Categorias ══════════ -->
+  <div id="prod-panel-categories" style="display:none;">
+    <div id="prod-help-categories" class="prod-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Organiza tus productos en categorias. Puedes crear, editar o eliminar categorias. Los productos se agrupan automaticamente.</p>
+      <button onclick="prodDismissHelp('categories')" class="prod-help-close">&times;</button>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+      <button onclick="prodOpenCatModal()" class="prod-btn-primary" style="display:flex;align-items:center;gap:6px;padding:10px 20px;">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Nueva categoria
+      </button>
+    </div>
+    <div id="prod-categories-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;"></div>
+  </div>
+
+  <!-- ══════════ Tab: Inventario ══════════ -->
+  <div id="prod-panel-inventory" style="display:none;">
+    <div id="prod-help-inventory" class="prod-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Controla el stock de tus productos. Las alertas en rojo indican productos agotados y las naranjas bajo stock. Puedes ajustar cantidades en lote.</p>
+      <button onclick="prodDismissHelp('inventory')" class="prod-help-close">&times;</button>
+    </div>
+    <!-- Low stock alerts -->
+    <div id="prod-low-stock-alerts" style="margin-bottom:16px;"></div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-bottom:16px;">
+      <button onclick="prodBulkUpdate()" class="prod-btn-secondary" style="display:flex;align-items:center;gap:6px;padding:10px 20px;">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        Actualizar stock en lote
+      </button>
+    </div>
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="border-bottom:1px solid var(--border);">
+            <th class="prod-th">Producto</th><th class="prod-th">SKU</th><th class="prod-th" style="text-align:right;">Stock</th>
+            <th class="prod-th">Estado</th><th class="prod-th" style="text-align:right;">Costo</th>
+            <th class="prod-th" style="text-align:right;">Valor stock</th><th class="prod-th" style="text-align:center;">Ajustar</th>
+          </tr></thead>
+          <tbody id="prod-inventory-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <!-- Adjustment log -->
+    <div class="stat-card animate-in" style="padding:20px;margin-top:20px;">
+      <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Historial de ajustes</h4>
+      <div id="prod-adjustment-log"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Analitica ══════════ -->
+  <div id="prod-panel-analytics" style="display:none;">
+    <div id="prod-help-analytics" class="prod-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Mira como se venden tus productos. Descubre cuales generan mas ingresos y cuales necesitan reabastecimiento.</p>
+      <button onclick="prodDismissHelp('analytics')" class="prod-help-close">&times;</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:20px;">
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Top productos vendidos</h4>
+        <div id="prod-chart-topselling"></div>
+      </div>
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Ingresos por categoria</h4>
+        <div id="prod-chart-catrevenue"></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Valor del inventario por categoria</h4>
+        <div id="prod-chart-stockvalue"></div>
+      </div>
+      <div class="stat-card animate-in" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Productos que necesitan restock</h4>
+        <div id="prod-chart-restock"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Autopilot (collapsed) -->
+  <div class="stat-card animate-in" style="padding:0;margin-top:20px;overflow:hidden;">
+    <button onclick="prodToggleSection('prod-autopilot-content')" class="prod-collapse-header">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,rgba(34,197,94,0.15),rgba(111,207,245,0.15));display:flex;align-items:center;justify-content:center;">
+          <svg style="width:14px;height:14px;color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <div style="text-align:left;"><p style="font-size:13px;font-weight:700;color:var(--text-primary);">Piloto automatico de productos</p><p style="font-size:11px;color:var(--text-faint);">Automatiza inventario y sincronizacion</p></div>
+      </div>
+      <svg style="width:16px;height:16px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+    </button>
+    <div id="prod-autopilot-content" style="display:none;padding:20px;">
+      <div id="prod-autopilot-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
+    </div>
+  </div>
+
+  <!-- Modal: Category Create/Edit -->
+  <div id="prod-modal-cat" class="prod-modal-overlay" style="display:none;">
+    <div class="prod-modal-box" style="max-width:480px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <h3 id="prod-cat-modal-title" style="font-size:17px;font-weight:900;color:var(--text-primary);">Nueva categoria</h3>
+        <button onclick="prodCloseCatModal()" class="prod-modal-close">&times;</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div><label class="prod-label">Nombre de la categoria *</label><input id="prod-cat-name" type="text" placeholder="Ej: Accesorios" class="prod-input"/></div>
+        <div><label class="prod-label">Descripcion</label><textarea id="prod-cat-desc" rows="3" placeholder="Describe esta categoria..." class="prod-input" style="resize:vertical;"></textarea></div>
+        <div><label class="prod-label">Icono (emoji)</label><input id="prod-cat-icon" type="text" placeholder="Ej: 👗" class="prod-input" maxlength="4"/></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button onclick="prodCloseCatModal()" class="prod-btn-secondary" style="flex:1;">Cancelar</button>
+        <button onclick="prodSaveCat()" class="prod-btn-primary" style="flex:1;">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Product Detail -->
+  <div id="prod-modal-detail" class="prod-modal-overlay" style="display:none;">
+    <div class="prod-modal-box" style="max-width:600px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <h3 id="prod-detail-title" style="font-size:17px;font-weight:900;color:var(--text-primary);">Producto</h3>
+        <button onclick="prodCloseDetail()" class="prod-modal-close">&times;</button>
+      </div>
+      <div id="prod-detail-body"></div>
+    </div>
+  </div>
+
+  <!-- Modal: Stock Adjust -->
+  <div id="prod-modal-stock" class="prod-modal-overlay" style="display:none;">
+    <div class="prod-modal-box" style="max-width:400px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <h3 style="font-size:17px;font-weight:900;color:var(--text-primary);">Ajustar stock</h3>
+        <button onclick="prodCloseStockModal()" class="prod-modal-close">&times;</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <p id="prod-stock-product-name" style="font-size:14px;font-weight:700;color:var(--text-primary);"></p>
+        <p style="font-size:12px;color:var(--text-muted);">Stock actual: <strong id="prod-stock-current">0</strong></p>
+        <div><label class="prod-label">Nuevo stock</label><input id="prod-stock-new" type="number" placeholder="0" class="prod-input"/></div>
+        <div><label class="prod-label">Motivo</label><select id="prod-stock-reason" class="prod-input" style="cursor:pointer;"><option value="restock">Reabastecimiento</option><option value="sale">Venta</option><option value="damage">Producto danado</option><option value="correction">Correccion</option><option value="return">Devolucion</option></select></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button onclick="prodCloseStockModal()" class="prod-btn-secondary" style="flex:1;">Cancelar</button>
+        <button onclick="prodConfirmStock()" class="prod-btn-primary" style="flex:1;">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</DashboardLayout>
+
+<style>
+  @keyframes fadeInUp { from { opacity:0;transform:translateY(10px); } to { opacity:1;transform:translateY(0); } }
+  .prod-stat-label { font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px; }
+  .prod-stat-val { font-size:28px;font-weight:900;color:var(--text-primary); }
+  .prod-tab { padding:10px 20px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;display:flex;align-items:center;gap:6px; }
+  .prod-tab.active { color:var(--accent);border-bottom-color:var(--accent); }
+  .prod-th { padding:14px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px; }
+  .prod-modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center; }
+  .prod-modal-box { background:var(--bg-sidebar);border:1px solid var(--border);border-radius:16px;padding:28px;width:90%;max-height:90vh;overflow-y:auto;position:relative; }
+  .prod-modal-close { width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px; }
+  .prod-label { font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:4px;display:block; }
+  .prod-input { width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;transition:border-color 0.2s; }
+  .prod-input:focus { border-color:var(--accent); }
+  .prod-btn-primary { padding:12px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s; }
+  .prod-btn-primary:hover { opacity:0.85; }
+  .prod-btn-secondary { padding:12px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-primary);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s; }
+  .prod-btn-secondary:hover { background:var(--nav-hover); }
+  .prod-help-banner { display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;background:var(--accent-bg);border:1px solid rgba(111,207,245,0.15);margin-bottom:16px; }
+  .prod-help-close { border:none;background:transparent;color:var(--text-faint);cursor:pointer;font-size:16px;padding:0 4px; }
+  .prod-empty-state { text-align:center;padding:48px 24px; }
+  .prod-dropdown-item { width:100%;display:flex;align-items:center;gap:8px;padding:8px 12px;border:none;background:transparent;color:var(--text-secondary);font-size:12px;font-weight:600;cursor:pointer;border-radius:6px;transition:all 0.15s;text-align:left; }
+  .prod-dropdown-item:hover { background:var(--nav-hover);color:var(--accent); }
+  .prod-tip { display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--input-bg);color:var(--text-faint);font-size:10px;font-weight:800;cursor:help;position:relative;flex-shrink:0; }
+  .prod-tip:hover::after { content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--bg-sidebar);border:1px solid var(--border);color:var(--text-secondary);padding:10px 14px;border-radius:10px;font-size:12px;font-weight:500;white-space:normal;width:260px;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.3);line-height:1.5;pointer-events:none; }
+  .prod-tip:hover::before { content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--border);z-index:101; }
+  .prod-collapse-header { width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border:none;background:transparent;cursor:pointer;transition:background 0.15s; }
+  .prod-collapse-header:hover { background:var(--nav-hover); }
+  .prod-toggle-wrap { position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0; }
+  .prod-toggle-wrap input { opacity:0;width:0;height:0; }
+  .prod-toggle-slider { position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:22px;transition:0.3s; }
+  .prod-toggle-slider::before { content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s; }
+  .prod-toggle-wrap input:checked + .prod-toggle-slider { background:var(--toggle-color, #22c55e); }
+  .prod-toggle-wrap input:checked + .prod-toggle-slider::before { transform:translateX(18px); }
+  .prod-card { border-radius:14px;overflow:hidden;border:1px solid var(--border);background:var(--bg-sidebar);transition:all 0.2s;cursor:pointer; }
+  .prod-card:hover { border-color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,0.15); }
+  .prod-badge { display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.3px; }
+</style>
+
+<script is:inline>
+// ═══════ DEMO DATA ═══════
+const demoProducts = [
+  { id:1, name:'Blusa bordada Oaxaca', price:450, compare:600, cost:180, sku:'BLU-OAX-001', barcode:'7501000000001', category:'Ropa', weight:0.3, stock:25, status:'activo', sizes:'CH, M, G, XG', colors:'Rojo, Azul, Blanco', desc:'Blusa artesanal bordada a mano por artesanas oaxaquenas con disenos florales tradicionales.', sold:48 },
+  { id:2, name:'Huaraches artesanales', price:890, compare:1100, cost:350, sku:'HUA-ART-002', barcode:'7501000000002', category:'Ropa', weight:0.8, stock:12, status:'activo', sizes:'24, 25, 26, 27, 28', colors:'Cafe, Negro', desc:'Huaraches tejidos a mano con piel genuina. Ideales para el uso diario con un toque artesanal.', sold:32 },
+  { id:3, name:'Aretes de plata', price:280, compare:350, cost:90, sku:'ARE-PLA-003', barcode:'7501000000003', category:'Accesorios', weight:0.05, stock:0, status:'agotado', sizes:'', colors:'Plata', desc:'Aretes de plata 925 con disenos inspirados en la cultura zapoteca.', sold:67 },
+  { id:4, name:'Rebozo de seda', price:1500, compare:2000, cost:600, sku:'REB-SED-004', barcode:'7501000000004', category:'Ropa', weight:0.2, stock:8, status:'activo', sizes:'Unico', colors:'Morado, Azul, Rojo', desc:'Rebozo de seda natural tejido en telar de cintura por artesanas de San Pedro Cajonos.', sold:15 },
+  { id:5, name:'Alebrije mediano', price:320, compare:0, cost:120, sku:'ALE-MED-005', barcode:'7501000000005', category:'Artesanias', weight:0.4, stock:3, status:'activo', sizes:'', colors:'Multicolor', desc:'Alebrije tallado a mano en madera de copal, pintado con anilinas naturales.', sold:28 },
+  { id:6, name:'Collar ambar Chiapas', price:750, compare:950, cost:280, sku:'COL-AMB-006', barcode:'7501000000006', category:'Accesorios', weight:0.08, stock:0, status:'agotado', sizes:'', colors:'Ambar', desc:'Collar de ambar autentico de Chiapas, cada pieza es unica por sus inclusiones naturales.', sold:22 },
+  { id:7, name:'Bolsa tejida', price:680, compare:850, cost:250, sku:'BOL-TEJ-007', barcode:'7501000000007', category:'Accesorios', weight:0.5, stock:15, status:'activo', sizes:'', colors:'Beige, Negro, Multicolor', desc:'Bolsa tejida a mano con fibras naturales de palma por artesanas guerrerenses.', sold:38 },
+  { id:8, name:'Sombrero de palma', price:250, compare:0, cost:80, sku:'SOM-PAL-008', barcode:'7501000000008', category:'Accesorios', weight:0.3, stock:2, status:'borrador', sizes:'M, G', colors:'Natural', desc:'Sombrero tradicional mexicano tejido con palma natural. Ideal para el sol.', sold:5 },
+];
+
+const demoCategories = [
+  { id:1, name:'Ropa', desc:'Prendas de vestir artesanales', icon:'👗', count:3 },
+  { id:2, name:'Accesorios', desc:'Joyeria, bolsas y complementos', icon:'💍', count:4 },
+  { id:3, name:'Artesanias', desc:'Piezas artesanales decorativas', icon:'🎨', count:1 },
+  { id:4, name:'Bebidas', desc:'Mezcal, tequila y bebidas artesanales', icon:'🥃', count:0 },
+  { id:5, name:'Hogar', desc:'Decoracion y accesorios para el hogar', icon:'🏠', count:0 },
+];
+
+const demoAdjustments = [
+  { id:1, product:'Blusa bordada Oaxaca', from:20, to:25, reason:'Reabastecimiento', date:'2026-03-30', user:'Admin' },
+  { id:2, product:'Aretes de plata', from:5, to:0, reason:'Venta', date:'2026-03-29', user:'Sistema' },
+  { id:3, product:'Alebrije mediano', from:8, to:3, reason:'Venta', date:'2026-03-28', user:'Sistema' },
+  { id:4, product:'Collar ambar Chiapas', from:3, to:0, reason:'Venta', date:'2026-03-27', user:'Sistema' },
+  { id:5, product:'Sombrero de palma', from:5, to:2, reason:'Producto danado', date:'2026-03-26', user:'Admin' },
+];
+
+const prodAutoFlows = [
+  { id:'lowstock', name:'Alertar bajo stock', desc:'Notifica por email cuando un producto tenga menos de 5 unidades', icon:'📦', color:'#f97316', active:true },
+  { id:'hideout', name:'Ocultar agotados automaticamente', desc:'Esconde de la tienda los productos sin stock', icon:'👁', color:'#ef4444', active:true },
+  { id:'restock', name:'Restock automatico', desc:'Genera orden de compra cuando el stock baje del minimo', icon:'🔄', color:'#22c55e', active:false },
+  { id:'shopify', name:'Sincronizar con Shopify', desc:'Mantiene stock y precios sincronizados con tu tienda Shopify', icon:'🔗', color:'#8b5cf6', active:false },
+];
+
+let prodEditCatId = null;
+let prodStockEditId = null;
+
+// ═══════ SMART RECOMMENDATIONS ═══════
+function prodLoadRecs() {
+  const recs = [];
+  const outOfStock = demoProducts.filter(p => p.stock === 0).length;
+  const lowStock = demoProducts.filter(p => p.stock > 0 && p.stock < 5).length;
+  if (outOfStock > 0) recs.push({ type:'warning', text:'Tienes ' + outOfStock + ' producto(s) agotados. Tus clientes no pueden comprarlos.', action:'Ver agotados', fn:'prodFilterByStatus("agotado")' });
+  if (lowStock > 0) recs.push({ type:'alert', text:'Hay ' + lowStock + ' producto(s) con bajo stock que se agotaran pronto.', action:'Ver bajo stock', fn:'switchProdTab("inventory")' });
+  const noCat = demoProducts.filter(p => !p.category).length;
+  if (noCat > 0) recs.push({ type:'info', text:noCat + ' producto(s) sin categoria asignada.', action:'Organizar', fn:'switchProdTab("categories")' });
+
+  const wrap = document.getElementById('prod-smart-recs');
+  if (!wrap) return;
+  wrap.innerHTML = recs.map(r => {
+    const colors = { warning:'#ef4444', alert:'#f97316', info:'var(--accent)' };
+    return '<div class="stat-card animate-in" style="padding:14px 18px;display:flex;align-items:center;gap:12px;border-left:3px solid '+colors[r.type]+';">' +
+      '<svg style="width:16px;height:16px;color:'+colors[r.type]+';flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>' +
+      '<p style="flex:1;font-size:12px;color:var(--text-secondary);">'+r.text+'</p>' +
+      '<button onclick="'+r.fn+'" style="padding:6px 14px;border-radius:8px;border:1px solid '+colors[r.type]+';background:transparent;color:'+colors[r.type]+';font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">'+r.action+'</button>' +
+      '</div>';
+  }).join('');
+}
+
+// ═══════ STATS ═══════
+function prodUpdateStats() {
+  document.getElementById('prod-stat-total').textContent = demoProducts.length;
+  const invValue = demoProducts.reduce((s,p) => s + p.cost * p.stock, 0);
+  document.getElementById('prod-stat-value').textContent = '$' + invValue.toLocaleString('es-MX');
+  document.getElementById('prod-stat-outofstock').textContent = demoProducts.filter(p => p.stock === 0).length;
+  document.getElementById('prod-stat-lowstock').textContent = demoProducts.filter(p => p.stock > 0 && p.stock < 5).length;
+  document.getElementById('prod-stat-cats').textContent = demoCategories.length;
+  const margins = demoProducts.filter(p => p.cost > 0).map(p => ((p.price - p.cost) / p.price) * 100);
+  const avgMargin = margins.length > 0 ? (margins.reduce((s,m) => s + m, 0) / margins.length) : 0;
+  document.getElementById('prod-stat-margin').textContent = avgMargin.toFixed(1) + '%';
+}
+
+// ═══════ TABS ═══════
+window.switchProdTab = function(tab) {
+  var tabs = ['catalog','add','categories','inventory','analytics'];
+  tabs.forEach(function(t) {
+    var panel = document.getElementById('prod-panel-' + t);
+    var btn = document.getElementById('prod-tab-' + t);
+    if (panel) panel.style.display = t === tab ? '' : 'none';
+    if (btn) { btn.classList.toggle('active', t === tab); }
+  });
+  if (tab === 'catalog') prodRenderCatalog();
+  if (tab === 'categories') prodRenderCategories();
+  if (tab === 'inventory') prodRenderInventory();
+  if (tab === 'analytics') prodRenderAnalytics();
+};
+
+// ═══════ CATALOG ═══════
+function prodRenderCatalog() {
+  var grid = document.getElementById('prod-grid');
+  var emptyEl = document.getElementById('prod-empty-catalog');
+  var toolbar = document.getElementById('prod-toolbar');
+  if (!grid) return;
+
+  var search = (document.getElementById('prod-search').value || '').toLowerCase();
+  var catFilter = document.getElementById('prod-filter-cat').value;
+  var statusFilter = document.getElementById('prod-filter-status').value;
+
+  var filtered = demoProducts.filter(function(p) {
+    var matchSearch = !search || p.name.toLowerCase().indexOf(search) !== -1 || p.sku.toLowerCase().indexOf(search) !== -1;
+    var matchCat = !catFilter || p.category === catFilter;
+    var matchStatus = !statusFilter || p.status === statusFilter;
+    return matchSearch && matchCat && matchStatus;
+  });
+
+  if (demoProducts.length === 0) {
+    emptyEl.style.display = '';
+    toolbar.style.display = 'none';
+    grid.innerHTML = '';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  toolbar.style.display = '';
+
+  var statusColors = { activo:{ c:'#22c55e', b:'rgba(34,197,94,0.1)' }, agotado:{ c:'#ef4444', b:'rgba(239,68,68,0.1)' }, borrador:{ c:'#f97316', b:'rgba(249,115,22,0.1)' } };
+
+  grid.innerHTML = filtered.map(function(p) {
+    var sc = statusColors[p.status] || statusColors.activo;
+    var compareHtml = p.compare > 0 ? '<span style="text-decoration:line-through;color:var(--text-faint);font-size:11px;font-weight:400;">$' + p.compare.toLocaleString('es-MX') + '</span>' : '';
+    var stockColor = p.stock === 0 ? '#ef4444' : p.stock < 5 ? '#f97316' : '#22c55e';
+    return '<div class="prod-card" onclick="prodShowDetail('+p.id+')">' +
+      '<div style="height:160px;background:linear-gradient(135deg,var(--input-bg),var(--nav-hover));display:flex;align-items:center;justify-content:center;">' +
+        '<svg style="width:48px;height:48px;color:var(--text-faint);opacity:0.4;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>' +
+      '</div>' +
+      '<div style="padding:14px 16px;">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
+          '<span class="prod-badge" style="background:'+sc.b+';color:'+sc.c+';">'+p.status+'</span>' +
+          '<span style="font-size:10px;color:var(--text-faint);">'+p.category+'</span>' +
+        '</div>' +
+        '<h4 style="font-size:13px;font-weight:800;color:var(--text-primary);margin-bottom:6px;line-height:1.3;">'+p.name+'</h4>' +
+        '<div style="display:flex;align-items:baseline;gap:6px;margin-bottom:8px;">' +
+          '<span style="font-size:18px;font-weight:900;color:var(--text-primary);">$'+p.price.toLocaleString('es-MX')+'</span>' +
+          compareHtml +
+        '</div>' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;">' +
+          '<span style="font-size:11px;font-weight:700;color:'+stockColor+';">Stock: '+p.stock+'</span>' +
+          '<span style="font-size:10px;color:var(--text-faint);">'+p.sku+'</span>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-faint);font-size:13px;">No se encontraron productos con esos filtros.</div>';
+  }
+}
+
+window.prodFilterCatalog = function() { prodRenderCatalog(); };
+
+window.prodFilterByStatus = function(status) {
+  switchProdTab('catalog');
+  document.getElementById('prod-filter-status').value = status;
+  prodRenderCatalog();
+};
+
+// ═══════ PRODUCT DETAIL MODAL ═══════
+window.prodShowDetail = function(id) {
+  var p = demoProducts.find(function(x) { return x.id === id; });
+  if (!p) return;
+  document.getElementById('prod-detail-title').textContent = p.name;
+  var margin = p.cost > 0 ? (((p.price - p.cost) / p.price) * 100).toFixed(1) : '--';
+  var statusColors = { activo:{ c:'#22c55e', b:'rgba(34,197,94,0.1)' }, agotado:{ c:'#ef4444', b:'rgba(239,68,68,0.1)' }, borrador:{ c:'#f97316', b:'rgba(249,115,22,0.1)' } };
+  var sc = statusColors[p.status] || statusColors.activo;
+  document.getElementById('prod-detail-body').innerHTML =
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">' +
+      '<div>' +
+        '<div style="height:180px;background:linear-gradient(135deg,var(--input-bg),var(--nav-hover));border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;">' +
+          '<svg style="width:48px;height:48px;color:var(--text-faint);opacity:0.4;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>' +
+        '</div>' +
+        '<p style="font-size:12px;color:var(--text-secondary);line-height:1.5;">'+p.desc+'</p>' +
+      '</div>' +
+      '<div style="display:flex;flex-direction:column;gap:10px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:11px;color:var(--text-faint);">Estado</span><span class="prod-badge" style="background:'+sc.b+';color:'+sc.c+';">'+p.status+'</span></div>' +
+        '<div style="display:flex;justify-content:space-between;"><span style="font-size:11px;color:var(--text-faint);">Precio</span><span style="font-size:14px;font-weight:800;color:var(--text-primary);">$'+p.price.toLocaleString('es-MX')+'</span></div>' +
+        (p.compare > 0 ? '<div style="display:flex;justify-content:space-between;"><span style="font-size:11px;color:var(--text-faint);">Precio tachado</span><span style="font-size:13px;text-decoration:line-through;color:var(--text-faint);">$'+p.compare.toLocaleString('es-MX')+'</span></div>' : '') +
+        '<div style="display:flex;justify-content:space-between;"><span style="font-size:11px;color:var(--text-faint);">Costo</span><span style="font-size:13px;color:var(--text-secondary);">$'+p.cost.toLocaleString('es-MX')+'</span></div>' +
+        '<div style="display:flex;justify-content:space-between;"><span style="font-size:11px;color:var(--text-faint);">Margen</span><span style="font-size:13px;font-weight:700;color:#8b5cf6;">'+margin+'%</span></div>' +
+        '<div style="display:flex;justify-content:space-between;"><span style="font-size:11px;color:var(--text-faint);">Categoria</span><span style="font-size:13px;color:var(--text-secondary);">'+p.category+'</span></div>' +
+        '<div style="display:flex;justify-content:space-between;"><span style="font-size:11px;color:var(--text-faint);">SKU</span><span style="font-size:13px;color:var(--text-secondary);">'+p.sku+'</span></div>' +
+        '<div style="display:flex;justify-content:space-between;"><span style="font-size:11px;color:var(--text-faint);">Stock</span><span style="font-size:13px;font-weight:700;color:'+(p.stock===0?'#ef4444':p.stock<5?'#f97316':'#22c55e')+';">'+p.stock+' unidades</span></div>' +
+        '<div style="display:flex;justify-content:space-between;"><span style="font-size:11px;color:var(--text-faint);">Vendidos</span><span style="font-size:13px;font-weight:700;color:var(--text-primary);">'+p.sold+'</span></div>' +
+        (p.sizes ? '<div style="display:flex;justify-content:space-between;"><span style="font-size:11px;color:var(--text-faint);">Tallas</span><span style="font-size:12px;color:var(--text-secondary);">'+p.sizes+'</span></div>' : '') +
+        (p.colors ? '<div style="display:flex;justify-content:space-between;"><span style="font-size:11px;color:var(--text-faint);">Colores</span><span style="font-size:12px;color:var(--text-secondary);">'+p.colors+'</span></div>' : '') +
+        '<div style="display:flex;justify-content:space-between;"><span style="font-size:11px;color:var(--text-faint);">Peso</span><span style="font-size:13px;color:var(--text-secondary);">'+p.weight+' kg</span></div>' +
+      '</div>' +
+    '</div>' +
+    '<div style="display:flex;gap:10px;margin-top:20px;">' +
+      '<button onclick="showToast(\'Producto editado\');prodCloseDetail()" class="prod-btn-primary" style="flex:1;">Editar producto</button>' +
+      '<button onclick="showToast(\'Producto duplicado\');prodCloseDetail()" class="prod-btn-secondary" style="flex:1;">Duplicar</button>' +
+    '</div>';
+  document.getElementById('prod-modal-detail').style.display = 'flex';
+};
+
+window.prodCloseDetail = function() {
+  document.getElementById('prod-modal-detail').style.display = 'none';
+};
+
+// ═══════ ADD PRODUCT ═══════
+window.prodCalcMargin = function() {
+  var price = parseFloat(document.getElementById('prod-add-price').value) || 0;
+  var cost = parseFloat(document.getElementById('prod-add-cost').value) || 0;
+  var el = document.getElementById('prod-add-margin');
+  if (price > 0 && cost > 0) {
+    var margin = ((price - cost) / price * 100).toFixed(1);
+    el.textContent = margin + '%';
+    el.style.color = parseFloat(margin) >= 30 ? '#22c55e' : parseFloat(margin) >= 15 ? '#f97316' : '#ef4444';
+  } else {
+    el.textContent = '--%';
+    el.style.color = 'var(--accent)';
+  }
+};
+
+window.prodUpdateSeoCount = function(type) {
+  if (type === 'title') {
+    var v = document.getElementById('prod-add-metatitle').value;
+    document.getElementById('prod-seo-title-count').textContent = v.length + '/70';
+  } else {
+    var v2 = document.getElementById('prod-add-metadesc').value;
+    document.getElementById('prod-seo-desc-count').textContent = v2.length + '/160';
+  }
+};
+
+window.prodSaveProduct = function() {
+  var name = document.getElementById('prod-add-name').value.trim();
+  var price = parseFloat(document.getElementById('prod-add-price').value);
+  var cat = document.getElementById('prod-add-cat').value;
+  var stock = parseInt(document.getElementById('prod-add-stock').value);
+  if (!name) { showToast('Escribe el nombre del producto'); return; }
+  if (!price || price <= 0) { showToast('El precio debe ser mayor a 0'); return; }
+  if (!cat) { showToast('Selecciona una categoria'); return; }
+  if (isNaN(stock) || stock < 0) { showToast('Indica el stock disponible'); return; }
+
+  var newProd = {
+    id: demoProducts.length + 1,
+    name: name,
+    price: price,
+    compare: parseFloat(document.getElementById('prod-add-compare').value) || 0,
+    cost: parseFloat(document.getElementById('prod-add-cost').value) || 0,
+    sku: document.getElementById('prod-add-sku').value || 'SKU-' + (demoProducts.length + 1),
+    barcode: document.getElementById('prod-add-barcode').value || '',
+    category: cat,
+    weight: parseFloat(document.getElementById('prod-add-weight').value) || 0,
+    stock: stock,
+    status: stock === 0 ? 'agotado' : 'activo',
+    sizes: document.getElementById('prod-add-sizes').value || '',
+    colors: document.getElementById('prod-add-colors').value || '',
+    desc: document.getElementById('prod-add-desc').value || '',
+    sold: 0
+  };
+  demoProducts.push(newProd);
+  showToast('Producto "' + name + '" guardado correctamente');
+  // Clear form
+  ['prod-add-name','prod-add-desc','prod-add-price','prod-add-compare','prod-add-cost','prod-add-sku','prod-add-barcode','prod-add-weight','prod-add-stock','prod-add-sizes','prod-add-colors','prod-add-metatitle','prod-add-metadesc'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('prod-add-cat').value = '';
+  document.getElementById('prod-add-margin').textContent = '--%';
+  document.getElementById('prod-seo-title-count').textContent = '0/70';
+  document.getElementById('prod-seo-desc-count').textContent = '0/160';
+  prodUpdateStats();
+  prodLoadRecs();
+  switchProdTab('catalog');
+};
+
+// ═══════ CATEGORIES ═══════
+function prodRenderCategories() {
+  var grid = document.getElementById('prod-categories-grid');
+  if (!grid) return;
+  grid.innerHTML = demoCategories.map(function(c) {
+    var prodCount = demoProducts.filter(function(p) { return p.category === c.name; }).length;
+    return '<div class="stat-card animate-in" style="padding:20px;">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">' +
+        '<div style="display:flex;align-items:center;gap:10px;">' +
+          '<span style="font-size:28px;">'+c.icon+'</span>' +
+          '<div><h4 style="font-size:14px;font-weight:800;color:var(--text-primary);">'+c.name+'</h4><p style="font-size:11px;color:var(--text-faint);">'+c.desc+'</p></div>' +
+        '</div>' +
+        '<span style="font-size:22px;font-weight:900;color:var(--accent);">'+prodCount+'</span>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px;">' +
+        '<button onclick="prodEditCat('+c.id+')" class="prod-btn-secondary" style="flex:1;padding:8px;font-size:11px;">Editar</button>' +
+        '<button onclick="prodDeleteCat('+c.id+')" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(239,68,68,0.3);background:transparent;color:#ef4444;font-size:11px;font-weight:700;cursor:pointer;">Eliminar</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+window.prodOpenCatModal = function(editId) {
+  prodEditCatId = editId || null;
+  document.getElementById('prod-cat-modal-title').textContent = editId ? 'Editar categoria' : 'Nueva categoria';
+  if (editId) {
+    var cat = demoCategories.find(function(c) { return c.id === editId; });
+    if (cat) {
+      document.getElementById('prod-cat-name').value = cat.name;
+      document.getElementById('prod-cat-desc').value = cat.desc;
+      document.getElementById('prod-cat-icon').value = cat.icon;
+    }
+  } else {
+    document.getElementById('prod-cat-name').value = '';
+    document.getElementById('prod-cat-desc').value = '';
+    document.getElementById('prod-cat-icon').value = '';
+  }
+  document.getElementById('prod-modal-cat').style.display = 'flex';
+};
+
+window.prodCloseCatModal = function() {
+  document.getElementById('prod-modal-cat').style.display = 'none';
+  prodEditCatId = null;
+};
+
+window.prodSaveCat = function() {
+  var name = document.getElementById('prod-cat-name').value.trim();
+  if (!name) { showToast('Escribe el nombre de la categoria'); return; }
+  if (prodEditCatId) {
+    var cat = demoCategories.find(function(c) { return c.id === prodEditCatId; });
+    if (cat) {
+      cat.name = name;
+      cat.desc = document.getElementById('prod-cat-desc').value;
+      cat.icon = document.getElementById('prod-cat-icon').value || '📁';
+    }
+    showToast('Categoria actualizada');
+  } else {
+    demoCategories.push({
+      id: demoCategories.length + 1,
+      name: name,
+      desc: document.getElementById('prod-cat-desc').value,
+      icon: document.getElementById('prod-cat-icon').value || '📁',
+      count: 0
+    });
+    showToast('Categoria "' + name + '" creada');
+  }
+  prodCloseCatModal();
+  prodRenderCategories();
+  prodUpdateStats();
+};
+
+window.prodEditCat = function(id) { prodOpenCatModal(id); };
+
+window.prodDeleteCat = function(id) {
+  var cat = demoCategories.find(function(c) { return c.id === id; });
+  if (!cat) return;
+  var prodCount = demoProducts.filter(function(p) { return p.category === cat.name; }).length;
+  if (prodCount > 0) {
+    showToast('No puedes eliminar "' + cat.name + '" porque tiene ' + prodCount + ' productos');
+    return;
+  }
+  var idx = demoCategories.indexOf(cat);
+  if (idx !== -1) demoCategories.splice(idx, 1);
+  showToast('Categoria "' + cat.name + '" eliminada');
+  prodRenderCategories();
+  prodUpdateStats();
+};
+
+// ═══════ INVENTORY ═══════
+function prodRenderInventory() {
+  var tbody = document.getElementById('prod-inventory-tbody');
+  var alertsWrap = document.getElementById('prod-low-stock-alerts');
+  if (!tbody) return;
+
+  // Low stock alerts
+  var lowItems = demoProducts.filter(function(p) { return p.stock > 0 && p.stock < 5; });
+  var outItems = demoProducts.filter(function(p) { return p.stock === 0; });
+  var alertHtml = '';
+  if (outItems.length > 0) {
+    alertHtml += '<div class="stat-card animate-in" style="padding:14px 18px;display:flex;align-items:center;gap:12px;border-left:3px solid #ef4444;margin-bottom:10px;">' +
+      '<svg style="width:16px;height:16px;color:#ef4444;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>' +
+      '<p style="flex:1;font-size:12px;color:var(--text-secondary);"><strong style="color:#ef4444;">'+outItems.length+' producto(s) agotados:</strong> '+outItems.map(function(p){return p.name;}).join(', ')+'</p></div>';
+  }
+  if (lowItems.length > 0) {
+    alertHtml += '<div class="stat-card animate-in" style="padding:14px 18px;display:flex;align-items:center;gap:12px;border-left:3px solid #f97316;margin-bottom:10px;">' +
+      '<svg style="width:16px;height:16px;color:#f97316;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>' +
+      '<p style="flex:1;font-size:12px;color:var(--text-secondary);"><strong style="color:#f97316;">'+lowItems.length+' producto(s) con bajo stock:</strong> '+lowItems.map(function(p){return p.name+' ('+p.stock+')';}).join(', ')+'</p></div>';
+  }
+  if (alertsWrap) alertsWrap.innerHTML = alertHtml;
+
+  // Table
+  tbody.innerHTML = demoProducts.map(function(p) {
+    var stockColor = p.stock === 0 ? '#ef4444' : p.stock < 5 ? '#f97316' : 'var(--text-primary)';
+    var statusLabel = p.stock === 0 ? 'Agotado' : p.stock < 5 ? 'Bajo stock' : 'Disponible';
+    var statusBg = p.stock === 0 ? 'rgba(239,68,68,0.1)' : p.stock < 5 ? 'rgba(249,115,22,0.1)' : 'rgba(34,197,94,0.1)';
+    var statusC = p.stock === 0 ? '#ef4444' : p.stock < 5 ? '#f97316' : '#22c55e';
+    return '<tr style="border-bottom:1px solid var(--border);">' +
+      '<td style="padding:12px 16px;font-weight:700;color:var(--text-primary);">'+p.name+'</td>' +
+      '<td style="padding:12px 16px;color:var(--text-muted);font-size:12px;">'+p.sku+'</td>' +
+      '<td style="padding:12px 16px;text-align:right;font-weight:800;color:'+stockColor+';">'+p.stock+'</td>' +
+      '<td style="padding:12px 16px;"><span class="prod-badge" style="background:'+statusBg+';color:'+statusC+';">'+statusLabel+'</span></td>' +
+      '<td style="padding:12px 16px;text-align:right;color:var(--text-secondary);">$'+p.cost.toLocaleString('es-MX')+'</td>' +
+      '<td style="padding:12px 16px;text-align:right;font-weight:700;color:var(--text-primary);">$'+(p.cost * p.stock).toLocaleString('es-MX')+'</td>' +
+      '<td style="padding:12px 16px;text-align:center;"><button onclick="prodOpenStockModal('+p.id+')" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor=\'var(--accent)\';this.style.color=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--text-muted)\'">Ajustar</button></td>' +
+    '</tr>';
+  }).join('');
+
+  // Adjustment log
+  var logWrap = document.getElementById('prod-adjustment-log');
+  if (logWrap) {
+    logWrap.innerHTML = demoAdjustments.map(function(a) {
+      var diff = a.to - a.from;
+      var diffStr = diff > 0 ? '+'+diff : ''+diff;
+      var diffColor = diff > 0 ? '#22c55e' : '#ef4444';
+      return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">' +
+        '<div style="width:8px;height:8px;border-radius:50%;background:'+diffColor+';flex-shrink:0;"></div>' +
+        '<div style="flex:1;"><p style="font-size:12px;font-weight:700;color:var(--text-primary);">'+a.product+'</p><p style="font-size:11px;color:var(--text-faint);">'+a.reason+' por '+a.user+' - '+a.date+'</p></div>' +
+        '<span style="font-size:13px;font-weight:800;color:'+diffColor+';">'+diffStr+'</span>' +
+        '<span style="font-size:12px;color:var(--text-muted);">'+a.from+' &rarr; '+a.to+'</span>' +
+      '</div>';
+    }).join('');
+    if (demoAdjustments.length === 0) {
+      logWrap.innerHTML = '<p style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">No hay ajustes registrados.</p>';
+    }
+  }
+}
+
+window.prodOpenStockModal = function(id) {
+  var p = demoProducts.find(function(x) { return x.id === id; });
+  if (!p) return;
+  prodStockEditId = id;
+  document.getElementById('prod-stock-product-name').textContent = p.name;
+  document.getElementById('prod-stock-current').textContent = p.stock;
+  document.getElementById('prod-stock-new').value = '';
+  document.getElementById('prod-stock-reason').value = 'restock';
+  document.getElementById('prod-modal-stock').style.display = 'flex';
+};
+
+window.prodCloseStockModal = function() {
+  document.getElementById('prod-modal-stock').style.display = 'none';
+  prodStockEditId = null;
+};
+
+window.prodConfirmStock = function() {
+  var newStock = parseInt(document.getElementById('prod-stock-new').value);
+  if (isNaN(newStock) || newStock < 0) { showToast('Ingresa una cantidad valida'); return; }
+  var p = demoProducts.find(function(x) { return x.id === prodStockEditId; });
+  if (!p) return;
+  var reason = document.getElementById('prod-stock-reason').selectedOptions[0].textContent;
+  demoAdjustments.unshift({ id:demoAdjustments.length+1, product:p.name, from:p.stock, to:newStock, reason:reason, date:new Date().toISOString().slice(0,10), user:'Admin' });
+  p.stock = newStock;
+  p.status = newStock === 0 ? 'agotado' : 'activo';
+  showToast('Stock de "'+p.name+'" actualizado a '+newStock);
+  prodCloseStockModal();
+  prodRenderInventory();
+  prodUpdateStats();
+  prodLoadRecs();
+};
+
+window.prodBulkUpdate = function() {
+  showToast('Actualizacion en lote: todos los productos +5 unidades (demo)');
+  demoProducts.forEach(function(p) {
+    var old = p.stock;
+    p.stock += 5;
+    p.status = p.stock === 0 ? 'agotado' : 'activo';
+    demoAdjustments.unshift({ id:demoAdjustments.length+1, product:p.name, from:old, to:p.stock, reason:'Reabastecimiento en lote', date:new Date().toISOString().slice(0,10), user:'Admin' });
+  });
+  prodRenderInventory();
+  prodUpdateStats();
+  prodLoadRecs();
+};
+
+// ═══════ ANALYTICS ═══════
+function prodRenderAnalytics() {
+  // Top selling products
+  var topWrap = document.getElementById('prod-chart-topselling');
+  if (topWrap) {
+    var sorted = demoProducts.slice().sort(function(a,b) { return b.sold - a.sold; }).slice(0,5);
+    var maxSold = sorted[0] ? sorted[0].sold : 1;
+    topWrap.innerHTML = sorted.map(function(p) {
+      var pct = (p.sold / maxSold * 100).toFixed(0);
+      return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">' +
+        '<span style="font-size:12px;font-weight:700;color:var(--text-primary);min-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+p.name+'</span>' +
+        '<div style="flex:1;height:20px;background:var(--input-bg);border-radius:6px;overflow:hidden;"><div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,var(--accent),#8b5cf6);border-radius:6px;transition:width 0.5s;"></div></div>' +
+        '<span style="font-size:12px;font-weight:800;color:var(--text-primary);min-width:30px;text-align:right;">'+p.sold+'</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  // Revenue by category
+  var catWrap = document.getElementById('prod-chart-catrevenue');
+  if (catWrap) {
+    var catRevenue = {};
+    demoProducts.forEach(function(p) {
+      if (!catRevenue[p.category]) catRevenue[p.category] = 0;
+      catRevenue[p.category] += p.price * p.sold;
+    });
+    var cats = Object.keys(catRevenue).sort(function(a,b) { return catRevenue[b] - catRevenue[a]; });
+    var maxRev = cats.length > 0 ? catRevenue[cats[0]] : 1;
+    var catColors = { Ropa:'#6fcff5', Accesorios:'#8b5cf6', Artesanias:'#f97316', Bebidas:'#22c55e', Hogar:'#eab308' };
+    catWrap.innerHTML = cats.map(function(c) {
+      var pct = (catRevenue[c] / maxRev * 100).toFixed(0);
+      var col = catColors[c] || 'var(--accent)';
+      return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">' +
+        '<span style="font-size:12px;font-weight:700;color:var(--text-primary);min-width:100px;">'+c+'</span>' +
+        '<div style="flex:1;height:20px;background:var(--input-bg);border-radius:6px;overflow:hidden;"><div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:6px;transition:width 0.5s;"></div></div>' +
+        '<span style="font-size:11px;font-weight:800;color:var(--text-primary);min-width:70px;text-align:right;">$'+(catRevenue[c]).toLocaleString('es-MX')+'</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  // Stock value by category
+  var stockValWrap = document.getElementById('prod-chart-stockvalue');
+  if (stockValWrap) {
+    var catStockVal = {};
+    demoProducts.forEach(function(p) {
+      if (!catStockVal[p.category]) catStockVal[p.category] = 0;
+      catStockVal[p.category] += p.cost * p.stock;
+    });
+    var svCats = Object.keys(catStockVal).sort(function(a,b) { return catStockVal[b] - catStockVal[a]; });
+    var maxSV = svCats.length > 0 ? catStockVal[svCats[0]] : 1;
+    var catColors2 = { Ropa:'#6fcff5', Accesorios:'#8b5cf6', Artesanias:'#f97316', Bebidas:'#22c55e', Hogar:'#eab308' };
+    stockValWrap.innerHTML = svCats.map(function(c) {
+      var pct = maxSV > 0 ? (catStockVal[c] / maxSV * 100).toFixed(0) : 0;
+      var col = catColors2[c] || 'var(--accent)';
+      return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">' +
+        '<span style="font-size:12px;font-weight:700;color:var(--text-primary);min-width:100px;">'+c+'</span>' +
+        '<div style="flex:1;height:20px;background:var(--input-bg);border-radius:6px;overflow:hidden;"><div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:6px;transition:width 0.5s;"></div></div>' +
+        '<span style="font-size:11px;font-weight:800;color:var(--text-primary);min-width:70px;text-align:right;">$'+(catStockVal[c]).toLocaleString('es-MX')+'</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  // Products needing restock
+  var restockWrap = document.getElementById('prod-chart-restock');
+  if (restockWrap) {
+    var needRestock = demoProducts.filter(function(p) { return p.stock < 5; }).sort(function(a,b) { return a.stock - b.stock; });
+    if (needRestock.length === 0) {
+      restockWrap.innerHTML = '<p style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">Todos los productos tienen stock suficiente.</p>';
+    } else {
+      restockWrap.innerHTML = needRestock.map(function(p) {
+        var urgency = p.stock === 0 ? '#ef4444' : '#f97316';
+        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">' +
+          '<div style="width:8px;height:8px;border-radius:50%;background:'+urgency+';flex-shrink:0;"></div>' +
+          '<span style="flex:1;font-size:12px;font-weight:700;color:var(--text-primary);">'+p.name+'</span>' +
+          '<span style="font-size:12px;font-weight:800;color:'+urgency+';">'+p.stock+' uds</span>' +
+          '<span style="font-size:10px;color:var(--text-faint);">'+p.category+'</span>' +
+        '</div>';
+      }).join('');
+    }
+  }
+}
+
+// ═══════ AUTOPILOT ═══════
+function prodRenderAutopilot() {
+  var wrap = document.getElementById('prod-autopilot-list');
+  if (!wrap) return;
+  wrap.innerHTML = prodAutoFlows.map(function(f) {
+    return '<div class="stat-card" style="padding:16px;display:flex;align-items:center;gap:12px;">' +
+      '<span style="font-size:24px;">'+f.icon+'</span>' +
+      '<div style="flex:1;">' +
+        '<p style="font-size:13px;font-weight:700;color:var(--text-primary);">'+f.name+'</p>' +
+        '<p style="font-size:11px;color:var(--text-faint);">'+f.desc+'</p>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:8px;">' +
+        '<label class="prod-toggle-wrap"><input type="checkbox" '+(f.active?'checked':'')+' onchange="prodToggleAuto(\''+f.id+'\',this.checked)"/><span class="prod-toggle-slider" style="--toggle-color:'+f.color+';"></span></label>' +
+        '<span style="font-size:11px;font-weight:700;color:'+(f.active?'#22c55e':'var(--text-faint)')+';">'+(f.active?'Activo':'Inactivo')+'</span>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+window.prodToggleAuto = function(id, val) {
+  var f = prodAutoFlows.find(function(x) { return x.id === id; });
+  if (f) f.active = val;
+  showToast(f.name + (val ? ' activado' : ' desactivado'));
+  prodRenderAutopilot();
+};
+
+window.prodToggleSection = function(id) {
+  var el = document.getElementById(id);
+  if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
+};
+
+// ═══════ HELP BANNERS ═══════
+window.prodDismissHelp = function(tab) {
+  var el = document.getElementById('prod-help-' + tab);
+  if (el) {
+    el.style.transition = 'opacity 0.3s, transform 0.3s';
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(-10px)';
+    setTimeout(function() { el.style.display = 'none'; }, 300);
+  }
+  try { localStorage.setItem('prod_help_' + tab, 'dismissed'); } catch(e) {}
+};
+
+function prodRestoreHelp() {
+  ['catalog','add','categories','inventory','analytics'].forEach(function(tab) {
+    try {
+      if (localStorage.getItem('prod_help_' + tab) === 'dismissed') {
+        var el = document.getElementById('prod-help-' + tab);
+        if (el) el.style.display = 'none';
+      }
+    } catch(e) {}
+  });
+}
+
+// ═══════ MORE MENU ═══════
+window.prodToggleMore = function() {
+  var m = document.getElementById('prod-more-menu');
+  if (m) m.style.display = m.style.display === 'none' ? '' : 'none';
+};
+document.addEventListener('click', function(e) {
+  var wrap = document.getElementById('prod-more-wrap');
+  var menu = document.getElementById('prod-more-menu');
+  if (wrap && menu && !wrap.contains(e.target)) menu.style.display = 'none';
+});
+
+// ═══════ CUSTOM FIELDS ═══════
+var prodCustomFields = [];
+
+function prodAddCustomField() {
+  var name = prompt('Nombre del campo:', '');
+  if (!name) return;
+  prodCustomFields.push({ name: name, type: 'text', value: '' });
+  prodRenderCustomFields();
+}
+
+function prodRemoveCustomField(idx) {
+  prodCustomFields.splice(idx, 1);
+  prodRenderCustomFields();
+}
+
+function prodRenderCustomFields() {
+  var el = document.getElementById('prod-custom-fields');
+  if (!prodCustomFields.length) {
+    el.innerHTML = '<p style="font-size:11px;color:var(--text-faintest);text-align:center;padding:12px;">Sin campos personalizados.</p>';
+    return;
+  }
+  el.innerHTML = prodCustomFields.map(function(f, i) {
+    return '<div style="display:flex;gap:8px;align-items:end;">' +
+      '<div style="flex:1;"><label class="prod-label">' + f.name + '</label><input type="text" placeholder="Valor..." class="prod-input" style="font-size:12px;" value="' + (f.value || '') + '" onchange="prodCustomFields[' + i + '].value=this.value"/></div>' +
+      '<button onclick="prodRemoveCustomField(' + i + ')" style="width:32px;height:38px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-faint);cursor:pointer;font-size:14px;">✕</button>' +
+    '</div>';
+  }).join('');
+}
+
+var presetFields = {
+  restaurant: [{ name: 'Ingredientes', type: 'text' }, { name: 'Alérgenos', type: 'text' }, { name: 'Tiempo de preparación', type: 'text' }, { name: 'Calorías', type: 'text' }, { name: 'Tipo (Entrada/Plato fuerte/Postre/Bebida)', type: 'text' }],
+  health: [{ name: 'Duración de consulta', type: 'text' }, { name: 'Especialidad', type: 'text' }, { name: 'Requiere receta', type: 'text' }, { name: 'Contraindicaciones', type: 'text' }],
+  beauty: [{ name: 'Duración del servicio', type: 'text' }, { name: 'Tipo de cabello/piel', type: 'text' }, { name: 'Productos utilizados', type: 'text' }, { name: 'Nivel (Básico/Premium)', type: 'text' }],
+  fitness: [{ name: 'Duración de clase', type: 'text' }, { name: 'Nivel (Principiante/Intermedio/Avanzado)', type: 'text' }, { name: 'Cupo máximo', type: 'text' }, { name: 'Instructor', type: 'text' }, { name: 'Equipo necesario', type: 'text' }],
+  education: [{ name: 'Duración del curso', type: 'text' }, { name: 'Nivel', type: 'text' }, { name: 'Formato (Presencial/Online/Híbrido)', type: 'text' }, { name: 'Certificado incluido', type: 'text' }, { name: 'Requisitos previos', type: 'text' }],
+  realestate: [{ name: 'Metros cuadrados', type: 'text' }, { name: 'Recámaras', type: 'text' }, { name: 'Baños', type: 'text' }, { name: 'Estacionamientos', type: 'text' }, { name: 'Zona/Colonia', type: 'text' }, { name: 'Tipo (Venta/Renta)', type: 'text' }],
+};
+
+function prodAddPresetFields(sector) {
+  var fields = presetFields[sector] || [];
+  fields.forEach(function(f) {
+    if (!prodCustomFields.find(function(x) { return x.name === f.name; })) {
+      prodCustomFields.push({ name: f.name, type: f.type, value: '' });
+    }
+  });
+  prodRenderCustomFields();
+  showToast('Campos de ' + sector + ' agregados');
+}
+
+// ═══════ INIT ═══════
+(function() {
+  prodUpdateStats();
+  prodLoadRecs();
+  prodRenderCatalog();
+  prodRenderAutopilot();
+  prodRestoreHelp();
+})();
+</script>

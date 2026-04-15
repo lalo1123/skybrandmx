@@ -1,0 +1,772 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+const API_URL = import.meta.env.PUBLIC_API_URL || '';
+---
+
+<DashboardLayout title="Reportes">
+  <!-- ══════════ Smart Recommendations ══════════ -->
+  <div id="rep-smart-recs" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;"></div>
+
+  <!-- Stats bar -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px;">
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px;">Ingresos totales <span class="rep-tip" data-tip="Todo el dinero que entra a tu negocio por ventas, antes de restar gastos">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="rep-stat-revenue" style="font-size:28px;font-weight:900;color:#22c55e;">$158,200</p><span class="rep-trend rep-trend-up">+18.2%</span></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px;">Utilidad neta <span class="rep-tip" data-tip="Lo que realmente ganas despues de todos los gastos: productos, envios, comisiones y publicidad">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="rep-stat-profit" style="font-size:28px;font-weight:900;color:var(--text-primary);">$48,600</p><span class="rep-trend rep-trend-up">+12.4%</span></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px;">Margen de utilidad <span class="rep-tip" data-tip="De cada peso que vendes, cuantos centavos te quedan de ganancia. Arriba de 25% es bueno para e-commerce">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="rep-stat-margin" style="font-size:28px;font-weight:900;color:var(--accent);">30.7%</p><span class="rep-trend rep-trend-down">-3.0%</span></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px;">Gastos del mes <span class="rep-tip" data-tip="Suma de todos tus costos: productos, envios, comisiones de plataformas y publicidad">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="rep-stat-expenses" style="font-size:28px;font-weight:900;color:#f97316;">$109,600</p><span class="rep-trend rep-trend-up">+22.1%</span></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px;">IVA por declarar <span class="rep-tip" data-tip="IVA que cobraste a tus clientes menos el IVA que pagaste en tus compras. Esto lo debes declarar al SAT">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="rep-stat-iva" style="font-size:28px;font-weight:900;color:#ef4444;">$8,200</p></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px;">Mejor producto <span class="rep-tip" data-tip="El producto que te genera mas ganancia este mes">?</span></p>
+      <div><p style="font-size:16px;font-weight:900;color:var(--text-primary);margin-bottom:2px;">Playera Premium</p><p style="font-size:11px;color:#22c55e;font-weight:700;">$18,400 utilidad</p></div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;overflow-x:auto;">
+    <button id="rep-tab-resumen" class="rep-tab active" onclick="switchRepTab('resumen')">Resumen financiero</button>
+    <button id="rep-tab-flujo" class="rep-tab" onclick="switchRepTab('flujo')">Flujo de caja</button>
+    <button id="rep-tab-producto" class="rep-tab" onclick="switchRepTab('producto')">Por producto</button>
+    <button id="rep-tab-impuestos" class="rep-tab" onclick="switchRepTab('impuestos')">Impuestos</button>
+    <button id="rep-tab-exportar" class="rep-tab" onclick="switchRepTab('exportar')">Exportar</button>
+  </div>
+
+  <!-- ══════════ Tab: Resumen Financiero ══════════ -->
+  <div id="rep-panel-resumen">
+    <div id="rep-help-resumen" class="rep-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Este es tu estado de resultados simplificado. Muestra cuanto vendes, cuanto gastas y cuanto te queda de ganancia cada mes.</p>
+      <button onclick="repDismissHelp('resumen')" class="rep-help-close">&times;</button>
+    </div>
+
+    <!-- Bar chart -->
+    <div class="stat-card animate-in" style="padding:24px;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+        <div>
+          <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);margin-bottom:2px;">Ingresos vs Utilidad</h3>
+          <p style="font-size:12px;color:var(--text-muted);">Ultimos 6 meses</p>
+        </div>
+        <div style="display:flex;gap:16px;align-items:center;">
+          <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:3px;background:#22c55e;"></div><span style="font-size:11px;color:var(--text-muted);font-weight:600;">Ingresos</span></div>
+          <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:3px;background:var(--accent);"></div><span style="font-size:11px;color:var(--text-muted);font-weight:600;">Utilidad</span></div>
+          <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:3px;background:#f97316;"></div><span style="font-size:11px;color:var(--text-muted);font-weight:600;">Gastos</span></div>
+        </div>
+      </div>
+      <div id="rep-chart-resumen" style="display:flex;align-items:flex-end;gap:12px;height:220px;padding:0 8px;"></div>
+    </div>
+
+    <!-- P&L Table -->
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+      <div style="padding:20px 20px 12px;">
+        <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);margin-bottom:2px;">Estado de resultados <span class="rep-tip" data-tip="Resumen de cuanto vendes, cuanto gastas y cuanto ganas. Es la base para saber si tu negocio es rentable">?</span></h3>
+        <p style="font-size:12px;color:var(--text-muted);">Desglose mensual simplificado</p>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);">
+              <th class="rep-th" style="min-width:180px;">Concepto</th>
+              <th class="rep-th" style="text-align:right;">Nov</th>
+              <th class="rep-th" style="text-align:right;">Dic</th>
+              <th class="rep-th" style="text-align:right;">Ene</th>
+              <th class="rep-th" style="text-align:right;">Feb</th>
+              <th class="rep-th" style="text-align:right;">Mar</th>
+              <th class="rep-th" style="text-align:right;">Abr</th>
+            </tr>
+          </thead>
+          <tbody id="rep-pnl-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Flujo de Caja ══════════ -->
+  <div id="rep-panel-flujo" style="display:none;">
+    <div id="rep-help-flujo" class="rep-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Flujo de caja = dinero que entra vs dinero que sale de tu negocio cada semana. Te ayuda a saber si vas a tener suficiente dinero para pagar tus gastos.</p>
+      <button onclick="repDismissHelp('flujo')" class="rep-help-close">&times;</button>
+    </div>
+
+    <!-- Cash flow chart -->
+    <div class="stat-card animate-in" style="padding:24px;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+        <div>
+          <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);margin-bottom:2px;">Flujo de caja semanal</h3>
+          <p style="font-size:12px;color:var(--text-muted);">Dinero que entra y sale de tu negocio <span class="rep-tip" data-tip="Dinero que entra vs dinero que sale de tu negocio. Si sale mas de lo que entra, vas a tener problemas de liquidez">?</span></p>
+        </div>
+        <div style="display:flex;gap:16px;align-items:center;">
+          <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:3px;background:#22c55e;"></div><span style="font-size:11px;color:var(--text-muted);font-weight:600;">Entradas</span></div>
+          <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:3px;background:#ef4444;"></div><span style="font-size:11px;color:var(--text-muted);font-weight:600;">Salidas</span></div>
+          <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:3px;background:var(--accent);"></div><span style="font-size:11px;color:var(--text-muted);font-weight:600;">Saldo</span></div>
+        </div>
+      </div>
+      <div id="rep-chart-flujo" style="display:flex;align-items:flex-end;gap:8px;height:200px;padding:0 8px;"></div>
+    </div>
+
+    <!-- Cash flow table -->
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+      <div style="padding:20px 20px 12px;">
+        <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);margin-bottom:2px;">Detalle semanal</h3>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);">
+              <th class="rep-th">Semana</th>
+              <th class="rep-th" style="text-align:right;">Entradas <span class="rep-tip" data-tip="Pagos de clientes, reembolsos recibidos, otros ingresos">?</span></th>
+              <th class="rep-th" style="text-align:right;">Salidas <span class="rep-tip" data-tip="Pagos a proveedores, envios, comisiones, publicidad, otros gastos">?</span></th>
+              <th class="rep-th" style="text-align:right;">Saldo <span class="rep-tip" data-tip="Entradas menos salidas. Si es positivo, te quedo dinero. Si es negativo, gastaste mas de lo que ganaste">?</span></th>
+            </tr>
+          </thead>
+          <tbody id="rep-flujo-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Por Producto ══════════ -->
+  <div id="rep-panel-producto" style="display:none;">
+    <div id="rep-help-producto" class="rep-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Descubre cuales productos te dejan mas ganancia. No siempre el que mas vendes es el que mas dinero te genera.</p>
+      <button onclick="repDismissHelp('producto')" class="rep-help-close">&times;</button>
+    </div>
+
+    <!-- Product revenue chart -->
+    <div class="stat-card animate-in" style="padding:24px;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+        <div>
+          <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);margin-bottom:2px;">Rentabilidad por producto</h3>
+          <p style="font-size:12px;color:var(--text-muted);">Cuales productos te generan mas dinero</p>
+        </div>
+      </div>
+      <div id="rep-chart-producto" style="display:flex;flex-direction:column;gap:12px;"></div>
+    </div>
+
+    <!-- Product table -->
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+      <div style="padding:20px 20px 12px;">
+        <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);margin-bottom:2px;">Desglose por producto</h3>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);">
+              <th class="rep-th">Producto</th>
+              <th class="rep-th" style="text-align:right;">Unidades</th>
+              <th class="rep-th" style="text-align:right;">Ingresos <span class="rep-tip" data-tip="Total de ventas de este producto">?</span></th>
+              <th class="rep-th" style="text-align:right;">Costo <span class="rep-tip" data-tip="Lo que te cuesta comprar o fabricar este producto">?</span></th>
+              <th class="rep-th" style="text-align:right;">Utilidad <span class="rep-tip" data-tip="Lo que te queda despues de restar el costo del producto">?</span></th>
+              <th class="rep-th" style="text-align:right;">Margen <span class="rep-tip" data-tip="Porcentaje de ganancia. Si vendes en $100 y te cuesta $60, tu margen es 40%">?</span></th>
+              <th class="rep-th" style="text-align:center;">Tendencia</th>
+            </tr>
+          </thead>
+          <tbody id="rep-producto-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Impuestos ══════════ -->
+  <div id="rep-panel-impuestos" style="display:none;">
+    <div id="rep-help-impuestos" class="rep-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Resumen de impuestos para que tu contador lo tenga facil. Recuerda declarar tu IVA antes del dia 17 de cada mes.</p>
+      <button onclick="repDismissHelp('impuestos')" class="rep-help-close">&times;</button>
+    </div>
+
+    <!-- SAT reminder -->
+    <div class="stat-card animate-in" style="padding:16px 20px;margin-bottom:20px;background:linear-gradient(135deg,rgba(239,68,68,0.08),rgba(249,115,22,0.08));border:1px solid rgba(239,68,68,0.15);">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div style="width:40px;height:40px;border-radius:10px;background:rgba(239,68,68,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg style="width:20px;height:20px;color:#ef4444;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div style="flex:1;">
+          <h4 style="font-size:13px;font-weight:800;color:#ef4444;margin-bottom:2px;">Proxima declaracion: 17 de abril 2026</h4>
+          <p style="font-size:12px;color:var(--text-muted);">Tienes $8,200 de IVA por declarar correspondiente a marzo 2026. No olvides presentar tu declaracion mensual ante el SAT.</p>
+        </div>
+        <button onclick="repExportTax()" class="rep-btn-primary" style="background:#ef4444;padding:10px 20px;white-space:nowrap;">Exportar para mi contador</button>
+      </div>
+    </div>
+
+    <!-- Tax summary cards -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px;">
+      <div class="stat-card animate-in" style="padding:18px 20px;">
+        <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px;">IVA cobrado <span class="rep-tip" data-tip="El IVA que cobraste a tus clientes en cada venta. Esto se lo debes al SAT">?</span></p>
+        <p style="font-size:24px;font-weight:900;color:#ef4444;">$25,312</p>
+      </div>
+      <div class="stat-card animate-in" style="padding:18px 20px;">
+        <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px;">IVA pagado <span class="rep-tip" data-tip="El IVA que pagaste al comprar productos, insumos y servicios. Esto se resta del IVA que debes">?</span></p>
+        <p style="font-size:24px;font-weight:900;color:#22c55e;">$17,112</p>
+      </div>
+      <div class="stat-card animate-in" style="padding:18px 20px;">
+        <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px;">IVA por pagar <span class="rep-tip" data-tip="IVA cobrado menos IVA pagado. Es lo que debes declarar y pagar al SAT">?</span></p>
+        <p style="font-size:24px;font-weight:900;color:#f97316;">$8,200</p>
+      </div>
+      <div class="stat-card animate-in" style="padding:18px 20px;">
+        <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px;">ISR estimado <span class="rep-tip" data-tip="Impuesto Sobre la Renta estimado basado en tu utilidad. El calculo exacto depende de tu regimen fiscal">?</span></p>
+        <p style="font-size:24px;font-weight:900;color:var(--text-primary);">$14,580</p>
+      </div>
+    </div>
+
+    <!-- Tax monthly table -->
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+      <div style="padding:20px 20px 12px;">
+        <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);margin-bottom:2px;">Desglose mensual de impuestos</h3>
+        <p style="font-size:12px;color:var(--text-muted);">Estos datos son estimaciones. Confirma con tu contador antes de declarar.</p>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);">
+              <th class="rep-th">Mes</th>
+              <th class="rep-th" style="text-align:right;">Ingresos</th>
+              <th class="rep-th" style="text-align:right;">IVA cobrado <span class="rep-tip" data-tip="16% del total de tus ventas">?</span></th>
+              <th class="rep-th" style="text-align:right;">IVA pagado</th>
+              <th class="rep-th" style="text-align:right;">IVA por pagar</th>
+              <th class="rep-th" style="text-align:right;">ISR estimado <span class="rep-tip" data-tip="Estimacion basada en tasa del 30% sobre utilidad. Tu contador calculara la tasa real segun tu regimen">?</span></th>
+              <th class="rep-th" style="text-align:center;">Declarado</th>
+            </tr>
+          </thead>
+          <tbody id="rep-impuestos-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SAT dates -->
+    <div class="stat-card animate-in" style="padding:20px;margin-top:20px;">
+      <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);margin-bottom:12px;">Calendario de declaraciones SAT</h3>
+      <div id="rep-sat-calendar" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Exportar ══════════ -->
+  <div id="rep-panel-exportar" style="display:none;">
+    <div id="rep-help-exportar" class="rep-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Descarga tus reportes en CSV o PDF para compartir con tu contador o guardarlos en tus archivos.</p>
+      <button onclick="repDismissHelp('exportar')" class="rep-help-close">&times;</button>
+    </div>
+
+    <!-- Export form -->
+    <div class="stat-card animate-in" style="padding:24px;margin-bottom:20px;">
+      <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);margin-bottom:16px;">Descargar reportes</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px;">
+        <div>
+          <label class="rep-label">Tipo de reporte</label>
+          <select id="rep-export-type" class="rep-input" style="cursor:pointer;">
+            <option value="pnl">Estado de resultados</option>
+            <option value="cashflow">Flujo de caja</option>
+            <option value="products">Rentabilidad por producto</option>
+            <option value="taxes">Impuestos (IVA e ISR)</option>
+            <option value="all">Reporte completo</option>
+          </select>
+        </div>
+        <div>
+          <label class="rep-label">Desde</label>
+          <input id="rep-export-from" type="date" class="rep-input" value="2025-11-01"/>
+        </div>
+        <div>
+          <label class="rep-label">Hasta</label>
+          <input id="rep-export-to" type="date" class="rep-input" value="2026-04-01"/>
+        </div>
+        <div>
+          <label class="rep-label">Formato</label>
+          <select id="rep-export-format" class="rep-input" style="cursor:pointer;">
+            <option value="csv">CSV (Excel)</option>
+            <option value="pdf">PDF</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <button onclick="repDownloadReport()" class="rep-btn-primary" style="display:flex;align-items:center;gap:8px;padding:12px 24px;">
+          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Descargar reporte
+        </button>
+        <button onclick="repSendToAccountant()" class="rep-btn-secondary" style="display:flex;align-items:center;gap:8px;padding:12px 24px;">
+          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          Enviar a mi contador
+        </button>
+      </div>
+    </div>
+
+    <!-- Accountant config -->
+    <div class="stat-card animate-in" style="padding:24px;margin-bottom:20px;">
+      <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">Datos de mi contador</h3>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Configura el email de tu contador para enviarle reportes directamente.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:16px;">
+        <div>
+          <label class="rep-label">Nombre del contador</label>
+          <input id="rep-accountant-name" type="text" class="rep-input" placeholder="Ej: CP. Maria Lopez" value="CP. Roberto Sanchez"/>
+        </div>
+        <div>
+          <label class="rep-label">Email del contador</label>
+          <input id="rep-accountant-email" type="email" class="rep-input" placeholder="contador@email.com" value="roberto.sanchez@contadigital.mx"/>
+        </div>
+      </div>
+      <button onclick="repSaveAccountant()" class="rep-btn-secondary" style="padding:10px 20px;">Guardar datos</button>
+    </div>
+
+    <!-- Recent exports -->
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+      <div style="padding:20px 20px 12px;">
+        <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);margin-bottom:2px;">Exportaciones recientes</h3>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);">
+              <th class="rep-th">Reporte</th>
+              <th class="rep-th">Periodo</th>
+              <th class="rep-th">Formato</th>
+              <th class="rep-th">Fecha</th>
+              <th class="rep-th" style="text-align:center;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="rep-exports-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Autopilot Section ══════════ -->
+  <div class="stat-card animate-in" style="margin-top:28px;padding:0;overflow:hidden;border:1px solid rgba(139,92,246,0.15);">
+    <div style="padding:20px;background:linear-gradient(135deg,rgba(139,92,246,0.06),rgba(111,207,245,0.06));">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+        <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#8b5cf6,#6fcff5);display:flex;align-items:center;justify-content:center;">
+          <svg style="width:18px;height:18px;color:#fff;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <div>
+          <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);">Autopilot financiero</h3>
+          <p style="font-size:12px;color:var(--text-muted);">Automatiza tus reportes y alertas para nunca perder de vista tus finanzas</p>
+        </div>
+      </div>
+    </div>
+    <div id="rep-autopilot-list" style="padding:16px 20px;display:flex;flex-direction:column;gap:12px;"></div>
+  </div>
+
+  <!-- ══════════ Toast ══════════ -->
+  <div id="rep-toast" style="position:fixed;bottom:24px;right:24px;background:var(--bg-sidebar);border:1px solid var(--border);border-radius:12px;padding:14px 20px;font-size:13px;font-weight:700;color:var(--text-primary);box-shadow:0 8px 30px rgba(0,0,0,0.3);z-index:2000;transform:translateY(100px);opacity:0;transition:all 0.3s;pointer-events:none;"></div>
+
+</DashboardLayout>
+
+<style>
+  @keyframes fadeInUp { from { opacity:0;transform:translateY(10px); } to { opacity:1;transform:translateY(0); } }
+
+  /* Tabs */
+  .rep-tab { padding:10px 20px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap; }
+  .rep-tab.active { color:var(--accent);border-bottom-color:var(--accent); }
+
+  /* Table headers */
+  .rep-th { padding:14px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px; }
+
+  /* Form */
+  .rep-label { font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:4px;display:block; }
+  .rep-input { width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;transition:border-color 0.2s; }
+  .rep-input:focus { border-color:var(--accent); }
+
+  /* Buttons */
+  .rep-btn-primary { padding:12px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s; }
+  .rep-btn-primary:hover { opacity:0.85; }
+  .rep-btn-secondary { padding:12px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-primary);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s; }
+  .rep-btn-secondary:hover { background:var(--nav-hover); }
+  .rep-tbl-btn { padding:5px 9px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;transition:all 0.15s; }
+  .rep-tbl-btn:hover { border-color:var(--accent);color:var(--accent); }
+
+  /* Tooltips */
+  .rep-tip { display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--input-bg);color:var(--text-faint);font-size:10px;font-weight:800;cursor:help;position:relative;flex-shrink:0; }
+  .rep-tip:hover::after { content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--bg-sidebar);border:1px solid var(--border);color:var(--text-secondary);padding:10px 14px;border-radius:10px;font-size:12px;font-weight:500;white-space:normal;width:260px;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.3);line-height:1.5;pointer-events:none; }
+  .rep-tip:hover::before { content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--border);z-index:101; }
+
+  /* Help banners */
+  .rep-help-banner { display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;background:var(--accent-bg);border:1px solid rgba(111,207,245,0.15);margin-bottom:16px; }
+  .rep-help-close { border:none;background:transparent;color:var(--text-faint);cursor:pointer;font-size:16px;padding:0 4px; }
+
+  /* Trend indicators */
+  .rep-trend { font-size:11px;font-weight:700; }
+  .rep-trend-up { color:#22c55e; }
+  .rep-trend-down { color:#ef4444; }
+
+  /* Toggle switch */
+  .rep-toggle-wrap { position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0; }
+  .rep-toggle-wrap input { opacity:0;width:0;height:0; }
+  .rep-toggle-slider { position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:22px;transition:0.3s; }
+  .rep-toggle-slider::before { content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s; }
+  .rep-toggle-wrap input:checked + .rep-toggle-slider { background:#22c55e; }
+  .rep-toggle-wrap input:checked + .rep-toggle-slider::before { transform:translateX(18px); }
+
+  /* Chart bars */
+  .rep-bar { border-radius:4px 4px 0 0;transition:opacity 0.2s;cursor:pointer;position:relative; }
+  .rep-bar:hover { opacity:0.8; }
+  .rep-bar-label { position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:var(--text-faint);white-space:nowrap;display:none; }
+  .rep-bar:hover .rep-bar-label { display:block; }
+
+  /* Horizontal bar chart */
+  .rep-hbar { height:28px;border-radius:6px;transition:opacity 0.2s;cursor:pointer;position:relative;min-width:4px; }
+  .rep-hbar:hover { opacity:0.8; }
+
+  /* P&L row styles */
+  .rep-pnl-row td { padding:12px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary); }
+  .rep-pnl-row-header td { padding:12px 16px;border-bottom:1px solid var(--border);font-weight:800;color:var(--text-primary); }
+  .rep-pnl-row-total td { padding:14px 16px;border-top:2px solid var(--accent);font-weight:900;color:var(--accent);font-size:14px; }
+  .rep-pnl-row-sub td { padding:10px 16px 10px 32px;border-bottom:1px solid var(--border);color:var(--text-muted);font-size:12px; }
+
+  /* Smart rec cards */
+  .rep-rec-card { display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:12px;border:1px solid var(--border);background:var(--bg-sidebar);cursor:pointer;transition:all 0.2s; }
+  .rep-rec-card:hover { border-color:var(--accent);background:var(--accent-bg); }
+</style>
+
+<script>
+// ═══════ DATA ═══════
+const repMonths = ['Nov','Dic','Ene','Feb','Mar','Abr'];
+const repPnlData = {
+  ingresos:    [108500, 142800, 118200, 135600, 148900, 158200],
+  costoProductos: [43400, 57120, 47280, 54240, 59560, 63280],
+  envios:      [8680, 11424, 9456, 10848, 11912, 12656],
+  comisiones:  [10850, 14280, 11820, 13560, 14890, 15820],
+  publicidad:  [12500, 16800, 14200, 15800, 17200, 18440],
+  utilidad:    [33070, 43176, 35444, 41152, 45338, 48004]
+};
+
+const repCashflow = [
+  { week:'Sem 1 Mar',inflow:38200,outflow:28400 },
+  { week:'Sem 2 Mar',inflow:35600,outflow:31200 },
+  { week:'Sem 3 Mar',inflow:41800,outflow:29800 },
+  { week:'Sem 4 Mar',inflow:42800,outflow:33100 },
+  { week:'Sem 1 Abr',inflow:39500,outflow:27600 },
+  { week:'Sem 2 Abr',inflow:44200,outflow:30800 },
+  { week:'Sem 3 Abr',inflow:37800,outflow:28900 },
+  { week:'Sem 4 Abr',inflow:36700,outflow:31300 }
+];
+
+const repProducts = [
+  { name:'Playera Premium', units:245, revenue:48600, cost:19440, color:'#22c55e', trend:'up' },
+  { name:'Sudadera Logo', units:128, revenue:38400, cost:17280, color:'#6fcff5', trend:'up' },
+  { name:'Gorra Snapback', units:312, revenue:28080, cost:9360, color:'#8b5cf6', trend:'stable' },
+  { name:'Tote Bag', units:189, revenue:18900, cost:7560, color:'#f97316', trend:'down' },
+  { name:'Stickers Pack', units:456, revenue:13680, cost:2736, color:'#ec4899', trend:'up' },
+  { name:'Taza Ceramica', units:167, revenue:10020, cost:4008, color:'#eab308', trend:'down' }
+];
+
+const repTaxData = [
+  { month:'Nov 2025', revenue:108500, ivaCobrado:17360, ivaPagado:12048, isr:9921, declared:true },
+  { month:'Dic 2025', revenue:142800, ivaCobrado:22848, ivaPagado:15878, isr:12953, declared:true },
+  { month:'Ene 2026', revenue:118200, ivaCobrado:18912, ivaPagado:13221, isr:10633, declared:true },
+  { month:'Feb 2026', revenue:135600, ivaCobrado:21696, ivaPagado:15104, isr:12346, declared:true },
+  { month:'Mar 2026', revenue:148900, ivaCobrado:23824, ivaPagado:15624, isr:13601, declared:false },
+  { month:'Abr 2026', revenue:158200, ivaCobrado:25312, ivaPagado:17112, isr:14580, declared:false }
+];
+
+const repExports = [
+  { name:'Estado de resultados', period:'Nov 2025 - Mar 2026', format:'PDF', date:'28 Mar 2026' },
+  { name:'Impuestos Q1 2026', period:'Ene - Mar 2026', format:'CSV', date:'15 Mar 2026' },
+  { name:'Productos rentables', period:'Feb 2026', format:'PDF', date:'02 Mar 2026' }
+];
+
+const repAutopilotItems = [
+  { id:'weekly-report', label:'Reporte semanal por email', desc:'Recibe un resumen de tus finanzas todos los lunes a las 8am', enabled:true },
+  { id:'margin-alert', label:'Alerta cuando baje tu margen', desc:'Te avisamos si tu margen de utilidad baja mas de 5% vs el mes anterior', enabled:true },
+  { id:'tax-reminder', label:'Recordatorio de declaracion fiscal', desc:'Te recordamos 5 dias antes del dia 17 de cada mes para declarar tu IVA', enabled:true },
+  { id:'expense-alert', label:'Alerta de gastos inusuales', desc:'Te notificamos si un gasto sube mas de 30% respecto al promedio', enabled:false }
+];
+
+// ═══════ TABS ═══════
+function switchRepTab(tab) {
+  ['resumen','flujo','producto','impuestos','exportar'].forEach(t => {
+    const panel = document.getElementById('rep-panel-' + t);
+    const btn = document.getElementById('rep-tab-' + t);
+    if (panel) panel.style.display = t === tab ? 'block' : 'none';
+    if (btn) btn.classList.toggle('active', t === tab);
+  });
+}
+
+// ═══════ HELP BANNERS ═══════
+function repDismissHelp(id) {
+  const el = document.getElementById('rep-help-' + id);
+  if (el) { el.style.opacity = '0'; el.style.transform = 'translateY(-10px)'; setTimeout(() => el.style.display = 'none', 300); }
+}
+
+// ═══════ TOAST ═══════
+function repToast(msg) {
+  const t = document.getElementById('rep-toast');
+  t.textContent = msg;
+  t.style.transform = 'translateY(0)';
+  t.style.opacity = '1';
+  setTimeout(() => { t.style.transform = 'translateY(100px)'; t.style.opacity = '0'; }, 3000);
+}
+
+// ═══════ FORMAT ═══════
+function repFmt(n) { return '$' + n.toLocaleString('es-MX'); }
+function repPct(n) { return n.toFixed(1) + '%'; }
+
+// ═══════ SMART RECS ═══════
+function renderRepSmartRecs() {
+  const recs = [
+    { icon:'<svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg>', color:'#f97316', text:'Tu margen bajo 3% vs mes pasado. Revisa tus costos de publicidad que subieron $1,240.', action:'Ver detalle', tab:'resumen' },
+    { icon:'<svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>', color:'#ef4444', text:'Tienes $8,200 de IVA por declarar antes del dia 17. No olvides tu declaracion mensual.', action:'Ver impuestos', tab:'impuestos' },
+    { icon:'<svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>', color:'#22c55e', text:'Stickers Pack tiene el mejor margen (80%). Considera promocionarlo mas para aumentar tu utilidad.', action:'Ver productos', tab:'producto' }
+  ];
+  const container = document.getElementById('rep-smart-recs');
+  container.innerHTML = recs.map(r => `
+    <div class="rep-rec-card" onclick="switchRepTab('${r.tab}')">
+      <div style="width:32px;height:32px;border-radius:8px;background:${r.color}15;display:flex;align-items:center;justify-content:center;color:${r.color};flex-shrink:0;">${r.icon}</div>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);line-height:1.5;">${r.text}</p>
+      <span style="font-size:11px;font-weight:700;color:var(--accent);white-space:nowrap;">${r.action} &rarr;</span>
+    </div>
+  `).join('');
+}
+
+// ═══════ RESUMEN CHART ═══════
+function renderResumenChart() {
+  const container = document.getElementById('rep-chart-resumen');
+  const maxVal = Math.max(...repPnlData.ingresos);
+  container.innerHTML = repMonths.map((m, i) => {
+    const ingH = (repPnlData.ingresos[i] / maxVal * 180);
+    const utilH = (repPnlData.utilidad[i] / maxVal * 180);
+    const gastoH = ((repPnlData.ingresos[i] - repPnlData.utilidad[i]) / maxVal * 180);
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+      <div style="display:flex;gap:3px;align-items:flex-end;height:180px;">
+        <div class="rep-bar" style="width:18px;height:${ingH}px;background:#22c55e;"><span class="rep-bar-label">${repFmt(repPnlData.ingresos[i])}</span></div>
+        <div class="rep-bar" style="width:18px;height:utilH > 0 ? ${utilH}px : '2px';background:var(--accent);"><span class="rep-bar-label">${repFmt(repPnlData.utilidad[i])}</span></div>
+        <div class="rep-bar" style="width:18px;height:${gastoH}px;background:#f97316;opacity:0.6;"><span class="rep-bar-label">${repFmt(repPnlData.ingresos[i] - repPnlData.utilidad[i])}</span></div>
+      </div>
+      <span style="font-size:11px;font-weight:700;color:var(--text-faint);">${m}</span>
+    </div>`;
+  }).join('');
+}
+
+// ═══════ P&L TABLE ═══════
+function renderPnlTable() {
+  const tbody = document.getElementById('rep-pnl-tbody');
+  const rows = [
+    { label:'Ingresos por ventas', data:repPnlData.ingresos, cls:'rep-pnl-row-header', prefix:'' },
+    { label:'(-) Costo de productos', data:repPnlData.costoProductos, cls:'rep-pnl-row-sub', prefix:'-' },
+    { label:'(-) Envios', data:repPnlData.envios, cls:'rep-pnl-row-sub', prefix:'-' },
+    { label:'(-) Comisiones plataformas', data:repPnlData.comisiones, cls:'rep-pnl-row-sub', prefix:'-', tip:'Lo que te cobran MercadoLibre, Amazon, Shopify, etc.' },
+    { label:'(-) Publicidad', data:repPnlData.publicidad, cls:'rep-pnl-row-sub', prefix:'-', tip:'Facebook Ads, Google Ads, influencers, etc.' },
+    { label:'= Utilidad neta', data:repPnlData.utilidad, cls:'rep-pnl-row-total', prefix:'' }
+  ];
+  tbody.innerHTML = rows.map(r => {
+    const tipHtml = r.tip ? ` <span class="rep-tip" data-tip="${r.tip}">?</span>` : '';
+    return `<tr class="${r.cls}">
+      <td style="font-size:13px;">${r.label}${tipHtml}</td>
+      ${r.data.map(v => `<td style="text-align:right;">${r.prefix}${repFmt(v)}</td>`).join('')}
+    </tr>`;
+  }).join('');
+}
+
+// ═══════ CASH FLOW CHART ═══════
+function renderCashflowChart() {
+  const container = document.getElementById('rep-chart-flujo');
+  const maxVal = Math.max(...repCashflow.map(w => Math.max(w.inflow, w.outflow)));
+  container.innerHTML = repCashflow.map(w => {
+    const inH = (w.inflow / maxVal * 160);
+    const outH = (w.outflow / maxVal * 160);
+    const saldo = w.inflow - w.outflow;
+    const saldoH = Math.abs(saldo) / maxVal * 160;
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+      <div style="display:flex;gap:2px;align-items:flex-end;height:160px;">
+        <div class="rep-bar" style="width:14px;height:${inH}px;background:#22c55e;"><span class="rep-bar-label">${repFmt(w.inflow)}</span></div>
+        <div class="rep-bar" style="width:14px;height:${outH}px;background:#ef4444;"><span class="rep-bar-label">${repFmt(w.outflow)}</span></div>
+        <div class="rep-bar" style="width:14px;height:${saldoH}px;background:var(--accent);"><span class="rep-bar-label">${saldo >= 0 ? '+' : ''}${repFmt(saldo)}</span></div>
+      </div>
+      <span style="font-size:9px;font-weight:700;color:var(--text-faint);text-align:center;line-height:1.2;">${w.week}</span>
+    </div>`;
+  }).join('');
+}
+
+// ═══════ CASH FLOW TABLE ═══════
+function renderCashflowTable() {
+  const tbody = document.getElementById('rep-flujo-tbody');
+  tbody.innerHTML = repCashflow.map(w => {
+    const saldo = w.inflow - w.outflow;
+    const saldoColor = saldo >= 0 ? '#22c55e' : '#ef4444';
+    return `<tr class="rep-pnl-row">
+      <td style="font-weight:700;">${w.week}</td>
+      <td style="text-align:right;color:#22c55e;font-weight:700;">${repFmt(w.inflow)}</td>
+      <td style="text-align:right;color:#ef4444;font-weight:700;">${repFmt(w.outflow)}</td>
+      <td style="text-align:right;color:${saldoColor};font-weight:700;">${saldo >= 0 ? '+' : ''}${repFmt(saldo)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════ PRODUCT CHART ═══════
+function renderProductChart() {
+  const container = document.getElementById('rep-chart-producto');
+  const maxRevenue = Math.max(...repProducts.map(p => p.revenue));
+  container.innerHTML = repProducts.map(p => {
+    const profit = p.revenue - p.cost;
+    const margin = ((profit / p.revenue) * 100);
+    const barW = (p.revenue / maxRevenue * 100);
+    const profitW = (profit / maxRevenue * 100);
+    return `<div style="display:flex;align-items:center;gap:12px;">
+      <div style="width:120px;flex-shrink:0;"><p style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:1px;">${p.name}</p><p style="font-size:10px;color:var(--text-faint);">${repPct(margin)} margen</p></div>
+      <div style="flex:1;position:relative;height:28px;">
+        <div class="rep-hbar" style="width:${barW}%;background:${p.color};opacity:0.2;position:absolute;top:0;"></div>
+        <div class="rep-hbar" style="width:${profitW}%;background:${p.color};position:absolute;top:0;"></div>
+        <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:800;color:var(--text-primary);">${repFmt(profit)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════ PRODUCT TABLE ═══════
+function renderProductTable() {
+  const tbody = document.getElementById('rep-producto-tbody');
+  tbody.innerHTML = repProducts.map(p => {
+    const profit = p.revenue - p.cost;
+    const margin = ((profit / p.revenue) * 100);
+    const trendIcon = p.trend === 'up' ? '<span style="color:#22c55e;font-weight:800;">&#9650;</span>' : p.trend === 'down' ? '<span style="color:#ef4444;font-weight:800;">&#9660;</span>' : '<span style="color:var(--text-faint);font-weight:800;">&#9654;</span>';
+    return `<tr class="rep-pnl-row">
+      <td><div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:${p.color};flex-shrink:0;"></div><span style="font-weight:700;">${p.name}</span></div></td>
+      <td style="text-align:right;">${p.units}</td>
+      <td style="text-align:right;font-weight:700;">${repFmt(p.revenue)}</td>
+      <td style="text-align:right;color:var(--text-muted);">${repFmt(p.cost)}</td>
+      <td style="text-align:right;color:#22c55e;font-weight:700;">${repFmt(profit)}</td>
+      <td style="text-align:right;font-weight:700;">${repPct(margin)}</td>
+      <td style="text-align:center;">${trendIcon}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════ TAX TABLE ═══════
+function renderTaxTable() {
+  const tbody = document.getElementById('rep-impuestos-tbody');
+  tbody.innerHTML = repTaxData.map(t => {
+    const ivaPagar = t.ivaCobrado - t.ivaPagado;
+    const statusHtml = t.declared
+      ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:6px;background:rgba(34,197,94,0.1);color:#22c55e;font-size:11px;font-weight:700;"><svg style="width:12px;height:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Si</span>'
+      : '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:6px;background:rgba(239,68,68,0.1);color:#ef4444;font-size:11px;font-weight:700;">Pendiente</span>';
+    return `<tr class="rep-pnl-row">
+      <td style="font-weight:700;">${t.month}</td>
+      <td style="text-align:right;">${repFmt(t.revenue)}</td>
+      <td style="text-align:right;color:#ef4444;font-weight:600;">${repFmt(t.ivaCobrado)}</td>
+      <td style="text-align:right;color:#22c55e;font-weight:600;">${repFmt(t.ivaPagado)}</td>
+      <td style="text-align:right;color:#f97316;font-weight:700;">${repFmt(ivaPagar)}</td>
+      <td style="text-align:right;font-weight:600;">${repFmt(t.isr)}</td>
+      <td style="text-align:center;">${statusHtml}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════ SAT CALENDAR ═══════
+function renderSATCalendar() {
+  const container = document.getElementById('rep-sat-calendar');
+  const months = [
+    { month:'Nov 2025', date:'17 Dic', status:'done' },
+    { month:'Dic 2025', date:'17 Ene', status:'done' },
+    { month:'Ene 2026', date:'17 Feb', status:'done' },
+    { month:'Feb 2026', date:'17 Mar', status:'done' },
+    { month:'Mar 2026', date:'17 Abr', status:'pending' },
+    { month:'Abr 2026', date:'17 May', status:'future' }
+  ];
+  container.innerHTML = months.map(m => {
+    const bg = m.status === 'done' ? 'rgba(34,197,94,0.08)' : m.status === 'pending' ? 'rgba(239,68,68,0.08)' : 'var(--input-bg)';
+    const border = m.status === 'done' ? 'rgba(34,197,94,0.2)' : m.status === 'pending' ? 'rgba(239,68,68,0.2)' : 'var(--border)';
+    const icon = m.status === 'done' ? '<svg style="width:14px;height:14px;color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'
+      : m.status === 'pending' ? '<svg style="width:14px;height:14px;color:#ef4444;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+      : '<svg style="width:14px;height:14px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>';
+    return `<div style="padding:12px;border-radius:10px;background:${bg};border:1px solid ${border};text-align:center;">
+      ${icon}
+      <p style="font-size:11px;font-weight:700;color:var(--text-primary);margin-top:6px;">${m.month}</p>
+      <p style="font-size:10px;color:var(--text-faint);margin-top:2px;">Vence: ${m.date}</p>
+    </div>`;
+  }).join('');
+}
+
+// ═══════ EXPORTS TABLE ═══════
+function renderExportsTable() {
+  const tbody = document.getElementById('rep-exports-tbody');
+  tbody.innerHTML = repExports.map(e => {
+    const formatBadge = e.format === 'PDF'
+      ? '<span style="padding:3px 10px;border-radius:6px;background:rgba(239,68,68,0.1);color:#ef4444;font-size:11px;font-weight:700;">PDF</span>'
+      : '<span style="padding:3px 10px;border-radius:6px;background:rgba(34,197,94,0.1);color:#22c55e;font-size:11px;font-weight:700;">CSV</span>';
+    return `<tr class="rep-pnl-row">
+      <td style="font-weight:700;">${e.name}</td>
+      <td>${e.period}</td>
+      <td>${formatBadge}</td>
+      <td>${e.date}</td>
+      <td style="text-align:center;"><button onclick="repToast('Descargando ${e.name}...')" class="rep-tbl-btn">Descargar</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════ AUTOPILOT ═══════
+function renderRepAutopilot() {
+  const container = document.getElementById('rep-autopilot-list');
+  container.innerHTML = repAutopilotItems.map(item => `
+    <div style="display:flex;align-items:center;gap:14px;padding:12px 0;${item !== repAutopilotItems[repAutopilotItems.length-1] ? 'border-bottom:1px solid var(--border);' : ''}">
+      <label class="rep-toggle-wrap">
+        <input type="checkbox" ${item.enabled ? 'checked' : ''} onchange="repToggleAutopilot('${item.id}', this.checked)"/>
+        <span class="rep-toggle-slider"></span>
+      </label>
+      <div style="flex:1;">
+        <p style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:2px;">${item.label}</p>
+        <p style="font-size:11px;color:var(--text-muted);">${item.desc}</p>
+      </div>
+      <span style="font-size:10px;font-weight:700;color:${item.enabled ? '#22c55e' : 'var(--text-faint)'};">${item.enabled ? 'ACTIVO' : 'INACTIVO'}</span>
+    </div>
+  `).join('');
+}
+
+function repToggleAutopilot(id, on) {
+  const item = repAutopilotItems.find(i => i.id === id);
+  if (item) item.enabled = on;
+  renderRepAutopilot();
+  repToast(on ? 'Automatizacion activada' : 'Automatizacion desactivada');
+}
+
+// ═══════ ACTIONS ═══════
+function repDownloadReport() {
+  const type = document.getElementById('rep-export-type').value;
+  const format = document.getElementById('rep-export-format').value;
+  const names = { pnl:'Estado de resultados', cashflow:'Flujo de caja', products:'Rentabilidad por producto', taxes:'Impuestos', all:'Reporte completo' };
+  repToast('Generando ' + names[type] + ' en ' + format.toUpperCase() + '...');
+  setTimeout(() => repToast('Reporte descargado correctamente'), 1500);
+}
+
+function repSendToAccountant() {
+  const email = document.getElementById('rep-accountant-email').value;
+  if (!email) { repToast('Configura el email de tu contador primero'); return; }
+  repToast('Enviando reporte a ' + email + '...');
+  setTimeout(() => repToast('Reporte enviado a tu contador'), 1500);
+}
+
+function repSaveAccountant() {
+  repToast('Datos de tu contador guardados');
+}
+
+function repExportTax() {
+  repToast('Generando reporte de impuestos para tu contador...');
+  setTimeout(() => repToast('Reporte de impuestos descargado'), 1500);
+}
+
+// ═══════ INIT ═══════
+document.addEventListener('DOMContentLoaded', () => {
+  renderRepSmartRecs();
+  renderResumenChart();
+  renderPnlTable();
+  renderCashflowChart();
+  renderCashflowTable();
+  renderProductChart();
+  renderProductTable();
+  renderTaxTable();
+  renderSATCalendar();
+  renderExportsTable();
+  renderRepAutopilot();
+});
+</script>

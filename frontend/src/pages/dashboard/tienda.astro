@@ -1,0 +1,1021 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+const API_URL = import.meta.env.PUBLIC_API_URL || '';
+---
+
+<DashboardLayout title="Tienda Online">
+  <!-- Smart Recommendations -->
+  <div id="store-smart-recs" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;"></div>
+
+  <!-- Stats bar -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px;">
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="store-stat-label">Visitas del mes</p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="store-stat-visits" class="store-stat-val">--</p><span id="store-trend-visits" class="store-trend"></span></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="store-stat-label" style="display:flex;align-items:center;gap:4px;">Tasa de conversion <span class="store-tip" data-tip="De cada 100 personas que visitan tu tienda, cuantas terminan comprando algo">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="store-stat-conversion" class="store-stat-val" style="color:#22c55e;">--</p><span id="store-trend-conversion" class="store-trend"></span></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="store-stat-label">Pedidos desde tienda</p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="store-stat-orders" class="store-stat-val" style="color:var(--accent);">--</p><span id="store-trend-orders" class="store-trend"></span></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="store-stat-label">Productos publicados</p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="store-stat-products" class="store-stat-val">--</p></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="store-stat-label">Paginas</p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="store-stat-pages" class="store-stat-val">--</p></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="store-stat-label" style="display:flex;align-items:center;gap:4px;">Dominio <span class="store-tip" data-tip="Estado de tu dominio personalizado o subdominio de SkyBrandMX">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="store-stat-domain" class="store-stat-val" style="font-size:16px;">--</p></div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;overflow-x:auto;">
+    <button id="store-tab-mi-tienda" class="store-tab active" onclick="switchStoreTab('mi-tienda')">Mi tienda</button>
+    <button id="store-tab-diseno" class="store-tab" onclick="switchStoreTab('diseno')">Diseno</button>
+    <button id="store-tab-paginas" class="store-tab" onclick="switchStoreTab('paginas')">Paginas</button>
+    <button id="store-tab-dominio" class="store-tab" onclick="switchStoreTab('dominio')">Dominio</button>
+    <button id="store-tab-analitica" class="store-tab" onclick="switchStoreTab('analitica')">Analitica</button>
+  </div>
+
+  <!-- Autopilot bar -->
+  <div id="store-autopilot" class="stat-card animate-in" style="padding:16px 20px;margin-bottom:20px;background:linear-gradient(135deg,rgba(34,197,94,0.06),rgba(111,207,245,0.06));border:1px solid rgba(34,197,94,0.15);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+      <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#22c55e,#6fcff5);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg style="width:18px;height:18px;color:#fff;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      </div>
+      <div>
+        <h3 style="font-size:14px;font-weight:900;color:var(--text-primary);margin-bottom:1px;">Autopilot de tienda</h3>
+        <p style="font-size:11px;color:var(--text-muted);">Automatizaciones que mantienen tu tienda optimizada sin que hagas nada.</p>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+      <div class="store-autopilot-item">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:12px;font-weight:700;color:var(--text-secondary);">Auto-publicar productos nuevos</span>
+          <label class="store-toggle-wrap"><input type="checkbox" checked onchange="toggleAutopilot('auto-publish',this.checked)"><span class="store-toggle-slider"></span></label>
+        </div>
+        <p style="font-size:10px;color:var(--text-faint);margin-top:4px;">Publica automaticamente los productos cuando los creas</p>
+      </div>
+      <div class="store-autopilot-item">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:12px;font-weight:700;color:var(--text-secondary);">SEO automatico</span>
+          <label class="store-toggle-wrap"><input type="checkbox" checked onchange="toggleAutopilot('seo',this.checked)"><span class="store-toggle-slider"></span></label>
+        </div>
+        <p style="font-size:10px;color:var(--text-faint);margin-top:4px;">Genera meta tags, descripciones y URLs amigables</p>
+      </div>
+      <div class="store-autopilot-item">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:12px;font-weight:700;color:var(--text-secondary);">Certificado SSL automatico</span>
+          <label class="store-toggle-wrap"><input type="checkbox" checked onchange="toggleAutopilot('ssl',this.checked)"><span class="store-toggle-slider"></span></label>
+        </div>
+        <p style="font-size:10px;color:var(--text-faint);margin-top:4px;">Renueva el certificado HTTPS de tu tienda</p>
+      </div>
+      <div class="store-autopilot-item">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:12px;font-weight:700;color:var(--text-secondary);">Sitemap automatico</span>
+          <label class="store-toggle-wrap"><input type="checkbox" checked onchange="toggleAutopilot('sitemap',this.checked)"><span class="store-toggle-slider"></span></label>
+        </div>
+        <p style="font-size:10px;color:var(--text-faint);margin-top:4px;">Actualiza el mapa del sitio para buscadores</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Mi tienda ══════════ -->
+  <div id="store-panel-mi-tienda">
+    <div id="store-help-mi-tienda" class="store-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Este es el panel principal de tu tienda online. Aqui puedes ver el estado general, las visitas y gestionar la configuracion.</p>
+      <button onclick="storeDismissHelp('mi-tienda')" class="store-help-close">&times;</button>
+    </div>
+
+    <!-- Store status card -->
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;margin-bottom:20px;">
+      <div style="display:flex;align-items:stretch;flex-wrap:wrap;">
+        <!-- Store info -->
+        <div style="flex:1;min-width:280px;padding:24px;">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+            <div id="store-logo-placeholder" style="width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,rgba(111,207,245,0.15),rgba(139,92,246,0.15));display:flex;align-items:center;justify-content:center;border:2px dashed rgba(111,207,245,0.3);cursor:pointer;" onclick="showToast('Sube un logo desde Configuracion')" title="Haz clic para subir un logo">
+              <svg style="width:28px;height:28px;color:var(--accent);opacity:0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+            </div>
+            <div>
+              <h2 id="store-name" style="font-size:20px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">Artesanias Oaxaquenas</h2>
+              <a id="store-url" href="#" style="font-size:13px;color:var(--accent);text-decoration:none;display:flex;align-items:center;gap:4px;" target="_blank">
+                <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                artesanias-oaxaquenas.skybrandmx.com
+              </a>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
+            <div style="background:var(--input-bg);border-radius:10px;padding:14px;">
+              <p style="font-size:10px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Estado</p>
+              <span id="store-status-badge" class="store-badge store-badge-success">Publicada</span>
+            </div>
+            <div style="background:var(--input-bg);border-radius:10px;padding:14px;">
+              <p style="font-size:10px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Tema activo</p>
+              <p style="font-size:14px;font-weight:800;color:var(--text-primary);">Moderno</p>
+            </div>
+            <div style="background:var(--input-bg);border-radius:10px;padding:14px;">
+              <p style="font-size:10px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Visitantes</p>
+              <p style="font-size:14px;font-weight:800;color:var(--text-primary);">1,234</p>
+            </div>
+            <div style="background:var(--input-bg);border-radius:10px;padding:14px;">
+              <p style="font-size:10px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Pedidos</p>
+              <p style="font-size:14px;font-weight:800;color:var(--text-primary);">47</p>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button onclick="previewStore()" class="store-btn-primary" style="display:flex;align-items:center;gap:6px;">
+              <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              Vista previa
+            </button>
+            <button onclick="openStoreSettings()" class="store-btn-secondary" style="display:flex;align-items:center;gap:6px;">
+              <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              Configuracion
+            </button>
+            <button onclick="toggleStoreStatus()" class="store-btn-secondary" id="store-toggle-btn" style="display:flex;align-items:center;gap:6px;">
+              <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 11-12.728 0M12 3v9"/></svg>
+              Despublicar
+            </button>
+          </div>
+        </div>
+
+        <!-- Store preview -->
+        <div style="flex:1;min-width:280px;background:linear-gradient(135deg,rgba(111,207,245,0.04),rgba(139,92,246,0.04));border-left:1px solid var(--border);display:flex;align-items:center;justify-content:center;padding:24px;">
+          <div style="width:100%;max-width:320px;background:var(--bg-sidebar);border-radius:12px;overflow:hidden;border:1px solid var(--border);box-shadow:0 4px 20px rgba(0,0,0,0.15);">
+            <div style="background:linear-gradient(135deg,#6fcff5,#8b5cf6);padding:12px 16px;display:flex;align-items:center;gap:8px;">
+              <div style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.4);"></div>
+              <div style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.4);"></div>
+              <div style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.4);"></div>
+              <div style="flex:1;background:rgba(255,255,255,0.2);border-radius:4px;padding:3px 8px;font-size:9px;color:rgba(255,255,255,0.8);text-align:center;">artesanias-oaxaquenas.skybrandmx.com</div>
+            </div>
+            <div style="padding:16px;">
+              <div style="width:100%;height:80px;background:linear-gradient(135deg,rgba(111,207,245,0.15),rgba(139,92,246,0.1));border-radius:8px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;">
+                <p style="font-size:11px;font-weight:800;color:var(--text-primary);opacity:0.6;">Banner principal</p>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+                <div style="height:50px;background:var(--input-bg);border-radius:6px;"></div>
+                <div style="height:50px;background:var(--input-bg);border-radius:6px;"></div>
+                <div style="height:50px;background:var(--input-bg);border-radius:6px;"></div>
+              </div>
+              <div style="margin-top:10px;height:6px;background:var(--input-bg);border-radius:3px;width:60%;"></div>
+              <div style="margin-top:6px;height:6px;background:var(--input-bg);border-radius:3px;width:40%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Store settings modal (inline, toggled) -->
+    <div id="store-settings-modal" class="store-modal-overlay" style="display:none;">
+      <div class="store-modal">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);">Configuracion de la tienda</h3>
+          <button onclick="closeStoreSettings()" class="store-help-close" style="position:static;">&times;</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div>
+            <label class="store-form-label">Nombre de la tienda</label>
+            <input id="store-setting-name" type="text" class="store-input" value="Artesanias Oaxaquenas" />
+          </div>
+          <div>
+            <label class="store-form-label">Descripcion</label>
+            <textarea id="store-setting-desc" class="store-input" rows="3" style="resize:vertical;">Artesanias hechas a mano desde Oaxaca, Mexico. Tradicion y calidad en cada pieza.</textarea>
+          </div>
+          <div>
+            <label class="store-form-label">Moneda</label>
+            <select id="store-setting-currency" class="store-input" style="cursor:pointer;">
+              <option value="MXN" selected>MXN - Peso mexicano</option>
+              <option value="USD">USD - Dolar americano</option>
+            </select>
+          </div>
+          <div>
+            <label class="store-form-label">Idioma</label>
+            <select id="store-setting-lang" class="store-input" style="cursor:pointer;">
+              <option value="es" selected>Espanol</option>
+              <option value="en">Ingles</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+            <button onclick="closeStoreSettings()" class="store-btn-secondary">Cancelar</button>
+            <button onclick="saveStoreSettings()" class="store-btn-primary">Guardar cambios</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Diseno ══════════ -->
+  <div id="store-panel-diseno" style="display:none;">
+    <div id="store-help-diseno" class="store-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Elige un tema para tu tienda y personaliza los colores, el logo y las fuentes. Los cambios se ven en tiempo real.</p>
+      <button onclick="storeDismissHelp('diseno')" class="store-help-close">&times;</button>
+    </div>
+
+    <!-- Theme selector -->
+    <h3 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:14px;">Elige un tema</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px;">
+      <!-- Theme: Moderno -->
+      <div id="store-theme-moderno" class="store-theme-card store-theme-active" onclick="selectTheme('moderno')">
+        <div class="store-theme-preview" style="background:linear-gradient(135deg,#0f172a,#1e293b);">
+          <div style="display:flex;gap:6px;margin-bottom:8px;">
+            <div style="width:20px;height:20px;border-radius:4px;background:#6fcff5;"></div>
+            <div style="flex:1;height:20px;border-radius:4px;background:rgba(255,255,255,0.1);"></div>
+          </div>
+          <div style="height:40px;background:linear-gradient(135deg,#6fcff5,#8b5cf6);border-radius:6px;margin-bottom:6px;"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+            <div style="height:24px;background:rgba(255,255,255,0.06);border-radius:4px;"></div>
+            <div style="height:24px;background:rgba(255,255,255,0.06);border-radius:4px;"></div>
+          </div>
+        </div>
+        <div class="store-theme-info">
+          <p class="store-theme-name">Moderno</p>
+          <p class="store-theme-desc">Limpio y profesional con colores vibrantes</p>
+        </div>
+        <div class="store-theme-check">
+          <svg style="width:16px;height:16px;color:#fff;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        </div>
+      </div>
+
+      <!-- Theme: Artesanal -->
+      <div id="store-theme-artesanal" class="store-theme-card" onclick="selectTheme('artesanal')">
+        <div class="store-theme-preview" style="background:linear-gradient(135deg,#fef3c7,#fde68a);">
+          <div style="display:flex;gap:6px;margin-bottom:8px;">
+            <div style="width:20px;height:20px;border-radius:4px;background:#92400e;"></div>
+            <div style="flex:1;height:20px;border-radius:4px;background:rgba(0,0,0,0.08);"></div>
+          </div>
+          <div style="height:40px;background:linear-gradient(135deg,#92400e,#b45309);border-radius:6px;margin-bottom:6px;"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+            <div style="height:24px;background:rgba(0,0,0,0.06);border-radius:4px;"></div>
+            <div style="height:24px;background:rgba(0,0,0,0.06);border-radius:4px;"></div>
+          </div>
+        </div>
+        <div class="store-theme-info">
+          <p class="store-theme-name">Artesanal</p>
+          <p class="store-theme-desc">Tonos calidos y texturas naturales</p>
+        </div>
+        <div class="store-theme-check">
+          <svg style="width:16px;height:16px;color:#fff;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        </div>
+      </div>
+
+      <!-- Theme: Minimalista -->
+      <div id="store-theme-minimalista" class="store-theme-card" onclick="selectTheme('minimalista')">
+        <div class="store-theme-preview" style="background:linear-gradient(135deg,#f8fafc,#e2e8f0);">
+          <div style="display:flex;gap:6px;margin-bottom:8px;">
+            <div style="width:20px;height:20px;border-radius:4px;background:#1e293b;"></div>
+            <div style="flex:1;height:20px;border-radius:4px;background:rgba(0,0,0,0.06);"></div>
+          </div>
+          <div style="height:40px;background:#1e293b;border-radius:6px;margin-bottom:6px;"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+            <div style="height:24px;background:rgba(0,0,0,0.04);border-radius:4px;"></div>
+            <div style="height:24px;background:rgba(0,0,0,0.04);border-radius:4px;"></div>
+          </div>
+        </div>
+        <div class="store-theme-info">
+          <p class="store-theme-name">Minimalista</p>
+          <p class="store-theme-desc">Blanco y negro, elegante y simple</p>
+        </div>
+        <div class="store-theme-check">
+          <svg style="width:16px;height:16px;color:#fff;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        </div>
+      </div>
+
+      <!-- Theme: Colorido -->
+      <div id="store-theme-colorido" class="store-theme-card" onclick="selectTheme('colorido')">
+        <div class="store-theme-preview" style="background:linear-gradient(135deg,#fdf2f8,#ede9fe);">
+          <div style="display:flex;gap:6px;margin-bottom:8px;">
+            <div style="width:20px;height:20px;border-radius:4px;background:#ec4899;"></div>
+            <div style="flex:1;height:20px;border-radius:4px;background:rgba(0,0,0,0.06);"></div>
+          </div>
+          <div style="height:40px;background:linear-gradient(135deg,#ec4899,#8b5cf6,#6fcff5);border-radius:6px;margin-bottom:6px;"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+            <div style="height:24px;background:rgba(0,0,0,0.04);border-radius:4px;"></div>
+            <div style="height:24px;background:rgba(0,0,0,0.04);border-radius:4px;"></div>
+          </div>
+        </div>
+        <div class="store-theme-info">
+          <p class="store-theme-name">Colorido</p>
+          <p class="store-theme-desc">Gradientes y colores llamativos</p>
+        </div>
+        <div class="store-theme-check">
+          <svg style="width:16px;height:16px;color:#fff;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Customization panel -->
+    <div class="stat-card animate-in" style="padding:24px;margin-bottom:20px;">
+      <h3 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Personalizar</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;">
+        <div>
+          <label class="store-form-label">Color principal</label>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <input id="store-color-primary" type="color" value="#6fcff5" style="width:40px;height:40px;border:none;border-radius:8px;cursor:pointer;background:none;" />
+            <span style="font-size:12px;color:var(--text-muted);">#6fcff5</span>
+          </div>
+        </div>
+        <div>
+          <label class="store-form-label">Color secundario</label>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <input id="store-color-secondary" type="color" value="#8b5cf6" style="width:40px;height:40px;border:none;border-radius:8px;cursor:pointer;background:none;" />
+            <span style="font-size:12px;color:var(--text-muted);">#8b5cf6</span>
+          </div>
+        </div>
+        <div>
+          <label class="store-form-label">Fuente</label>
+          <select id="store-font" class="store-input" style="cursor:pointer;">
+            <option value="inter">Inter (moderna)</option>
+            <option value="playfair">Playfair Display (elegante)</option>
+            <option value="poppins">Poppins (amigable)</option>
+            <option value="roboto">Roboto (neutral)</option>
+          </select>
+        </div>
+        <div>
+          <label class="store-form-label">Logo</label>
+          <button onclick="showToast('Funcion de subida disponible proximamente')" class="store-btn-secondary" style="width:100%;display:flex;align-items:center;justify-content:center;gap:6px;">
+            <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            Subir logo
+          </button>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+        <button onclick="showToast('Cambios de diseno guardados')" class="store-btn-primary">Guardar diseno</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Paginas ══════════ -->
+  <div id="store-panel-paginas" style="display:none;">
+    <div id="store-help-paginas" class="store-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Administra las paginas de tu tienda. Puedes agregar, editar o reordenar las paginas que tus clientes ven.</p>
+      <button onclick="storeDismissHelp('paginas')" class="store-help-close">&times;</button>
+    </div>
+
+    <div class="stat-card animate-in" style="padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div style="flex:1;min-width:200px;position:relative;">
+        <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input id="store-page-search" type="text" placeholder="Buscar paginas..." oninput="filterPages()" class="store-input" style="padding-left:38px;" />
+      </div>
+      <button onclick="openPageEditor(null)" class="store-btn-primary" style="display:flex;align-items:center;gap:6px;padding:10px 20px;">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Nueva pagina
+      </button>
+    </div>
+
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr style="border-bottom:1px solid var(--border);">
+          <th class="store-th">Pagina</th>
+          <th class="store-th">Ruta</th>
+          <th class="store-th">Estado</th>
+          <th class="store-th">Ultima edicion</th>
+          <th class="store-th" style="text-align:center;">Acciones</th>
+        </tr></thead>
+        <tbody id="store-pages-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- Page editor modal -->
+    <div id="store-page-modal" class="store-modal-overlay" style="display:none;">
+      <div class="store-modal" style="max-width:560px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <h3 id="store-page-modal-title" style="font-size:16px;font-weight:900;color:var(--text-primary);">Editar pagina</h3>
+          <button onclick="closePageEditor()" class="store-help-close" style="position:static;">&times;</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div>
+            <label class="store-form-label">Titulo</label>
+            <input id="store-page-title" type="text" class="store-input" placeholder="Ej: Nosotros" />
+          </div>
+          <div>
+            <label class="store-form-label">Ruta (URL)</label>
+            <input id="store-page-slug" type="text" class="store-input" placeholder="Ej: /nosotros" />
+          </div>
+          <div>
+            <label class="store-form-label">Contenido</label>
+            <textarea id="store-page-content" class="store-input" rows="6" style="resize:vertical;" placeholder="Escribe el contenido de la pagina..."></textarea>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <label class="store-toggle-wrap"><input id="store-page-visible" type="checkbox" checked><span class="store-toggle-slider"></span></label>
+            <span style="font-size:12px;color:var(--text-secondary);">Visible en la tienda</span>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+            <button onclick="closePageEditor()" class="store-btn-secondary">Cancelar</button>
+            <button onclick="savePage()" class="store-btn-primary">Guardar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Dominio ══════════ -->
+  <div id="store-panel-dominio" style="display:none;">
+    <div id="store-help-dominio" class="store-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Configura un dominio propio para tu tienda o usa el subdominio gratuito de SkyBrandMX. El certificado SSL se activa automaticamente.</p>
+      <button onclick="storeDismissHelp('dominio')" class="store-help-close">&times;</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;">
+      <!-- Current domain -->
+      <div class="stat-card animate-in" style="padding:24px;">
+        <h3 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Dominio actual</h3>
+        <div style="background:var(--input-bg);border-radius:10px;padding:16px;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Subdominio SkyBrandMX</p>
+            <span class="store-badge store-badge-success">Activo</span>
+          </div>
+          <p style="font-size:15px;font-weight:800;color:var(--accent);">artesanias-oaxaquenas.skybrandmx.com</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:12px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);border-radius:10px;">
+          <svg style="width:18px;height:18px;color:#22c55e;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          <div>
+            <p style="font-size:12px;font-weight:700;color:#22c55e;">Certificado SSL activo</p>
+            <p style="font-size:10px;color:var(--text-muted);">Tu tienda usa HTTPS. Se renueva automaticamente.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Custom domain -->
+      <div class="stat-card animate-in" style="padding:24px;">
+        <h3 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Dominio personalizado</h3>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Conecta tu propio dominio para dar una imagen mas profesional a tu tienda.</p>
+        <div style="display:flex;gap:10px;margin-bottom:16px;">
+          <input id="store-custom-domain" type="text" class="store-input" placeholder="www.mitienda.com" style="flex:1;" />
+          <button onclick="connectDomain()" class="store-btn-primary">Conectar</button>
+        </div>
+        <div id="store-dns-instructions" style="display:none;">
+          <h4 style="font-size:12px;font-weight:800;color:var(--text-primary);margin-bottom:10px;">Instrucciones DNS</h4>
+          <div style="background:var(--input-bg);border-radius:10px;padding:14px;font-family:monospace;font-size:11px;">
+            <p style="color:var(--text-muted);margin-bottom:8px;">Agrega estos registros en tu proveedor de dominio:</p>
+            <div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;color:var(--text-secondary);">
+              <span style="font-weight:700;color:var(--accent);">Tipo</span>
+              <span style="font-weight:700;color:var(--accent);">Nombre</span>
+              <span style="font-weight:700;color:var(--accent);">Valor</span>
+              <span>CNAME</span><span>www</span><span>proxy.skybrandmx.com</span>
+              <span>A</span><span>@</span><span>76.76.21.21</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:12px;padding:10px;background:rgba(234,179,8,0.06);border:1px solid rgba(234,179,8,0.15);border-radius:8px;">
+            <svg style="width:16px;height:16px;color:#eab308;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+            <p style="font-size:11px;color:var(--text-secondary);">Los cambios DNS pueden tardar hasta 48 horas en propagarse.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Analitica ══════════ -->
+  <div id="store-panel-analitica" style="display:none;">
+    <div id="store-help-analitica" class="store-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Aqui puedes ver las estadisticas de visitas, conversion y trafico de tu tienda. Los datos se actualizan cada hora.</p>
+      <button onclick="storeDismissHelp('analitica')" class="store-help-close">&times;</button>
+    </div>
+
+    <!-- Visitors chart -->
+    <div class="stat-card animate-in" style="padding:24px;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <h3 style="font-size:14px;font-weight:800;color:var(--text-primary);">Visitas por dia</h3>
+        <select id="store-chart-range" onchange="renderVisitorsChart()" class="store-input" style="width:auto;padding:6px 12px;cursor:pointer;">
+          <option value="7">Ultimos 7 dias</option>
+          <option value="14">Ultimos 14 dias</option>
+          <option value="30" selected>Ultimos 30 dias</option>
+        </select>
+      </div>
+      <div id="store-visitors-chart" style="height:200px;display:flex;align-items:flex-end;gap:4px;padding:0 4px;"></div>
+      <div id="store-chart-labels" style="display:flex;justify-content:space-between;margin-top:8px;font-size:9px;color:var(--text-faint);"></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;">
+      <!-- Conversion funnel -->
+      <div class="stat-card animate-in" style="padding:24px;">
+        <h3 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Embudo de conversion</h3>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="store-funnel-step">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <span style="font-size:12px;font-weight:700;color:var(--text-secondary);">Visitantes</span>
+              <span style="font-size:12px;font-weight:800;color:var(--text-primary);">1,234</span>
+            </div>
+            <div class="store-progress-bar"><div class="store-progress-fill" style="width:100%;background:var(--accent);"></div></div>
+          </div>
+          <div class="store-funnel-step">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <span style="font-size:12px;font-weight:700;color:var(--text-secondary);">Vieron producto</span>
+              <span style="font-size:12px;font-weight:800;color:var(--text-primary);">687</span>
+            </div>
+            <div class="store-progress-bar"><div class="store-progress-fill" style="width:55.7%;background:#8b5cf6;"></div></div>
+          </div>
+          <div class="store-funnel-step">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <span style="font-size:12px;font-weight:700;color:var(--text-secondary);">Agregaron al carrito</span>
+              <span style="font-size:12px;font-weight:800;color:var(--text-primary);">156</span>
+            </div>
+            <div class="store-progress-bar"><div class="store-progress-fill" style="width:12.6%;background:#f97316;"></div></div>
+          </div>
+          <div class="store-funnel-step">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <span style="font-size:12px;font-weight:700;color:var(--text-secondary);">Compraron</span>
+              <span style="font-size:12px;font-weight:800;color:var(--text-primary);">47</span>
+            </div>
+            <div class="store-progress-bar"><div class="store-progress-fill" style="width:3.8%;background:#22c55e;"></div></div>
+          </div>
+        </div>
+        <p style="font-size:11px;color:var(--text-faint);margin-top:12px;">Tasa de conversion: <strong style="color:#22c55e;">3.8%</strong></p>
+      </div>
+
+      <!-- Top pages -->
+      <div class="stat-card animate-in" style="padding:24px;">
+        <h3 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Paginas mas visitadas</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;" id="store-top-pages"></div>
+      </div>
+
+      <!-- Traffic sources -->
+      <div class="stat-card animate-in" style="padding:24px;">
+        <h3 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Fuentes de trafico</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;" id="store-traffic-sources"></div>
+      </div>
+    </div>
+  </div>
+
+</DashboardLayout>
+
+<style>
+  /* ══════════ STORE MODULE STYLES ══════════ */
+
+  /* Stat labels */
+  .store-stat-label { font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px; }
+  .store-stat-val { font-size:28px;font-weight:900;color:var(--text-primary); }
+
+  /* Tooltips */
+  .store-tip { display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--input-bg);color:var(--text-faint);font-size:10px;font-weight:800;cursor:help;position:relative; }
+  .store-tip:hover::after { content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg-sidebar);color:var(--text-secondary);font-size:11px;font-weight:500;padding:8px 12px;border-radius:8px;white-space:normal;width:220px;z-index:100;border:1px solid var(--border);box-shadow:0 4px 12px rgba(0,0,0,0.3);line-height:1.4; }
+
+  /* Trends */
+  .store-trend { font-size:11px;font-weight:700; }
+
+  /* Tabs */
+  .store-tab { padding:10px 18px;border:none;background:transparent;color:var(--text-faint);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;white-space:nowrap; }
+  .store-tab:hover { color:var(--text-secondary); }
+  .store-tab.active { color:var(--accent);border-bottom-color:var(--accent); }
+
+  /* Help banners */
+  .store-help-banner { display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(111,207,245,0.06);border:1px solid rgba(111,207,245,0.12);border-radius:10px;margin-bottom:16px; }
+  .store-help-close { background:transparent;border:none;color:var(--text-faint);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:4px;transition:color 0.15s; }
+  .store-help-close:hover { color:var(--text-primary); }
+
+  /* Badges */
+  .store-badge { display:inline-flex;align-items:center;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700; }
+  .store-badge-success { background:rgba(34,197,94,0.1);color:#22c55e; }
+  .store-badge-warning { background:rgba(234,179,8,0.1);color:#eab308; }
+  .store-badge-draft { background:rgba(148,163,184,0.1);color:#94a3b8; }
+  .store-badge-info { background:rgba(111,207,245,0.1);color:#6fcff5; }
+
+  /* Buttons */
+  .store-btn-primary { padding:10px 20px;border-radius:10px;border:none;background:var(--accent);color:#0f172a;font-size:12px;font-weight:800;cursor:pointer;transition:all 0.15s; }
+  .store-btn-primary:hover { opacity:0.9;transform:translateY(-1px); }
+  .store-btn-secondary { padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s; }
+  .store-btn-secondary:hover { background:var(--nav-hover);color:var(--text-primary); }
+
+  /* Inputs */
+  .store-input { width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-family:inherit;transition:border-color 0.15s; }
+  .store-input:focus { outline:none;border-color:var(--accent); }
+  .store-form-label { display:block;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px; }
+
+  /* Table */
+  .store-th { padding:12px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px; }
+  .store-td { padding:14px 16px;border-top:1px solid var(--border);font-size:13px;color:var(--text-secondary);vertical-align:middle; }
+
+  /* Theme cards */
+  .store-theme-card { border-radius:14px;border:2px solid var(--border);overflow:hidden;cursor:pointer;transition:all 0.2s;position:relative; }
+  .store-theme-card:hover { border-color:rgba(111,207,245,0.3);transform:translateY(-2px); }
+  .store-theme-active { border-color:var(--accent) !important;box-shadow:0 0 0 3px rgba(111,207,245,0.15); }
+  .store-theme-preview { padding:16px;height:130px; }
+  .store-theme-info { padding:14px 16px;border-top:1px solid var(--border); }
+  .store-theme-name { font-size:13px;font-weight:800;color:var(--text-primary);margin-bottom:2px; }
+  .store-theme-desc { font-size:11px;color:var(--text-muted); }
+  .store-theme-check { position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:50%;background:var(--accent);display:none;align-items:center;justify-content:center; }
+  .store-theme-active .store-theme-check { display:flex; }
+
+  /* Toggle switch */
+  .store-toggle-wrap { position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0; }
+  .store-toggle-wrap input { opacity:0;width:0;height:0; }
+  .store-toggle-slider { position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:22px;transition:0.3s; }
+  .store-toggle-slider::before { content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s; }
+  .store-toggle-wrap input:checked + .store-toggle-slider { background:#22c55e; }
+  .store-toggle-wrap input:checked + .store-toggle-slider::before { transform:translateX(18px); }
+
+  /* Autopilot items */
+  .store-autopilot-item { background:var(--input-bg);border-radius:10px;padding:14px; }
+
+  /* Progress bar */
+  .store-progress-bar { width:100%;height:8px;background:var(--input-bg);border-radius:4px;overflow:hidden; }
+  .store-progress-fill { height:100%;border-radius:4px;transition:width 0.6s ease; }
+
+  /* Modal */
+  .store-modal-overlay { position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px); }
+  .store-modal { background:var(--bg-sidebar);border:1px solid var(--border);border-radius:16px;padding:28px;width:90%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.4); }
+
+  /* Smart rec */
+  .store-smart-rec { display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:12px;border:1px solid rgba(234,179,8,0.15);background:rgba(234,179,8,0.04);cursor:pointer;transition:all 0.15s; }
+  .store-smart-rec:hover { background:rgba(234,179,8,0.08);border-color:rgba(234,179,8,0.25); }
+
+  /* Responsive */
+  @media(max-width:640px) {
+    .store-stat-val { font-size:22px; }
+    .store-theme-preview { height:100px; }
+  }
+</style>
+
+<script is:inline>
+// ═══════ DEMO DATA ═══════
+const storeData = {
+  name: 'Artesanias Oaxaquenas',
+  url: 'artesanias-oaxaquenas.skybrandmx.com',
+  status: 'published', // published | draft
+  theme: 'moderno',
+  visits: 1234,
+  conversion: 3.8,
+  orders: 47,
+  products: 28,
+  domain: 'activo'
+};
+
+const storePages = [
+  { id:1, title:'Inicio', slug:'/', status:'visible', lastEdit:'2026-03-28', system:true },
+  { id:2, title:'Productos', slug:'/productos', status:'visible', lastEdit:'2026-03-27', system:true },
+  { id:3, title:'Nosotros', slug:'/nosotros', status:'visible', lastEdit:'2026-03-20', system:false },
+  { id:4, title:'Contacto', slug:'/contacto', status:'visible', lastEdit:'2026-03-18', system:false },
+  { id:5, title:'Politica de envio', slug:'/envio', status:'visible', lastEdit:'2026-03-15', system:false },
+  { id:6, title:'Preguntas frecuentes', slug:'/faq', status:'borrador', lastEdit:'2026-03-10', system:false },
+];
+
+const visitorsData = [];
+(function generateVisitors() {
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const base = 30 + Math.floor(Math.random() * 50);
+    const weekend = (d.getDay() === 0 || d.getDay() === 6) ? 0.6 : 1;
+    visitorsData.push({
+      date: d.toISOString().split('T')[0],
+      label: d.getDate() + '/' + (d.getMonth()+1),
+      visits: Math.floor(base * weekend)
+    });
+  }
+})();
+
+const topPages = [
+  { page:'Inicio', views:456, pct:37 },
+  { page:'Productos', views:312, pct:25.3 },
+  { page:'Alebrije grande', views:189, pct:15.3 },
+  { page:'Barro negro', views:145, pct:11.7 },
+  { page:'Nosotros', views:78, pct:6.3 },
+  { page:'Contacto', views:54, pct:4.4 },
+];
+
+const trafficSources = [
+  { source:'Busqueda organica', visits:512, pct:41.5, color:'#22c55e' },
+  { source:'Redes sociales', visits:321, pct:26, color:'#8b5cf6' },
+  { source:'Directo', visits:234, pct:19, color:'#6fcff5' },
+  { source:'Email', visits:98, pct:7.9, color:'#f97316' },
+  { source:'Referidos', visits:69, pct:5.6, color:'#eab308' },
+];
+
+const smartRecs = [
+  { text:'Tu tienda no tiene logo. Sube uno para dar mejor imagen.', icon:'image', action:() => { switchStoreTab('diseno'); showToast('Sube tu logo en la seccion de Personalizar'); }},
+  { text:'La pagina de preguntas frecuentes esta en borrador. Publicala para ayudar a tus clientes.', icon:'page', action:() => switchStoreTab('paginas') },
+  { text:'Conecta un dominio propio para verte mas profesional.', icon:'globe', action:() => switchStoreTab('dominio') },
+];
+
+// ═══════ HELP BANNERS ═══════
+function storeDismissHelp(tab) {
+  const el = document.getElementById('store-help-' + tab);
+  if (el) el.style.display = 'none';
+  localStorage.setItem('store_help_' + tab + '_dismissed', '1');
+}
+function initHelpBanners() {
+  ['mi-tienda','diseno','paginas','dominio','analitica'].forEach(t => {
+    if (localStorage.getItem('store_help_' + t + '_dismissed')) {
+      const el = document.getElementById('store-help-' + t);
+      if (el) el.style.display = 'none';
+    }
+  });
+}
+
+// ═══════ TOAST ═══════
+function showToast(msg) {
+  let t = document.getElementById('store-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'store-toast';
+    t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#22c55e;color:#fff;padding:12px 24px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;transform:translateY(20px);opacity:0;transition:all 0.3s;box-shadow:0 4px 16px rgba(0,0,0,0.2);';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  t.style.transform = 'translateY(0)';
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(20px)'; }, 3000);
+}
+
+// ═══════ TAB SWITCHING ═══════
+function switchStoreTab(tab) {
+  document.querySelectorAll('.store-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('store-tab-' + tab).classList.add('active');
+  ['mi-tienda','diseno','paginas','dominio','analitica'].forEach(p => {
+    const panel = document.getElementById('store-panel-' + p);
+    if (panel) panel.style.display = p === tab ? '' : 'none';
+  });
+  if (tab === 'analitica') renderVisitorsChart();
+}
+
+// ═══════ STATS ═══════
+function renderStats() {
+  document.getElementById('store-stat-visits').textContent = storeData.visits.toLocaleString();
+  document.getElementById('store-stat-conversion').textContent = storeData.conversion + '%';
+  document.getElementById('store-stat-orders').textContent = storeData.orders;
+  document.getElementById('store-stat-products').textContent = storeData.products;
+  document.getElementById('store-stat-pages').textContent = storePages.length;
+  document.getElementById('store-stat-domain').textContent = storeData.domain === 'activo' ? 'Activo' : 'Pendiente';
+  document.getElementById('store-stat-domain').style.color = storeData.domain === 'activo' ? '#22c55e' : '#eab308';
+
+  setTrend('store-trend-visits', '+18.2%', 'vs mes pasado');
+  setTrend('store-trend-conversion', '+0.5%', 'vs mes pasado');
+  setTrend('store-trend-orders', '+12', 'vs mes pasado');
+}
+function setTrend(id, val, label) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const isUp = val.startsWith('+');
+  const color = isUp ? '#22c55e' : '#ef4444';
+  el.innerHTML = '<span style="color:' + color + ';">' + (isUp ? '&#9650;' : '&#9660;') + ' ' + val + '</span>';
+  el.title = label;
+}
+
+// ═══════ SMART RECS ═══════
+function renderSmartRecs() {
+  const container = document.getElementById('store-smart-recs');
+  if (!container) return;
+  const dismissed = JSON.parse(localStorage.getItem('store_recs_dismissed') || '[]');
+  const icons = {
+    image: '<svg style="width:18px;height:18px;color:#eab308;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>',
+    page: '<svg style="width:18px;height:18px;color:#eab308;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>',
+    globe: '<svg style="width:18px;height:18px;color:#eab308;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>'
+  };
+  let html = '';
+  smartRecs.forEach((rec, i) => {
+    if (dismissed.includes(i)) return;
+    html += '<div class="store-smart-rec" onclick="smartRecs[' + i + '].action()">' +
+      icons[rec.icon] +
+      '<p style="flex:1;font-size:12px;font-weight:600;color:var(--text-secondary);">' + rec.text + '</p>' +
+      '<button onclick="event.stopPropagation();dismissRec(' + i + ')" style="background:transparent;border:none;color:var(--text-faint);font-size:16px;cursor:pointer;padding:2px 6px;">&times;</button>' +
+    '</div>';
+  });
+  container.innerHTML = html;
+}
+function dismissRec(idx) {
+  const d = JSON.parse(localStorage.getItem('store_recs_dismissed') || '[]');
+  if (!d.includes(idx)) d.push(idx);
+  localStorage.setItem('store_recs_dismissed', JSON.stringify(d));
+  renderSmartRecs();
+}
+
+// ═══════ PAGES TABLE ═══════
+function renderPages() {
+  const tbody = document.getElementById('store-pages-tbody');
+  if (!tbody) return;
+  const search = (document.getElementById('store-page-search')?.value || '').toLowerCase();
+  let data = [...storePages];
+  if (search) data = data.filter(p => p.title.toLowerCase().includes(search) || p.slug.toLowerCase().includes(search));
+
+  let html = '';
+  data.forEach(p => {
+    const statusBadge = p.status === 'visible'
+      ? '<span class="store-badge store-badge-success">Visible</span>'
+      : '<span class="store-badge store-badge-draft">Borrador</span>';
+    html += '<tr>' +
+      '<td class="store-td"><span style="font-weight:700;color:var(--text-primary);">' + p.title + '</span>' + (p.system ? ' <span style="font-size:9px;color:var(--text-faint);background:var(--input-bg);padding:2px 6px;border-radius:4px;margin-left:6px;">Sistema</span>' : '') + '</td>' +
+      '<td class="store-td" style="font-family:monospace;font-size:12px;color:var(--accent);">' + p.slug + '</td>' +
+      '<td class="store-td">' + statusBadge + '</td>' +
+      '<td class="store-td">' + p.lastEdit + '</td>' +
+      '<td class="store-td" style="text-align:center;">' +
+        '<div style="display:flex;align-items:center;justify-content:center;gap:6px;">' +
+          '<button onclick="openPageEditor(' + p.id + ')" class="store-action-btn" title="Editar"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>' +
+          (p.system ? '' : '<button onclick="togglePageVisibility(' + p.id + ')" class="store-action-btn" title="Cambiar visibilidad"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>') +
+        '</div>' +
+      '</td>' +
+    '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+function filterPages() { renderPages(); }
+
+let editingPageId = null;
+function openPageEditor(id) {
+  editingPageId = id;
+  const modal = document.getElementById('store-page-modal');
+  const titleEl = document.getElementById('store-page-modal-title');
+  if (id) {
+    const page = storePages.find(p => p.id === id);
+    if (!page) return;
+    titleEl.textContent = 'Editar pagina';
+    document.getElementById('store-page-title').value = page.title;
+    document.getElementById('store-page-slug').value = page.slug;
+    document.getElementById('store-page-content').value = 'Contenido de la pagina ' + page.title + '...';
+    document.getElementById('store-page-visible').checked = page.status === 'visible';
+  } else {
+    titleEl.textContent = 'Nueva pagina';
+    document.getElementById('store-page-title').value = '';
+    document.getElementById('store-page-slug').value = '';
+    document.getElementById('store-page-content').value = '';
+    document.getElementById('store-page-visible').checked = true;
+  }
+  modal.style.display = 'flex';
+}
+function closePageEditor() {
+  document.getElementById('store-page-modal').style.display = 'none';
+  editingPageId = null;
+}
+function savePage() {
+  if (editingPageId) {
+    const page = storePages.find(p => p.id === editingPageId);
+    if (page) {
+      page.title = document.getElementById('store-page-title').value || page.title;
+      page.slug = document.getElementById('store-page-slug').value || page.slug;
+      page.status = document.getElementById('store-page-visible').checked ? 'visible' : 'borrador';
+      page.lastEdit = new Date().toISOString().split('T')[0];
+    }
+    showToast('Pagina actualizada');
+  } else {
+    const newId = Math.max(...storePages.map(p => p.id)) + 1;
+    storePages.push({
+      id: newId,
+      title: document.getElementById('store-page-title').value || 'Sin titulo',
+      slug: document.getElementById('store-page-slug').value || '/nueva-pagina',
+      status: document.getElementById('store-page-visible').checked ? 'visible' : 'borrador',
+      lastEdit: new Date().toISOString().split('T')[0],
+      system: false
+    });
+    showToast('Pagina creada');
+  }
+  closePageEditor();
+  renderPages();
+  renderStats();
+}
+function togglePageVisibility(id) {
+  const page = storePages.find(p => p.id === id);
+  if (page) {
+    page.status = page.status === 'visible' ? 'borrador' : 'visible';
+    showToast('Visibilidad cambiada a: ' + page.status);
+    renderPages();
+  }
+}
+
+// ═══════ STORE ACTIONS ═══════
+function previewStore() {
+  showToast('Abriendo vista previa de la tienda...');
+}
+function openStoreSettings() {
+  document.getElementById('store-settings-modal').style.display = 'flex';
+}
+function closeStoreSettings() {
+  document.getElementById('store-settings-modal').style.display = 'none';
+}
+function saveStoreSettings() {
+  storeData.name = document.getElementById('store-setting-name').value;
+  document.getElementById('store-name').textContent = storeData.name;
+  showToast('Configuracion guardada');
+  closeStoreSettings();
+}
+function toggleStoreStatus() {
+  if (storeData.status === 'published') {
+    storeData.status = 'draft';
+    document.getElementById('store-status-badge').textContent = 'Borrador';
+    document.getElementById('store-status-badge').className = 'store-badge store-badge-draft';
+    document.getElementById('store-toggle-btn').innerHTML = '<svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 11-12.728 0M12 3v9"/></svg> Publicar';
+    showToast('Tienda despublicada');
+  } else {
+    storeData.status = 'published';
+    document.getElementById('store-status-badge').textContent = 'Publicada';
+    document.getElementById('store-status-badge').className = 'store-badge store-badge-success';
+    document.getElementById('store-toggle-btn').innerHTML = '<svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 11-12.728 0M12 3v9"/></svg> Despublicar';
+    showToast('Tienda publicada');
+  }
+}
+
+// ═══════ THEME SELECTOR ═══════
+function selectTheme(theme) {
+  document.querySelectorAll('.store-theme-card').forEach(c => c.classList.remove('store-theme-active'));
+  document.getElementById('store-theme-' + theme).classList.add('store-theme-active');
+  storeData.theme = theme;
+  showToast('Tema "' + theme.charAt(0).toUpperCase() + theme.slice(1) + '" seleccionado');
+}
+
+// ═══════ DOMAIN ═══════
+function connectDomain() {
+  const domain = document.getElementById('store-custom-domain').value.trim();
+  if (!domain) { showToast('Escribe un dominio'); return; }
+  document.getElementById('store-dns-instructions').style.display = 'block';
+  showToast('Instrucciones DNS generadas para ' + domain);
+}
+
+// ═══════ AUTOPILOT ═══════
+function toggleAutopilot(feature, enabled) {
+  showToast(feature + ' ' + (enabled ? 'activado' : 'desactivado'));
+}
+
+// ═══════ VISITORS CHART ═══════
+function renderVisitorsChart() {
+  const container = document.getElementById('store-visitors-chart');
+  const labelsContainer = document.getElementById('store-chart-labels');
+  if (!container) return;
+
+  const range = parseInt(document.getElementById('store-chart-range')?.value || '30');
+  const data = visitorsData.slice(-range);
+  const max = Math.max(...data.map(d => d.visits));
+
+  let barsHtml = '';
+  data.forEach((d, i) => {
+    const h = max > 0 ? (d.visits / max) * 180 : 0;
+    const barColor = 'var(--accent)';
+    barsHtml += '<div style="flex:1;min-width:6px;max-width:20px;background:' + barColor + ';height:' + h + 'px;border-radius:3px 3px 0 0;opacity:0.7;cursor:pointer;transition:all 0.2s;" ' +
+      'onmouseover="this.style.opacity=\'1\';this.title=\'' + d.label + ': ' + d.visits + ' visitas\'" ' +
+      'onmouseout="this.style.opacity=\'0.7\'" title="' + d.label + ': ' + d.visits + ' visitas"></div>';
+  });
+  container.innerHTML = barsHtml;
+
+  // Labels
+  const step = Math.max(1, Math.floor(data.length / 6));
+  let labelsHtml = '';
+  for (let i = 0; i < data.length; i += step) {
+    labelsHtml += '<span>' + data[i].label + '</span>';
+  }
+  if (labelsContainer) labelsContainer.innerHTML = labelsHtml;
+}
+
+// ═══════ TOP PAGES & TRAFFIC ═══════
+function renderTopPages() {
+  const container = document.getElementById('store-top-pages');
+  if (!container) return;
+  let html = '';
+  topPages.forEach(p => {
+    html += '<div style="display:flex;align-items:center;gap:12px;">' +
+      '<div style="flex:1;">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">' +
+          '<span style="font-size:12px;font-weight:700;color:var(--text-secondary);">' + p.page + '</span>' +
+          '<span style="font-size:11px;color:var(--text-faint);">' + p.views + ' visitas</span>' +
+        '</div>' +
+        '<div class="store-progress-bar"><div class="store-progress-fill" style="width:' + p.pct + '%;background:var(--accent);"></div></div>' +
+      '</div>' +
+    '</div>';
+  });
+  container.innerHTML = html;
+}
+
+function renderTrafficSources() {
+  const container = document.getElementById('store-traffic-sources');
+  if (!container) return;
+  let html = '';
+  trafficSources.forEach(s => {
+    html += '<div style="display:flex;align-items:center;gap:12px;">' +
+      '<div style="width:10px;height:10px;border-radius:50%;background:' + s.color + ';flex-shrink:0;"></div>' +
+      '<div style="flex:1;">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">' +
+          '<span style="font-size:12px;font-weight:700;color:var(--text-secondary);">' + s.source + '</span>' +
+          '<span style="font-size:11px;color:var(--text-faint);">' + s.pct + '%</span>' +
+        '</div>' +
+        '<div class="store-progress-bar"><div class="store-progress-fill" style="width:' + s.pct + '%;background:' + s.color + ';"></div></div>' +
+      '</div>' +
+    '</div>';
+  });
+  container.innerHTML = html;
+}
+
+// ═══════ INIT ═══════
+document.addEventListener('DOMContentLoaded', function() {
+  renderStats();
+  renderSmartRecs();
+  renderPages();
+  renderTopPages();
+  renderTrafficSources();
+  initHelpBanners();
+});
+
+// Close modals on overlay click
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('store-modal-overlay')) {
+    e.target.style.display = 'none';
+  }
+});
+</script>

@@ -1,0 +1,1114 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+const API_URL = import.meta.env.PUBLIC_API_URL || '';
+---
+
+<DashboardLayout title="CRM">
+  <!-- Stats bar -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px;">
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Total contactos</p>
+      <p id="crm-stat-total" style="font-size:28px;font-weight:900;color:var(--text-primary);">--</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Activos</p>
+      <p id="crm-stat-active" style="font-size:28px;font-weight:900;color:#22c55e;">--</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Nuevos esta semana</p>
+      <p id="crm-stat-new" style="font-size:28px;font-weight:900;color:var(--accent);">--</p>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Revenue total</p>
+      <p id="crm-stat-revenue" style="font-size:28px;font-weight:900;color:var(--text-primary);">--</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;">
+    <button id="crm-tab-contacts" class="crm-tab active" onclick="switchCRMTab('contacts')" style="padding:10px 20px;border:none;background:transparent;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid var(--accent);transition:all 0.2s;">Contactos</button>
+    <button id="crm-tab-pipeline" class="crm-tab" onclick="switchCRMTab('pipeline')" style="padding:10px 20px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;">Pipeline</button>
+    <button id="crm-tab-activity" class="crm-tab" onclick="switchCRMTab('activity')" style="padding:10px 20px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;">Actividad</button>
+    <button id="crm-tab-forms" class="crm-tab" onclick="switchCRMTab('forms')" style="padding:10px 20px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;">Formularios</button>
+    <button id="crm-tab-segments" class="crm-tab" onclick="switchCRMTab('segments')" style="padding:10px 20px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;">Segmentos</button>
+    <button id="crm-tab-tasks" class="crm-tab" onclick="switchCRMTab('tasks')" style="padding:10px 20px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;">Tareas</button>
+    <button id="crm-tab-duplicates" class="crm-tab" onclick="switchCRMTab('duplicates')" style="padding:10px 20px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;">Duplicados</button>
+  </div>
+
+  <!-- Tab: Contacts -->
+  <div id="crm-panel-contacts">
+    <!-- Search + actions bar -->
+    <div class="stat-card animate-in" style="padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;position:relative;">
+        <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input id="crm-search" type="text" placeholder="Buscar contactos..." oninput="crmSearchDebounce()" style="width:100%;padding:10px 12px 10px 38px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+      </div>
+      <button onclick="openContactModal()" style="padding:10px 20px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s;white-space:nowrap;display:flex;align-items:center;gap:6px;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Agregar contacto
+      </button>
+    </div>
+
+    <!-- Contacts table -->
+    <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);">
+              <th style="padding:14px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Nombre</th>
+              <th style="padding:14px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Email</th>
+              <th style="padding:14px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Tel&eacute;fono</th>
+              <th style="padding:14px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Estado</th>
+              <th style="padding:14px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Tags</th>
+              <th style="padding:14px 16px;text-align:center;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Score</th>
+              <th style="padding:14px 16px;text-align:right;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Pedidos</th>
+              <th style="padding:14px 16px;text-align:right;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Revenue</th>
+              <th style="padding:14px 16px;text-align:center;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="crm-contacts-tbody">
+            <tr><td colspan="9" style="padding:40px;text-align:center;color:var(--text-faint);font-size:13px;">Cargando contactos...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Pipeline -->
+  <div id="crm-panel-pipeline" style="display:none;">
+    <div style="display:flex;gap:16px;overflow-x:auto;padding-bottom:16px;min-height:400px;" id="pipeline-container">
+      <div class="pipeline-col" data-stage="lead" style="min-width:240px;flex:1;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:10px;height:10px;border-radius:50%;background:#6fcff5;"></div>
+            <h4 style="font-size:13px;font-weight:800;color:var(--text-primary);">Lead</h4>
+          </div>
+          <span id="pipeline-count-lead" style="font-size:11px;font-weight:700;color:var(--text-faint);background:var(--input-bg);padding:2px 8px;border-radius:6px;">0</span>
+        </div>
+        <div class="pipeline-cards" data-stage="lead" style="display:flex;flex-direction:column;gap:8px;min-height:60px;padding:8px;border-radius:12px;border:2px dashed var(--border);transition:border-color 0.2s;" ondragover="event.preventDefault();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border)'" ondrop="dropCard(event,'lead');this.style.borderColor='var(--border)'"></div>
+      </div>
+      <div class="pipeline-col" data-stage="prospecto" style="min-width:240px;flex:1;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:10px;height:10px;border-radius:50%;background:#f97316;"></div>
+            <h4 style="font-size:13px;font-weight:800;color:var(--text-primary);">Prospecto</h4>
+          </div>
+          <span id="pipeline-count-prospecto" style="font-size:11px;font-weight:700;color:var(--text-faint);background:var(--input-bg);padding:2px 8px;border-radius:6px;">0</span>
+        </div>
+        <div class="pipeline-cards" data-stage="prospecto" style="display:flex;flex-direction:column;gap:8px;min-height:60px;padding:8px;border-radius:12px;border:2px dashed var(--border);transition:border-color 0.2s;" ondragover="event.preventDefault();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border)'" ondrop="dropCard(event,'prospecto');this.style.borderColor='var(--border)'"></div>
+      </div>
+      <div class="pipeline-col" data-stage="negociacion" style="min-width:240px;flex:1;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:10px;height:10px;border-radius:50%;background:#eab308;"></div>
+            <h4 style="font-size:13px;font-weight:800;color:var(--text-primary);">Negociaci&oacute;n</h4>
+          </div>
+          <span id="pipeline-count-negociacion" style="font-size:11px;font-weight:700;color:var(--text-faint);background:var(--input-bg);padding:2px 8px;border-radius:6px;">0</span>
+        </div>
+        <div class="pipeline-cards" data-stage="negociacion" style="display:flex;flex-direction:column;gap:8px;min-height:60px;padding:8px;border-radius:12px;border:2px dashed var(--border);transition:border-color 0.2s;" ondragover="event.preventDefault();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border)'" ondrop="dropCard(event,'negociacion');this.style.borderColor='var(--border)'"></div>
+      </div>
+      <div class="pipeline-col" data-stage="cliente" style="min-width:240px;flex:1;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:10px;height:10px;border-radius:50%;background:#22c55e;"></div>
+            <h4 style="font-size:13px;font-weight:800;color:var(--text-primary);">Cliente</h4>
+          </div>
+          <span id="pipeline-count-cliente" style="font-size:11px;font-weight:700;color:var(--text-faint);background:var(--input-bg);padding:2px 8px;border-radius:6px;">0</span>
+        </div>
+        <div class="pipeline-cards" data-stage="cliente" style="display:flex;flex-direction:column;gap:8px;min-height:60px;padding:8px;border-radius:12px;border:2px dashed var(--border);transition:border-color 0.2s;" ondragover="event.preventDefault();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border)'" ondrop="dropCard(event,'cliente');this.style.borderColor='var(--border)'"></div>
+      </div>
+      <div class="pipeline-col" data-stage="perdido" style="min-width:240px;flex:1;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:10px;height:10px;border-radius:50%;background:#ef4444;"></div>
+            <h4 style="font-size:13px;font-weight:800;color:var(--text-primary);">Perdido</h4>
+          </div>
+          <span id="pipeline-count-perdido" style="font-size:11px;font-weight:700;color:var(--text-faint);background:var(--input-bg);padding:2px 8px;border-radius:6px;">0</span>
+        </div>
+        <div class="pipeline-cards" data-stage="perdido" style="display:flex;flex-direction:column;gap:8px;min-height:60px;padding:8px;border-radius:12px;border:2px dashed var(--border);transition:border-color 0.2s;" ondragover="event.preventDefault();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border)'" ondrop="dropCard(event,'perdido');this.style.borderColor='var(--border)'"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Activity -->
+  <div id="crm-panel-activity" style="display:none;">
+    <div class="stat-card" style="padding:20px;">
+      <h3 style="font-size:15px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Actividad reciente</h3>
+      <div id="crm-activity-list" style="display:flex;flex-direction:column;gap:0;">
+        <p style="color:var(--text-faintest);font-size:13px;text-align:center;padding:32px;">Cargando actividad...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Forms -->
+  <div id="crm-panel-forms" style="display:none;">
+    <div class="stat-card animate-in" style="padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <h3 style="font-size:15px;font-weight:800;color:var(--text-primary);margin:0;">Formularios de captura</h3>
+      <button onclick="openFormCreator()" style="padding:10px 20px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s;display:flex;align-items:center;gap:6px;white-space:nowrap;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Crear formulario
+      </button>
+    </div>
+    <div id="crm-forms-list" class="stat-card animate-in" style="padding:20px;">
+      <p style="color:var(--text-faintest);font-size:13px;text-align:center;padding:32px;">Cargando formularios...</p>
+    </div>
+    <!-- Create form inline modal -->
+    <div id="crm-form-creator" style="display:none;margin-top:16px;" class="stat-card animate-in">
+      <div style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:12px;">Nuevo formulario</h4>
+        <div style="display:flex;gap:10px;align-items:flex-end;">
+          <div style="flex:1;">
+            <label style="display:block;font-size:11px;font-weight:700;color:var(--text-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">Nombre del formulario *</label>
+            <input id="crm-form-name" type="text" placeholder="Ej: Contacto Web, Landing Page..." style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')createForm()"/>
+          </div>
+          <button onclick="createForm()" style="padding:10px 20px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s;white-space:nowrap;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Crear</button>
+          <button onclick="document.getElementById('crm-form-creator').style.display='none'" style="padding:10px 16px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-size:13px;font-weight:700;cursor:pointer;">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Segments -->
+  <div id="crm-panel-segments" style="display:none;">
+    <div class="stat-card animate-in" style="padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <h3 style="font-size:15px;font-weight:800;color:var(--text-primary);margin:0;">Segmentos</h3>
+      <button onclick="openSegmentCreator()" style="padding:10px 20px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s;display:flex;align-items:center;gap:6px;white-space:nowrap;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Crear segmento
+      </button>
+    </div>
+    <div id="crm-segments-list" class="stat-card animate-in" style="padding:20px;">
+      <p style="color:var(--text-faintest);font-size:13px;text-align:center;padding:32px;">Cargando segmentos...</p>
+    </div>
+    <!-- Create segment inline -->
+    <div id="crm-segment-creator" style="display:none;margin-top:16px;" class="stat-card animate-in">
+      <div style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:12px;">Nuevo segmento</h4>
+        <div style="margin-bottom:12px;">
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--text-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">Nombre *</label>
+          <input id="crm-segment-name" type="text" placeholder="Ej: Clientes VIP, Leads frios..." style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--text-faint);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Filtros</label>
+          <div id="crm-segment-filters" style="display:flex;flex-direction:column;gap:8px;"></div>
+          <button onclick="addSegmentFilterRow()" style="margin-top:8px;padding:6px 14px;border-radius:8px;border:1px dashed var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">+ Agregar filtro</button>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button onclick="document.getElementById('crm-segment-creator').style.display='none'" style="padding:10px 16px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-size:13px;font-weight:700;cursor:pointer;">Cancelar</button>
+          <button onclick="createSegment()" style="padding:10px 20px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Crear segmento</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Tareas -->
+  <div id="crm-panel-tasks" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <h3 style="font-size:15px;font-weight:800;color:var(--text-primary);margin:0;">Tareas y recordatorios</h3>
+        <span style="font-size:11px;color:var(--text-faint);">(Te ayudan a no olvidar dar seguimiento a tus clientes)</span>
+      </div>
+      <button onclick="crmAddTask()" style="padding:10px 20px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Nueva tarea
+      </button>
+    </div>
+    <div id="crm-tasks-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+  </div>
+
+  <!-- Tab: Duplicados -->
+  <div id="crm-panel-duplicates" style="display:none;">
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;background:var(--accent-bg);border:1px solid rgba(111,207,245,0.15);margin-bottom:16px;">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Revisamos tu lista de contactos para encontrar posibles duplicados. Así mantienes tu base limpia y no envías emails repetidos.</p>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+      <button onclick="crmScanDuplicates()" style="padding:10px 20px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        Buscar duplicados
+      </button>
+    </div>
+    <div id="crm-duplicates-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+  </div>
+
+  <!-- Add/Edit Contact Modal -->
+  <div id="crm-contact-modal" style="display:none;position:fixed;inset:0;z-index:60;align-items:center;justify-content:center;padding:20px;">
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);" onclick="closeCRMModal('crm-contact-modal')"></div>
+    <div style="position:relative;width:100%;max-width:520px;background:var(--bg-sidebar);border:1px solid var(--border);border-radius:20px;padding:28px;max-height:85vh;overflow-y:auto;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <h2 id="crm-modal-title" style="font-size:18px;font-weight:900;color:var(--text-primary);">Agregar contacto</h2>
+        <button onclick="closeCRMModal('crm-contact-modal')" style="width:32px;height:32px;border-radius:8px;border:none;background:transparent;cursor:pointer;color:var(--text-muted);display:flex;align-items:center;justify-content:center;">
+          <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <input type="hidden" id="crm-edit-id"/>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--text-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">Nombre *</label>
+          <input id="crm-f-first" type="text" placeholder="Juan" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+        </div>
+        <div>
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--text-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">Apellido</label>
+          <input id="crm-f-last" type="text" placeholder="P&eacute;rez" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--text-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">Email *</label>
+        <input id="crm-f-email" type="email" placeholder="juan@ejemplo.com" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+        <div>
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--text-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">Tel&eacute;fono</label>
+          <input id="crm-f-phone" type="tel" placeholder="+52 55 1234 5678" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+        </div>
+        <div>
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--text-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">Empresa</label>
+          <input id="crm-f-company" type="text" placeholder="ACME Corp" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+        <div>
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--text-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">Estado</label>
+          <input id="crm-f-state" type="text" placeholder="CDMX, Jalisco, etc." style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+        </div>
+        <div>
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--text-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">Etapa pipeline</label>
+          <select id="crm-f-pipeline" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;cursor:pointer;">
+            <option value="">Sin asignar</option>
+            <option value="lead">Lead</option>
+            <option value="prospecto">Prospecto</option>
+            <option value="negociacion">Negociaci&oacute;n</option>
+            <option value="cliente">Cliente</option>
+            <option value="perdido">Perdido</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--text-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">Tags (separados por coma)</label>
+        <input id="crm-f-tags" type="text" placeholder="vip, mayorista, nuevo" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+      </div>
+      <div style="margin-top:20px;display:flex;justify-content:flex-end;gap:10px;">
+        <button onclick="closeCRMModal('crm-contact-modal')" style="padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-size:13px;font-weight:700;cursor:pointer;">Cancelar</button>
+        <button id="crm-save-btn" onclick="saveContact()" style="padding:10px 24px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact Detail Modal -->
+  <div id="crm-detail-modal" style="display:none;position:fixed;inset:0;z-index:60;align-items:center;justify-content:center;padding:20px;">
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);" onclick="closeCRMModal('crm-detail-modal')"></div>
+    <div style="position:relative;width:100%;max-width:600px;background:var(--bg-sidebar);border:1px solid var(--border);border-radius:20px;padding:28px;max-height:85vh;overflow-y:auto;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <h2 id="crm-detail-title" style="font-size:18px;font-weight:900;color:var(--text-primary);">Detalle de contacto</h2>
+        <button onclick="closeCRMModal('crm-detail-modal')" style="width:32px;height:32px;border-radius:8px;border:none;background:transparent;cursor:pointer;color:var(--text-muted);display:flex;align-items:center;justify-content:center;">
+          <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div id="crm-detail-body" style="font-size:13px;color:var(--text-secondary);line-height:1.7;">
+        Cargando...
+      </div>
+    </div>
+  </div>
+
+  <script define:vars={{ API_URL }}>
+    // ===== CRM FUNCTIONS =====
+    const _crmHeaders = () => ({
+      'Authorization': `Bearer ${localStorage.getItem('skybrand_token')}`,
+      'Content-Type': 'application/json',
+    });
+
+    let _allContacts = [];
+    let _crmSearchTimer = null;
+    window.crmSearchDebounce = function() {
+      clearTimeout(_crmSearchTimer);
+      _crmSearchTimer = setTimeout(() => {
+        const q = document.getElementById('crm-search')?.value || '';
+        loadContacts(q);
+      }, 300);
+    };
+
+    const _tagColors = ['#6fcff5','#a78bfa','#f472b6','#34d399','#fbbf24','#fb923c','#60a5fa','#e879f9'];
+    function _tagColor(tag) {
+      let h = 0;
+      for (let i = 0; i < tag.length; i++) h = tag.charCodeAt(i) + ((h << 5) - h);
+      return _tagColors[Math.abs(h) % _tagColors.length];
+    }
+
+    function _parseTags(raw) {
+      if (!raw) return [];
+      if (Array.isArray(raw)) return raw;
+      try { const p = JSON.parse(raw); return Array.isArray(p) ? p : []; } catch { return []; }
+    }
+
+    function _parseNotes(raw) {
+      if (!raw) return [];
+      if (Array.isArray(raw)) return raw;
+      try { const p = JSON.parse(raw); return Array.isArray(p) ? p : []; } catch { return []; }
+    }
+
+    // Tab switching
+    window.switchCRMTab = function(tab) {
+      document.querySelectorAll('.crm-tab').forEach(t => {
+        t.style.color = 'var(--text-muted)';
+        t.style.borderBottomColor = 'transparent';
+        t.classList.remove('active');
+      });
+      const activeTab = document.getElementById('crm-tab-' + tab);
+      if (activeTab) {
+        activeTab.style.color = 'var(--accent)';
+        activeTab.style.borderBottomColor = 'var(--accent)';
+        activeTab.classList.add('active');
+      }
+      ['contacts','pipeline','activity','forms','segments','tasks','duplicates'].forEach(p => {
+        const el = document.getElementById('crm-panel-' + p);
+        if (el) el.style.display = p === tab ? '' : 'none';
+      });
+
+      if (tab === 'pipeline') renderPipeline();
+      if (tab === 'activity') loadActivity();
+      if (tab === 'tasks') renderCRMTasks();
+      if (tab === 'duplicates') crmScanDuplicates();
+      if (tab === 'forms') loadForms();
+      if (tab === 'segments') loadSegments();
+    };
+
+    async function loadCRMStats() {
+      try {
+        const res = await fetch(`${API_URL}/api/v1/crm/stats`, { headers: _crmHeaders() });
+        if (!res.ok) return;
+        const d = await res.json();
+        document.getElementById('crm-stat-total').textContent = d.total_contacts ?? '--';
+        document.getElementById('crm-stat-active').textContent = d.active_contacts ?? '--';
+        document.getElementById('crm-stat-new').textContent = d.new_this_week ?? '--';
+        const rev = d.total_revenue != null ? '$' + Number(d.total_revenue).toLocaleString('es-MX', {minimumFractionDigits:2}) : '--';
+        document.getElementById('crm-stat-revenue').textContent = rev;
+      } catch(e) { console.error('CRM stats error', e); }
+    }
+
+    async function loadContacts(search) {
+      const tbody = document.getElementById('crm-contacts-tbody');
+      if (!tbody) return;
+      tbody.innerHTML = '<tr><td colspan="9" style="padding:40px;text-align:center;color:var(--text-faint);font-size:13px;">Cargando...</td></tr>';
+      try {
+        let url = `${API_URL}/api/v1/crm/contacts?limit=50`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        const res = await fetch(url, { headers: _crmHeaders() });
+        if (!res.ok) throw new Error('fetch error');
+        const data = await res.json();
+        const contacts = Array.isArray(data) ? data : (data.contacts || data.data || []);
+        _allContacts = contacts;
+        if (contacts.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="9" style="padding:40px;text-align:center;color:var(--text-faint);font-size:13px;">No hay contactos. Agrega el primero.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = contacts.map(c => {
+          const tags = _parseTags(c.tags);
+          const tagsHtml = tags.map(t => `<span style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;color:#fff;background:${_tagColor(t)};margin:1px 2px;">${t}</span>`).join('');
+          const name = [c.first_name, c.last_name].filter(Boolean).join(' ') || '--';
+          const revenue = c.total_spent != null ? '$' + Number(c.total_spent).toLocaleString('es-MX',{minimumFractionDigits:2}) : '$0.00';
+          const score = c.lead_score != null ? c.lead_score : null;
+          const scoreColor = score === null ? 'var(--text-faintest)' : score <= 30 ? '#ef4444' : score <= 60 ? '#eab308' : '#22c55e';
+          const scoreBarHtml = score !== null
+            ? `<div style="display:flex;align-items:center;gap:6px;justify-content:center;"><div style="width:40px;height:6px;border-radius:3px;background:var(--border);overflow:hidden;"><div style="width:${score}%;height:100%;border-radius:3px;background:${scoreColor};"></div></div><span style="font-size:11px;font-weight:700;color:${scoreColor};">${score}</span></div>`
+            : '<span style="font-size:11px;color:var(--text-faintest);">--</span>';
+          return `<tr style="border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='var(--accent-bg)'" onmouseout="this.style.background='transparent'" onclick="openContactDetail(${c.id})">
+            <td style="padding:12px 16px;font-weight:700;color:var(--text-primary);white-space:nowrap;">${name}</td>
+            <td style="padding:12px 16px;color:var(--text-secondary);">${c.email || '--'}</td>
+            <td style="padding:12px 16px;color:var(--text-secondary);white-space:nowrap;">${c.phone || '--'}</td>
+            <td style="padding:12px 16px;color:var(--text-secondary);">${c.state || '--'}</td>
+            <td style="padding:12px 16px;">${tagsHtml || '<span style="color:var(--text-faintest);">--</span>'}</td>
+            <td style="padding:12px 16px;text-align:center;">${scoreBarHtml}</td>
+            <td style="padding:12px 16px;text-align:right;color:var(--text-secondary);font-weight:600;">${c.total_orders ?? 0}</td>
+            <td style="padding:12px 16px;text-align:right;color:var(--text-primary);font-weight:700;">${revenue}</td>
+            <td style="padding:12px 16px;text-align:center;white-space:nowrap;" onclick="event.stopPropagation()">
+              <button onclick="openContactModal(${c.id})" title="Editar" style="width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;transition:all 0.15s;margin-right:4px;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+                <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </button>
+              <button onclick="deleteContact(${c.id})" title="Eliminar" style="width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;transition:all 0.15s;" onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+                <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </td>
+          </tr>`;
+        }).join('');
+      } catch(e) {
+        console.error('CRM load contacts error', e);
+        tbody.innerHTML = '<tr><td colspan="9" style="padding:40px;text-align:center;color:#ef4444;font-size:13px;">Error al cargar contactos.</td></tr>';
+      }
+    }
+
+    // Pipeline
+    let _draggedContactId = null;
+
+    function renderPipeline() {
+      const stages = ['lead', 'prospecto', 'negociacion', 'cliente', 'perdido'];
+      stages.forEach(stage => {
+        const container = document.querySelector(`.pipeline-cards[data-stage="${stage}"]`);
+        if (!container) return;
+        const contacts = _allContacts.filter(c => (c.pipeline_stage || '').toLowerCase() === stage);
+        document.getElementById('pipeline-count-' + stage).textContent = contacts.length;
+        if (contacts.length === 0) {
+          container.innerHTML = '<p style="font-size:11px;color:var(--text-faintest);text-align:center;padding:12px;">Arrastra contactos aqui</p>';
+          return;
+        }
+        container.innerHTML = contacts.map(c => {
+          const name = [c.first_name, c.last_name].filter(Boolean).join(' ') || '--';
+          const revenue = c.total_spent != null ? '$' + Number(c.total_spent).toLocaleString('es-MX',{minimumFractionDigits:2}) : '$0.00';
+          const pScore = c.lead_score != null ? c.lead_score : null;
+          const pScoreColor = pScore === null ? 'var(--text-faintest)' : pScore <= 30 ? '#ef4444' : pScore <= 60 ? '#eab308' : '#22c55e';
+          const pScoreBadge = pScore !== null ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:${pScoreColor};"><span style="width:8px;height:8px;border-radius:50%;background:${pScoreColor};display:inline-block;"></span>${pScore}</span>` : '';
+          return `<div draggable="true" ondragstart="dragCard(event, ${c.id})" onclick="openContactDetail(${c.id})" class="stat-card" style="padding:14px;cursor:grab;margin:0;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+              <p style="font-size:13px;font-weight:700;color:var(--text-primary);margin:0;">${name}</p>
+              ${pScoreBadge}
+            </div>
+            <p style="font-size:11px;color:var(--text-faint);">${c.company || c.email || ''}</p>
+            <p style="font-size:12px;font-weight:700;color:var(--accent);margin-top:6px;">${revenue}</p>
+          </div>`;
+        }).join('');
+      });
+    }
+
+    window.dragCard = function(event, contactId) {
+      _draggedContactId = contactId;
+      event.dataTransfer.effectAllowed = 'move';
+    };
+
+    window.dropCard = async function(event, newStage) {
+      event.preventDefault();
+      if (!_draggedContactId) return;
+      try {
+        await fetch(`${API_URL}/api/v1/crm/contacts/${_draggedContactId}`, {
+          method: 'PUT',
+          headers: _crmHeaders(),
+          body: JSON.stringify({ pipeline_stage: newStage })
+        });
+        // Update local data
+        const c = _allContacts.find(x => x.id === _draggedContactId);
+        if (c) c.pipeline_stage = newStage;
+        renderPipeline();
+      } catch(e) {
+        console.error('Pipeline drop error', e);
+      }
+      _draggedContactId = null;
+    };
+
+    // Activity
+    async function loadActivity() {
+      const container = document.getElementById('crm-activity-list');
+      try {
+        const res = await fetch(`${API_URL}/api/v1/crm/contacts?limit=200`, { headers: _crmHeaders() });
+        const data = await res.json();
+        const contacts = Array.isArray(data) ? data : (data.contacts || data.data || []);
+        // Build activity from notes across all contacts
+        let activities = [];
+        contacts.forEach(c => {
+          const notes = _parseNotes(c.notes);
+          const name = [c.first_name, c.last_name].filter(Boolean).join(' ') || c.email;
+          notes.forEach(n => {
+            activities.push({ text: n.text, date: n.date, by: n.by, contactName: name, contactId: c.id });
+          });
+          if (c.created_at) {
+            activities.push({ text: 'Contacto creado', date: c.created_at, contactName: name, contactId: c.id, isCreation: true });
+          }
+        });
+        activities.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+        if (activities.length === 0) {
+          container.innerHTML = '<p style="color:var(--text-faintest);font-size:13px;text-align:center;padding:32px;">Sin actividad reciente.</p>';
+          return;
+        }
+        container.innerHTML = activities.slice(0, 30).map(a => {
+          const d = a.date ? new Date(a.date).toLocaleDateString('es-MX', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '';
+          const dotColor = a.isCreation ? '#22c55e' : 'var(--accent)';
+          return `<div class="activity-item" style="cursor:pointer;" onclick="openContactDetail(${a.contactId})">
+            <div class="activity-dot" style="background:${dotColor};"></div>
+            <div style="flex:1;min-width:0;">
+              <p style="font-size:13px;color:var(--text-primary);font-weight:600;">${a.contactName}</p>
+              <p style="font-size:12px;color:var(--text-faint);">${a.text}</p>
+            </div>
+            <span style="font-size:10px;color:var(--text-faintest);flex-shrink:0;">${d}</span>
+          </div>`;
+        }).join('');
+      } catch(e) {
+        container.innerHTML = '<p style="color:#ef4444;font-size:13px;text-align:center;padding:32px;">Error al cargar actividad.</p>';
+      }
+    }
+
+    function closeCRMModal(id) {
+      const m = document.getElementById(id);
+      if (m) m.style.display = 'none';
+    }
+    window.closeCRMModal = closeCRMModal;
+
+    let _crmContactCache = {};
+
+    async function openContactModal(contactId) {
+      document.getElementById('crm-edit-id').value = contactId || '';
+      document.getElementById('crm-f-first').value = '';
+      document.getElementById('crm-f-last').value = '';
+      document.getElementById('crm-f-email').value = '';
+      document.getElementById('crm-f-phone').value = '';
+      document.getElementById('crm-f-company').value = '';
+      document.getElementById('crm-f-state').value = '';
+      document.getElementById('crm-f-tags').value = '';
+      document.getElementById('crm-f-pipeline').value = '';
+      document.getElementById('crm-modal-title').textContent = contactId ? 'Editar contacto' : 'Agregar contacto';
+      document.getElementById('crm-save-btn').textContent = 'Guardar';
+      document.getElementById('crm-save-btn').disabled = false;
+
+      if (contactId) {
+        try {
+          const res = await fetch(`${API_URL}/api/v1/crm/contacts?search=&limit=100`, { headers: _crmHeaders() });
+          const data = await res.json();
+          const contacts = Array.isArray(data) ? data : (data.contacts || data.data || []);
+          const c = contacts.find(x => x.id === contactId || x.id === String(contactId));
+          if (c) {
+            _crmContactCache[contactId] = c;
+            document.getElementById('crm-f-first').value = c.first_name || '';
+            document.getElementById('crm-f-last').value = c.last_name || '';
+            document.getElementById('crm-f-email').value = c.email || '';
+            document.getElementById('crm-f-phone').value = c.phone || '';
+            document.getElementById('crm-f-company').value = c.company || '';
+            document.getElementById('crm-f-state').value = c.state || '';
+            document.getElementById('crm-f-tags').value = _parseTags(c.tags).join(', ');
+            document.getElementById('crm-f-pipeline').value = c.pipeline_stage || '';
+          }
+        } catch(e) { console.error('CRM fetch contact for edit', e); }
+      }
+
+      const modal = document.getElementById('crm-contact-modal');
+      modal.style.display = 'flex';
+    }
+    window.openContactModal = openContactModal;
+
+    async function saveContact() {
+      const btn = document.getElementById('crm-save-btn');
+      const editId = document.getElementById('crm-edit-id').value;
+      const first = document.getElementById('crm-f-first').value.trim();
+      const email = document.getElementById('crm-f-email').value.trim();
+      if (!first || !email) { alert('Nombre y email son requeridos.'); return; }
+
+      const tagsRaw = document.getElementById('crm-f-tags').value.trim();
+      const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+      const body = {
+        first_name: first,
+        last_name: document.getElementById('crm-f-last').value.trim() || undefined,
+        email: email,
+        phone: document.getElementById('crm-f-phone').value.trim() || undefined,
+        company: document.getElementById('crm-f-company').value.trim() || undefined,
+        state: document.getElementById('crm-f-state').value.trim() || undefined,
+        tags: tags.length > 0 ? tags : undefined,
+        pipeline_stage: document.getElementById('crm-f-pipeline').value || undefined,
+      };
+
+      btn.textContent = 'Guardando...';
+      btn.disabled = true;
+
+      try {
+        const url = editId ? `${API_URL}/api/v1/crm/contacts/${editId}` : `${API_URL}/api/v1/crm/contacts`;
+        const method = editId ? 'PUT' : 'POST';
+        const res = await fetch(url, { method, headers: _crmHeaders(), body: JSON.stringify(body) });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || err.message || 'Error al guardar');
+        }
+        closeCRMModal('crm-contact-modal');
+        loadCRMStats();
+        loadContacts(document.getElementById('crm-search')?.value || '');
+      } catch(e) {
+        alert(e.message || 'Error al guardar contacto.');
+        btn.textContent = 'Guardar';
+        btn.disabled = false;
+      }
+    }
+    window.saveContact = saveContact;
+
+    async function deleteContact(id) {
+      if (!confirm('Estas seguro de eliminar este contacto? Esta accion no se puede deshacer.')) return;
+      try {
+        const res = await fetch(`${API_URL}/api/v1/crm/contacts/${id}`, { method: 'DELETE', headers: _crmHeaders() });
+        if (!res.ok) throw new Error('Error');
+        loadCRMStats();
+        loadContacts(document.getElementById('crm-search')?.value || '');
+      } catch(e) {
+        alert('Error al eliminar contacto.');
+      }
+    }
+    window.deleteContact = deleteContact;
+
+    async function openContactDetail(id) {
+      const body = document.getElementById('crm-detail-body');
+      const titleEl = document.getElementById('crm-detail-title');
+      body.innerHTML = 'Cargando...';
+      titleEl.textContent = 'Detalle de contacto';
+      document.getElementById('crm-detail-modal').style.display = 'flex';
+
+      try {
+        const res = await fetch(`${API_URL}/api/v1/crm/contacts?search=&limit=200`, { headers: _crmHeaders() });
+        const data = await res.json();
+        const contacts = Array.isArray(data) ? data : (data.contacts || data.data || []);
+        const c = contacts.find(x => x.id === id || x.id === String(id));
+        if (!c) { body.innerHTML = '<p style="color:#ef4444;">Contacto no encontrado.</p>'; return; }
+        _crmContactCache[id] = c;
+
+        const name = [c.first_name, c.last_name].filter(Boolean).join(' ');
+        titleEl.textContent = name || 'Contacto';
+        const tags = _parseTags(c.tags);
+        const tagsHtml = tags.map(t => `<span style="display:inline-block;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;color:#fff;background:${_tagColor(t)};margin:2px 3px;">${t}</span>`).join('') || '<span style="color:var(--text-faintest);">Sin tags</span>';
+        const notes = _parseNotes(c.notes);
+        const revenue = c.total_spent != null ? '$' + Number(c.total_spent).toLocaleString('es-MX',{minimumFractionDigits:2}) : '$0.00';
+        const lastOrder = c.last_order_date ? new Date(c.last_order_date).toLocaleDateString('es-MX') : '--';
+        const created = c.created_at ? new Date(c.created_at).toLocaleDateString('es-MX') : '--';
+
+        let html = `
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+            <div style="padding:14px;border-radius:12px;background:var(--bg-card);border:1px solid var(--border);">
+              <p style="font-size:11px;color:var(--text-faint);font-weight:700;text-transform:uppercase;margin-bottom:4px;">Email</p>
+              <p style="color:var(--text-primary);font-weight:600;">${c.email || '--'}</p>
+            </div>
+            <div style="padding:14px;border-radius:12px;background:var(--bg-card);border:1px solid var(--border);">
+              <p style="font-size:11px;color:var(--text-faint);font-weight:700;text-transform:uppercase;margin-bottom:4px;">Telefono</p>
+              <p style="color:var(--text-primary);font-weight:600;">${c.phone || '--'}</p>
+            </div>
+            <div style="padding:14px;border-radius:12px;background:var(--bg-card);border:1px solid var(--border);">
+              <p style="font-size:11px;color:var(--text-faint);font-weight:700;text-transform:uppercase;margin-bottom:4px;">Empresa</p>
+              <p style="color:var(--text-primary);font-weight:600;">${c.company || '--'}</p>
+            </div>
+            <div style="padding:14px;border-radius:12px;background:var(--bg-card);border:1px solid var(--border);">
+              <p style="font-size:11px;color:var(--text-faint);font-weight:700;text-transform:uppercase;margin-bottom:4px;">Estado</p>
+              <p style="color:var(--text-primary);font-weight:600;">${c.state || '--'}${c.city ? ', ' + c.city : ''}</p>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:20px;">
+            <div style="padding:14px;border-radius:12px;background:var(--accent-bg);text-align:center;">
+              <p style="font-size:22px;font-weight:900;color:var(--text-primary);">${c.total_orders ?? 0}</p>
+              <p style="font-size:11px;color:var(--text-faint);font-weight:700;">Pedidos</p>
+            </div>
+            <div style="padding:14px;border-radius:12px;background:var(--accent-bg);text-align:center;">
+              <p style="font-size:22px;font-weight:900;color:var(--text-primary);">${revenue}</p>
+              <p style="font-size:11px;color:var(--text-faint);font-weight:700;">Revenue</p>
+            </div>
+            <div style="padding:14px;border-radius:12px;background:var(--accent-bg);text-align:center;">
+              <p style="font-size:14px;font-weight:900;color:var(--text-primary);">${lastOrder}</p>
+              <p style="font-size:11px;color:var(--text-faint);font-weight:700;">Ultimo pedido</p>
+            </div>
+            <div style="padding:14px;border-radius:12px;background:var(--accent-bg);text-align:center;">
+              ${(() => {
+                const ls = c.lead_score != null ? c.lead_score : null;
+                const lsColor = ls === null ? 'var(--text-faintest)' : ls <= 30 ? '#ef4444' : ls <= 60 ? '#eab308' : '#22c55e';
+                return ls !== null
+                  ? '<p style="font-size:22px;font-weight:900;color:' + lsColor + ';">' + ls + '</p>'
+                  : '<p style="font-size:22px;font-weight:900;color:var(--text-faintest);">--</p>';
+              })()}
+              <p style="font-size:11px;color:var(--text-faint);font-weight:700;">Lead Score</p>
+            </div>
+          </div>
+          <div style="margin-bottom:16px;">
+            <p style="font-size:11px;color:var(--text-faint);font-weight:700;text-transform:uppercase;margin-bottom:6px;">Tags</p>
+            <div>${tagsHtml}</div>
+          </div>
+          <div style="margin-bottom:8px;">
+            <p style="font-size:11px;color:var(--text-faint);font-weight:700;text-transform:uppercase;margin-bottom:2px;">Fuente: <span style="color:var(--text-secondary);text-transform:none;">${c.source || '--'}</span></p>
+            <p style="font-size:11px;color:var(--text-faint);font-weight:700;text-transform:uppercase;">Creado: <span style="color:var(--text-secondary);text-transform:none;">${created}</span></p>
+          </div>
+          <hr style="border:none;border-top:1px solid var(--border);margin:16px 0;"/>
+          <p style="font-size:13px;font-weight:800;color:var(--text-primary);margin-bottom:10px;">Notas</p>
+          <div id="crm-notes-list" style="margin-bottom:12px;">
+        `;
+        if (notes.length === 0) {
+          html += '<p style="color:var(--text-faintest);font-size:12px;">Sin notas.</p>';
+        } else {
+          for (const n of notes) {
+            const nd = n.date ? new Date(n.date).toLocaleDateString('es-MX') : '';
+            html += `<div style="padding:10px 14px;border-radius:10px;background:var(--bg-card);border:1px solid var(--border);margin-bottom:6px;">
+              <p style="font-size:12px;color:var(--text-primary);">${n.text || ''}</p>
+              <p style="font-size:10px;color:var(--text-faintest);margin-top:4px;">${nd}${n.by ? ' - ' + n.by : ''}</p>
+            </div>`;
+          }
+        }
+        html += `</div>
+          <div style="display:flex;gap:8px;">
+            <input id="crm-note-input" type="text" placeholder="Agregar una nota..." style="flex:1;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')addNote(${c.id})"/>
+            <button onclick="addNote(${c.id})" style="padding:10px 16px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s;white-space:nowrap;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Agregar</button>
+          </div>
+          <hr style="border:none;border-top:1px solid var(--border);margin:16px 0;"/>
+          <p style="font-size:13px;font-weight:800;color:var(--text-primary);margin-bottom:10px;">Enviar mensaje</p>
+          <div style="margin-bottom:12px;">
+            <div style="display:flex;gap:4px;margin-bottom:10px;" id="crm-msg-channel-tabs">
+              <button onclick="switchMsgChannel('email')" class="crm-msg-ch active" data-ch="email" style="padding:6px 14px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;">Email</button>
+              <button onclick="switchMsgChannel('whatsapp')" class="crm-msg-ch" data-ch="whatsapp" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;">WhatsApp</button>
+              <button onclick="switchMsgChannel('sms')" class="crm-msg-ch" data-ch="sms" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;">SMS</button>
+            </div>
+            <div id="crm-msg-subject-wrap" style="margin-bottom:8px;">
+              <input id="crm-msg-subject" type="text" placeholder="Asunto..." style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+            </div>
+            <textarea id="crm-msg-content" placeholder="Escribe tu mensaje..." rows="3" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;resize:vertical;font-family:inherit;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+            <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+              <button onclick="sendContactMessage(${c.id})" id="crm-send-msg-btn" style="padding:10px 20px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s;display:flex;align-items:center;gap:6px;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+                <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                Enviar
+              </button>
+            </div>
+          </div>
+          <hr style="border:none;border-top:1px solid var(--border);margin:16px 0;"/>
+          <p style="font-size:13px;font-weight:800;color:var(--text-primary);margin-bottom:10px;">Historial de conversaciones</p>
+          <div id="crm-msg-history" style="max-height:250px;overflow-y:auto;">
+            <p style="color:var(--text-faintest);font-size:12px;text-align:center;padding:16px;">Cargando mensajes...</p>
+          </div>
+        `;
+        body.innerHTML = html;
+        // Load conversation history
+        loadContactMessages(c.id);
+      } catch(e) {
+        console.error('CRM detail error', e);
+        body.innerHTML = '<p style="color:#ef4444;">Error al cargar detalle.</p>';
+      }
+    }
+    window.openContactDetail = openContactDetail;
+
+    async function addNote(contactId) {
+      const input = document.getElementById('crm-note-input');
+      const text = input?.value.trim();
+      if (!text) return;
+      input.value = '';
+      try {
+        const res = await fetch(`${API_URL}/api/v1/crm/contacts/${contactId}/notes`, {
+          method: 'POST',
+          headers: _crmHeaders(),
+          body: JSON.stringify({ text }),
+        });
+        if (!res.ok) throw new Error('Error');
+        openContactDetail(contactId);
+      } catch(e) {
+        alert('Error al agregar nota.');
+      }
+    }
+    window.addNote = addNote;
+
+    // ===== MESSAGING FUNCTIONS =====
+    let _currentMsgChannel = 'email';
+
+    window.switchMsgChannel = function(ch) {
+      _currentMsgChannel = ch;
+      document.querySelectorAll('.crm-msg-ch').forEach(btn => {
+        const isCurrent = btn.getAttribute('data-ch') === ch;
+        btn.style.background = isCurrent ? 'var(--accent)' : 'transparent';
+        btn.style.color = isCurrent ? '#fff' : 'var(--text-muted)';
+        btn.style.borderColor = isCurrent ? 'var(--accent)' : 'var(--border)';
+        if (isCurrent) btn.classList.add('active'); else btn.classList.remove('active');
+      });
+      const subjectWrap = document.getElementById('crm-msg-subject-wrap');
+      if (subjectWrap) subjectWrap.style.display = ch === 'email' ? '' : 'none';
+    };
+
+    async function loadContactMessages(contactId) {
+      const container = document.getElementById('crm-msg-history');
+      if (!container) return;
+      try {
+        const res = await fetch(`${API_URL}/api/v1/crm/contacts/${contactId}/messages`, { headers: _crmHeaders() });
+        if (!res.ok) throw new Error('fetch error');
+        const data = await res.json();
+        const messages = Array.isArray(data) ? data : (data.messages || data.data || []);
+        if (messages.length === 0) {
+          container.innerHTML = '<p style="color:var(--text-faintest);font-size:12px;text-align:center;padding:16px;">Sin mensajes anteriores.</p>';
+          return;
+        }
+        container.innerHTML = messages.map(m => {
+          const dt = m.created_at ? new Date(m.created_at).toLocaleDateString('es-MX', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '';
+          const chBadge = m.channel ? `<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:var(--accent-bg);color:var(--accent);text-transform:uppercase;">${m.channel}</span>` : '';
+          const dir = m.direction === 'outbound' || m.direction === 'sent' ? 'Enviado' : 'Recibido';
+          const dirColor = dir === 'Enviado' ? 'var(--accent)' : '#22c55e';
+          return `<div style="padding:10px 14px;border-radius:10px;background:var(--bg-card);border:1px solid var(--border);margin-bottom:6px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+              <div style="display:flex;align-items:center;gap:6px;">${chBadge}<span style="font-size:10px;font-weight:700;color:${dirColor};">${dir}</span></div>
+              <span style="font-size:10px;color:var(--text-faintest);">${dt}</span>
+            </div>
+            ${m.subject ? '<p style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:2px;">' + m.subject + '</p>' : ''}
+            <p style="font-size:12px;color:var(--text-secondary);line-height:1.5;">${m.content || m.body || ''}</p>
+          </div>`;
+        }).join('');
+      } catch(e) {
+        container.innerHTML = '<p style="color:var(--text-faintest);font-size:12px;text-align:center;padding:16px;">No se pudo cargar el historial.</p>';
+      }
+    }
+
+    window.sendContactMessage = async function(contactId) {
+      const btn = document.getElementById('crm-send-msg-btn');
+      const content = document.getElementById('crm-msg-content')?.value.trim();
+      const subject = document.getElementById('crm-msg-subject')?.value.trim();
+      if (!content) { alert('Escribe un mensaje.'); return; }
+
+      btn.textContent = 'Enviando...';
+      btn.disabled = true;
+      try {
+        let url = `${API_URL}/api/v1/crm/contacts/${contactId}/send?channel=${_currentMsgChannel}&content=${encodeURIComponent(content)}`;
+        if (_currentMsgChannel === 'email' && subject) url += `&subject=${encodeURIComponent(subject)}`;
+        const res = await fetch(url, { method: 'POST', headers: _crmHeaders() });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || err.message || 'Error al enviar');
+        }
+        document.getElementById('crm-msg-content').value = '';
+        document.getElementById('crm-msg-subject').value = '';
+        loadContactMessages(contactId);
+      } catch(e) {
+        alert(e.message || 'Error al enviar mensaje.');
+      }
+      btn.innerHTML = '<svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> Enviar';
+      btn.disabled = false;
+    };
+
+    // ===== FORMS FUNCTIONS =====
+    async function loadForms() {
+      const container = document.getElementById('crm-forms-list');
+      if (!container) return;
+      container.innerHTML = '<p style="color:var(--text-faintest);font-size:13px;text-align:center;padding:32px;">Cargando formularios...</p>';
+      try {
+        const res = await fetch(`${API_URL}/api/v1/crm/forms`, { headers: _crmHeaders() });
+        if (!res.ok) throw new Error('fetch error');
+        const data = await res.json();
+        const forms = Array.isArray(data) ? data : (data.forms || data.data || []);
+        if (forms.length === 0) {
+          container.innerHTML = '<p style="color:var(--text-faintest);font-size:13px;text-align:center;padding:32px;">No hay formularios creados. Crea el primero.</p>';
+          return;
+        }
+        container.innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;">' + forms.map(f => {
+          const embedUrl = f.embed_url || `${API_URL}/api/v1/crm/forms/${f.slug || f.id}/embed`;
+          return `<div style="padding:16px;border-radius:12px;background:var(--bg-card);border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:150px;">
+              <p style="font-size:14px;font-weight:700;color:var(--text-primary);">${f.name || 'Sin nombre'}</p>
+              <p style="font-size:11px;color:var(--text-faint);margin-top:2px;">${f.submissions_count != null ? f.submissions_count + ' envios' : ''} ${f.slug ? '&middot; /' + f.slug : ''}</p>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button onclick="copyEmbedUrl('${embedUrl}')" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:4px;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">
+                <svg style="width:12px;height:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                Copiar embed
+              </button>
+            </div>
+          </div>`;
+        }).join('') + '</div>';
+      } catch(e) {
+        container.innerHTML = '<p style="color:#ef4444;font-size:13px;text-align:center;padding:32px;">Error al cargar formularios.</p>';
+      }
+    }
+
+    window.openFormCreator = function() {
+      document.getElementById('crm-form-creator').style.display = '';
+      document.getElementById('crm-form-name').value = '';
+      document.getElementById('crm-form-name').focus();
+    };
+
+    window.createForm = async function() {
+      const name = document.getElementById('crm-form-name')?.value.trim();
+      if (!name) { alert('Ingresa un nombre para el formulario.'); return; }
+      try {
+        const res = await fetch(`${API_URL}/api/v1/crm/forms?name=${encodeURIComponent(name)}`, { method: 'POST', headers: _crmHeaders() });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || err.message || 'Error al crear');
+        }
+        document.getElementById('crm-form-creator').style.display = 'none';
+        loadForms();
+      } catch(e) {
+        alert(e.message || 'Error al crear formulario.');
+      }
+    };
+
+    window.copyEmbedUrl = function(url) {
+      navigator.clipboard.writeText(url).then(() => {
+        // Brief visual feedback - could also be a toast
+        alert('URL de embed copiada al portapapeles.');
+      }).catch(() => {
+        prompt('Copia esta URL:', url);
+      });
+    };
+
+    // ===== SEGMENTS FUNCTIONS =====
+    async function loadSegments() {
+      const container = document.getElementById('crm-segments-list');
+      if (!container) return;
+      container.innerHTML = '<p style="color:var(--text-faintest);font-size:13px;text-align:center;padding:32px;">Cargando segmentos...</p>';
+      try {
+        const res = await fetch(`${API_URL}/api/v1/crm/segments`, { headers: _crmHeaders() });
+        if (!res.ok) throw new Error('fetch error');
+        const data = await res.json();
+        const segments = Array.isArray(data) ? data : (data.segments || data.data || []);
+        if (segments.length === 0) {
+          container.innerHTML = '<p style="color:var(--text-faintest);font-size:13px;text-align:center;padding:32px;">No hay segmentos creados.</p>';
+          return;
+        }
+        container.innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;">' + segments.map(s => {
+          const filters = Array.isArray(s.filters) ? s.filters : [];
+          const filtersHtml = filters.length > 0
+            ? filters.map(f => `<span style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;color:var(--accent);background:var(--accent-bg);margin:1px 2px;">${f.field || ''} ${f.operator || ''} ${f.value || ''}</span>`).join('')
+            : '<span style="font-size:11px;color:var(--text-faintest);">Sin filtros</span>';
+          return `<div style="padding:16px;border-radius:12px;background:var(--bg-card);border:1px solid var(--border);">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <p style="font-size:14px;font-weight:700;color:var(--text-primary);">${s.name || 'Sin nombre'}</p>
+              <span style="font-size:11px;font-weight:700;color:var(--text-faint);background:var(--input-bg);padding:2px 10px;border-radius:6px;">${s.contact_count != null ? s.contact_count : '?'} contactos</span>
+            </div>
+            <div style="margin-top:4px;">${filtersHtml}</div>
+          </div>`;
+        }).join('') + '</div>';
+      } catch(e) {
+        container.innerHTML = '<p style="color:#ef4444;font-size:13px;text-align:center;padding:32px;">Error al cargar segmentos.</p>';
+      }
+    }
+
+    window.openSegmentCreator = function() {
+      document.getElementById('crm-segment-creator').style.display = '';
+      document.getElementById('crm-segment-name').value = '';
+      document.getElementById('crm-segment-filters').innerHTML = '';
+      addSegmentFilterRow();
+    };
+
+    window.addSegmentFilterRow = function() {
+      const container = document.getElementById('crm-segment-filters');
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:8px;align-items:center;';
+      row.innerHTML = `
+        <select class="seg-filter-field" style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:12px;outline:none;cursor:pointer;">
+          <option value="lead_score">Lead Score</option>
+          <option value="pipeline_stage">Etapa</option>
+          <option value="state">Estado</option>
+          <option value="tags">Tag</option>
+          <option value="total_orders">Pedidos</option>
+          <option value="total_spent">Revenue</option>
+          <option value="source">Fuente</option>
+        </select>
+        <select class="seg-filter-op" style="width:100px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:12px;outline:none;cursor:pointer;">
+          <option value="eq">igual a</option>
+          <option value="neq">diferente de</option>
+          <option value="gt">mayor que</option>
+          <option value="lt">menor que</option>
+          <option value="gte">mayor o igual</option>
+          <option value="lte">menor o igual</option>
+          <option value="contains">contiene</option>
+        </select>
+        <input class="seg-filter-val" type="text" placeholder="Valor" style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:12px;outline:none;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+        <button onclick="this.parentElement.remove()" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--text-muted);display:flex;align-items:center;justify-content:center;flex-shrink:0;" onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+          <svg style="width:12px;height:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      `;
+      container.appendChild(row);
+    };
+
+    window.createSegment = async function() {
+      const name = document.getElementById('crm-segment-name')?.value.trim();
+      if (!name) { alert('Ingresa un nombre para el segmento.'); return; }
+      const filterRows = document.querySelectorAll('#crm-segment-filters > div');
+      const filters = [];
+      filterRows.forEach(row => {
+        const field = row.querySelector('.seg-filter-field')?.value;
+        const operator = row.querySelector('.seg-filter-op')?.value;
+        const value = row.querySelector('.seg-filter-val')?.value.trim();
+        if (field && operator && value) filters.push({ field, operator, value });
+      });
+      try {
+        const res = await fetch(`${API_URL}/api/v1/crm/segments?name=${encodeURIComponent(name)}&filters=${encodeURIComponent(JSON.stringify(filters))}`, { method: 'POST', headers: _crmHeaders() });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || err.message || 'Error al crear');
+        }
+        document.getElementById('crm-segment-creator').style.display = 'none';
+        loadSegments();
+      } catch(e) {
+        alert(e.message || 'Error al crear segmento.');
+      }
+    };
+
+    // ═══════ TASKS / TAREAS ═══════
+    const _crmTasks = [
+      { id:1, title:'Llamar a María García para dar seguimiento', contact:'María García López', date:'2026-04-02', time:'10:00', priority:'high', done:false },
+      { id:2, title:'Enviar cotización a Carlos Hernández', contact:'Carlos Hernández Ruiz', date:'2026-04-02', time:'14:00', priority:'medium', done:false },
+      { id:3, title:'Seguimiento post-venta con Ana Sofía', contact:'Ana Sofía Martínez', date:'2026-04-03', time:'11:00', priority:'low', done:false },
+      { id:4, title:'Revisar propuesta para Roberto Juárez', contact:'Roberto Juárez Peña', date:'2026-04-01', time:'09:00', priority:'high', done:true },
+    ];
+
+    const _priorityMap = { high:{l:'Urgente',c:'#ef4444',b:'rgba(239,68,68,0.1)'}, medium:{l:'Normal',c:'#eab308',b:'rgba(234,179,8,0.1)'}, low:{l:'Baja',c:'#22c55e',b:'rgba(34,197,94,0.1)'} };
+
+    window.renderCRMTasks = function() {
+      const el = document.getElementById('crm-tasks-list'); if (!el) return;
+      const pending = _crmTasks.filter(t => !t.done);
+      const completed = _crmTasks.filter(t => t.done);
+
+      el.innerHTML = (pending.length ? pending.map(t => {
+        const p = _priorityMap[t.priority];
+        const isToday = t.date === '2026-04-02';
+        const isOverdue = t.date < '2026-04-02';
+        return `<div class="stat-card" style="padding:16px;display:flex;align-items:center;gap:14px;${isOverdue?'border-color:#ef4444;border-left:3px solid #ef4444;':''}">
+          <button onclick="_crmTasks.find(x=>x.id===${t.id}).done=true;renderCRMTasks();_showToast('Tarea completada')" style="width:24px;height:24px;border-radius:6px;border:2px solid ${p.c};background:transparent;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.background='${p.c}20'" onmouseout="this.style.background='transparent'"></button>
+          <div style="flex:1;">
+            <p style="font-size:13px;font-weight:700;color:var(--text-primary);">${t.title}</p>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+              <span style="font-size:11px;color:var(--text-muted);">👤 ${t.contact}</span>
+              <span style="font-size:11px;color:${isOverdue?'#ef4444':isToday?'var(--accent)':'var(--text-faint)'};">${isOverdue?'⚠ Vencida':isToday?'📅 Hoy':'📅 '+t.date} ${t.time}</span>
+              <span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;color:${p.c};background:${p.b};">${p.l}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('') : '<div style="text-align:center;padding:32px;color:var(--text-faintest);font-size:13px;">No tienes tareas pendientes</div>')
+      + (completed.length ? `<div style="margin-top:16px;"><p style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;margin-bottom:8px;">Completadas</p>${completed.map(t => `<div style="display:flex;align-items:center;gap:14px;padding:10px 16px;opacity:0.5;"><div style="width:24px;height:24px;border-radius:6px;background:#22c55e;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg style="width:14px;height:14px;color:#fff;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div><p style="font-size:13px;color:var(--text-muted);text-decoration:line-through;">${t.title}</p></div>`).join('')}</div>` : '');
+    };
+
+    window.crmAddTask = function() {
+      const title = prompt('¿Qué necesitas hacer?', 'Llamar a cliente para seguimiento');
+      if (!title) return;
+      const contact = prompt('¿Con qué contacto? (opcional)', '');
+      _crmTasks.unshift({ id: Date.now(), title, contact: contact || 'Sin asignar', date: '2026-04-02', time: '12:00', priority: 'medium', done: false });
+      renderCRMTasks();
+      _showToast('Tarea creada');
+    };
+
+    // ═══════ DUPLICADOS ═══════
+    window.crmScanDuplicates = function() {
+      const el = document.getElementById('crm-duplicates-list'); if (!el) return;
+      // Demo duplicates
+      const duplicates = [
+        { group: [{ name:'María García López', email:'maria@gmail.com', phone:'55 2341 8765' }, { name:'Maria Garcia', email:'maria@gmail.com', phone:'' }], reason:'Mismo email' },
+        { group: [{ name:'Carlos Hernandez', email:'carlos.hr@outlook.com', phone:'33 1567 4321' }, { name:'Carlos Hernández Ruiz', email:'carlos.hernandez@gmail.com', phone:'33 1567 4321' }], reason:'Mismo teléfono' },
+      ];
+
+      if (!duplicates.length) {
+        el.innerHTML = '<div style="text-align:center;padding:32px;"><svg style="width:48px;height:48px;color:#22c55e;margin-bottom:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><p style="font-size:14px;font-weight:700;color:#22c55e;">¡Tu base está limpia!</p><p style="font-size:12px;color:var(--text-muted);margin-top:4px;">No se encontraron contactos duplicados.</p></div>';
+        return;
+      }
+
+      el.innerHTML = `<p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">Encontramos <strong>${duplicates.length} posibles duplicados</strong>. Revisa cada grupo y decide si quieres fusionarlos.</p>` +
+      duplicates.map((d, gi) => `
+        <div class="stat-card" style="padding:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <span style="padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700;color:#f97316;background:rgba(249,115,22,0.1);">${d.reason}</span>
+            <button onclick="_showToast('Contactos fusionados');this.closest('.stat-card').remove()" style="padding:6px 14px;border-radius:8px;border:none;background:#22c55e;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">Fusionar</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            ${d.group.map(c => `<div style="padding:12px;border-radius:8px;background:var(--input-bg);border:1px solid var(--border);">
+              <p style="font-size:13px;font-weight:700;color:var(--text-primary);">${c.name}</p>
+              <p style="font-size:11px;color:var(--text-muted);">${c.email || 'Sin email'}</p>
+              <p style="font-size:11px;color:var(--text-faint);">${c.phone || 'Sin teléfono'}</p>
+            </div>`).join('')}
+          </div>
+        </div>
+      `).join('');
+    };
+
+    function _showToast(msg) {
+      const ex = document.getElementById('crm-toast'); if (ex) ex.remove();
+      const t = document.createElement('div'); t.id = 'crm-toast'; t.textContent = msg;
+      Object.assign(t.style, { position:'fixed', bottom:'24px', right:'24px', background:'#22c55e', color:'#fff', padding:'12px 24px', borderRadius:'10px', fontSize:'13px', fontWeight:'700', zIndex:'9999', boxShadow:'0 4px 20px rgba(0,0,0,0.3)' });
+      document.body.appendChild(t);
+      setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, 3000);
+    }
+
+    // Load data on page load
+    window.addEventListener('skybrand:auth', () => {
+      loadCRMStats();
+      loadContacts();
+    });
+    // Also load if auth already happened
+    if (window._skybrandUser) {
+      loadCRMStats();
+      loadContacts();
+    }
+  </script>
+</DashboardLayout>

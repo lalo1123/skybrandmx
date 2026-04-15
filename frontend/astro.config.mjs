@@ -4,10 +4,12 @@ import icon from "astro-icon";
 
 export default defineConfig({
     integrations: [tailwind(), icon()],
-    server: {
-        port: 4005,
-        proxy: {
-            "/api": "http://localhost:8000"
+    server: { port: 4005 },
+    vite: {
+        server: {
+            proxy: {
+                '/api': 'http://localhost:8000'
+            }
         }
     }
 });

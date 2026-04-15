@@ -1,0 +1,429 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+const API_URL = import.meta.env.PUBLIC_API_URL || '';
+---
+
+<DashboardLayout title="Resumen">
+  <!-- Demo Banner -->
+  <div id="demo-banner" class="stat-card" style="margin-bottom:20px;background:linear-gradient(135deg,#0c2d3f,#084D6E);border:1px solid rgba(111,207,245,0.15);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h3 style="font-size:14px;font-weight:800;color:#fff;margin-bottom:4px;">Modo Demo</h3>
+      <p style="font-size:12px;color:rgba(255,255,255,0.6);">Carga datos de prueba para explorar la plataforma</p>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="loadDemoData()" id="demo-load-btn" style="padding:10px 20px;border-radius:10px;border:none;background:#6fcff5;color:#0f172a;font-size:12px;font-weight:800;cursor:pointer;">Cargar datos demo</button>
+      <button onclick="openSimulator()" style="padding:10px 20px;border-radius:10px;border:1px solid rgba(111,207,245,0.3);background:transparent;color:#6fcff5;font-size:12px;font-weight:700;cursor:pointer;">Simulador de tienda</button>
+    </div>
+  </div>
+
+  <!-- Onboarding Banner -->
+  <div id="onboarding-banner" style="background:linear-gradient(135deg, #0c2d3f, #0a4060, #084D6E);border-radius:16px;padding:24px 28px;margin-bottom:24px;position:relative;overflow:hidden;border:1px solid rgba(111,207,245,0.15);" class="animate-in delay-1">
+    <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:rgba(111,207,245,0.06);border-radius:50%;"></div>
+    <div style="position:absolute;bottom:-60px;right:60px;width:120px;height:120px;background:rgba(111,207,245,0.04);border-radius:50%;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div>
+        <h2 style="font-size:18px;font-weight:900;color:#fff;margin-bottom:4px;">Configura tu negocio</h2>
+        <p style="font-size:13px;color:rgba(255,255,255,0.75);">Completa estos pasos para activar tu plataforma</p>
+      </div>
+      <button onclick="dismissOnboarding()" style="background:rgba(255,255,255,0.15);border:none;border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+      <a href="/dashboard/configuracion" style="background:rgba(111,207,245,0.08);border:1px solid rgba(111,207,245,0.15);border-radius:12px;padding:14px 16px;text-align:center;cursor:pointer;transition:all 0.2s;text-decoration:none;" onmouseover="this.style.background='rgba(111,207,245,0.15)';this.style.borderColor='rgba(111,207,245,0.3)'" onmouseout="this.style.background='rgba(111,207,245,0.08)';this.style.borderColor='rgba(111,207,245,0.15)'">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(111,207,245,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+          <svg style="width:18px;height:18px;color:#6fcff5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+        </div>
+        <p style="font-size:12px;font-weight:700;color:#fff;margin-bottom:2px;">Empresa</p>
+        <p style="font-size:10px;color:#6fcff5;">Datos fiscales</p>
+      </a>
+      <a href="/dashboard/pedidos" style="background:rgba(111,207,245,0.08);border:1px solid rgba(111,207,245,0.15);border-radius:12px;padding:14px 16px;text-align:center;cursor:pointer;transition:all 0.2s;text-decoration:none;" onmouseover="this.style.background='rgba(111,207,245,0.15)';this.style.borderColor='rgba(111,207,245,0.3)'" onmouseout="this.style.background='rgba(111,207,245,0.08)';this.style.borderColor='rgba(111,207,245,0.15)'">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(111,207,245,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+          <svg style="width:18px;height:18px;color:#6fcff5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+        </div>
+        <p style="font-size:12px;font-weight:700;color:#fff;margin-bottom:2px;">Tienda</p>
+        <p style="font-size:10px;color:#6fcff5;">Productos y cat&aacute;logo</p>
+      </a>
+      <a href="/dashboard/facturacion" style="background:rgba(111,207,245,0.08);border:1px solid rgba(111,207,245,0.15);border-radius:12px;padding:14px 16px;text-align:center;cursor:pointer;transition:all 0.2s;text-decoration:none;" onmouseover="this.style.background='rgba(111,207,245,0.15)';this.style.borderColor='rgba(111,207,245,0.3)'" onmouseout="this.style.background='rgba(111,207,245,0.08)';this.style.borderColor='rgba(111,207,245,0.15)'">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(111,207,245,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+          <svg style="width:18px;height:18px;color:#6fcff5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z"/></svg>
+        </div>
+        <p style="font-size:12px;font-weight:700;color:#fff;margin-bottom:2px;">Facturaci&oacute;n</p>
+        <p style="font-size:10px;color:#6fcff5;">CFDI y SAT</p>
+      </a>
+      <a href="/dashboard/envios" style="background:rgba(111,207,245,0.08);border:1px solid rgba(111,207,245,0.15);border-radius:12px;padding:14px 16px;text-align:center;cursor:pointer;transition:all 0.2s;text-decoration:none;" onmouseover="this.style.background='rgba(111,207,245,0.15)';this.style.borderColor='rgba(111,207,245,0.3)'" onmouseout="this.style.background='rgba(111,207,245,0.08)';this.style.borderColor='rgba(111,207,245,0.15)'">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(111,207,245,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+          <svg style="width:18px;height:18px;color:#6fcff5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+        </div>
+        <p style="font-size:12px;font-weight:700;color:#fff;margin-bottom:2px;">Env&iacute;os</p>
+        <p style="font-size:10px;color:#6fcff5;">Paqueter&iacute;as</p>
+      </a>
+    </div>
+  </div>
+
+  <!-- Smart alerts -->
+  <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;" class="animate-in delay-1">
+    <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.15);">
+      <span style="font-size:24px;">📦</span>
+      <div style="flex:1;"><p style="font-size:13px;font-weight:700;color:var(--text-primary);">4 pedidos pendientes de envío</p><p style="font-size:11px;color:var(--text-muted);">Entre más rápido los envíes, mejor experiencia para tu cliente.</p></div>
+      <a href="/dashboard/pedidos" style="padding:8px 16px;border-radius:8px;border:none;background:#f97316;color:#fff;font-size:11px;font-weight:700;text-decoration:none;">Ver pedidos</a>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);">
+      <span style="font-size:24px;">💬</span>
+      <div style="flex:1;"><p style="font-size:13px;font-weight:700;color:var(--text-primary);">1 mensaje sin contestar en el chat</p><p style="font-size:11px;color:var(--text-muted);">María García te preguntó por la talla de una blusa.</p></div>
+      <a href="/dashboard/chat" style="padding:8px 16px;border-radius:8px;border:none;background:#ef4444;color:#fff;font-size:11px;font-weight:700;text-decoration:none;">Responder</a>
+    </div>
+  </div>
+
+  <!-- Stats row (cross-module) -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:28px;" class="animate-in delay-1">
+    <div class="stat-card" style="padding:18px 20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span class="stat-label">Ingresos</span>
+        <span style="font-size:10px;font-weight:700;color:#22c55e;">▲ +24.5%</span>
+      </div>
+      <p class="stat-value" style="color:var(--text-primary);">$158,200</p>
+      <p style="font-size:10px;color:var(--text-faint);margin-top:6px;">este mes</p>
+    </div>
+    <div class="stat-card" style="padding:18px 20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span class="stat-label">Pedidos</span>
+        <span style="font-size:10px;font-weight:700;color:#22c55e;">▲ +12%</span>
+      </div>
+      <p class="stat-value" style="color:var(--text-primary);">87</p>
+      <p style="font-size:10px;color:var(--text-faint);margin-top:6px;">este mes</p>
+    </div>
+    <div class="stat-card" style="padding:18px 20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span class="stat-label">Contactos CRM</span>
+        <span style="font-size:10px;font-weight:700;color:#22c55e;">▲ +31%</span>
+      </div>
+      <p class="stat-value" style="color:var(--text-primary);">2,450</p>
+      <p style="font-size:10px;color:var(--text-faint);margin-top:6px;">activos</p>
+    </div>
+    <div class="stat-card" style="padding:18px 20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span class="stat-label">Facturas</span>
+        <span style="font-size:10px;font-weight:700;color:#22c55e;">▲ +18%</span>
+      </div>
+      <p class="stat-value" style="color:var(--text-primary);">42</p>
+      <p style="font-size:10px;color:var(--text-faint);margin-top:6px;">timbradas este mes</p>
+    </div>
+    <div class="stat-card" style="padding:18px 20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span class="stat-label">Emails enviados</span>
+        <span style="font-size:10px;font-weight:700;color:#22c55e;">▲ +28%</span>
+      </div>
+      <p class="stat-value" style="color:var(--accent);">5,880</p>
+      <p style="font-size:10px;color:var(--text-faint);margin-top:6px;">47% apertura</p>
+    </div>
+    <div class="stat-card" style="padding:18px 20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span class="stat-label">ROAS Ads</span>
+        <span style="font-size:10px;font-weight:700;color:#22c55e;">▲ +0.8x</span>
+      </div>
+      <p class="stat-value" style="color:#22c55e;">4.3x</p>
+      <p style="font-size:10px;color:var(--text-faint);margin-top:6px;">retorno publicitario</p>
+    </div>
+  </div>
+
+  <!-- Two-column: Chart + Activity -->
+  <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:16px;margin-bottom:24px;" class="animate-in delay-2">
+    <!-- Sales chart (last 7 days) -->
+    <div class="stat-card" style="padding:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);">Ventas (7 d&iacute;as)</h4>
+        <span style="font-size:11px;font-weight:700;color:#22c55e;">&#9650; +24.5%</span>
+      </div>
+      <div style="height:180px;display:flex;align-items:flex-end;gap:10px;padding-top:24px;">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;"><div style="width:100%;background:var(--accent);border-radius:6px 6px 0 0;height:55px;opacity:0.5;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='0.5'"></div><span style="font-size:10px;color:var(--text-faint);">Vie</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;"><div style="width:100%;background:var(--accent);border-radius:6px 6px 0 0;height:80px;opacity:0.55;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='0.55'"></div><span style="font-size:10px;color:var(--text-faint);">S&aacute;b</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;"><div style="width:100%;background:var(--accent);border-radius:6px 6px 0 0;height:40px;opacity:0.45;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='0.45'"></div><span style="font-size:10px;color:var(--text-faint);">Dom</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;"><div style="width:100%;background:var(--accent);border-radius:6px 6px 0 0;height:100px;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='0.6'"></div><span style="font-size:10px;color:var(--text-faint);">Lun</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;"><div style="width:100%;background:var(--accent);border-radius:6px 6px 0 0;height:120px;opacity:0.7;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='0.7'"></div><span style="font-size:10px;color:var(--text-faint);">Mar</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;"><div style="width:100%;background:var(--accent);border-radius:6px 6px 0 0;height:140px;opacity:0.8;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='0.8'"></div><span style="font-size:10px;color:var(--text-faint);">Mi&eacute;</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;"><div style="width:100%;background:linear-gradient(to top,var(--accent),#22c55e);border-radius:6px 6px 0 0;height:160px;"></div><span style="font-size:11px;font-weight:800;color:var(--accent);">Hoy</span><span style="font-size:10px;font-weight:700;color:#22c55e;">$28.4k</span></div>
+      </div>
+    </div>
+
+    <!-- Activity feed -->
+    <div class="stat-card" style="padding:20px;overflow:hidden;">
+      <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Actividad reciente</h4>
+      <div style="display:flex;flex-direction:column;gap:0;max-height:220px;overflow-y:auto;">
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:16px;">🛒</span>
+          <div style="flex:1;"><p style="font-size:12px;font-weight:600;color:var(--text-primary);">Nuevo pedido SKY-010</p><p style="font-size:10px;color:var(--text-faint);">Jos&eacute; Miguel R&iacute;os &middot; $1,410</p></div>
+          <span style="font-size:10px;color:var(--text-faintest);white-space:nowrap;">Hace 15 min</span>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:16px;">🧾</span>
+          <div style="flex:1;"><p style="font-size:12px;font-weight:600;color:var(--text-primary);">Factura A-008 timbrada</p><p style="font-size:10px;color:var(--text-faint);">Fernando L&oacute;pez &middot; $2,552</p></div>
+          <span style="font-size:10px;color:var(--text-faintest);white-space:nowrap;">Hace 30 min</span>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:16px;">📦</span>
+          <div style="flex:1;"><p style="font-size:12px;font-weight:600;color:var(--text-primary);">Gu&iacute;a DHL generada</p><p style="font-size:10px;color:var(--text-faint);">Carlos Hern&aacute;ndez &middot; DHL987654321</p></div>
+          <span style="font-size:10px;color:var(--text-faintest);white-space:nowrap;">Hace 1h</span>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:16px;">✉️</span>
+          <div style="flex:1;"><p style="font-size:12px;font-weight:600;color:var(--text-primary);">Campa&ntilde;a "Promo Verano" enviada</p><p style="font-size:10px;color:var(--text-faint);">2,450 emails &middot; 47% apertura</p></div>
+          <span style="font-size:10px;color:var(--text-faintest);white-space:nowrap;">Hace 2h</span>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:16px;">⚡</span>
+          <div style="flex:1;"><p style="font-size:12px;font-weight:600;color:var(--text-primary);">5 automatizaciones ejecutadas</p><p style="font-size:10px;color:var(--text-faint);">Facturar + enviar gu&iacute;a + WhatsApp</p></div>
+          <span style="font-size:10px;color:var(--text-faintest);white-space:nowrap;">Hace 3h</span>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px 0;">
+          <span style="font-size:16px;">👤</span>
+          <div style="flex:1;"><p style="font-size:12px;font-weight:600;color:var(--text-primary);">Nuevo contacto en CRM</p><p style="font-size:10px;color:var(--text-faint);">Gabriela Moreno &middot; desde formulario web</p></div>
+          <span style="font-size:10px;color:var(--text-faintest);white-space:nowrap;">Hace 4h</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Automation summary + Quick actions -->
+  <div style="display:grid;grid-template-columns:1fr 2fr;gap:16px;margin-bottom:24px;" class="animate-in delay-2">
+    <!-- Automations summary -->
+    <div class="stat-card" style="padding:20px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+        <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,rgba(34,197,94,0.15),rgba(111,207,245,0.15));display:flex;align-items:center;justify-content:center;">
+          <svg style="width:16px;height:16px;color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);">Automatizaciones</h4>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:8px;background:var(--input-bg);">
+          <span style="font-size:12px;color:var(--text-secondary);">Reglas activas</span>
+          <span style="font-size:16px;font-weight:900;color:#22c55e;">5</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:8px;background:var(--input-bg);">
+          <span style="font-size:12px;color:var(--text-secondary);">Ejecutadas hoy</span>
+          <span style="font-size:16px;font-weight:900;color:var(--accent);">12</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:8px;background:var(--input-bg);">
+          <span style="font-size:12px;color:var(--text-secondary);">Tiempo ahorrado</span>
+          <span style="font-size:16px;font-weight:900;color:#8b5cf6;">~32h/mes</span>
+        </div>
+      </div>
+      <a href="/dashboard/automatizaciones" style="display:block;text-align:center;margin-top:12px;font-size:11px;font-weight:700;color:var(--accent);text-decoration:none;">Ver automatizaciones &rarr;</a>
+    </div>
+
+    <!-- Quick actions grid -->
+    <div>
+      <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:12px;">Accesos r&aacute;pidos</h4>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;">
+        <a href="/dashboard/pedidos" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">🛒</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Pedidos</p>
+          <p style="font-size:10px;color:var(--text-faint);">87 este mes</p>
+        </a>
+        <a href="/dashboard/productos" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">🛍</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Productos</p>
+          <p style="font-size:10px;color:var(--text-faint);">28 activos</p>
+        </a>
+        <a href="/dashboard/crm" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">👤</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">CRM</p>
+          <p style="font-size:10px;color:var(--text-faint);">2,450 contactos</p>
+        </a>
+        <a href="/dashboard/facturacion" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">🧾</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Facturaci&oacute;n</p>
+          <p style="font-size:10px;color:var(--text-faint);">42 timbradas</p>
+        </a>
+        <a href="/dashboard/envios" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">📦</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Env&iacute;os</p>
+          <p style="font-size:10px;color:var(--text-faint);">8 gu&iacute;as</p>
+        </a>
+        <a href="/dashboard/email-marketing" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">✉️</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Email</p>
+          <p style="font-size:10px;color:var(--text-faint);">47% apertura</p>
+        </a>
+        <a href="/dashboard/ads" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">📢</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Publicidad</p>
+          <p style="font-size:10px;color:var(--text-faint);">4.3x ROAS</p>
+        </a>
+        <a href="/dashboard/chat" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">💬</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Chat</p>
+          <p style="font-size:10px;color:var(--text-faint);">5 conversaciones</p>
+        </a>
+        <a href="/dashboard/tienda" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">🏪</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Tienda</p>
+          <p style="font-size:10px;color:var(--text-faint);">1,234 visitas</p>
+        </a>
+        <a href="/dashboard/reservaciones" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">📅</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Citas</p>
+          <p style="font-size:10px;color:var(--text-faint);">5 hoy</p>
+        </a>
+        <a href="/dashboard/cotizaciones" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">📋</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Cotizaciones</p>
+          <p style="font-size:10px;color:var(--text-faint);">2 pendientes</p>
+        </a>
+        <a href="/dashboard/reportes" class="stat-card" style="padding:14px;cursor:pointer;transition:border-color 0.2s;text-decoration:none;text-align:center;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">📊</span>
+          <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Reportes</p>
+          <p style="font-size:10px;color:var(--text-faint);">30.7% margen</p>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script define:vars={{ API_URL }}>
+    // ===== ONBOARDING =====
+    window.dismissOnboarding = function() {
+      const banner = document.getElementById('onboarding-banner');
+      if (banner) {
+        banner.style.transition = 'opacity 0.3s, transform 0.3s';
+        banner.style.opacity = '0';
+        banner.style.transform = 'translateY(-10px)';
+        setTimeout(() => { banner.style.display = 'none'; }, 300);
+      }
+      localStorage.setItem('skybrand_onboarding_dismissed', 'true');
+    };
+
+    if (localStorage.getItem('skybrand_onboarding_dismissed') === 'true') {
+      const banner = document.getElementById('onboarding-banner');
+      if (banner) banner.style.display = 'none';
+    }
+
+    // ===== DEMO & SIMULATOR =====
+    let demoData = null;
+
+    window.loadDemoData = async function() {
+      const btn = document.getElementById('demo-load-btn');
+      btn.textContent = 'Cargando...';
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${API_URL}/api/v1/demo/seed`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('skybrand_token')}` },
+        });
+        demoData = await res.json();
+        if (demoData.success) {
+          const s = demoData.stats;
+          const statValues = document.querySelectorAll('.stat-value');
+          if (statValues[0]) statValues[0].textContent = '$' + s.revenue.toLocaleString();
+          if (statValues[1]) statValues[1].textContent = s.orders;
+          if (statValues[2]) statValues[2].textContent = s.customers;
+          if (statValues[3]) statValues[3].textContent = s.invoices;
+          btn.textContent = '\u2713 Datos cargados';
+          btn.style.background = '#22c55e';
+        }
+      } catch(e) {
+        btn.textContent = 'Error - Reintentar';
+        btn.style.background = '#ef4444';
+      }
+      setTimeout(() => {
+        btn.textContent = 'Cargar datos demo';
+        btn.style.background = '#6fcff5';
+        btn.disabled = false;
+      }, 3000);
+    };
+
+    window.openSimulator = function() {
+      document.getElementById('simulator-modal')?.remove();
+      const events = [
+        {type: 'order.created', icon: '\u{1F4E6}', label: 'Nuevo pedido', desc: 'Simula que entra un pedido de Shopify'},
+        {type: 'order.paid', icon: '\u2705', label: 'Pedido pagado', desc: 'Simula confirmaci\u00F3n de pago'},
+        {type: 'order.shipped', icon: '\u{1F69A}', label: 'Pedido enviado', desc: 'Simula que el pedido sale del almac\u00E9n'},
+        {type: 'order.delivered', icon: '\u{1F4EC}', label: 'Pedido entregado', desc: 'Simula entrega al cliente'},
+        {type: 'order.cancelled', icon: '\u274C', label: 'Pedido cancelado', desc: 'Simula cancelaci\u00F3n de pedido'},
+        {type: 'cart.abandoned', icon: '\u{1F6D2}', label: 'Carrito abandonado', desc: 'Simula que un cliente deja productos en el carrito'},
+        {type: 'payment.failed', icon: '\u{1F6AB}', label: 'Pago fallido', desc: 'Simula un pago rechazado'},
+        {type: 'inventory.low', icon: '\u{1F4C9}', label: 'Stock bajo', desc: 'Simula alerta de inventario bajo'},
+        {type: 'customer.created', icon: '\u{1F464}', label: 'Nuevo cliente', desc: 'Simula registro de cliente'},
+      ];
+
+      const modal = document.createElement('div');
+      modal.id = 'simulator-modal';
+      modal.style.cssText = 'position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px;';
+      modal.innerHTML = `
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);" onclick="document.getElementById('simulator-modal')?.remove()"></div>
+        <div style="position:relative;width:100%;max-width:600px;max-height:80vh;overflow-y:auto;background:var(--bg-sidebar);border:1px solid var(--border);border-radius:20px;padding:28px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+            <div>
+              <h2 style="font-size:18px;font-weight:900;color:var(--text-primary);">Simulador de Tienda</h2>
+              <p style="font-size:12px;color:var(--text-faint);">Simula eventos reales y ve c\u00F3mo responden tus automatizaciones</p>
+            </div>
+            <button onclick="document.getElementById('simulator-modal')?.remove()" style="width:32px;height:32px;border-radius:8px;border:none;background:transparent;cursor:pointer;color:var(--text-muted);display:flex;align-items:center;justify-content:center;">
+              <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div id="simulator-events" style="display:grid;gap:8px;">
+            ${events.map(e => `
+              <button onclick="simulateEvent('${e.type}', this)" style="display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:var(--bg-card);cursor:pointer;text-align:left;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+                <span style="font-size:24px;flex-shrink:0;">${e.icon}</span>
+                <div style="flex:1;min-width:0;">
+                  <p style="font-size:13px;font-weight:700;color:var(--text-primary);">${e.label}</p>
+                  <p style="font-size:11px;color:var(--text-faint);">${e.desc}</p>
+                </div>
+                <div class="sim-status" style="font-size:11px;font-weight:700;color:var(--text-faintest);">Simular \u2192</div>
+              </button>
+            `).join('')}
+          </div>
+          <div id="simulator-result" style="display:none;margin-top:16px;padding:16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    };
+
+    window.simulateEvent = async function(eventType, btn) {
+      const statusEl = btn.querySelector('.sim-status');
+      statusEl.textContent = 'Simulando...';
+      statusEl.style.color = 'var(--accent)';
+      try {
+        const res = await fetch(`${API_URL}/api/v1/demo/simulate/${eventType}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('skybrand_token')}` },
+        });
+        const data = await res.json();
+        if (data.rules_triggered > 0) {
+          statusEl.textContent = `\u2713 ${data.rules_triggered} regla(s)`;
+          statusEl.style.color = '#22c55e';
+        } else {
+          statusEl.textContent = 'Sin reglas';
+          statusEl.style.color = '#f97316';
+        }
+        const resultEl = document.getElementById('simulator-result');
+        if (resultEl) {
+          resultEl.style.display = 'block';
+          let html = `<p style="font-size:13px;font-weight:800;color:var(--text-primary);margin-bottom:8px;">Resultado: ${eventType}</p>`;
+          html += `<p style="font-size:12px;color:var(--text-faint);margin-bottom:8px;">Cliente: ${data.event_data.customer_name || 'N/A'} | ${data.rules_triggered} regla(s) ejecutada(s)</p>`;
+          if (data.automation_results && data.automation_results.length > 0) {
+            for (const r of data.automation_results) {
+              html += `<div style="margin-top:8px;padding:10px;border-radius:8px;background:var(--bg-card);border:1px solid var(--border);">`;
+              html += `<p style="font-size:12px;font-weight:700;color:var(--text-primary);">${r.rule_name} <span style="color:${r.status === 'success' ? '#22c55e' : '#ef4444'}">(${r.status})</span></p>`;
+              for (const s of r.steps) {
+                const icon = s.status === 'success' ? '\u2705' : s.status === 'skipped' ? '\u23ED\uFE0F' : '\u274C';
+                html += `<p style="font-size:11px;color:var(--text-faint);margin-top:4px;">${icon} ${s.action}: ${s.status}</p>`;
+              }
+              html += `</div>`;
+            }
+          } else {
+            html += `<p style="font-size:12px;color:#f97316;">No hay reglas configuradas para este evento. Crea una en Automatizaciones.</p>`;
+          }
+          resultEl.innerHTML = html;
+        }
+      } catch(e) {
+        statusEl.textContent = 'Error';
+        statusEl.style.color = '#ef4444';
+      }
+      setTimeout(() => {
+        statusEl.textContent = 'Simular \u2192';
+        statusEl.style.color = 'var(--text-faintest)';
+      }, 5000);
+    };
+  </script>
+</DashboardLayout>
+

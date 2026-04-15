@@ -116,7 +116,7 @@ const { title } = Astro.props;
         <script>
             // Protected Routes Check
             document.addEventListener('DOMContentLoaded', () => {
-                const token = localStorage.getItem('token');
+                const token = localStorage.getItem('skybrand_token');
                 if (!token && !window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/soluciones') && !window.location.pathname.startsWith('/modulos') && window.location.pathname.startsWith('/app')) {
                     window.location.href = '/login';
                 }

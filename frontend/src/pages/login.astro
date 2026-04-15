@@ -164,11 +164,11 @@ import { Icon } from 'astro-icon/components';
 
             if (response.ok) {
                 const data = await response.json();
-                localStorage.setItem('token', data.access_token);
+                localStorage.setItem('skybrand_token', data.access_token);
                 localStorage.setItem('workspace_id', data.workspace_id);
                 localStorage.setItem('user_id', data.user_id);
-                
-                window.location.href = '/app/dashboard';
+
+                window.location.href = '/dashboard';
             } else {
                 const errorData = await response.json();
                 errorMsg.innerText = errorData.detail || 'Error en la autenticación.';

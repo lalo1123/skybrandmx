@@ -1,0 +1,483 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+const API_URL = import.meta.env.PUBLIC_API_URL || '';
+---
+
+<DashboardLayout title="Publicidad">
+  <!-- Smart Recommendations -->
+  <div id="ads-smart-recs" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;"></div>
+
+  <!-- Mode toggle: Manual vs IA -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+    <div style="display:flex;border:2px solid var(--border);border-radius:12px;overflow:hidden;">
+      <button onclick="setAdsMode('manual')" id="ads-mode-manual" class="ads-mode-btn active">📊 Gestionar campañas</button>
+      <button onclick="setAdsMode('ai')" id="ads-mode-ai" class="ads-mode-btn">🤖 Modo IA (automático)</button>
+    </div>
+    <span class="ads-tip" data-tip="En 'Gestionar campañas' tú controlas todo. En 'Modo IA' la inteligencia artificial crea, optimiza y gestiona tus anuncios automáticamente.">?</span>
+  </div>
+
+  <!-- Stats bar -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px;">
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="ads-stat-label">Gasto del mes</p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="ads-stat-spend" class="ads-stat-val">--</p><span id="ads-trend-spend" class="ads-trend"></span></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="ads-stat-label">Ventas desde ads <span class="ads-tip" data-tip="Ventas que llegaron directamente desde tus anuncios">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="ads-stat-sales" class="ads-stat-val" style="color:#22c55e;">--</p><span id="ads-trend-sales" class="ads-trend"></span></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="ads-stat-label">ROAS <span class="ads-tip" data-tip="Por cada peso que gastas en publicidad, ¿cuántos pesos ganas? Si dice 3.5x, significa que por cada $1 gastado ganaste $3.50">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="ads-stat-roas" class="ads-stat-val" style="color:var(--accent);">--</p><span id="ads-trend-roas" class="ads-trend"></span></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="ads-stat-label">Clics</p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="ads-stat-clicks" class="ads-stat-val">--</p><span id="ads-trend-clicks" class="ads-trend"></span></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="ads-stat-label">Costo por venta <span class="ads-tip" data-tip="Cuánto te cuesta en publicidad conseguir una venta. Mientras más bajo, mejor.">?</span></p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="ads-stat-cpa" class="ads-stat-val" style="color:#f97316;">--</p><span id="ads-trend-cpa" class="ads-trend"></span></div>
+    </div>
+    <div class="stat-card animate-in" style="padding:18px 20px;">
+      <p class="ads-stat-label">Campañas activas</p>
+      <div style="display:flex;align-items:baseline;gap:8px;"><p id="ads-stat-active" class="ads-stat-val" style="color:#8b5cf6;">--</p></div>
+    </div>
+  </div>
+
+  <!-- ══════════ MANUAL MODE ══════════ -->
+  <div id="ads-panel-manual">
+    <!-- Tabs -->
+    <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;overflow-x:auto;">
+      <button id="ads-tab-campaigns" class="ads-tab active" onclick="switchAdsTab('campaigns')">Campañas</button>
+      <button id="ads-tab-accounts" class="ads-tab" onclick="switchAdsTab('accounts')">Cuentas conectadas</button>
+      <button id="ads-tab-analytics" class="ads-tab" onclick="switchAdsTab('analytics')">Analítica</button>
+    </div>
+
+    <!-- Tab: Campaigns -->
+    <div id="ads-panel-campaigns">
+      <div id="ads-help-campaigns" class="ads-help-banner">
+        <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <p style="flex:1;font-size:12px;color:var(--text-secondary);">Aquí ves todas tus campañas de publicidad de Meta (Facebook/Instagram) y Google en un solo lugar.</p>
+        <button onclick="adsDismissHelp('campaigns')" class="ads-help-close">&times;</button>
+      </div>
+      <div class="stat-card animate-in" style="padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;position:relative;">
+          <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input id="ads-search" type="text" placeholder="Buscar campañas..." oninput="adsFilter()" class="ads-input" style="padding-left:38px;"/>
+        </div>
+        <select id="ads-filter-platform" onchange="adsFilter()" class="ads-input" style="width:auto;cursor:pointer;">
+          <option value="">Todas las plataformas</option>
+          <option value="meta">Meta (FB/IG)</option>
+          <option value="google">Google</option>
+          <option value="tiktok">TikTok</option>
+        </select>
+        <select id="ads-filter-status" onchange="adsFilter()" class="ads-input" style="width:auto;cursor:pointer;">
+          <option value="">Todos los estados</option>
+          <option value="active">Activa</option>
+          <option value="paused">Pausada</option>
+          <option value="ended">Finalizada</option>
+        </select>
+      </div>
+      <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead><tr style="border-bottom:1px solid var(--border);">
+              <th class="ads-th">Campaña</th><th class="ads-th">Plataforma</th><th class="ads-th">Estado</th>
+              <th class="ads-th" style="text-align:right;">Gasto</th><th class="ads-th" style="text-align:right;">Clics</th>
+              <th class="ads-th" style="text-align:right;">Ventas</th><th class="ads-th" style="text-align:right;">ROAS</th>
+              <th class="ads-th" style="text-align:center;">Acciones</th>
+            </tr></thead>
+            <tbody id="ads-campaigns-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Accounts -->
+    <div id="ads-panel-accounts" style="display:none;">
+      <div id="ads-help-accounts" class="ads-help-banner">
+        <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <p style="flex:1;font-size:12px;color:var(--text-secondary);">Conecta tus cuentas de publicidad para ver todas tus campañas aquí. Solo necesitas hacerlo una vez.</p>
+        <button onclick="adsDismissHelp('accounts')" class="ads-help-close">&times;</button>
+      </div>
+      <div id="ads-accounts-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+    </div>
+
+    <!-- Tab: Analytics -->
+    <div id="ads-panel-analytics" style="display:none;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:20px;">
+        <div class="stat-card animate-in" style="padding:20px;">
+          <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Gasto vs Ventas por mes</h4>
+          <div id="ads-chart-spend" style="height:200px;display:flex;align-items:flex-end;gap:6px;"></div>
+          <div style="display:flex;gap:16px;margin-top:12px;">
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:2px;background:#ef4444;"></div><span style="font-size:11px;color:var(--text-muted);">Gasto</span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:2px;background:#22c55e;"></div><span style="font-size:11px;color:var(--text-muted);">Ventas</span></div>
+          </div>
+        </div>
+        <div class="stat-card animate-in" style="padding:20px;">
+          <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Rendimiento por plataforma</h4>
+          <div id="ads-chart-platforms"></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+        <div class="stat-card animate-in" style="padding:20px;">
+          <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Top campañas por ROAS</h4>
+          <div id="ads-chart-top"></div>
+        </div>
+        <div class="stat-card animate-in" style="padding:20px;">
+          <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Distribución de presupuesto</h4>
+          <div id="ads-chart-budget"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ AI MODE ══════════ -->
+  <div id="ads-panel-ai" style="display:none;">
+    <div class="ads-help-banner">
+      <svg style="width:16px;height:16px;color:#8b5cf6;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">En modo IA, solo dile qué quieres vender y cuánto quieres gastar. La IA se encarga de crear los anuncios, elegir la audiencia y optimizar el presupuesto automáticamente.</p>
+    </div>
+
+    <!-- AI Campaign Creator -->
+    <div class="stat-card animate-in" style="padding:0;margin-bottom:20px;overflow:hidden;background:linear-gradient(135deg,rgba(139,92,246,0.06),rgba(111,207,245,0.06));border:1px solid rgba(139,92,246,0.15);">
+      <div style="padding:24px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#8b5cf6,#6fcff5);display:flex;align-items:center;justify-content:center;">
+            <svg style="width:20px;height:20px;color:#fff;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <div>
+            <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);">Crear campaña con IA</h3>
+            <p style="font-size:12px;color:var(--text-muted);">Dile a la IA qué producto quieres vender y ella hace el resto.</p>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div><label class="ads-label">¿Qué quieres promocionar?</label><input id="ads-ai-product" type="text" placeholder="Ej: Mi nueva colección de blusas bordadas" class="ads-input"/></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+            <div><label class="ads-label">Presupuesto diario</label><input id="ads-ai-budget" type="number" value="200" class="ads-input" placeholder="$200"/></div>
+            <div>
+              <label class="ads-label">¿Dónde publicar?</label>
+              <select id="ads-ai-platforms" class="ads-input" style="cursor:pointer;">
+                <option value="all" selected>Todas (recomendado)</option>
+                <option value="meta">Solo Meta (FB/IG)</option>
+                <option value="google">Solo Google</option>
+                <option value="tiktok">Solo TikTok</option>
+              </select>
+            </div>
+            <div>
+              <label class="ads-label">Objetivo</label>
+              <select id="ads-ai-goal" class="ads-input" style="cursor:pointer;">
+                <option value="sales" selected>Vender más</option>
+                <option value="traffic">Más visitas a mi tienda</option>
+                <option value="leads">Captar contactos</option>
+                <option value="awareness">Que me conozcan</option>
+              </select>
+            </div>
+          </div>
+          <button onclick="adsAICreate()" style="padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#8b5cf6,#6fcff5);color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+            <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            La IA crea mi campaña
+          </button>
+        </div>
+        <div id="ads-ai-result" style="display:none;margin-top:16px;"></div>
+      </div>
+    </div>
+
+    <!-- AI Active Campaigns -->
+    <h3 style="font-size:15px;font-weight:800;color:var(--text-primary);margin-bottom:12px;">Campañas gestionadas por IA</h3>
+    <div id="ads-ai-campaigns" style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;"></div>
+
+    <!-- AI Insights -->
+    <h3 style="font-size:15px;font-weight:800;color:var(--text-primary);margin-bottom:12px;">Recomendaciones de la IA</h3>
+    <div id="ads-ai-insights" style="display:flex;flex-direction:column;gap:10px;"></div>
+  </div>
+
+  <!-- Autopilot -->
+  <div class="stat-card animate-in" style="padding:0;margin-top:20px;overflow:hidden;">
+    <button onclick="adsToggleSection('ads-autopilot-content')" class="ads-collapse-header">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,rgba(34,197,94,0.15),rgba(111,207,245,0.15));display:flex;align-items:center;justify-content:center;">
+          <svg style="width:14px;height:14px;color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <div style="text-align:left;"><p style="font-size:13px;font-weight:700;color:var(--text-primary);">Piloto automático de publicidad</p><p style="font-size:11px;color:var(--text-faint);">Deja que la IA optimice tus campañas</p></div>
+      </div>
+      <svg style="width:16px;height:16px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+    </button>
+    <div id="ads-autopilot-content" style="display:none;padding:20px;">
+      <div id="ads-autopilot-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
+    </div>
+  </div>
+</DashboardLayout>
+
+<style>
+  .ads-stat-label { font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:4px; }
+  .ads-stat-val { font-size:28px;font-weight:900;color:var(--text-primary); }
+  .ads-trend { font-size:11px;font-weight:700; }
+  .ads-mode-btn { padding:12px 24px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s; }
+  .ads-mode-btn.active { background:var(--accent-bg);color:var(--accent); }
+  .ads-tab { padding:10px 20px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap; }
+  .ads-tab.active { color:var(--accent);border-bottom-color:var(--accent); }
+  .ads-th { padding:14px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px; }
+  .ads-label { font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:4px;display:block; }
+  .ads-input { width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;outline:none;transition:border-color 0.2s; }
+  .ads-input:focus { border-color:var(--accent); }
+  .ads-tbl-btn { padding:5px 9px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;transition:all 0.15s; }
+  .ads-tbl-btn:hover { border-color:var(--accent);color:var(--accent); }
+  .ads-help-banner { display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;background:var(--accent-bg);border:1px solid rgba(111,207,245,0.15);margin-bottom:16px; }
+  .ads-help-close { border:none;background:transparent;color:var(--text-faint);cursor:pointer;font-size:16px;padding:0 4px; }
+  .ads-tip { display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--input-bg);color:var(--text-faint);font-size:10px;font-weight:800;cursor:help;position:relative;flex-shrink:0; }
+  .ads-tip:hover::after { content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--bg-sidebar);border:1px solid var(--border);color:var(--text-secondary);padding:10px 14px;border-radius:10px;font-size:12px;font-weight:500;white-space:normal;width:280px;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.3);line-height:1.5;pointer-events:none; }
+  .ads-tip:hover::before { content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--border);z-index:101; }
+  .ads-collapse-header { width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border:none;background:transparent;cursor:pointer;transition:background 0.15s; }
+  .ads-collapse-header:hover { background:var(--nav-hover); }
+  .ads-toggle-wrap { position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0; }
+  .ads-toggle-wrap input { opacity:0;width:0;height:0; }
+  .ads-toggle-slider { position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:22px;transition:0.3s; }
+  .ads-toggle-slider::before { content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s; }
+  .ads-toggle-wrap input:checked + .ads-toggle-slider { background:var(--toggle-color, #22c55e); }
+  .ads-toggle-wrap input:checked + .ads-toggle-slider::before { transform:translateX(18px); }
+</style>
+
+<script is:inline>
+// ═══════ DEMO DATA ═══════
+const demoCampaigns = [
+  { id:1, name:'Promo Verano - Blusas', platform:'meta', status:'active', spend:4500, clicks:1230, impressions:45000, sales:42, revenue:18900, cpa:107, roas:4.2, date:'2026-03-15' },
+  { id:2, name:'Google Shopping - Accesorios', platform:'google', status:'active', spend:3200, clicks:890, impressions:32000, sales:28, revenue:11200, cpa:114, roas:3.5, date:'2026-03-18' },
+  { id:3, name:'Instagram Stories - Huaraches', platform:'meta', status:'active', spend:2100, clicks:650, impressions:28000, sales:18, revenue:16020, cpa:117, roas:7.6, date:'2026-03-20' },
+  { id:4, name:'Remarketing - Carritos abandonados', platform:'meta', status:'active', spend:1800, clicks:420, impressions:15000, sales:24, revenue:9600, cpa:75, roas:5.3, date:'2026-03-10' },
+  { id:5, name:'Google Search - Regalos artesanales', platform:'google', status:'paused', spend:1500, clicks:380, impressions:12000, sales:12, revenue:5400, cpa:125, roas:3.6, date:'2026-03-05' },
+  { id:6, name:'TikTok - Colección nueva', platform:'tiktok', status:'active', spend:2800, clicks:2100, impressions:95000, sales:15, revenue:6750, cpa:187, roas:2.4, date:'2026-03-25' },
+  { id:7, name:'Meta - Black Friday early', platform:'meta', status:'ended', spend:5200, clicks:3400, impressions:120000, sales:65, revenue:32500, cpa:80, roas:6.3, date:'2026-02-20' },
+];
+
+const adsAccounts = [
+  { id:'meta', name:'Meta Business (Facebook + Instagram)', icon:'📘', color:'#1877f2', connected:true, accountName:'SkyBrandMX', campaigns:4, spend:'$8,400' },
+  { id:'google', name:'Google Ads', icon:'🔍', color:'#4285f4', connected:true, accountName:'SkyBrandMX Ads', campaigns:2, spend:'$4,700' },
+  { id:'tiktok', name:'TikTok Ads', icon:'🎵', color:'#000', connected:true, accountName:'@skybrandmx', campaigns:1, spend:'$2,800' },
+  { id:'pinterest', name:'Pinterest Ads', icon:'📌', color:'#e60023', connected:false },
+  { id:'twitter', name:'X (Twitter) Ads', icon:'🐦', color:'#1da1f2', connected:false },
+];
+
+const adsAutoFlows = [
+  { id:'optimize', name:'Optimizar presupuesto automático', desc:'La IA mueve presupuesto a las campañas que mejor funcionan', icon:'💰', color:'#22c55e', active:true },
+  { id:'pause_bad', name:'Pausar campañas malas', desc:'Pausa automáticamente campañas con ROAS menor a 2x', icon:'⏸', color:'#f97316', active:true },
+  { id:'scale_good', name:'Escalar campañas buenas', desc:'Aumenta presupuesto automáticamente a campañas con ROAS mayor a 4x', icon:'📈', color:'#6fcff5', active:false },
+  { id:'retarget', name:'Remarketing automático', desc:'Crea campañas de remarketing para personas que visitaron tu tienda sin comprar', icon:'🎯', color:'#8b5cf6', active:true },
+  { id:'lookalike', name:'Audiencias similares', desc:'Crea automáticamente audiencias parecidas a tus mejores clientes', icon:'👥', color:'#ec4899', active:false },
+  { id:'creative', name:'Rotar creativos', desc:'Prueba diferentes imágenes y textos automáticamente y usa los que funcionan mejor', icon:'🎨', color:'#eab308', active:false },
+];
+
+const aiInsights = [
+  { icon:'💡', color:'#eab308', text:'Tu campaña "Instagram Stories - Huaraches" tiene un ROAS de 7.6x. La IA recomienda aumentar su presupuesto de $2,100 a $3,500/mes.', action:'Aplicar', actionFn:"showToast('Presupuesto aumentado')" },
+  { icon:'⚠', color:'#f97316', text:'La campaña de TikTok tiene el costo por venta más alto ($187). Considera pausarla o cambiar el contenido.', action:'Pausar', actionFn:"showToast('Campaña pausada')" },
+  { icon:'🎯', color:'#22c55e', text:'El remarketing de carritos abandonados es tu campaña más eficiente (CPA $75). La IA sugiere crear una variante para "visitaron pero no agregaron al carrito".', action:'Crear variante', actionFn:"showToast('Variante creada por IA')" },
+  { icon:'📊', color:'#8b5cf6', text:'Los jueves y viernes son tus mejores días de conversión. La IA recomienda concentrar el 60% del presupuesto en esos días.', action:'Aplicar', actionFn:"showToast('Horarios optimizados')" },
+];
+
+const platformMap = { meta:{l:'Meta (FB/IG)',c:'#1877f2',icon:'📘'}, google:{l:'Google',c:'#4285f4',icon:'🔍'}, tiktok:{l:'TikTok',c:'#000',icon:'🎵'} };
+const statusMap = { active:{l:'Activa',c:'#22c55e',b:'rgba(34,197,94,0.1)'}, paused:{l:'Pausada',c:'#f97316',b:'rgba(249,115,22,0.1)'}, ended:{l:'Finalizada',c:'#64748b',b:'rgba(100,116,139,0.1)'} };
+
+// ═══════ HELPERS ═══════
+function adsDismissHelp(t){document.getElementById('ads-help-'+t).style.display='none';localStorage.setItem('ads_help_'+t+'_dismissed','1');}
+function adsToggleSection(id){const el=document.getElementById(id);el.style.display=el.style.display==='none'?'block':'none';}
+function showToast(msg){const ex=document.getElementById('ads-toast');if(ex)ex.remove();const t=document.createElement('div');t.id='ads-toast';t.textContent=msg;Object.assign(t.style,{position:'fixed',bottom:'24px',right:'24px',background:'#22c55e',color:'#fff',padding:'12px 24px',borderRadius:'10px',fontSize:'13px',fontWeight:'700',zIndex:'9999',boxShadow:'0 4px 20px rgba(0,0,0,0.3)'});document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(()=>t.remove(),300);},3000);}
+
+function setAdsMode(mode){
+  document.getElementById('ads-mode-manual').classList.toggle('active',mode==='manual');
+  document.getElementById('ads-mode-ai').classList.toggle('active',mode==='ai');
+  document.getElementById('ads-panel-manual').style.display=mode==='manual'?'':'none';
+  document.getElementById('ads-panel-ai').style.display=mode==='ai'?'':'none';
+}
+function switchAdsTab(tab){
+  document.querySelectorAll('.ads-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('ads-tab-'+tab).classList.add('active');
+  ['campaigns','accounts','analytics'].forEach(p=>document.getElementById('ads-panel-'+p).style.display=p===tab?'':'none');
+}
+
+// ═══════ STATS ═══════
+function renderAdsStats(){
+  const active=demoCampaigns.filter(c=>c.status==='active');
+  const totalSpend=active.reduce((s,c)=>s+c.spend,0);
+  const totalSales=active.reduce((s,c)=>s+c.revenue,0);
+  const totalClicks=active.reduce((s,c)=>s+c.clicks,0);
+  const totalConv=active.reduce((s,c)=>s+c.sales,0);
+  document.getElementById('ads-stat-spend').textContent='$'+totalSpend.toLocaleString();
+  document.getElementById('ads-stat-sales').textContent='$'+totalSales.toLocaleString();
+  document.getElementById('ads-stat-roas').textContent=totalSpend>0?(totalSales/totalSpend).toFixed(1)+'x':'0x';
+  document.getElementById('ads-stat-clicks').textContent=totalClicks.toLocaleString();
+  document.getElementById('ads-stat-cpa').textContent='$'+(totalConv>0?Math.round(totalSpend/totalConv):0);
+  document.getElementById('ads-stat-active').textContent=active.length;
+  setT('ads-trend-spend','+12%');setT('ads-trend-sales','+28%');setT('ads-trend-roas','+0.8x');setT('ads-trend-clicks','+15%');setT('ads-trend-cpa','-$18');
+}
+function setT(id,val){const el=document.getElementById(id);if(!el)return;const up=val.startsWith('+');const color=id.includes('cpa')?(up?'#ef4444':'#22c55e'):id.includes('spend')?(up?'#f97316':'#22c55e'):(up?'#22c55e':'#ef4444');el.innerHTML=`<span style="color:${color};">${up?'▲':'▼'} ${val}</span>`;}
+
+// ═══════ SMART RECS ═══════
+function renderAdsRecs(){
+  const el=document.getElementById('ads-smart-recs');if(!el)return;const recs=[];
+  const bestCamp=demoCampaigns.filter(c=>c.status==='active').sort((a,b)=>b.roas-a.roas)[0];
+  if(bestCamp&&bestCamp.roas>4)recs.push({icon:'🚀',color:'#22c55e',title:`"${bestCamp.name}" tiene ROAS de ${bestCamp.roas}x`,desc:'La IA recomienda aumentar su presupuesto para maximizar ventas.',btn:'Escalar',action:"showToast('Presupuesto aumentado por IA')"});
+  const worstCamp=demoCampaigns.filter(c=>c.status==='active').sort((a,b)=>a.roas-b.roas)[0];
+  if(worstCamp&&worstCamp.roas<3)recs.push({icon:'⚠',color:'#f97316',title:`"${worstCamp.name}" tiene ROAS bajo (${worstCamp.roas}x)`,desc:'Considera pausarla o dejar que la IA optimice el contenido.',btn:'Optimizar con IA',action:"setAdsMode('ai');showToast('Modo IA activado')"});
+  if(!recs.length){el.style.display='none';return;}
+  el.style.display='flex';
+  el.innerHTML=recs.map(r=>`<div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;background:${r.color}08;border:1px solid ${r.color}20;"><span style="font-size:24px;flex-shrink:0;">${r.icon}</span><div style="flex:1;"><p style="font-size:13px;font-weight:700;color:var(--text-primary);">${r.title}</p><p style="font-size:11px;color:var(--text-muted);margin-top:2px;">${r.desc}</p></div><button onclick="${r.action}" style="padding:8px 16px;border-radius:8px;border:none;background:${r.color};color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">${r.btn}</button><button onclick="this.closest('div[style]').remove()" style="border:none;background:transparent;color:var(--text-faint);cursor:pointer;font-size:14px;padding:0 4px;">✕</button></div>`).join('');
+}
+
+// ═══════ CAMPAIGNS TABLE ═══════
+function renderAdsCampaigns(){
+  const tbody=document.getElementById('ads-campaigns-tbody');let data=[...demoCampaigns];
+  const search=document.getElementById('ads-search').value.toLowerCase();
+  const pf=document.getElementById('ads-filter-platform').value;
+  const sf=document.getElementById('ads-filter-status').value;
+  if(search)data=data.filter(c=>c.name.toLowerCase().includes(search));
+  if(pf)data=data.filter(c=>c.platform===pf);
+  if(sf)data=data.filter(c=>c.status===sf);
+  if(!data.length){tbody.innerHTML='<tr><td colspan="8" style="padding:40px;text-align:center;color:var(--text-faint);">No se encontraron campañas</td></tr>';return;}
+  tbody.innerHTML=data.map(c=>{const pl=platformMap[c.platform];const st=statusMap[c.status];const roasColor=c.roas>=4?'#22c55e':c.roas>=2?'#eab308':'#ef4444';return`<tr style="border-bottom:1px solid var(--border);transition:background 0.15s;" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background='transparent'">
+    <td style="padding:14px 16px;"><p style="font-weight:700;color:var(--text-primary);">${c.name}</p><p style="font-size:11px;color:var(--text-faint);">Desde ${c.date}</p></td>
+    <td style="padding:14px 16px;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:14px;">${pl.icon}</span><span style="font-size:12px;font-weight:600;color:var(--text-primary);">${pl.l}</span></div></td>
+    <td style="padding:14px 16px;"><span style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;color:${st.c};background:${st.b};">${st.l}</span></td>
+    <td style="padding:14px 16px;text-align:right;font-weight:700;color:var(--text-primary);">$${c.spend.toLocaleString()}</td>
+    <td style="padding:14px 16px;text-align:right;color:var(--text-secondary);">${c.clicks.toLocaleString()}</td>
+    <td style="padding:14px 16px;text-align:right;color:#22c55e;font-weight:700;">${c.sales} ($${c.revenue.toLocaleString()})</td>
+    <td style="padding:14px 16px;text-align:right;font-weight:900;color:${roasColor};">${c.roas}x</td>
+    <td style="padding:14px 16px;text-align:center;"><div style="display:flex;gap:4px;justify-content:center;">
+      ${c.status==='active'?`<button onclick="demoCampaigns.find(x=>x.id===${c.id}).status='paused';renderAdsCampaigns();renderAdsStats();showToast('Campaña pausada')" class="ads-tbl-btn" style="border-color:#f97316;color:#f97316;">Pausar</button>`:''}
+      ${c.status==='paused'?`<button onclick="demoCampaigns.find(x=>x.id===${c.id}).status='active';renderAdsCampaigns();renderAdsStats();showToast('Campaña reactivada')" class="ads-tbl-btn" style="border-color:#22c55e;color:#22c55e;">Activar</button>`:''}
+    </div></td>
+  </tr>`;}).join('');
+}
+function adsFilter(){renderAdsCampaigns();}
+
+// ═══════ ACCOUNTS ═══════
+function renderAdsAccounts(){
+  const el=document.getElementById('ads-accounts-list');
+  el.innerHTML=adsAccounts.map(a=>`
+    <div style="display:flex;align-items:center;gap:14px;padding:16px;border-radius:12px;border:1px solid ${a.connected?'#22c55e30':'var(--border)'};background:${a.connected?'rgba(34,197,94,0.03)':'var(--input-bg)'};">
+      <span style="font-size:28px;flex-shrink:0;">${a.icon}</span>
+      <div style="flex:1;">
+        <p style="font-size:14px;font-weight:800;color:var(--text-primary);">${a.name}</p>
+        ${a.connected?`<p style="font-size:11px;color:var(--text-faint);">${a.accountName} · ${a.campaigns} campañas · ${a.spend} gastado</p>`:`<p style="font-size:11px;color:var(--text-faint);">No conectado</p>`}
+      </div>
+      ${a.connected
+        ?'<span style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;color:#22c55e;background:rgba(34,197,94,0.1);">Conectado ✓</span>'
+        :`<button onclick="adsAccounts.find(x=>x.id==='${a.id}').connected=true;renderAdsAccounts();showToast('${a.name} conectado')" style="padding:8px 16px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:700;cursor:pointer;">Conectar</button>`}
+    </div>`).join('');
+}
+
+// ═══════ ANALYTICS ═══════
+function renderAdsAnalytics(){
+  // Spend vs Sales
+  const months=['Oct','Nov','Dic','Ene','Feb','Mar'];
+  const spends=[8500,12000,18500,14200,16800,21100];const salesA=[28000,38000,62000,48000,56000,72000];const mV=Math.max(...salesA);
+  document.getElementById('ads-chart-spend').innerHTML=months.map((m,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;display:flex;gap:2px;align-items:flex-end;height:170px;"><div style="flex:1;background:#ef4444;border-radius:3px 3px 0 0;height:${(spends[i]/mV)*170}px;opacity:0.8;" title="Gasto: $${spends[i].toLocaleString()}"></div><div style="flex:1;background:#22c55e;border-radius:3px 3px 0 0;height:${(salesA[i]/mV)*170}px;opacity:0.8;" title="Ventas: $${salesA[i].toLocaleString()}"></div></div><span style="font-size:10px;color:var(--text-faint);font-weight:600;">${m}</span></div>`).join('');
+
+  // By platform
+  const platforms=[{n:'Meta (FB/IG)',spend:8400,sales:42000,roas:5.0,c:'#1877f2'},{n:'Google',spend:4700,sales:16600,roas:3.5,c:'#4285f4'},{n:'TikTok',spend:2800,sales:6750,roas:2.4,c:'#000'}];
+  document.getElementById('ads-chart-platforms').innerHTML=platforms.map(p=>`<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">
+    <div style="width:10px;height:10px;border-radius:3px;background:${p.c};flex-shrink:0;"></div>
+    <div style="flex:1;"><p style="font-size:13px;font-weight:700;color:var(--text-primary);">${p.n}</p><p style="font-size:11px;color:var(--text-faint);">Gasto: $${p.spend.toLocaleString()} · Ventas: $${p.sales.toLocaleString()}</p></div>
+    <span style="font-size:16px;font-weight:900;color:${p.roas>=4?'#22c55e':p.roas>=2?'#eab308':'#ef4444'};">${p.roas}x</span>
+  </div>`).join('');
+
+  // Top by ROAS
+  const top=demoCampaigns.sort((a,b)=>b.roas-a.roas).slice(0,5);
+  document.getElementById('ads-chart-top').innerHTML=top.map((c,i)=>`<div style="display:flex;align-items:center;gap:12px;padding:8px 0;${i<top.length-1?'border-bottom:1px solid var(--border);':''}">
+    <span style="width:20px;height:20px;border-radius:6px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:var(--accent);">${i+1}</span>
+    <div style="flex:1;"><p style="font-size:12px;font-weight:700;color:var(--text-primary);">${c.name}</p><p style="font-size:10px;color:var(--text-faint);">${platformMap[c.platform].l}</p></div>
+    <span style="font-size:14px;font-weight:900;color:${c.roas>=4?'#22c55e':'#eab308'};">${c.roas}x</span>
+  </div>`).join('');
+
+  // Budget distribution
+  const totalBudget=demoCampaigns.filter(c=>c.status==='active').reduce((s,c)=>s+c.spend,0);
+  const byPlat={};demoCampaigns.filter(c=>c.status==='active').forEach(c=>{byPlat[c.platform]=(byPlat[c.platform]||0)+c.spend;});
+  const budgetData=Object.entries(byPlat).map(([k,v])=>({...platformMap[k],spend:v,pct:Math.round(v/totalBudget*100)}));
+  document.getElementById('ads-chart-budget').innerHTML=`<div style="display:flex;height:24px;border-radius:12px;overflow:hidden;margin-bottom:16px;">${budgetData.map(p=>`<div style="width:${p.pct}%;background:${p.c};" title="${p.l}: ${p.pct}%"></div>`).join('')}</div>${budgetData.map(p=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:10px;height:10px;border-radius:3px;background:${p.c};"></div><span style="font-size:12px;color:var(--text-secondary);">${p.l}</span></div><span style="font-size:13px;font-weight:800;color:var(--text-primary);">$${p.spend.toLocaleString()} (${p.pct}%)</span></div>`).join('')}`;
+}
+
+// ═══════ AI MODE ═══════
+function adsAICreate(){
+  const product=document.getElementById('ads-ai-product').value.trim();
+  if(!product){alert('Escribe qué quieres promocionar');return;}
+  const budget=document.getElementById('ads-ai-budget').value||200;
+  const goal=document.getElementById('ads-ai-goal').selectedOptions[0]?.text||'Vender más';
+  const result=document.getElementById('ads-ai-result');
+  result.style.display='block';
+  result.innerHTML='<div style="padding:16px;text-align:center;"><p style="color:var(--text-muted);">La IA está creando tu campaña...</p></div>';
+
+  setTimeout(()=>{
+    result.innerHTML=`
+      <div style="padding:16px;border-top:1px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;"><svg style="width:16px;height:16px;color:#8b5cf6;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg><p style="font-size:13px;font-weight:800;color:#8b5cf6;">Campaña generada por IA</p></div>
+        <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;font-size:12px;margin-bottom:16px;">
+          <span style="color:var(--text-faint);font-weight:700;">Nombre:</span><span style="color:var(--text-primary);font-weight:600;">IA: ${product.substring(0,40)}</span>
+          <span style="color:var(--text-faint);font-weight:700;">Plataformas:</span><span style="color:var(--text-primary);">Meta (FB + IG) + Google</span>
+          <span style="color:var(--text-faint);font-weight:700;">Presupuesto:</span><span style="color:var(--text-primary);">$${parseInt(budget).toLocaleString()}/día ($${(parseInt(budget)*30).toLocaleString()}/mes)</span>
+          <span style="color:var(--text-faint);font-weight:700;">Objetivo:</span><span style="color:var(--text-primary);">${goal}</span>
+          <span style="color:var(--text-faint);font-weight:700;">Audiencia:</span><span style="color:var(--text-primary);">Mujeres 25-45, intereses: moda artesanal, regalos mexicanos</span>
+          <span style="color:var(--text-faint);font-weight:700;">Textos:</span><span style="color:var(--text-primary);">3 variantes generadas por IA (se prueban automáticamente)</span>
+        </div>
+        <p style="font-size:11px;color:var(--text-faint);margin-bottom:12px;">La IA creará 3 variantes de anuncio, probará cuál funciona mejor y optimizará automáticamente.</p>
+        <div style="display:flex;gap:10px;">
+          <button onclick="adsAILaunch('${product.substring(0,40)}',${budget})" style="flex:1;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#8b5cf6,#6fcff5);color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Lanzar campaña</button>
+          <button onclick="document.getElementById('ads-ai-result').style.display='none'" style="flex:0;padding:12px 16px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-primary);font-size:13px;font-weight:700;cursor:pointer;">Cancelar</button>
+        </div>
+      </div>`;
+  },1200);
+}
+
+function adsAILaunch(name,budget){
+  demoCampaigns.unshift({id:Date.now(),name:'IA: '+name,platform:'meta',status:'active',spend:0,clicks:0,impressions:0,sales:0,revenue:0,cpa:0,roas:0,date:'2026-04-02'});
+  document.getElementById('ads-ai-result').style.display='none';
+  document.getElementById('ads-ai-product').value='';
+  renderAdsCampaigns();renderAdsStats();renderAIcampaigns();
+  showToast('Campaña lanzada por IA. Se optimizará automáticamente.');
+}
+
+function renderAIcampaigns(){
+  const el=document.getElementById('ads-ai-campaigns');
+  const aiCamps=demoCampaigns.filter(c=>c.name.startsWith('IA:'));
+  if(!aiCamps.length){
+    el.innerHTML='<div style="text-align:center;padding:24px;color:var(--text-faintest);font-size:13px;">No tienes campañas gestionadas por IA. Crea una arriba.</div>';
+    return;
+  }
+  el.innerHTML=aiCamps.map(c=>{
+    const st=statusMap[c.status];
+    return`<div class="stat-card" style="padding:16px;background:linear-gradient(135deg,rgba(139,92,246,0.03),rgba(111,207,245,0.03));border:1px solid rgba(139,92,246,0.1);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(139,92,246,0.1);color:#8b5cf6;font-weight:700;">IA</span><span style="font-size:14px;font-weight:800;color:var(--text-primary);">${c.name.replace('IA: ','')}</span></div>
+        <span style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;color:${st.c};background:${st.b};">${st.l}</span>
+      </div>
+      <div style="display:flex;gap:16px;">
+        <div><p style="font-size:10px;color:var(--text-faint);">Gasto</p><p style="font-size:14px;font-weight:800;color:var(--text-primary);">$${c.spend.toLocaleString()}</p></div>
+        <div><p style="font-size:10px;color:var(--text-faint);">Ventas</p><p style="font-size:14px;font-weight:800;color:#22c55e;">${c.sales}</p></div>
+        <div><p style="font-size:10px;color:var(--text-faint);">ROAS</p><p style="font-size:14px;font-weight:800;color:var(--accent);">${c.roas}x</p></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderAIinsights(){
+  const el=document.getElementById('ads-ai-insights');
+  el.innerHTML=aiInsights.map(i=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;background:${i.color}08;border:1px solid ${i.color}20;">
+      <span style="font-size:20px;flex-shrink:0;">${i.icon}</span>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);line-height:1.5;">${i.text}</p>
+      <button onclick="${i.actionFn}" style="padding:6px 14px;border-radius:8px;border:none;background:${i.color};color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">${i.action}</button>
+    </div>`).join('');
+}
+
+// ═══════ AUTOPILOT ═══════
+function renderAdsAutopilot(){
+  const el=document.getElementById('ads-autopilot-list');if(!el)return;
+  el.innerHTML=adsAutoFlows.map(f=>`<div style="padding:16px;border-radius:12px;border:1px solid ${f.active?f.color+'30':'var(--border)'};background:${f.active?f.color+'08':'var(--input-bg)'};">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:18px;">${f.icon}</span><span style="font-size:13px;font-weight:800;color:var(--text-primary);">${f.name}</span></div><label class="ads-toggle-wrap"><input type="checkbox" ${f.active?'checked':''} onchange="adsAutoFlows.find(x=>x.id==='${f.id}').active=this.checked;renderAdsAutopilot();showToast(this.checked?'Activado':'Desactivado')"/><span class="ads-toggle-slider" style="${f.active?'--toggle-color:'+f.color:''}"></span></label></div>
+    <p style="font-size:11px;color:var(--text-muted);line-height:1.4;">${f.desc}</p></div>`).join('');
+}
+
+// ═══════ INIT ═══════
+document.addEventListener('DOMContentLoaded',()=>{
+  ['campaigns','accounts','analytics'].forEach(t=>{if(localStorage.getItem('ads_help_'+t+'_dismissed')){const el=document.getElementById('ads-help-'+t);if(el)el.style.display='none';}});
+  renderAdsRecs();renderAdsStats();renderAdsCampaigns();renderAdsAccounts();renderAdsAnalytics();renderAIcampaigns();renderAIinsights();renderAdsAutopilot();
+});
+</script>
