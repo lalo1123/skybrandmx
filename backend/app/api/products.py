@@ -76,7 +76,7 @@ def get_product_stats(
 
 # ===== LIST / SEARCH =====
 
-@router.get("/products", response_model=list[ProductResponse])
+@router.get("/", response_model=list[ProductResponse])
 def list_products(
     search: str = Query(None, description="Search by name or SKU"),
     category: str = Query(None, description="Filter by category"),
@@ -120,7 +120,7 @@ def list_products(
 
 # ===== CRUD =====
 
-@router.get("/products/{product_id}", response_model=ProductResponse)
+@router.get("/{product_id}", response_model=ProductResponse)
 def get_product(
     product_id: int,
     current_user: User = Depends(get_current_user),
@@ -136,7 +136,7 @@ def get_product(
     return product
 
 
-@router.post("/products", response_model=ProductResponse)
+@router.post("/", response_model=ProductResponse)
 def create_product(
     data: ProductCreate,
     current_user: User = Depends(get_current_user),
@@ -170,7 +170,7 @@ def create_product(
     return product
 
 
-@router.put("/products/{product_id}", response_model=ProductResponse)
+@router.put("/{product_id}", response_model=ProductResponse)
 def update_product(
     product_id: int,
     data: ProductUpdate,
@@ -202,7 +202,7 @@ def update_product(
     return product
 
 
-@router.delete("/products/{product_id}")
+@router.delete("/{product_id}")
 def delete_product(
     product_id: int,
     current_user: User = Depends(get_current_user),

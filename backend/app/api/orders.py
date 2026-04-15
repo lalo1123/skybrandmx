@@ -78,7 +78,7 @@ async def get_order_stats(
 
 # ═══════ LIST ORDERS ═══════
 
-@router.get("/orders", response_model=List[OrderResponse])
+@router.get("/", response_model=List[OrderResponse])
 async def list_orders(
     search: Optional[str] = None,
     status: Optional[str] = None,
@@ -119,7 +119,7 @@ async def list_orders(
 
 # ═══════ GET ORDER ═══════
 
-@router.get("/orders/{order_id}", response_model=OrderResponse)
+@router.get("/{order_id}", response_model=OrderResponse)
 async def get_order(
     order_id: int,
     user: User = Depends(get_current_user),
@@ -136,7 +136,7 @@ async def get_order(
 
 # ═══════ CREATE ORDER ═══════
 
-@router.post("/orders", response_model=OrderResponse)
+@router.post("/", response_model=OrderResponse)
 async def create_order(
     data: OrderCreate,
     user: User = Depends(get_current_user),
@@ -186,7 +186,7 @@ async def create_order(
 
 # ═══════ UPDATE ORDER ═══════
 
-@router.put("/orders/{order_id}", response_model=OrderResponse)
+@router.put("/{order_id}", response_model=OrderResponse)
 async def update_order(
     order_id: int,
     data: OrderUpdate,
@@ -232,7 +232,7 @@ async def update_order(
 class StatusChange(BaseModel):
     status: str
 
-@router.put("/orders/{order_id}/status", response_model=OrderResponse)
+@router.put("/{order_id}/status", response_model=OrderResponse)
 async def change_order_status(
     order_id: int,
     data: StatusChange,
