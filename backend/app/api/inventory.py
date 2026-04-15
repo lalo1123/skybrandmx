@@ -1,46 +1,57 @@
+"""ERP inventory sync endpoint."""
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from ..schemas.schemas import ERPInventorySync, GenericResponse
-from ..models.models import Product
 from ..core.database import get_db
+from ..models.product import Product
+from pydantic import BaseModel
+from typing import Optional
 
 router = APIRouter()
 
-@router.post("/inventory/sync-erp", response_model=GenericResponse)
+
+class InventoryItem(BaseModel):
+    sku: str
+    name: str
+    quantity: int
+    price: Optional[float] = None
+
+
+class ERPInventorySync(BaseModel):
+    source: str = "erp"
+    items: list[InventoryItem] = []
+
+
+@router.post("/inventory/sync-erp")
 async def erp_inventory_sync(
     sync_data: ERPInventorySync,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
-    """
-    Receives mass inventory updates from ERP systems (e.g., AS400).
-    Updates existing products or creates new ones in the 'Inventario Base'.
-    """
+    """Receive mass inventory updates from ERP systems."""
     updated_count = 0
     created_count = 0
-    
+
     for item in sync_data.items:
-        # Check if product exists by SKU
         product = db.query(Product).filter(Product.sku == item.sku).first()
-        
+
         if product:
-            product.stock_quantity = item.quantity
+            product.stock = item.quantity
             if item.price:
                 product.price = item.price
             product.name = item.name
             updated_count += 1
         else:
             new_product = Product(
+                workspace_id=1,  # TODO: derive from auth
                 sku=item.sku,
                 name=item.name,
-                stock_quantity=item.quantity,
-                price=item.price
+                stock=item.quantity,
+                price=item.price or 0.0,
             )
             db.add(new_product)
             created_count += 1
-            
+
     db.commit()
-    
     return {
-        "status": "success", 
-        "message": f"Sync completed. Created: {created_count}, Updated: {updated_count}. Source: {sync_data.source}"
+        "status": "success",
+        "message": f"Sync completado. Creados: {created_count}, Actualizados: {updated_count}. Fuente: {sync_data.source}",
     }

@@ -1,44 +1,50 @@
+"""API credential management — store encrypted third-party keys."""
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from ..db.session import get_db # Placeholder, assuming it exists or creating it
-from ..models.models import User, CredentialVault, IntegrationProvider
-from ..schemas.schemas import ConnectionPayload, GenericResponse
-from ..core.security import encrypt_key
+from ..core.database import get_db
+from ..core.deps import get_current_user
+from ..models.base import User, ApiCredential
+from ..core.security import encrypt_api_credential
+from pydantic import BaseModel
+from typing import Optional
 
 router = APIRouter()
 
-@router.post("/connect", response_model=GenericResponse)
+
+class ConnectionPayload(BaseModel):
+    provider: str  # skydropx, facturapi, resend, shopify, meta
+    api_key: str
+    api_secret: Optional[str] = None
+
+
+@router.post("/connect")
 async def connect_integration(
     payload: ConnectionPayload,
-    current_user_id: int = 1, # TODO: Use real Auth
-    db: Session = Depends(get_db)
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
-    """
-    Saves an API Key in the encrypted vault for a specific provider (SAT, DHL, Meta).
-    The Orquestador will use these credentials in background tasks.
-    """
-    # 1. Verify provider exists in catalog
-    provider = db.query(IntegrationProvider).filter(IntegrationProvider.slug == payload.provider_slug).first()
-    if not provider:
-        raise HTTPException(status_code=404, detail=f"Provider {payload.provider_slug} not supported.")
-    
-    # 2. Encrypt sensitive data
-    encrypted_key = encrypt_key(payload.api_key)
-    encrypted_secret = encrypt_key(payload.api_secret) if payload.api_secret else None
-    
-    # 3. Store in the Vault
-    new_vault_entry = CredentialVault(
-        user_id=current_user_id,
-        provider_id=provider.id,
-        encrypted_key=encrypted_key,
-        encrypted_secret=encrypted_secret,
-        is_valid=True
+    """Save an API key in the encrypted vault for a specific provider."""
+    ws = current_user.workspace_id
+
+    # Check if credential already exists for this provider
+    existing = (
+        db.query(ApiCredential)
+        .filter(ApiCredential.workspace_id == ws, ApiCredential.provider == payload.provider)
+        .first()
     )
-    
-    db.add(new_vault_entry)
+    if existing:
+        existing.encrypted_api_key = encrypt_api_credential(payload.api_key)
+        if payload.api_secret:
+            existing.encrypted_api_secret = encrypt_api_credential(payload.api_secret)
+        db.commit()
+        return {"status": "success", "message": f"Credenciales de {payload.provider} actualizadas."}
+
+    new_cred = ApiCredential(
+        workspace_id=ws,
+        provider=payload.provider,
+        encrypted_api_key=encrypt_api_credential(payload.api_key),
+        encrypted_api_secret=encrypt_api_credential(payload.api_secret) if payload.api_secret else None,
+    )
+    db.add(new_cred)
     db.commit()
-    
-    return {
-        "status": "success",
-        "message": f"Successfully connected to {provider.name}. Your credentials are encrypted and secure."
-    }
+    return {"status": "success", "message": f"Conectado a {payload.provider} exitosamente."}
