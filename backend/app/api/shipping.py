@@ -13,7 +13,7 @@ from sqlalchemy import func, extract
 
 from app.core.deps import get_current_user, get_db
 from app.models.base import User
-from app.models.shipping import Shipment, ShipmentEvent, ReturnLabel
+from app.models.shipping import Shipment, ShipmentEvent, ReturnLabel, SavedAddress
 from app.integrations.skydropx_service import (
     get_skydropx_client, calculate_user_price, calculate_volumetric_weight
 )
@@ -73,6 +73,21 @@ class ShipmentCreate(BaseModel):
     content_description: Optional[str] = None
     declared_value: float = Field(default=0.0, ge=0)
     insured: bool = False
+    # COD
+    cod_enabled: bool = False
+    cod_amount: float = 0.0
+    cod_payment_method: Optional[str] = None  # cash, card, transfer
+    # Carta Porte
+    carta_porte: bool = False
+    merchandise_description: Optional[str] = None
+    # Pickup
+    schedule_pickup: bool = False
+    pickup_date: Optional[str] = None
+    pickup_time_from: Optional[str] = "09:00"
+    pickup_time_to: Optional[str] = "18:00"
+    # Notifications
+    notify_on_create: bool = True
+    notify_on_delivery: bool = True
     # Selected rate
     carrier: str
     rate_id: Optional[str] = None
@@ -205,6 +220,17 @@ async def create_shipment(
         content_description=data.content_description,
         declared_value=data.declared_value,
         insured=data.insured,
+        cod_enabled=data.cod_enabled,
+        cod_amount=data.cod_amount,
+        cod_payment_method=data.cod_payment_method,
+        carta_porte=data.carta_porte,
+        merchandise_description=data.merchandise_description,
+        pickup_scheduled=data.schedule_pickup,
+        pickup_date=data.pickup_date,
+        pickup_time_from=data.pickup_time_from,
+        pickup_time_to=data.pickup_time_to,
+        notify_on_create=data.notify_on_create,
+        notify_on_delivery=data.notify_on_delivery,
         cost=data.cost,
         price=data.price,
         margin=data.price - data.cost,
@@ -303,7 +329,30 @@ async def get_shipment(
     return s
 
 
-# ═══════ TRACKING ═══════
+# ═══════ TRACKING (public — no auth for customer-facing page) ═══════
+
+@router.post("/track/public")
+async def track_shipment_public(
+    data: TrackRequest,
+    db: Session = Depends(get_db),
+):
+    """Public tracking — no auth required. Used by branded tracking page."""
+    shipment = db.query(Shipment).filter(
+        Shipment.tracking_number == data.tracking_number,
+    ).first()
+    if not shipment:
+        return {"tracking_number": data.tracking_number, "status": "not_found", "events": [], "message": "No se encontró el envío"}
+    events = db.query(ShipmentEvent).filter(ShipmentEvent.shipment_id == shipment.id).order_by(ShipmentEvent.event_date.desc()).all()
+    return {
+        "tracking_number": shipment.tracking_number,
+        "carrier": shipment.carrier,
+        "status": shipment.status,
+        "dest_city": shipment.dest_city,
+        "events": [{"description": e.description, "location": e.location, "date": str(e.event_date)} for e in events],
+    }
+
+
+# ═══════ TRACKING (authenticated) ═══════
 
 @router.post("/track")
 async def track_shipment(
@@ -717,3 +766,214 @@ async def lookup_zipcode(cp: str):
         return {"cp": cp, "found": True, **info}
 
     return {"cp": cp, "found": False, "colonies": [], "city": "", "state": "", "municipality": ""}
+
+
+# ═══════ ADDRESS BOOK ═══════
+
+class SavedAddressCreate(BaseModel):
+    label: str = Field(..., max_length=100)
+    is_origin: bool = True
+    is_default: bool = False
+    name: str = Field(..., max_length=200)
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    street: Optional[str] = None
+    ext_number: Optional[str] = None
+    int_number: Optional[str] = None
+    colony: Optional[str] = None
+    zip_code: str = Field(..., min_length=5, max_length=5)
+    city: Optional[str] = None
+    state: Optional[str] = None
+    municipality: Optional[str] = None
+    reference: Optional[str] = None
+
+
+class SavedAddressResponse(BaseModel):
+    id: int
+    workspace_id: int
+    label: str
+    is_origin: bool
+    is_default: bool
+    name: str
+    phone: Optional[str]
+    email: Optional[str]
+    street: Optional[str]
+    ext_number: Optional[str]
+    int_number: Optional[str]
+    colony: Optional[str]
+    zip_code: str
+    city: Optional[str]
+    state: Optional[str]
+    municipality: Optional[str]
+    reference: Optional[str]
+    created_at: Optional[datetime]
+    class Config:
+        from_attributes = True
+
+
+@router.get("/addresses", response_model=List[SavedAddressResponse])
+async def list_addresses(
+    is_origin: Optional[bool] = None,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """List saved addresses"""
+    q = db.query(SavedAddress).filter(SavedAddress.workspace_id == user.workspace_id)
+    if is_origin is not None:
+        q = q.filter(SavedAddress.is_origin == is_origin)
+    return q.order_by(SavedAddress.is_default.desc(), SavedAddress.label).all()
+
+
+@router.post("/addresses", response_model=SavedAddressResponse)
+async def create_address(
+    data: SavedAddressCreate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Save an address to the address book"""
+    if data.is_default:
+        db.query(SavedAddress).filter(
+            SavedAddress.workspace_id == user.workspace_id,
+            SavedAddress.is_origin == data.is_origin,
+            SavedAddress.is_default == True,
+        ).update({"is_default": False})
+
+    addr = SavedAddress(workspace_id=user.workspace_id, **data.model_dump())
+    db.add(addr)
+    db.commit()
+    db.refresh(addr)
+    return addr
+
+
+@router.put("/addresses/{address_id}", response_model=SavedAddressResponse)
+async def update_address(
+    address_id: int,
+    data: SavedAddressCreate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Update a saved address"""
+    addr = db.query(SavedAddress).filter(
+        SavedAddress.id == address_id, SavedAddress.workspace_id == user.workspace_id
+    ).first()
+    if not addr:
+        raise HTTPException(404, "Dirección no encontrada")
+
+    if data.is_default:
+        db.query(SavedAddress).filter(
+            SavedAddress.workspace_id == user.workspace_id,
+            SavedAddress.is_origin == data.is_origin,
+            SavedAddress.is_default == True,
+            SavedAddress.id != address_id,
+        ).update({"is_default": False})
+
+    for key, val in data.model_dump().items():
+        setattr(addr, key, val)
+    addr.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(addr)
+    return addr
+
+
+@router.delete("/addresses/{address_id}")
+async def delete_address(
+    address_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Delete a saved address"""
+    addr = db.query(SavedAddress).filter(
+        SavedAddress.id == address_id, SavedAddress.workspace_id == user.workspace_id
+    ).first()
+    if not addr:
+        raise HTTPException(404, "Dirección no encontrada")
+    db.delete(addr)
+    db.commit()
+    return {"status": "success", "message": "Dirección eliminada"}
+
+
+# ═══════ MASS SHIPMENT ═══════
+
+class MassShipmentItem(BaseModel):
+    dest_name: str
+    dest_email: Optional[str] = None
+    dest_phone: Optional[str] = None
+    dest_street: Optional[str] = None
+    dest_zip: str = Field(..., min_length=5, max_length=5)
+    weight: float = Field(default=1.0, gt=0)
+    content_description: Optional[str] = None
+    declared_value: float = 0.0
+
+
+class MassShipmentRequest(BaseModel):
+    origin_zip: str = Field(..., min_length=5, max_length=5)
+    origin_name: Optional[str] = "SkyBrandMX"
+    carrier_preference: str = "cheapest"
+    insured: bool = False
+    schedule_pickup: bool = False
+    pickup_date: Optional[str] = None
+    notify_clients: bool = True
+    items: List[MassShipmentItem] = Field(..., min_length=1)
+
+
+@router.post("/mass-shipment")
+async def create_mass_shipment(
+    data: MassShipmentRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Create multiple shipments from CSV data"""
+    results = []
+    for item in data.items:
+        shipment = Shipment(
+            workspace_id=user.workspace_id,
+            carrier=data.carrier_preference if data.carrier_preference != "cheapest" else "Estafeta",
+            status="created",
+            origin_name=data.origin_name,
+            origin_zip=data.origin_zip,
+            dest_name=item.dest_name,
+            dest_zip=item.dest_zip,
+            dest_street=item.dest_street,
+            dest_phone=item.dest_phone,
+            dest_email=item.dest_email,
+            weight=item.weight,
+            content_description=item.content_description,
+            declared_value=item.declared_value,
+            insured=data.insured,
+            notify_on_create=data.notify_clients,
+            pickup_scheduled=data.schedule_pickup,
+            pickup_date=data.pickup_date,
+        )
+        base_cost = round(item.weight * 45 + 25, 2)
+        pricing = calculate_user_price(base_cost)
+        shipment.cost = pricing["cost"]
+        shipment.price = pricing["price"]
+        shipment.margin = pricing["margin"]
+        shipment.tracking_number = f"{shipment.carrier[:3].upper()}{len(results)+1:09d}"
+
+        db.add(shipment)
+        db.flush()
+
+        event = ShipmentEvent(
+            shipment_id=shipment.id,
+            description="Guía creada (envío masivo)",
+            location=data.origin_zip,
+            status="created",
+        )
+        db.add(event)
+        results.append({
+            "id": shipment.id,
+            "tracking_number": shipment.tracking_number,
+            "dest_name": item.dest_name,
+            "dest_zip": item.dest_zip,
+            "carrier": shipment.carrier,
+            "price": shipment.price,
+        })
+
+    db.commit()
+    return {
+        "status": "success",
+        "total": len(results),
+        "shipments": results,
+        "message": f"{len(results)} guías generadas exitosamente",
+    }

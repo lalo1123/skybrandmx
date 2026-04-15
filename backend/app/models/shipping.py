@@ -47,6 +47,27 @@ class Shipment(SQLModel, table=True):
     declared_value: float = Field(default=0.0)
     insured: bool = Field(default=False)
 
+    # COD (contra entrega)
+    cod_enabled: bool = Field(default=False)
+    cod_amount: float = Field(default=0.0)
+    cod_payment_method: Optional[str] = Field(default=None, max_length=20)  # cash, card, transfer
+
+    # Carta Porte
+    carta_porte: bool = Field(default=False)
+    merchandise_description: Optional[str] = Field(default=None, max_length=300)
+    sat_product_key: Optional[str] = Field(default=None, max_length=20)
+
+    # Pickup
+    pickup_scheduled: bool = Field(default=False)
+    pickup_date: Optional[str] = Field(default=None, max_length=10)
+    pickup_time_from: Optional[str] = Field(default=None, max_length=5)
+    pickup_time_to: Optional[str] = Field(default=None, max_length=5)
+
+    # Notifications
+    notify_on_create: bool = Field(default=True)
+    notify_on_transit: bool = Field(default=False)
+    notify_on_delivery: bool = Field(default=True)
+
     # Costs
     cost: float = Field(default=0.0)  # What we pay Skydropx
     price: float = Field(default=0.0)  # What user pays (cost + margin)
@@ -99,3 +120,26 @@ class ReturnLabel(SQLModel, table=True):
     status: str = Field(default="created", max_length=20)
     label_url: Optional[str] = Field(default=None, max_length=500)
     created_at: Optional[datetime] = Field(default_factory=datetime.utcnow)
+
+
+class SavedAddress(SQLModel, table=True):
+    """Dirección guardada — libreta de direcciones"""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    workspace_id: int = Field(foreign_key="workspace.id", index=True)
+    label: str = Field(max_length=100)  # "Mi bodega", "Oficina CDMX"
+    is_origin: bool = Field(default=True)  # True=origin, False=destination
+    is_default: bool = Field(default=False)
+    name: str = Field(max_length=200)
+    phone: Optional[str] = Field(default=None, max_length=20)
+    email: Optional[str] = Field(default=None, max_length=255)
+    street: Optional[str] = Field(default=None, max_length=300)
+    ext_number: Optional[str] = Field(default=None, max_length=20)
+    int_number: Optional[str] = Field(default=None, max_length=20)
+    colony: Optional[str] = Field(default=None, max_length=200)
+    zip_code: str = Field(max_length=5)
+    city: Optional[str] = Field(default=None, max_length=100)
+    state: Optional[str] = Field(default=None, max_length=100)
+    municipality: Optional[str] = Field(default=None, max_length=100)
+    reference: Optional[str] = Field(default=None, max_length=300)
+    created_at: Optional[datetime] = Field(default_factory=datetime.utcnow)
+    updated_at: Optional[datetime] = Field(default_factory=datetime.utcnow)

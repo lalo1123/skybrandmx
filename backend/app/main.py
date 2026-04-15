@@ -46,7 +46,7 @@ async def startup_event():
     from app.models.automation import AutomationRule, AutomationLog, AutomationStepLog  # noqa: F401
     from app.models.crm import Contact, Message, LeadForm, Segment  # noqa: F401
     from app.models.invoicing import Invoice, InvoiceItem, CreditNote, FiscalClient  # noqa: F401
-    from app.models.shipping import Shipment, ShipmentEvent, ReturnLabel  # noqa: F401
+    from app.models.shipping import Shipment, ShipmentEvent, ReturnLabel, SavedAddress  # noqa: F401
     from app.models.email_marketing import Campaign, EmailTemplate, Audience, Subscriber, EmailEvent, Suppression  # noqa: F401
     from sqlmodel import SQLModel
     # Import actions to register them
