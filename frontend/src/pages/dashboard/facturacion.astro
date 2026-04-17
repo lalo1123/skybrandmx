@@ -35,12 +35,65 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
     </div>
   </div>
 
+  <!-- ══════════ Health Score + Insights IA ══════════ -->
+  <div style="display:grid;grid-template-columns:320px 1fr;gap:16px;margin-bottom:20px;" class="fac-hero-grid">
+    <!-- Health Score Gauge -->
+    <div class="stat-card" style="padding:20px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;right:0;width:120px;height:120px;background:radial-gradient(circle at top right,rgba(111,207,245,0.18),transparent 70%);pointer-events:none;"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;position:relative;">
+        <p class="fac-stat-label" style="margin:0;">Health score fiscal <span class="fac-tip" data-tip="Qué tan sano está tu negocio ante el SAT. Considera declaraciones, cobros pendientes, errores de timbrado y uso de facturas.">?</span></p>
+        <span id="fac-score-delta" style="font-size:11px;font-weight:800;"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:18px;position:relative;">
+        <div style="position:relative;width:120px;height:120px;flex-shrink:0;">
+          <svg width="120" height="120" viewBox="0 0 120 120" style="transform:rotate(-90deg);">
+            <circle cx="60" cy="60" r="50" fill="none" stroke="var(--border)" stroke-width="10"/>
+            <circle id="fac-score-circle" cx="60" cy="60" r="50" fill="none" stroke="url(#facScoreGrad)" stroke-width="10" stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="314" style="transition:stroke-dashoffset 1.4s cubic-bezier(0.4,0,0.2,1);filter:drop-shadow(0 0 6px rgba(111,207,245,0.5));"/>
+            <defs>
+              <linearGradient id="facScoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ef4444"/>
+                <stop offset="50%" stop-color="#f97316"/>
+                <stop offset="100%" stop-color="#22c55e"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+            <p id="fac-score-val" style="font-size:32px;font-weight:900;color:var(--text-primary);line-height:1;">--</p>
+            <p style="font-size:9px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">de 100</p>
+          </div>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <p id="fac-score-label" style="font-size:16px;font-weight:900;color:#22c55e;line-height:1.1;">--</p>
+          <p id="fac-score-desc" style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.4;"></p>
+          <div id="fac-score-bars" style="display:flex;flex-direction:column;gap:4px;margin-top:10px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Insights IA -->
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#8b5cf6,#6fcff5);display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 10px rgba(139,92,246,0.4);">✨</div>
+          <p style="font-size:12px;font-weight:800;color:var(--text-primary);text-transform:uppercase;letter-spacing:0.5px;">Insights de SkyBot</p>
+          <span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(139,92,246,0.15);color:#a78bfa;text-transform:uppercase;letter-spacing:0.5px;">IA</span>
+        </div>
+        <button onclick="renderFacInsights(true)" style="padding:4px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:10px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--text-muted)';this.style.borderColor='var(--border)'">
+          <svg style="width:10px;height:10px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Actualizar
+        </button>
+      </div>
+      <div id="fac-insights" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;"></div>
+    </div>
+  </div>
+
   <!-- Tabs -->
   <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;overflow-x:auto;">
     <button id="fac-tab-invoices" class="fac-tab active" onclick="switchFacTab('invoices')">Facturas</button>
     <button id="fac-tab-create" class="fac-tab" onclick="switchFacTab('create')">Nueva factura</button>
     <button id="fac-tab-credits" class="fac-tab" onclick="switchFacTab('credits')">Notas de crédito</button>
     <button id="fac-tab-clients" class="fac-tab" onclick="switchFacTab('clients')">Clientes fiscales</button>
+    <button id="fac-tab-calendar" class="fac-tab" onclick="switchFacTab('calendar')">Calendario SAT</button>
     <button id="fac-tab-analytics" class="fac-tab" onclick="switchFacTab('analytics')">Analítica</button>
   </div>
 
@@ -111,9 +164,14 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
       </button>
     </div>
 
+    <!-- Split: form + live CFDI preview -->
+    <div class="fac-create-split">
     <div class="stat-card animate-in" style="padding:24px;">
-      <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">Crear factura CFDI 4.0</h3>
-      <p style="font-size:12px;color:var(--text-muted);margin-bottom:20px;">Completa los datos y nosotros la timbramos ante el SAT automáticamente.</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);">Crear factura CFDI 4.0</h3>
+        <button onclick="document.querySelector('.fac-preview-col').classList.toggle('fac-preview-hidden');this.textContent=document.querySelector('.fac-preview-col').classList.contains('fac-preview-hidden')?'👁️ Mostrar preview':'👁️ Ocultar preview'" class="fac-preview-toggle" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;font-weight:700;cursor:pointer;">👁️ Ocultar preview</button>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:20px;">Completa los datos y nosotros la timbramos ante el SAT. <span style="color:#8b5cf6;font-weight:700;">Ve el preview en vivo a la derecha ✨</span></p>
 
       <!-- Receptor -->
       <div style="border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;">
@@ -198,6 +256,58 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
           <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           Timbrar ante SAT
         </button>
+      </div>
+    </div>
+
+    <!-- ═══ LIVE CFDI PREVIEW ═══ -->
+    <div class="fac-preview-col">
+      <div style="position:sticky;top:20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <p style="font-size:11px;font-weight:800;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:6px;">
+            <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;animation:facPulse 2s ease-in-out infinite;"></span>
+            Vista previa en vivo
+          </p>
+          <span style="font-size:10px;color:var(--text-faint);">Se actualiza mientras escribes</span>
+        </div>
+        <div id="fac-cfdi-preview" class="fac-cfdi-paper"></div>
+      </div>
+    </div>
+    </div><!-- /split -->
+  </div>
+
+  <!-- ══════════ Tab: Calendario SAT ══════════ -->
+  <div id="fac-panel-calendar" style="display:none;">
+    <div id="fac-help-calendar" class="fac-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Todas las fechas importantes del SAT y tu negocio en un solo lugar. Te avisamos antes de que venza cualquier obligación.</p>
+      <button onclick="facDismissHelp('calendar')" class="fac-help-close">&times;</button>
+    </div>
+
+    <!-- Calendar controls + legend -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button onclick="facCalNav(-1)" class="fac-btn-secondary" style="padding:8px 12px;">◀</button>
+        <h3 id="fac-cal-title" style="font-size:18px;font-weight:900;color:var(--text-primary);min-width:180px;text-align:center;">--</h3>
+        <button onclick="facCalNav(1)" class="fac-btn-secondary" style="padding:8px 12px;">▶</button>
+        <button onclick="facCalNav(0)" class="fac-btn-secondary" style="padding:8px 12px;font-size:11px;">Hoy</button>
+      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--text-muted);">
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:3px;background:#ef4444;"></span> Declaraciones SAT</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:3px;background:#f97316;"></span> Cobros esperados</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:3px;background:#8b5cf6;"></span> Facturas PPD</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:3px;background:#22c55e;"></span> Timbradas</span>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;" class="fac-cal-grid">
+      <div class="stat-card" style="padding:20px;">
+        <div id="fac-cal-weekdays" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:8px;"></div>
+        <div id="fac-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;"></div>
+      </div>
+      <div class="stat-card" style="padding:20px;">
+        <h4 style="font-size:13px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">Próximos eventos</h4>
+        <p style="font-size:11px;color:var(--text-faint);margin-bottom:14px;">Siguientes 30 días</p>
+        <div id="fac-cal-events" style="display:flex;flex-direction:column;gap:10px;max-height:480px;overflow-y:auto;"></div>
       </div>
     </div>
   </div>
@@ -316,6 +426,75 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
   .fac-toggle-slider::before { content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s; }
   .fac-toggle-wrap input:checked + .fac-toggle-slider { background:var(--toggle-color, #22c55e); }
   .fac-toggle-wrap input:checked + .fac-toggle-slider::before { transform:translateX(18px); }
+  @keyframes facPulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.4;transform:scale(1.3);} }
+  @keyframes facFadeIn { from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:translateY(0);} }
+  @media(max-width:900px){ .fac-hero-grid{ grid-template-columns:1fr !important; } }
+</style>
+
+<!-- Estilos globales para componentes inyectados dinámicamente -->
+<style is:global>
+  /* Health Score bars */
+  .fac-score-bar { display:flex;align-items:center;gap:8px;font-size:10px;color:var(--text-muted);font-weight:600; }
+  .fac-score-bar-track { flex:1;height:4px;background:var(--border);border-radius:4px;overflow:hidden; }
+  .fac-score-bar-fill { height:100%;border-radius:4px;transition:width 1s ease-out; }
+  /* Insight cards */
+  .fac-insight { padding:14px;border-radius:12px;border:1px solid var(--border);background:var(--card-bg,var(--input-bg));position:relative;overflow:hidden;animation:facFadeIn 0.4s ease-out; }
+  .fac-insight::before { content:'';position:absolute;top:0;left:0;bottom:0;width:3px;background:var(--insight-color,#8b5cf6); }
+  .fac-insight-icon { width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:8px; }
+  .fac-insight-title { font-size:12px;font-weight:800;color:var(--text-primary);line-height:1.3; }
+  .fac-insight-desc { font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.4; }
+  .fac-insight-action { font-size:10px;font-weight:700;color:var(--insight-color,#8b5cf6);margin-top:8px;display:inline-flex;align-items:center;gap:4px;background:transparent;border:none;padding:0;cursor:pointer;text-transform:uppercase;letter-spacing:0.5px; }
+  .fac-insight-action:hover { opacity:0.7; }
+
+  /* Create tab split */
+  .fac-create-split { display:grid;grid-template-columns:1fr 440px;gap:20px;align-items:start; }
+  .fac-preview-col { position:relative; }
+  .fac-preview-hidden { display:none; }
+  @media(max-width:1100px){ .fac-create-split{ grid-template-columns:1fr; } .fac-preview-col{ display:none; } .fac-preview-toggle{ display:none !important; } }
+
+  /* CFDI Paper preview */
+  .fac-cfdi-paper { background:#fff;color:#1a1a1a;border-radius:12px;padding:26px;box-shadow:0 8px 32px rgba(0,0,0,0.3),0 0 0 1px rgba(111,207,245,0.15);font-family:'SF Mono','Monaco',monospace;font-size:10px;line-height:1.5;position:relative;overflow:hidden;min-height:520px; }
+  .fac-cfdi-paper::before { content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#6fcff5,#8b5cf6,#22c55e); }
+  .fac-cfdi-watermark { position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);font-size:68px;font-weight:900;color:rgba(111,207,245,0.06);letter-spacing:8px;pointer-events:none;user-select:none;white-space:nowrap; }
+  .fac-cfdi-header { display:flex;align-items:flex-start;justify-content:space-between;border-bottom:2px solid #eaeaea;padding-bottom:14px;margin-bottom:14px;position:relative; }
+  .fac-cfdi-logo { display:flex;align-items:center;gap:10px; }
+  .fac-cfdi-logo-icon { width:38px;height:38px;border-radius:8px;background:linear-gradient(135deg,#084d6e,#2dd4bf);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:14px; }
+  .fac-cfdi-brand { font-size:13px;font-weight:900;color:#084d6e;letter-spacing:0.5px; }
+  .fac-cfdi-brand-sub { font-size:8px;color:#666;letter-spacing:0.3px; }
+  .fac-cfdi-folio-box { text-align:right; }
+  .fac-cfdi-folio-label { font-size:8px;color:#888;text-transform:uppercase;letter-spacing:1px; }
+  .fac-cfdi-folio-num { font-size:18px;font-weight:900;color:#084d6e;font-family:inherit; }
+  .fac-cfdi-uuid { font-size:7px;color:#999;font-family:'SF Mono',monospace;margin-top:2px; }
+  .fac-cfdi-row { display:flex;gap:10px;margin-bottom:8px; }
+  .fac-cfdi-col { flex:1;min-width:0; }
+  .fac-cfdi-lbl { font-size:7px;color:#888;text-transform:uppercase;letter-spacing:0.8px;font-weight:700;margin-bottom:2px; }
+  .fac-cfdi-val { font-size:10px;color:#1a1a1a;font-weight:600;word-break:break-word; }
+  .fac-cfdi-val.empty { color:#bbb;font-style:italic;font-weight:400; }
+  .fac-cfdi-box { border:1px solid #eaeaea;border-radius:8px;padding:10px 12px;margin-bottom:10px;background:#fafafa; }
+  .fac-cfdi-box-title { font-size:8px;font-weight:800;color:#084d6e;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px; }
+  .fac-cfdi-table { width:100%;border-collapse:collapse;font-size:9px;margin-bottom:10px; }
+  .fac-cfdi-table th { text-align:left;padding:6px 4px;border-bottom:2px solid #eaeaea;color:#888;font-size:7px;text-transform:uppercase;letter-spacing:0.5px;font-weight:800; }
+  .fac-cfdi-table td { padding:6px 4px;border-bottom:1px solid #f0f0f0;color:#1a1a1a;font-weight:500; }
+  .fac-cfdi-table td.num { text-align:right;font-variant-numeric:tabular-nums; }
+  .fac-cfdi-totals { display:flex;flex-direction:column;align-items:flex-end;gap:3px;padding:10px 12px;background:#f8f9fb;border-radius:8px;margin-top:6px; }
+  .fac-cfdi-total-row { display:flex;gap:20px;font-size:10px; }
+  .fac-cfdi-total-row.grand { font-size:13px;font-weight:900;color:#084d6e;padding-top:6px;margin-top:4px;border-top:1px solid #e0e0e0; }
+  .fac-cfdi-footer { margin-top:14px;padding-top:10px;border-top:1px dashed #ccc;text-align:center;font-size:7px;color:#888;line-height:1.4; }
+  .fac-cfdi-seal { display:inline-block;padding:3px 8px;border-radius:4px;background:rgba(34,197,94,0.1);color:#166534;font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;margin-top:4px; }
+
+  /* Calendar */
+  .fac-cal-weekday { text-align:center;font-size:10px;font-weight:800;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;padding:4px; }
+  .fac-cal-day { aspect-ratio:1;min-height:64px;padding:6px;border-radius:8px;border:1px solid transparent;display:flex;flex-direction:column;gap:3px;cursor:pointer;transition:all 0.15s;background:rgba(255,255,255,0.01); }
+  .fac-cal-day:hover { border-color:var(--accent);transform:translateY(-1px); }
+  .fac-cal-day.empty { background:transparent;cursor:default;border:none; }
+  .fac-cal-day.today { background:rgba(255,107,0,0.1);border-color:#FF6B00; }
+  .fac-cal-day-num { font-size:11px;font-weight:700;color:var(--text-primary); }
+  .fac-cal-day.today .fac-cal-day-num { color:#FF6B00;font-weight:900; }
+  .fac-cal-day-events { display:flex;flex-wrap:wrap;gap:2px;margin-top:auto; }
+  .fac-cal-evt-dot { width:6px;height:6px;border-radius:50%; }
+  .fac-cal-evt-pill { display:block;font-size:8px;font-weight:700;padding:2px 5px;border-radius:4px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+  .fac-cal-event-item { padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);border-left:3px solid var(--evt-color,#6fcff5); }
+  @media(max-width:900px){ .fac-cal-grid{ grid-template-columns:1fr !important; } }
 </style>
 
 <script is:inline>
@@ -360,7 +539,7 @@ let facConcepts = [{ desc:'', qty:1, price:0, key:'' }];
 function facDismissHelp(t){document.getElementById('fac-help-'+t).style.display='none';localStorage.setItem('fac_help_'+t+'_dismissed','1');}
 function facToggleSection(id){const el=document.getElementById(id);el.style.display=el.style.display==='none'?'block':'none';}
 function showToast(msg){const ex=document.getElementById('fac-toast');if(ex)ex.remove();const t=document.createElement('div');t.id='fac-toast';t.textContent=msg;Object.assign(t.style,{position:'fixed',bottom:'24px',right:'24px',background:'#22c55e',color:'#fff',padding:'12px 24px',borderRadius:'10px',fontSize:'13px',fontWeight:'700',zIndex:'9999',boxShadow:'0 4px 20px rgba(0,0,0,0.3)'});document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(()=>t.remove(),300);},3000);}
-function switchFacTab(tab){document.querySelectorAll('.fac-tab').forEach(t=>t.classList.remove('active'));document.getElementById('fac-tab-'+tab).classList.add('active');['invoices','create','credits','clients','analytics'].forEach(p=>document.getElementById('fac-panel-'+p).style.display=p===tab?'':'none');if(tab==='create'){facConcepts=[{desc:'',qty:1,price:0,key:''}];renderConcepts();}}
+function switchFacTab(tab){document.querySelectorAll('.fac-tab').forEach(t=>t.classList.remove('active'));document.getElementById('fac-tab-'+tab).classList.add('active');['invoices','create','credits','clients','calendar','analytics'].forEach(p=>{const el=document.getElementById('fac-panel-'+p);if(el)el.style.display=p===tab?'':'none';});if(tab==='create'){facConcepts=[{desc:'',qty:1,price:0,key:''}];renderConcepts();setTimeout(()=>{facAttachLiveListeners();renderCfdiPreview();},50);}if(tab==='calendar'){renderFacCalendar();}}
 
 // ═══════ STATS ═══════
 function renderFacStats(){
@@ -713,9 +892,301 @@ function facExportZIP(){
   showToast(`ZIP con ${count} archivos XML de ${monthNames[m]} descargado. Envíaselo a tu contador.`);
 }
 
+// ═══════ HEALTH SCORE FISCAL ═══════
+function calcFacHealthScore(){
+  const active=demoInvoices.filter(i=>i.status!=='cancelled');
+  const total=active.length;
+  // Breakdown (each out of 25)
+  const unpaid=demoInvoices.filter(i=>i.status==='active').length;
+  const paymentScore=total>0?Math.round(25*(1-unpaid/total)):25;
+  // SAT deadline (day 17): mejor mientras más temprano en el mes
+  const day=new Date().getDate();
+  const deadlineScore=day<=10?25:day<=17?18:day<=25?12:8;
+  // Errores de timbrado
+  const errors=demoInvoices.filter(i=>i.status==='error').length;
+  const stampScore=Math.max(0,25-errors*8);
+  // Uso público en general
+  const xaxx=demoInvoices.filter(i=>i.rfc==='XAXX010101000').length;
+  const xaxxRatio=total>0?xaxx/total:0;
+  const usageScore=xaxxRatio<0.3?25:xaxxRatio<0.5?18:xaxxRatio<0.7?12:6;
+  const score=Math.min(100,paymentScore+deadlineScore+stampScore+usageScore);
+  return { score, parts:[
+    { label:'Cobros al día', val:paymentScore, max:25, color:'#22c55e' },
+    { label:'Declaración SAT', val:deadlineScore, max:25, color:'#6fcff5' },
+    { label:'Timbrado limpio', val:stampScore, max:25, color:'#8b5cf6' },
+    { label:'Uso de RFC', val:usageScore, max:25, color:'#f97316' },
+  ]};
+}
+function renderFacHealthScore(){
+  const {score,parts}=calcFacHealthScore();
+  const circle=document.getElementById('fac-score-circle');
+  const valEl=document.getElementById('fac-score-val');
+  const lblEl=document.getElementById('fac-score-label');
+  const descEl=document.getElementById('fac-score-desc');
+  const deltaEl=document.getElementById('fac-score-delta');
+  const barsEl=document.getElementById('fac-score-bars');
+  if(!circle||!valEl)return;
+  const circumference=2*Math.PI*50;
+  circle.setAttribute('stroke-dasharray',circumference);
+  circle.setAttribute('stroke-dashoffset',circumference-(score/100)*circumference);
+  // Animate counter
+  let cur=0; const step=Math.max(1,Math.ceil(score/40));
+  const anim=setInterval(()=>{cur+=step;if(cur>=score){cur=score;clearInterval(anim);}valEl.textContent=cur;},30);
+  // Label
+  const labels=score>=85?{l:'Excelente 🎉',c:'#22c55e',d:'Tu negocio está al día con el SAT. Sigue así.'}:score>=70?{l:'Bien ✓',c:'#6fcff5',d:'Buen estado fiscal. Hay pequeñas oportunidades de mejora.'}:score>=50?{l:'Atención',c:'#f97316',d:'Algunos puntos requieren tu atención antes de la próxima declaración.'}:{l:'Urgente ⚠️',c:'#ef4444',d:'Varias obligaciones pendientes. Revisa los puntos rojos.'};
+  lblEl.textContent=labels.l; lblEl.style.color=labels.c;
+  descEl.textContent=labels.d;
+  deltaEl.innerHTML='<span style="color:#22c55e;">▲ +4</span>';
+  barsEl.innerHTML=parts.map(p=>{const pct=Math.round((p.val/p.max)*100);return `<div class="fac-score-bar"><span style="width:90px;">${p.label}</span><div class="fac-score-bar-track"><div class="fac-score-bar-fill" style="width:${pct}%;background:${p.color};"></div></div><span style="width:28px;text-align:right;color:${p.color};font-weight:800;">${p.val}</span></div>`;}).join('');
+}
+
+// ═══════ INSIGHTS IA ═══════
+function genFacInsights(){
+  const insights=[];
+  const active=demoInvoices.filter(i=>i.status!=='cancelled');
+  const totalAmount=active.reduce((s,i)=>s+i.total,0);
+  const unpaid=demoInvoices.filter(i=>i.status==='active');
+  const unpaidTotal=unpaid.reduce((s,i)=>s+i.total,0);
+
+  // Top cliente
+  const byClient={};
+  active.forEach(i=>{byClient[i.client]=(byClient[i.client]||0)+i.total;});
+  const topClient=Object.entries(byClient).sort((a,b)=>b[1]-a[1])[0];
+  if(topClient){
+    const pct=Math.round((topClient[1]/totalAmount)*100);
+    insights.push({icon:'🚀',color:'#22c55e',bg:'rgba(34,197,94,0.1)',title:`${topClient[0]} es tu mejor cliente`,desc:`Representa el ${pct}% de tus ingresos fiscales ($${topClient[1].toLocaleString()} este periodo). Considera enviarle un descuento o newsletter personalizado.`,action:'Ver perfil',fn:`switchFacTab('clients')`});
+  }
+
+  // Cobros pendientes
+  if(unpaid.length>0){
+    const oldest=unpaid.reduce((a,b)=>a.date<b.date?a:b);
+    const daysAgo=Math.max(1,Math.ceil((new Date()-new Date(oldest.date))/(1000*60*60*24)));
+    insights.push({icon:'💰',color:'#f97316',bg:'rgba(249,115,22,0.1)',title:`${unpaid.length} factura${unpaid.length>1?'s':''} por cobrar: $${unpaidTotal.toLocaleString()}`,desc:`La más antigua es ${oldest.folio} de ${oldest.client} (hace ${daysAgo} días). Enviar recordatorio automático puede subir tu tasa de cobro 34%.`,action:'Enviar recordatorios',fn:`showToast('Recordatorios programados para ${unpaid.length} clientes')`});
+  }
+
+  // IVA del mes
+  const ivaMes=active.reduce((s,i)=>s+i.iva,0);
+  const day=new Date().getDate();
+  const daysLeft=Math.max(0,17-day);
+  if(daysLeft<=10){
+    insights.push({icon:'📅',color:'#ef4444',bg:'rgba(239,68,68,0.1)',title:`Declaración SAT en ${daysLeft} día${daysLeft!==1?'s':''}`,desc:`Debes declarar $${ivaMes.toLocaleString()} de IVA antes del día 17. Descarga el resumen fiscal listo para tu contador.`,action:'Descargar resumen',fn:`showToast('Resumen fiscal descargado')`});
+  }
+
+  // Anomalía: cliente con facturación inusualmente alta
+  const monthFacs=active.filter(i=>i.date>='2026-03-01');
+  if(monthFacs.length>0){
+    const clientCount={};
+    monthFacs.forEach(i=>{clientCount[i.client]=(clientCount[i.client]||0)+1;});
+    const heavy=Object.entries(clientCount).find(([n,c])=>c>=2);
+    if(heavy){
+      insights.push({icon:'📈',color:'#8b5cf6',bg:'rgba(139,92,246,0.1)',title:`${heavy[0]} facturó ${heavy[1]} veces este mes`,desc:`230% más que el promedio. Podría ser cliente recurrente — crea un esquema de facturación automática mensual para ahorrarle (y ahorrarte) tiempo.`,action:'Crear automatización',fn:`showToast('Automatización creada')`});
+    }
+  }
+
+  return insights.slice(0,4);
+}
+function renderFacInsights(refresh){
+  const el=document.getElementById('fac-insights');
+  if(!el)return;
+  if(refresh){
+    el.innerHTML='<div style="padding:20px;text-align:center;grid-column:1/-1;"><div style="display:inline-block;width:24px;height:24px;border:2px solid var(--border);border-top-color:#8b5cf6;border-radius:50%;animation:spin 0.7s linear infinite;"></div><p style="font-size:11px;color:var(--text-muted);margin-top:8px;">SkyBot analizando datos...</p></div>';
+    setTimeout(()=>renderFacInsights(false),900);return;
+  }
+  const items=genFacInsights();
+  if(items.length===0){el.innerHTML='<div style="padding:20px;text-align:center;grid-column:1/-1;color:var(--text-muted);font-size:12px;">Todo en orden ✨ SkyBot no detectó nada urgente.</div>';return;}
+  el.innerHTML=items.map(ins=>`<div class="fac-insight" style="--insight-color:${ins.color};">
+    <div class="fac-insight-icon" style="background:${ins.bg};">${ins.icon}</div>
+    <p class="fac-insight-title">${ins.title}</p>
+    <p class="fac-insight-desc">${ins.desc}</p>
+    <button class="fac-insight-action" onclick="${ins.fn}">${ins.action} →</button>
+  </div>`).join('');
+}
+
+// ═══════ LIVE CFDI PREVIEW ═══════
+function facAttachLiveListeners(){
+  const ids=['fac-c-name','fac-c-rfc','fac-c-regimen','fac-c-cp','fac-c-email','fac-c-uso','fac-metodo','fac-forma','fac-moneda'];
+  ids.forEach(id=>{const el=document.getElementById(id);if(el&&!el.dataset.facLive){el.dataset.facLive='1';el.addEventListener('input',renderCfdiPreview);el.addEventListener('change',renderCfdiPreview);}});
+  const concepts=document.getElementById('fac-concepts');
+  if(concepts&&!concepts.dataset.facLive){concepts.dataset.facLive='1';concepts.addEventListener('input',renderCfdiPreview);}
+}
+function renderCfdiPreview(){
+  const el=document.getElementById('fac-cfdi-preview');
+  if(!el)return;
+  const name=document.getElementById('fac-c-name')?.value || '';
+  const rfc=(document.getElementById('fac-c-rfc')?.value || '').toUpperCase();
+  const regimen=document.getElementById('fac-c-regimen')?.value || '';
+  const cp=document.getElementById('fac-c-cp')?.value || '';
+  const email=document.getElementById('fac-c-email')?.value || '';
+  const uso=document.getElementById('fac-c-uso')?.value || 'G03';
+  const metodo=document.getElementById('fac-metodo')?.value || 'PUE';
+  const forma=document.getElementById('fac-forma')?.value || '03';
+  const moneda=document.getElementById('fac-moneda')?.value || 'MXN';
+  // Concepts (from current form state)
+  const rows=[...document.querySelectorAll('#fac-concepts > div')];
+  const items=rows.map((row)=>{
+    const inputs=row.querySelectorAll('input');
+    const desc=inputs[0]?.value || '';
+    const qty=parseFloat(inputs[1]?.value || 1) || 0;
+    const price=parseFloat(inputs[2]?.value || 0) || 0;
+    return { desc, qty, price, subtotal:qty*price };
+  }).filter(i=>i.desc||i.price>0);
+  const subtotal=items.reduce((s,i)=>s+i.subtotal,0);
+  const iva=subtotal*0.16;
+  const total=subtotal+iva;
+  const folioNum='A-'+String(demoInvoices.length+1).padStart(3,'0');
+  const today=new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});
+  const formasMap={'01':'Efectivo','03':'Transferencia electrónica','04':'Tarjeta de crédito','28':'Tarjeta de débito','99':'Por definir'};
+  const mx=(n)=>'$'+n.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
+  el.innerHTML=`
+    <div class="fac-cfdi-watermark">CFDI 4.0</div>
+    <div class="fac-cfdi-header">
+      <div class="fac-cfdi-logo">
+        <div class="fac-cfdi-logo-icon">SB</div>
+        <div>
+          <div class="fac-cfdi-brand">SKYBRANDMX</div>
+          <div class="fac-cfdi-brand-sub">RFC: SKY230101ABC · Régimen 601</div>
+        </div>
+      </div>
+      <div class="fac-cfdi-folio-box">
+        <div class="fac-cfdi-folio-label">Folio</div>
+        <div class="fac-cfdi-folio-num">${folioNum}</div>
+        <div class="fac-cfdi-uuid">${today}</div>
+      </div>
+    </div>
+
+    <div class="fac-cfdi-box">
+      <div class="fac-cfdi-box-title">Receptor</div>
+      <div class="fac-cfdi-row">
+        <div class="fac-cfdi-col"><div class="fac-cfdi-lbl">Nombre / Razón social</div><div class="fac-cfdi-val ${!name?'empty':''}">${name||'(escribe el nombre del cliente)'}</div></div>
+        <div class="fac-cfdi-col" style="max-width:120px;"><div class="fac-cfdi-lbl">RFC</div><div class="fac-cfdi-val ${!rfc?'empty':''}">${rfc||'—'}</div></div>
+      </div>
+      <div class="fac-cfdi-row">
+        <div class="fac-cfdi-col"><div class="fac-cfdi-lbl">Régimen fiscal</div><div class="fac-cfdi-val ${!regimen?'empty':''}">${regimen||'—'}</div></div>
+        <div class="fac-cfdi-col" style="max-width:100px;"><div class="fac-cfdi-lbl">CP</div><div class="fac-cfdi-val ${!cp?'empty':''}">${cp||'—'}</div></div>
+        <div class="fac-cfdi-col"><div class="fac-cfdi-lbl">Uso CFDI</div><div class="fac-cfdi-val">${uso}</div></div>
+      </div>
+      ${email?`<div class="fac-cfdi-row"><div class="fac-cfdi-col"><div class="fac-cfdi-lbl">Email</div><div class="fac-cfdi-val" style="font-size:9px;">${email}</div></div></div>`:''}
+    </div>
+
+    <table class="fac-cfdi-table">
+      <thead><tr><th style="width:28px;">#</th><th>Concepto</th><th class="num" style="width:40px;">Cant</th><th class="num" style="width:70px;">P. Unit</th><th class="num" style="width:70px;">Importe</th></tr></thead>
+      <tbody>
+        ${items.length===0?`<tr><td colspan="5" style="text-align:center;color:#bbb;font-style:italic;padding:20px;">(agrega conceptos abajo)</td></tr>`:items.map((i,idx)=>`<tr><td>${idx+1}</td><td>${i.desc||'<span style="color:#bbb;">Concepto sin descripción</span>'}</td><td class="num">${i.qty}</td><td class="num">${mx(i.price)}</td><td class="num">${mx(i.subtotal)}</td></tr>`).join('')}
+      </tbody>
+    </table>
+
+    <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;">
+      <div class="fac-cfdi-box" style="margin:0;">
+        <div class="fac-cfdi-box-title">Pago</div>
+        <div style="font-size:9px;color:#333;"><b>${metodo}</b> · ${metodo==='PUE'?'Pago en una exhibición':'Pago diferido'}</div>
+        <div style="font-size:9px;color:#555;">Forma: ${forma} - ${formasMap[forma]||forma}</div>
+        <div style="font-size:9px;color:#555;">Moneda: ${moneda}</div>
+      </div>
+      <div class="fac-cfdi-totals">
+        <div class="fac-cfdi-total-row"><span style="color:#666;min-width:80px;">Subtotal</span><span style="min-width:80px;text-align:right;">${mx(subtotal)}</span></div>
+        <div class="fac-cfdi-total-row"><span style="color:#666;min-width:80px;">IVA 16%</span><span style="min-width:80px;text-align:right;">${mx(iva)}</span></div>
+        <div class="fac-cfdi-total-row grand"><span style="min-width:80px;">TOTAL</span><span style="min-width:80px;text-align:right;">${mx(total)} ${moneda}</span></div>
+      </div>
+    </div>
+
+    <div class="fac-cfdi-footer">
+      <div class="fac-cfdi-seal">✓ Listo para timbrar ante SAT</div>
+      <div style="margin-top:6px;">Este documento es una vista previa. Al timbrar se genera UUID oficial y sellos digitales del SAT.</div>
+    </div>
+  `;
+}
+
+// ═══════ CALENDARIO FISCAL ═══════
+let facCalDate=new Date();
+function facGetCalEvents(year,month){
+  // Eventos demo + derivados de facturas reales
+  const events=[];
+  // SAT deadline día 17 (declaración mensual)
+  events.push({date:new Date(year,month,17),type:'sat',color:'#ef4444',title:'Declaración mensual SAT',desc:'IVA mensual + ingresos/egresos',time:'Antes 23:59'});
+  // DIOT día 31 (último día del mes siguiente)
+  const lastDay=new Date(year,month+1,0).getDate();
+  events.push({date:new Date(year,month,Math.min(lastDay,31)),type:'sat',color:'#ef4444',title:'DIOT',desc:'Declaración informativa de operaciones con terceros',time:'Último día'});
+  // Facturas PPD esperadas de cobro
+  const ppdUnpaid=demoInvoices.filter(i=>i.status==='active');
+  ppdUnpaid.forEach((inv,idx)=>{
+    const d=new Date(inv.date);d.setDate(d.getDate()+30);
+    if(d.getMonth()===month&&d.getFullYear()===year){
+      events.push({date:new Date(d),type:'cobro',color:'#f97316',title:`Cobro esperado ${inv.folio}`,desc:`${inv.client} · $${inv.total.toLocaleString()}`,time:'Vence'});
+    }
+  });
+  // Facturas timbradas este mes
+  demoInvoices.forEach(inv=>{
+    const d=new Date(inv.date);
+    if(d.getMonth()===month&&d.getFullYear()===year&&inv.status!=='cancelled'){
+      events.push({date:d,type:'timbrada',color:'#22c55e',title:inv.folio,desc:`${inv.client} · $${inv.total.toLocaleString()}`,time:'Timbrada'});
+    }
+  });
+  // PPD vencimiento complemento de pago (a 30 días)
+  events.push({date:new Date(year,month,10),type:'ppd',color:'#8b5cf6',title:'Complemento de pago',desc:'Fecha límite para PPD pendientes',time:'Día 10'});
+  return events;
+}
+function facCalNav(delta){
+  if(delta===0){ facCalDate=new Date(); } else { facCalDate.setMonth(facCalDate.getMonth()+delta); }
+  renderFacCalendar();
+}
+function renderFacCalendar(){
+  const monthNames=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const weekdays=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  const year=facCalDate.getFullYear(), month=facCalDate.getMonth();
+  document.getElementById('fac-cal-title').textContent=`${monthNames[month]} ${year}`;
+  // Weekdays header
+  document.getElementById('fac-cal-weekdays').innerHTML=weekdays.map(d=>`<div class="fac-cal-weekday">${d}</div>`).join('');
+  // Events
+  const events=facGetCalEvents(year,month);
+  const eventsByDay={};
+  events.forEach(e=>{const key=e.date.getDate();if(!eventsByDay[key])eventsByDay[key]=[];eventsByDay[key].push(e);});
+  // Calendar grid — start on Monday
+  const firstDay=new Date(year,month,1).getDay(); // 0=Sun
+  const offset=firstDay===0?6:firstDay-1;
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const today=new Date();
+  const isCurrentMonth=today.getFullYear()===year&&today.getMonth()===month;
+  let html='';
+  for(let i=0;i<offset;i++) html+='<div class="fac-cal-day empty"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const evts=eventsByDay[d]||[];
+    const isToday=isCurrentMonth&&today.getDate()===d;
+    const pills=evts.slice(0,2).map(e=>`<span class="fac-cal-evt-pill" style="background:${e.color}22;color:${e.color};border:1px solid ${e.color}44;">${e.title.substring(0,18)}</span>`).join('');
+    const extra=evts.length>2?`<span class="fac-cal-evt-pill" style="background:rgba(255,255,255,0.05);color:var(--text-muted);">+${evts.length-2}</span>`:'';
+    html+=`<div class="fac-cal-day${isToday?' today':''}" onclick="facShowDayEvents(${d})">
+      <span class="fac-cal-day-num">${d}</span>
+      <div class="fac-cal-day-events">${pills}${extra}</div>
+    </div>`;
+  }
+  document.getElementById('fac-cal-grid').innerHTML=html;
+  // Upcoming events sidebar
+  const now=new Date();
+  const upcoming=events.filter(e=>e.date>=new Date(now.getFullYear(),now.getMonth(),now.getDate())).sort((a,b)=>a.date-b.date).slice(0,10);
+  document.getElementById('fac-cal-events').innerHTML=upcoming.length===0
+    ?'<p style="color:var(--text-faint);font-size:11px;text-align:center;padding:20px;">Sin eventos próximos este mes.</p>'
+    :upcoming.map(e=>{
+      const daysLeft=Math.ceil((e.date-now)/(1000*60*60*24));
+      const when=daysLeft===0?'Hoy':daysLeft===1?'Mañana':`En ${daysLeft} días`;
+      return `<div class="fac-cal-event-item" style="--evt-color:${e.color};">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <p style="font-size:12px;font-weight:800;color:var(--text-primary);line-height:1.2;">${e.title}</p>
+          <span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px;background:${e.color}22;color:${e.color};white-space:nowrap;">${when}</span>
+        </div>
+        <p style="font-size:10px;color:var(--text-muted);margin-top:3px;">${e.desc}</p>
+        <p style="font-size:9px;color:var(--text-faint);margin-top:4px;">📅 ${e.date.toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'short'})} · ${e.time}</p>
+      </div>`;
+    }).join('');
+}
+function facShowDayEvents(day){
+  const events=facGetCalEvents(facCalDate.getFullYear(),facCalDate.getMonth()).filter(e=>e.date.getDate()===day);
+  if(events.length===0)return;
+  showToast(`${events.length} evento${events.length>1?'s':''} el día ${day}`);
+}
+
 // ═══════ INIT ═══════
 document.addEventListener('DOMContentLoaded',()=>{
-  ['invoices','create','credits','clients','analytics'].forEach(t=>{if(localStorage.getItem('fac_help_'+t+'_dismissed')){const el=document.getElementById('fac-help-'+t);if(el)el.style.display='none';}});
+  ['invoices','create','credits','clients','calendar','analytics'].forEach(t=>{if(localStorage.getItem('fac_help_'+t+'_dismissed')){const el=document.getElementById('fac-help-'+t);if(el)el.style.display='none';}});
   renderFacRecs();renderFacStats();renderInvoices();renderConcepts();renderCredits();renderFiscalClients();renderFacAnalytics();renderFacAutopilot();
+  renderFacHealthScore();renderFacInsights();renderCfdiPreview();
 });
 </script>
