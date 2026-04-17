@@ -167,9 +167,16 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
     <!-- Split: form + live CFDI preview -->
     <div class="fac-create-split">
     <div class="stat-card animate-in" style="padding:24px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;gap:10px;flex-wrap:wrap;">
         <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);">Crear factura CFDI 4.0</h3>
-        <button onclick="document.querySelector('.fac-preview-col').classList.toggle('fac-preview-hidden');this.textContent=document.querySelector('.fac-preview-col').classList.contains('fac-preview-hidden')?'👁️ Mostrar preview':'👁️ Ocultar preview'" class="fac-preview-toggle" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;font-weight:700;cursor:pointer;">👁️ Ocultar preview</button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button onclick="facOpenEmisor()" class="fac-toolbar-btn">🏢 Mi empresa</button>
+          <select id="fac-tpl-select" onchange="if(this.value)facUseTemplate(this.value);this.value='';" class="fac-toolbar-btn" style="cursor:pointer;"><option value="">📋 Plantillas</option></select>
+          <button onclick="facSaveTemplate()" class="fac-toolbar-btn">💾 Guardar</button>
+          <button onclick="facOpenCSV()" class="fac-toolbar-btn">📥 CSV</button>
+          <button onclick="facOpenSkybot()" class="fac-toolbar-btn" style="background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(111,207,245,0.15));border-color:rgba(139,92,246,0.3);color:#a78bfa;">✨ SkyBot</button>
+          <button onclick="document.querySelector('.fac-preview-col').classList.toggle('fac-preview-hidden');this.textContent=document.querySelector('.fac-preview-col').classList.contains('fac-preview-hidden')?'👁️ Mostrar preview':'👁️ Ocultar preview'" class="fac-preview-toggle fac-toolbar-btn">👁️ Ocultar preview</button>
+        </div>
       </div>
       <p style="font-size:12px;color:var(--text-muted);margin-bottom:20px;">Completa los datos y nosotros la timbramos ante el SAT. <span style="color:#8b5cf6;font-weight:700;">Ve el preview en vivo a la derecha ✨</span></p>
 
@@ -216,7 +223,9 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
         <!-- Totals -->
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
           <div style="display:flex;gap:20px;"><span style="font-size:13px;color:var(--text-muted);min-width:100px;text-align:right;">Subtotal:</span><span id="fac-subtotal" style="font-size:13px;font-weight:700;color:var(--text-primary);min-width:100px;text-align:right;">$0.00</span></div>
-          <div style="display:flex;gap:20px;"><span style="font-size:13px;color:var(--text-muted);min-width:100px;text-align:right;">IVA (16%):</span><span id="fac-iva-total" style="font-size:13px;font-weight:700;color:var(--text-primary);min-width:100px;text-align:right;">$0.00</span></div>
+          <div style="display:flex;gap:20px;"><span style="font-size:13px;color:var(--text-muted);min-width:100px;text-align:right;">IVA (16%):</span><span id="fac-iva-total" style="font-size:13px;font-weight:700;color:#22c55e;min-width:100px;text-align:right;">$0.00</span></div>
+          <div id="fac-ret-isr-row" style="display:none;gap:20px;"><span style="font-size:12px;color:var(--text-muted);min-width:100px;text-align:right;">Ret. ISR:</span><span id="fac-ret-isr-amt" style="font-size:13px;font-weight:700;color:#ef4444;min-width:100px;text-align:right;">-$0.00</span></div>
+          <div id="fac-ret-iva-row" style="display:none;gap:20px;"><span style="font-size:12px;color:var(--text-muted);min-width:100px;text-align:right;">Ret. IVA:</span><span id="fac-ret-iva-amt" style="font-size:13px;font-weight:700;color:#ef4444;min-width:100px;text-align:right;">-$0.00</span></div>
           <div style="display:flex;gap:20px;"><span style="font-size:15px;font-weight:800;color:var(--text-primary);min-width:100px;text-align:right;">Total:</span><span id="fac-grand-total" style="font-size:18px;font-weight:900;color:var(--accent);min-width:100px;text-align:right;">$0.00</span></div>
         </div>
       </div>
@@ -242,10 +251,52 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
         </div>
         <div>
           <label class="fac-label">Moneda</label>
-          <select id="fac-moneda" class="fac-input" style="cursor:pointer;">
+          <select id="fac-moneda" class="fac-input" style="cursor:pointer;" onchange="if(this.value==='USD')facMaybeShowTC();else document.getElementById('fac-tc-row').style.display='none';renderCfdiPreview();">
             <option value="MXN" selected>MXN - Peso mexicano</option>
             <option value="USD">USD - Dólar americano</option>
           </select>
+        </div>
+      </div>
+      <div id="fac-tc-row" style="display:none;margin-bottom:16px;">
+        <label class="fac-label">Tipo de cambio DOF (MXN por USD)</label>
+        <input id="fac-tc" type="number" step="0.01" value="17.50" class="fac-input" style="max-width:200px;" oninput="renderCfdiPreview()"/>
+        <p style="font-size:10px;color:var(--text-faint);margin-top:4px;">Consulta el tipo de cambio del día en <a href="https://www.banxico.org.mx/tipcamb/main.do" target="_blank" style="color:var(--accent);">Banxico</a></p>
+      </div>
+
+      <!-- Retenciones (colapsable) -->
+      <div style="border:1px solid var(--border);border-radius:12px;margin-bottom:16px;overflow:hidden;">
+        <button type="button" onclick="facToggleSection('fac-retenciones-body');this.querySelector('.fac-chev').style.transform=document.getElementById('fac-retenciones-body').style.display==='none'?'rotate(0deg)':'rotate(180deg)';" class="fac-collapse-header">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:18px;">🧾</span>
+            <div style="text-align:left;">
+              <p style="font-size:13px;font-weight:800;color:var(--text-primary);">Retenciones ISR / IVA</p>
+              <p style="font-size:10px;color:var(--text-faint);margin-top:2px;">Servicios profesionales y arrendamientos. Normalmente 10% ISR + 10.6667% IVA.</p>
+            </div>
+          </div>
+          <span class="fac-chev" style="color:var(--text-faint);font-size:14px;transition:transform 0.2s;">▼</span>
+        </button>
+        <div id="fac-retenciones-body" style="display:none;padding:0 16px 16px 16px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <label style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:1px solid var(--border);cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+              <input id="fac-ret-isr-chk" type="checkbox" onchange="facUpdateTotals();renderCfdiPreview();" style="accent-color:var(--accent);cursor:pointer;"/>
+              <div style="flex:1;">
+                <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Retención ISR</p>
+                <p style="font-size:10px;color:var(--text-faint);">Honorarios y arrendamientos</p>
+              </div>
+              <input id="fac-ret-isr-rate" type="number" value="10" step="0.01" min="0" max="40" style="width:55px;padding:4px 6px;border-radius:6px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:11px;text-align:right;" oninput="facUpdateTotals();renderCfdiPreview();"/>
+              <span style="font-size:11px;color:var(--text-muted);">%</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:1px solid var(--border);cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+              <input id="fac-ret-iva-chk" type="checkbox" onchange="facUpdateTotals();renderCfdiPreview();" style="accent-color:var(--accent);cursor:pointer;"/>
+              <div style="flex:1;">
+                <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Retención IVA</p>
+                <p style="font-size:10px;color:var(--text-faint);">2/3 del IVA = 10.6667%</p>
+              </div>
+              <input id="fac-ret-iva-rate" type="number" value="10.6667" step="0.0001" min="0" max="16" style="width:65px;padding:4px 6px;border-radius:6px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:11px;text-align:right;" oninput="facUpdateTotals();renderCfdiPreview();"/>
+              <span style="font-size:11px;color:var(--text-muted);">%</span>
+            </label>
+          </div>
+          <p style="font-size:10px;color:var(--text-faint);margin-top:10px;background:var(--accent-bg);padding:8px 10px;border-radius:8px;">💡 Si tu cliente es Persona Moral y tú eres Persona Física, normalmente tu cliente te retiene. Marca las casillas y el total se ajusta automáticamente.</p>
         </div>
       </div>
 
@@ -392,6 +443,176 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
       <div id="fac-autopilot-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
     </div>
   </div>
+
+  <!-- ══════════ MODALS ══════════ -->
+
+  <!-- Modal: Emisor / Mi empresa -->
+  <div id="fac-modal-emisor" class="fac-modal">
+    <div class="fac-modal-backdrop" onclick="facCloseModal('emisor')"></div>
+    <div class="fac-modal-box" style="max-width:540px;">
+      <div class="fac-modal-header">
+        <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);">🏢 Mi empresa (Emisor CFDI)</h3>
+        <button onclick="facCloseModal('emisor')" class="fac-modal-close">&times;</button>
+      </div>
+      <div style="padding:20px;">
+        <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:16px;">
+          <label style="cursor:pointer;flex-shrink:0;" title="Haz click para subir">
+            <input type="file" id="fac-emisor-logo-input" accept="image/*" style="display:none;" onchange="facUploadLogo(event)"/>
+            <div id="fac-emisor-logo-preview" style="width:84px;height:84px;border-radius:12px;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;background:var(--input-bg);overflow:hidden;position:relative;">
+              <span style="font-size:10px;color:var(--text-faint);text-align:center;">+ Subir<br/>logo</span>
+            </div>
+          </label>
+          <div style="flex:1;">
+            <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Logo de tu empresa</p>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.5;">PNG o JPG, cuadrado. Aparece en el PDF de la factura y en el preview en vivo. Máx 2MB.</p>
+            <button type="button" onclick="document.getElementById('fac-emisor-logo-input').click()" class="fac-btn-secondary" style="margin-top:8px;padding:6px 12px;font-size:11px;">Seleccionar archivo</button>
+            <button type="button" onclick="facRemoveLogo()" class="fac-btn-secondary" style="margin-top:8px;padding:6px 12px;font-size:11px;border-color:#ef4444;color:#ef4444;">Quitar</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr;gap:12px;">
+          <div><label class="fac-label">Razón social *</label><input id="fac-emisor-name" type="text" class="fac-input" placeholder="Mi Empresa SA de CV"/></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div><label class="fac-label">RFC *</label><input id="fac-emisor-rfc" type="text" class="fac-input" placeholder="ABC230101XYZ" maxlength="13" style="text-transform:uppercase;"/></div>
+            <div>
+              <label class="fac-label">Régimen fiscal *</label>
+              <select id="fac-emisor-regimen" class="fac-input" style="cursor:pointer;">
+                <option value="601">601 - General de Ley Personas Morales</option>
+                <option value="603">603 - Personas Morales sin fines de lucro</option>
+                <option value="605">605 - Sueldos y Salarios</option>
+                <option value="612">612 - Personas Físicas con Act. Empresarial</option>
+                <option value="621">621 - Incorporación Fiscal</option>
+                <option value="626">626 - Simplificado de Confianza (RESICO)</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div><label class="fac-label">Código postal *</label><input id="fac-emisor-cp" type="text" class="fac-input" placeholder="03100" maxlength="5"/></div>
+            <div><label class="fac-label">Serie (prefijo folios)</label><input id="fac-emisor-serie" type="text" class="fac-input" placeholder="A" maxlength="5"/></div>
+          </div>
+          <div><label class="fac-label">Email de contacto</label><input id="fac-emisor-email" type="email" class="fac-input" placeholder="facturacion@miempresa.com"/></div>
+        </div>
+      </div>
+      <div class="fac-modal-footer">
+        <button onclick="facCloseModal('emisor')" class="fac-btn-secondary" style="flex:1;">Cancelar</button>
+        <button onclick="facSaveEmisor()" class="fac-btn-primary" style="flex:2;background:#22c55e;">Guardar configuración</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Cancelar factura con motivo SAT -->
+  <div id="fac-modal-cancel" class="fac-modal">
+    <div class="fac-modal-backdrop" onclick="facCloseModal('cancel')"></div>
+    <div class="fac-modal-box" style="max-width:500px;">
+      <div class="fac-modal-header">
+        <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);">⚠️ Cancelar factura ante el SAT</h3>
+        <button onclick="facCloseModal('cancel')" class="fac-modal-close">&times;</button>
+      </div>
+      <div style="padding:20px;">
+        <div style="padding:12px;border-radius:10px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);margin-bottom:16px;">
+          <p style="font-size:12px;color:#ef4444;font-weight:700;">Folio <span id="fac-cancel-folio">--</span> · <span id="fac-cancel-client">--</span></p>
+          <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">Esta acción requiere motivo SAT según Anexo 20.</p>
+        </div>
+        <label class="fac-label">Motivo de cancelación *</label>
+        <select id="fac-cancel-motivo" class="fac-input" style="cursor:pointer;" onchange="document.getElementById('fac-cancel-sub').style.display=this.value==='01'?'block':'none'">
+          <option value="">Selecciona el motivo...</option>
+          <option value="01">01 - Comprobante emitido con errores con relación</option>
+          <option value="02">02 - Comprobante emitido con errores sin relación</option>
+          <option value="03">03 - No se llevó a cabo la operación</option>
+          <option value="04">04 - Operación nominativa relacionada en factura global</option>
+        </select>
+        <div id="fac-cancel-sub" style="display:none;margin-top:12px;">
+          <label class="fac-label">UUID de la factura que sustituye *</label>
+          <input id="fac-cancel-sub-uuid" type="text" class="fac-input" placeholder="ABCDEF12-3456-..." style="font-family:monospace;font-size:11px;"/>
+          <p style="font-size:10px;color:var(--text-faint);margin-top:4px;">Si el motivo es "01", debes indicar la factura correcta que emitiste en reemplazo.</p>
+        </div>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:12px;padding:10px;border-radius:8px;background:var(--accent-bg);">💡 Se generará automáticamente una nota de crédito para registrar el ajuste contable.</p>
+      </div>
+      <div class="fac-modal-footer">
+        <button onclick="facCloseModal('cancel')" class="fac-btn-secondary" style="flex:1;">Volver</button>
+        <button onclick="facConfirmCancel()" class="fac-btn-primary" style="flex:2;background:#ef4444;">Cancelar factura</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: CSV paste -->
+  <div id="fac-modal-csv" class="fac-modal">
+    <div class="fac-modal-backdrop" onclick="facCloseModal('csv')"></div>
+    <div class="fac-modal-box" style="max-width:640px;">
+      <div class="fac-modal-header">
+        <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);">📥 Importar conceptos desde CSV</h3>
+        <button onclick="facCloseModal('csv')" class="fac-modal-close">&times;</button>
+      </div>
+      <div style="padding:20px;">
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Pega tu CSV (o copia desde Excel/Google Sheets). Formato:</p>
+        <pre style="font-size:11px;background:var(--input-bg);padding:10px;border-radius:8px;color:var(--text-secondary);margin-bottom:12px;line-height:1.5;">descripcion,cantidad,precio,clave_sat
+Servicio de diseño web,1,15000,43233000
+Hosting mensual,12,450,81112100</pre>
+        <textarea id="fac-csv-text" rows="8" class="fac-input" style="font-family:monospace;font-size:12px;" placeholder="Pega aquí tu CSV..."></textarea>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button onclick="document.getElementById('fac-csv-text').value='Consultoría,1,15000,84111500\nHosting anual,12,450,81112100\nDominio .com,1,299,81112100'" class="fac-btn-secondary" style="padding:6px 12px;font-size:11px;">Usar ejemplo</button>
+        </div>
+      </div>
+      <div class="fac-modal-footer">
+        <button onclick="facCloseModal('csv')" class="fac-btn-secondary" style="flex:1;">Cancelar</button>
+        <button onclick="facImportCSV()" class="fac-btn-primary" style="flex:2;">Importar conceptos</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Complemento de Pago PPD -->
+  <div id="fac-modal-pago" class="fac-modal">
+    <div class="fac-modal-backdrop" onclick="facCloseModal('pago')"></div>
+    <div class="fac-modal-box" style="max-width:560px;">
+      <div class="fac-modal-header">
+        <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);">💰 Complemento de pago (REP)</h3>
+        <button onclick="facCloseModal('pago')" class="fac-modal-close">&times;</button>
+      </div>
+      <div style="padding:20px;">
+        <div id="fac-pago-inv-info" style="padding:12px;border-radius:10px;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);margin-bottom:16px;"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div><label class="fac-label">Fecha del pago *</label><input id="fac-pago-fecha" type="date" class="fac-input"/></div>
+          <div>
+            <label class="fac-label">Forma de pago *</label>
+            <select id="fac-pago-forma" class="fac-input" style="cursor:pointer;">
+              <option value="01">01 - Efectivo</option>
+              <option value="03" selected>03 - Transferencia electrónica</option>
+              <option value="04">04 - Tarjeta de crédito</option>
+              <option value="28">28 - Tarjeta de débito</option>
+            </select>
+          </div>
+          <div><label class="fac-label">Monto del pago (MXN) *</label><input id="fac-pago-monto" type="number" step="0.01" class="fac-input"/></div>
+          <div><label class="fac-label">Referencia bancaria</label><input id="fac-pago-ref" type="text" class="fac-input" placeholder="Opcional"/></div>
+        </div>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:14px;padding:10px;border-radius:8px;background:var(--accent-bg);">📌 El SAT requiere emitir un Recibo Electrónico de Pago (REP) cuando cobras una factura PPD. Esto se hace automáticamente al registrar el pago.</p>
+      </div>
+      <div class="fac-modal-footer">
+        <button onclick="facCloseModal('pago')" class="fac-btn-secondary" style="flex:1;">Cancelar</button>
+        <button onclick="facConfirmPago()" class="fac-btn-primary" style="flex:2;background:#22c55e;">Registrar pago + generar REP</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SkyBot Fiscal (floating chat) -->
+  <div id="fac-modal-skybot" class="fac-modal">
+    <div class="fac-modal-backdrop" onclick="facCloseModal('skybot')"></div>
+    <div class="fac-modal-box" style="max-width:560px;height:620px;display:flex;flex-direction:column;">
+      <div class="fac-modal-header" style="background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(111,207,245,0.12));">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#8b5cf6,#6fcff5);display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 12px rgba(139,92,246,0.4);">✨</div>
+          <div>
+            <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);">SkyBot Fiscal</h3>
+            <p style="font-size:10px;color:var(--text-muted);">Tu asistente SAT · Siempre disponible</p>
+          </div>
+        </div>
+        <button onclick="facCloseModal('skybot')" class="fac-modal-close">&times;</button>
+      </div>
+      <div id="fac-skybot-body" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;"></div>
+      <div style="padding:14px 16px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;">
+        <button onclick="facSkybotReset()" class="fac-btn-secondary" style="padding:8px 14px;font-size:11px;">↻ Reiniciar</button>
+        <p style="font-size:10px;color:var(--text-faint);">Respuestas basadas en Resolución Miscelánea Fiscal 2026</p>
+      </div>
+    </div>
+  </div>
 </DashboardLayout>
 
 <style>
@@ -495,6 +716,28 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
   .fac-cal-evt-pill { display:block;font-size:8px;font-weight:700;padding:2px 5px;border-radius:4px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
   .fac-cal-event-item { padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);border-left:3px solid var(--evt-color,#6fcff5); }
   @media(max-width:900px){ .fac-cal-grid{ grid-template-columns:1fr !important; } }
+
+  /* Toolbar buttons */
+  .fac-toolbar-btn { padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all 0.15s; }
+  .fac-toolbar-btn:hover { border-color:var(--accent);color:var(--accent); }
+
+  /* Modals */
+  .fac-modal { display:none;position:fixed;inset:0;z-index:9998;align-items:center;justify-content:center; }
+  .fac-modal.open { display:flex; }
+  .fac-modal-backdrop { position:absolute;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px); }
+  .fac-modal-box { position:relative;background:var(--card-bg,var(--bg-sidebar,#0F172A));border:1px solid var(--border);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.5);width:calc(100% - 40px);max-height:calc(100vh - 40px);overflow-y:auto;animation:facModalIn 0.2s ease-out; }
+  @keyframes facModalIn { from{opacity:0;transform:translateY(12px) scale(0.96);} to{opacity:1;transform:translateY(0) scale(1);} }
+  .fac-modal-header { display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border); }
+  .fac-modal-close { border:none;background:transparent;color:var(--text-muted);font-size:24px;line-height:1;cursor:pointer;padding:0 6px; }
+  .fac-modal-close:hover { color:var(--text-primary); }
+  .fac-modal-footer { display:flex;gap:10px;padding:16px 20px;border-top:1px solid var(--border); }
+
+  /* SkyBot chat bubbles */
+  .fac-sb-msg { padding:10px 14px;border-radius:12px;font-size:12px;line-height:1.5;max-width:85%;animation:facFadeIn 0.3s ease-out; }
+  .fac-sb-msg.bot { background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);color:var(--text-primary);align-self:flex-start;border-top-left-radius:4px; }
+  .fac-sb-msg.user { background:var(--accent);color:#0a1520;align-self:flex-end;border-top-right-radius:4px;font-weight:600; }
+  .fac-sb-option { display:block;width:100%;text-align:left;padding:10px 14px;margin-top:6px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-primary);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s; }
+  .fac-sb-option:hover { border-color:#8b5cf6;background:rgba(139,92,246,0.08);transform:translateX(2px); }
 </style>
 
 <script is:inline>
@@ -590,6 +833,7 @@ function renderInvoices(){
     <td style="padding:14px 16px;text-align:center;"><div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
       ${i.status!=='error'&&i.status!=='draft'?`<button onclick="showToast('PDF descargado')" class="fac-tbl-btn">PDF</button><button onclick="showToast('XML descargado')" class="fac-tbl-btn">XML</button>`:''}
       ${i.email&&i.status!=='error'?`<button onclick="showToast('Factura reenviada a ${i.email}')" class="fac-tbl-btn" style="border-color:#6fcff5;color:#6fcff5;">Reenviar</button>`:''}
+      ${(i.status==='active'||i.status==='stamped')&&i.payment==='PPD'?`<button onclick="facOpenPago(${i.id})" class="fac-tbl-btn" style="border-color:#8b5cf6;color:#8b5cf6;">💰 Pago</button>`:''}
       ${i.status==='active'||i.status==='stamped'?`<button onclick="facCancelInvoice(${i.id})" class="fac-tbl-btn" style="border-color:#ef4444;color:#ef4444;">Cancelar</button>`:''}
       ${i.status==='error'?`<button onclick="facRetryStamp(${i.id})" class="fac-tbl-btn" style="border-color:#f97316;color:#f97316;">Reintentar</button><span style="display:block;font-size:10px;color:#ef4444;margin-top:4px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${i.errorMsg||''}">${i.errorMsg||'Error desconocido'}</span>`:''}
       ${i.status==='draft'?`<button onclick="facRetryStamp(${i.id})" class="fac-tbl-btn" style="border-color:#22c55e;color:#22c55e;">Timbrar</button>`:''}
@@ -597,7 +841,34 @@ function renderInvoices(){
   </tr>`;}).join('');
 }
 function facFilter(){renderInvoices();}
-function facCancelInvoice(id){if(!confirm('¿Cancelar esta factura ante el SAT? Se generará una nota de crédito.'))return;const i=demoInvoices.find(x=>x.id===id);if(i){i.status='cancelled';demoCreditNotes.unshift({id:Date.now(),folio:'NC-'+String(demoCreditNotes.length+1).padStart(3,'0'),original:i.folio,client:i.client,reason:'Cancelación de factura',amount:i.total,date:'2026-04-02'});renderInvoices();renderFacStats();renderCredits();showToast('Factura cancelada ante SAT');}}
+let facPendingCancelId=null;
+function facCancelInvoice(id){
+  const inv=demoInvoices.find(x=>x.id===id);
+  if(!inv)return;
+  facPendingCancelId=id;
+  document.getElementById('fac-cancel-folio').textContent=inv.folio;
+  document.getElementById('fac-cancel-client').textContent=inv.client;
+  document.getElementById('fac-cancel-motivo').value='';
+  document.getElementById('fac-cancel-sub').style.display='none';
+  document.getElementById('fac-cancel-sub-uuid').value='';
+  facOpenModal('cancel');
+}
+function facConfirmCancel(){
+  const motivo=document.getElementById('fac-cancel-motivo').value;
+  if(!motivo){alert('Selecciona un motivo SAT');return;}
+  if(motivo==='01'&&!document.getElementById('fac-cancel-sub-uuid').value.trim()){alert('El motivo 01 requiere el UUID de la factura sustituta');return;}
+  const motivoNames={'01':'Errores con relación','02':'Errores sin relación','03':'No se llevó a cabo','04':'Operación en factura global'};
+  const i=demoInvoices.find(x=>x.id===facPendingCancelId);
+  if(i){
+    i.status='cancelled';
+    i.cancelMotivo=motivo;
+    demoCreditNotes.unshift({id:Date.now(),folio:'NC-'+String(demoCreditNotes.length+1).padStart(3,'0'),original:i.folio,client:i.client,reason:`Cancelación motivo ${motivo} - ${motivoNames[motivo]}`,amount:i.total,date:new Date().toISOString().substring(0,10)});
+    renderInvoices();renderFacStats();renderCredits();renderFacHealthScore();
+    showToast(`Factura ${i.folio} cancelada (motivo ${motivo})`);
+  }
+  facCloseModal('cancel');
+  facPendingCancelId=null;
+}
 
 // ═══════ CREATE INVOICE ═══════
 function renderConcepts(){
@@ -615,13 +886,33 @@ function renderConcepts(){
   facUpdateTotals();
 }
 function facAddConcept(){facConcepts.push({desc:'',qty:1,price:0,key:'01010101'});renderConcepts();}
+function facCalcRetenciones(subtotal,iva){
+  const isrChk=document.getElementById('fac-ret-isr-chk')?.checked;
+  const ivaChk=document.getElementById('fac-ret-iva-chk')?.checked;
+  const isrRate=parseFloat(document.getElementById('fac-ret-isr-rate')?.value || 0) || 0;
+  const ivaRate=parseFloat(document.getElementById('fac-ret-iva-rate')?.value || 0) || 0;
+  const isrAmt=isrChk?(subtotal*isrRate/100):0;
+  const ivaAmt=ivaChk?(subtotal*ivaRate/100):0;
+  return { isrChk, ivaChk, isrAmt, ivaAmt, isrRate, ivaRate };
+}
 function facUpdateTotals(){
   const sub=facConcepts.reduce((s,c)=>s+(c.price*c.qty),0);
   const iva=Math.round(sub*0.16*100)/100;
-  document.getElementById('fac-subtotal').textContent='$'+sub.toLocaleString(undefined,{minimumFractionDigits:2});
-  document.getElementById('fac-iva-total').textContent='$'+iva.toLocaleString(undefined,{minimumFractionDigits:2});
-  document.getElementById('fac-grand-total').textContent='$'+(sub+iva).toLocaleString(undefined,{minimumFractionDigits:2});
+  const ret=facCalcRetenciones(sub,iva);
+  const fmt=(n)=>'$'+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  const subEl=document.getElementById('fac-subtotal');if(subEl)subEl.textContent=fmt(sub);
+  const ivaEl=document.getElementById('fac-iva-total');if(ivaEl)ivaEl.textContent=fmt(iva);
+  const isrRow=document.getElementById('fac-ret-isr-row');
+  const ivaRow=document.getElementById('fac-ret-iva-row');
+  const isrAmt=document.getElementById('fac-ret-isr-amt');
+  const ivaAmt=document.getElementById('fac-ret-iva-amt');
+  if(isrRow){isrRow.style.display=ret.isrChk?'flex':'none';if(isrAmt)isrAmt.textContent='-'+fmt(ret.isrAmt);}
+  if(ivaRow){ivaRow.style.display=ret.ivaChk?'flex':'none';if(ivaAmt)ivaAmt.textContent='-'+fmt(ret.ivaAmt);}
+  const total=sub+iva-ret.isrAmt-ret.ivaAmt;
+  const gtEl=document.getElementById('fac-grand-total');if(gtEl)gtEl.textContent=fmt(total);
+  renderCfdiPreview();
 }
+function facMaybeShowTC(){document.getElementById('fac-tc-row').style.display='block';}
 
 function facValidateBeforeCreate(){
   const name=document.getElementById('fac-c-name').value.trim();
@@ -1032,19 +1323,21 @@ function renderCfdiPreview(){
   }).filter(i=>i.desc||i.price>0);
   const subtotal=items.reduce((s,i)=>s+i.subtotal,0);
   const iva=subtotal*0.16;
-  const total=subtotal+iva;
+  const ret=facCalcRetenciones(subtotal,iva);
+  const total=subtotal+iva-ret.isrAmt-ret.ivaAmt;
   const folioNum='A-'+String(demoInvoices.length+1).padStart(3,'0');
   const today=new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});
   const formasMap={'01':'Efectivo','03':'Transferencia electrónica','04':'Tarjeta de crédito','28':'Tarjeta de débito','99':'Por definir'};
   const mx=(n)=>'$'+n.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const cfg=facLoadConfig();
   el.innerHTML=`
     <div class="fac-cfdi-watermark">CFDI 4.0</div>
     <div class="fac-cfdi-header">
       <div class="fac-cfdi-logo">
-        <div class="fac-cfdi-logo-icon">SB</div>
+        ${cfg.logo?`<img src="${cfg.logo}" alt="logo" style="width:38px;height:38px;border-radius:8px;object-fit:cover;"/>`:`<div class="fac-cfdi-logo-icon">${(cfg.name||'SB').substring(0,2).toUpperCase()}</div>`}
         <div>
-          <div class="fac-cfdi-brand">SKYBRANDMX</div>
-          <div class="fac-cfdi-brand-sub">RFC: SKY230101ABC · Régimen 601</div>
+          <div class="fac-cfdi-brand">${(cfg.name||'SKYBRANDMX').toUpperCase()}</div>
+          <div class="fac-cfdi-brand-sub">RFC: ${cfg.rfc||'SKY230101ABC'} · Régimen ${cfg.regimen||'601'}</div>
         </div>
       </div>
       <div class="fac-cfdi-folio-box">
@@ -1085,6 +1378,8 @@ function renderCfdiPreview(){
       <div class="fac-cfdi-totals">
         <div class="fac-cfdi-total-row"><span style="color:#666;min-width:80px;">Subtotal</span><span style="min-width:80px;text-align:right;">${mx(subtotal)}</span></div>
         <div class="fac-cfdi-total-row"><span style="color:#666;min-width:80px;">IVA 16%</span><span style="min-width:80px;text-align:right;">${mx(iva)}</span></div>
+        ${ret.isrChk?`<div class="fac-cfdi-total-row"><span style="color:#d32f2f;min-width:80px;">Ret. ISR ${ret.isrRate}%</span><span style="min-width:80px;text-align:right;color:#d32f2f;">-${mx(ret.isrAmt)}</span></div>`:''}
+        ${ret.ivaChk?`<div class="fac-cfdi-total-row"><span style="color:#d32f2f;min-width:80px;">Ret. IVA ${ret.ivaRate}%</span><span style="min-width:80px;text-align:right;color:#d32f2f;">-${mx(ret.ivaAmt)}</span></div>`:''}
         <div class="fac-cfdi-total-row grand"><span style="min-width:80px;">TOTAL</span><span style="min-width:80px;text-align:right;">${mx(total)} ${moneda}</span></div>
       </div>
     </div>
@@ -1183,10 +1478,284 @@ function facShowDayEvents(day){
   showToast(`${events.length} evento${events.length>1?'s':''} el día ${day}`);
 }
 
+// ═══════ MODALS HELPERS ═══════
+function facOpenModal(name){document.getElementById('fac-modal-'+name).classList.add('open');}
+function facCloseModal(name){document.getElementById('fac-modal-'+name).classList.remove('open');}
+
+// ═══════ EMISOR / LOGO ═══════
+function facLoadConfig(){
+  try { return JSON.parse(localStorage.getItem('fac_emisor_cfg')) || {name:'',rfc:'',regimen:'',cp:'',serie:'A',email:'',logo:''}; }
+  catch(e){ return {name:'',rfc:'',regimen:'',cp:'',serie:'A',email:'',logo:''}; }
+}
+function facSaveConfig(cfg){localStorage.setItem('fac_emisor_cfg',JSON.stringify(cfg));}
+function facOpenEmisor(){
+  const cfg=facLoadConfig();
+  document.getElementById('fac-emisor-name').value=cfg.name||'';
+  document.getElementById('fac-emisor-rfc').value=cfg.rfc||'';
+  document.getElementById('fac-emisor-regimen').value=cfg.regimen||'601';
+  document.getElementById('fac-emisor-cp').value=cfg.cp||'';
+  document.getElementById('fac-emisor-serie').value=cfg.serie||'A';
+  document.getElementById('fac-emisor-email').value=cfg.email||'';
+  const prev=document.getElementById('fac-emisor-logo-preview');
+  if(cfg.logo){prev.innerHTML=`<img src="${cfg.logo}" style="width:100%;height:100%;object-fit:cover;"/>`;}
+  else prev.innerHTML='<span style="font-size:10px;color:var(--text-faint);text-align:center;">+ Subir<br/>logo</span>';
+  facOpenModal('emisor');
+}
+function facUploadLogo(event){
+  const file=event.target.files[0];
+  if(!file)return;
+  if(file.size>2*1024*1024){alert('La imagen debe pesar menos de 2MB');return;}
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    const cfg=facLoadConfig();
+    cfg.logo=e.target.result;
+    facSaveConfig(cfg);
+    document.getElementById('fac-emisor-logo-preview').innerHTML=`<img src="${cfg.logo}" style="width:100%;height:100%;object-fit:cover;"/>`;
+    renderCfdiPreview();
+    showToast('Logo subido ✓');
+  };
+  reader.readAsDataURL(file);
+}
+function facRemoveLogo(){
+  const cfg=facLoadConfig();cfg.logo='';facSaveConfig(cfg);
+  document.getElementById('fac-emisor-logo-preview').innerHTML='<span style="font-size:10px;color:var(--text-faint);text-align:center;">+ Subir<br/>logo</span>';
+  renderCfdiPreview();
+}
+function facSaveEmisor(){
+  const cfg=facLoadConfig();
+  cfg.name=document.getElementById('fac-emisor-name').value.trim();
+  cfg.rfc=document.getElementById('fac-emisor-rfc').value.trim().toUpperCase();
+  cfg.regimen=document.getElementById('fac-emisor-regimen').value;
+  cfg.cp=document.getElementById('fac-emisor-cp').value.trim();
+  cfg.serie=document.getElementById('fac-emisor-serie').value.trim()||'A';
+  cfg.email=document.getElementById('fac-emisor-email').value.trim();
+  if(!cfg.name||!cfg.rfc){alert('Completa al menos razón social y RFC');return;}
+  facSaveConfig(cfg);
+  facCloseModal('emisor');
+  renderCfdiPreview();
+  showToast('Datos del emisor guardados ✓');
+}
+
+// ═══════ PLANTILLAS ═══════
+function facGetTemplates(){try{return JSON.parse(localStorage.getItem('fac_templates'))||[];}catch(e){return [];}}
+function facSaveTemplatesList(list){localStorage.setItem('fac_templates',JSON.stringify(list));}
+function facSaveTemplate(){
+  const name=prompt('Nombre de la plantilla (ej: "Mensualidad hosting Café Maya"):');
+  if(!name)return;
+  const tpl={
+    id:Date.now(), name,
+    client:{name:document.getElementById('fac-c-name').value,rfc:document.getElementById('fac-c-rfc').value,regimen:document.getElementById('fac-c-regimen').value,cp:document.getElementById('fac-c-cp').value,email:document.getElementById('fac-c-email').value,uso:document.getElementById('fac-c-uso').value},
+    concepts:[...facConcepts],
+    payment:{metodo:document.getElementById('fac-metodo').value,forma:document.getElementById('fac-forma').value,moneda:document.getElementById('fac-moneda').value},
+    retenciones:{isr:document.getElementById('fac-ret-isr-chk')?.checked,iva:document.getElementById('fac-ret-iva-chk')?.checked,isrRate:document.getElementById('fac-ret-isr-rate')?.value,ivaRate:document.getElementById('fac-ret-iva-rate')?.value}
+  };
+  const list=facGetTemplates();list.unshift(tpl);facSaveTemplatesList(list);
+  facRenderTemplatesDropdown();
+  showToast('Plantilla "'+name+'" guardada ✓');
+}
+function facRenderTemplatesDropdown(){
+  const sel=document.getElementById('fac-tpl-select');
+  if(!sel)return;
+  const list=facGetTemplates();
+  sel.innerHTML='<option value="">📋 Plantillas ('+list.length+')</option>'+list.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')+(list.length>0?'<option value="__clear">🗑️ Borrar todas</option>':'');
+}
+function facUseTemplate(id){
+  if(id==='__clear'){if(confirm('¿Borrar todas las plantillas?')){facSaveTemplatesList([]);facRenderTemplatesDropdown();showToast('Plantillas eliminadas');}return;}
+  const tpl=facGetTemplates().find(t=>String(t.id)===String(id));
+  if(!tpl)return;
+  document.getElementById('fac-c-name').value=tpl.client.name||'';
+  document.getElementById('fac-c-rfc').value=tpl.client.rfc||'';
+  document.getElementById('fac-c-regimen').value=tpl.client.regimen||'';
+  document.getElementById('fac-c-cp').value=tpl.client.cp||'';
+  document.getElementById('fac-c-email').value=tpl.client.email||'';
+  document.getElementById('fac-c-uso').value=tpl.client.uso||'G03';
+  document.getElementById('fac-metodo').value=tpl.payment.metodo||'PUE';
+  document.getElementById('fac-forma').value=tpl.payment.forma||'03';
+  document.getElementById('fac-moneda').value=tpl.payment.moneda||'MXN';
+  facConcepts=tpl.concepts&&tpl.concepts.length>0?[...tpl.concepts]:[{desc:'',qty:1,price:0,key:''}];
+  renderConcepts();
+  if(tpl.retenciones){
+    const isrChk=document.getElementById('fac-ret-isr-chk');if(isrChk)isrChk.checked=!!tpl.retenciones.isr;
+    const ivaChk=document.getElementById('fac-ret-iva-chk');if(ivaChk)ivaChk.checked=!!tpl.retenciones.iva;
+    if(tpl.retenciones.isrRate)document.getElementById('fac-ret-isr-rate').value=tpl.retenciones.isrRate;
+    if(tpl.retenciones.ivaRate)document.getElementById('fac-ret-iva-rate').value=tpl.retenciones.ivaRate;
+  }
+  facUpdateTotals();renderCfdiPreview();
+  showToast('Plantilla "'+tpl.name+'" aplicada');
+}
+
+// ═══════ CSV IMPORT ═══════
+function facOpenCSV(){document.getElementById('fac-csv-text').value='';facOpenModal('csv');}
+function facImportCSV(){
+  const text=document.getElementById('fac-csv-text').value.trim();
+  if(!text){alert('Pega el CSV primero');return;}
+  const lines=text.split(/\r?\n/).filter(l=>l.trim());
+  const hasHeader=/descripcion|descripción|concepto/i.test(lines[0]);
+  const rows=hasHeader?lines.slice(1):lines;
+  const imported=rows.map(line=>{
+    const parts=line.split(/[,;\t]/).map(p=>p.trim().replace(/^"|"$/g,''));
+    return { desc:parts[0]||'', qty:parseFloat(parts[1])||1, price:parseFloat(parts[2])||0, key:parts[3]||'01010101' };
+  }).filter(r=>r.desc);
+  if(imported.length===0){alert('No se pudieron leer conceptos. Verifica el formato.');return;}
+  facConcepts=imported;
+  renderConcepts();facUpdateTotals();renderCfdiPreview();
+  facCloseModal('csv');
+  showToast(imported.length+' conceptos importados ✓');
+}
+
+// ═══════ COMPLEMENTO DE PAGO PPD ═══════
+let facPendingPagoInvId=null;
+function facOpenPago(id){
+  const inv=demoInvoices.find(x=>x.id===id);
+  if(!inv)return;
+  facPendingPagoInvId=id;
+  document.getElementById('fac-pago-inv-info').innerHTML=`
+    <p style="font-size:12px;color:#a78bfa;font-weight:800;">${inv.folio} · ${inv.client}</p>
+    <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">Método: PPD · Total factura: $${inv.total.toLocaleString()} MXN</p>
+    <p style="font-size:10px;color:var(--text-faint);margin-top:2px;">UUID: ABCDEF12-3456-7890-ABCD-${String(inv.id).padStart(12,'0')}</p>`;
+  document.getElementById('fac-pago-fecha').value=new Date().toISOString().substring(0,10);
+  document.getElementById('fac-pago-monto').value=inv.total;
+  document.getElementById('fac-pago-ref').value='';
+  facOpenModal('pago');
+}
+function facConfirmPago(){
+  const fecha=document.getElementById('fac-pago-fecha').value;
+  const monto=parseFloat(document.getElementById('fac-pago-monto').value);
+  const forma=document.getElementById('fac-pago-forma').value;
+  if(!fecha||!monto||monto<=0){alert('Completa fecha y monto');return;}
+  const i=demoInvoices.find(x=>x.id===facPendingPagoInvId);
+  if(i){
+    i.status='paid';
+    i.paymentDate=fecha;
+    // Create REP entry
+    demoInvoices.unshift({id:Date.now(),folio:'P-'+String(demoInvoices.filter(x=>x.folio?.startsWith('P-')).length+1).padStart(3,'0'),client:i.client,rfc:i.rfc,subtotal:0,iva:0,total:monto,status:'stamped',payment:forma,date:fecha,uso:'CP01',email:i.email,isREP:true,refInvoice:i.folio});
+    renderInvoices();renderFacStats();renderFacHealthScore();renderFacInsights();
+    showToast(`Pago registrado + REP generado para ${i.folio}`);
+  }
+  facCloseModal('pago');
+  facPendingPagoInvId=null;
+}
+
+// ═══════ SKYBOT FISCAL (decision tree) ═══════
+const SKYBOT_TREE = {
+  root: {
+    q:'¡Hola! Soy SkyBot Fiscal. ¿En qué te ayudo?',
+    options:[
+      {txt:'No sé qué régimen fiscal ponerle a mi cliente',next:'regimen'},
+      {txt:'No sé qué uso de CFDI escoger',next:'uso'},
+      {txt:'No sé si es PUE o PPD',next:'metodo'},
+      {txt:'Mi cliente me quiere retener ¿qué hago?',next:'retenciones'},
+      {txt:'¿Cuándo debo emitir complemento de pago?',next:'rep'},
+      {txt:'Me equivoqué en una factura',next:'error'},
+      {txt:'¿Qué es la DIOT y cuándo se presenta?',next:'diot'},
+    ]
+  },
+  regimen:{
+    q:'Pregúntale a tu cliente su <b>Constancia de Situación Fiscal</b> (SAT). Ahí viene el código. Si no la tiene, con estos indicadores suele acertar:',
+    options:[
+      {txt:'Empresa / SA / SRL / SC',answer:'👉 <b>601 - General de Ley Personas Morales</b>. Es la más común para empresas con fines de lucro.'},
+      {txt:'ONG / AC sin fines de lucro',answer:'👉 <b>603 - Personas Morales con Fines no Lucrativos</b>.'},
+      {txt:'Profesionista freelance / PF con actividad empresarial',answer:'👉 <b>612 - Personas Físicas con Actividades Empresariales y Profesionales</b>. El clásico para consultores, médicos, abogados.'},
+      {txt:'Persona en RESICO',answer:'👉 <b>626 - Simplificado de Confianza (RESICO)</b>. Atención: no pueden retener IVA/ISR, y llevan otras reglas.'},
+      {txt:'Empleado con sueldo',answer:'👉 <b>605 - Sueldos y Salarios</b>. Generalmente no pide factura pero si pide, este es el régimen.'},
+    ]
+  },
+  uso:{
+    q:'Depende qué va a hacer tu cliente con la factura:',
+    options:[
+      {txt:'Gasto general de operación',answer:'👉 <b>G03 - Gastos en general</b>. Es el default más seguro. 80% de facturas usan este.'},
+      {txt:'Comprar mercancía para reventa',answer:'👉 <b>G01 - Adquisición de mercancías</b>.'},
+      {txt:'Hacer una construcción o edificación',answer:'👉 <b>I01 - Construcciones</b>.'},
+      {txt:'Cliente no sabe / sin efectos fiscales',answer:'👉 <b>S01 - Sin efectos fiscales</b>. Úsalo cuando el cliente es Público en General (RFC XAXX010101000).'},
+      {txt:'Es para un complemento de pago',answer:'👉 <b>CP01 - Pagos</b>. Se usa solo en los REP (Recibos Electrónicos de Pago).'},
+    ]
+  },
+  metodo:{
+    q:'Aquí está la regla de oro:',
+    options:[
+      {txt:'El cliente ya me pagó TODO antes de que emita la factura',answer:'👉 <b>PUE - Pago en Una Exhibición</b>. No necesitas emitir complemento de pago.'},
+      {txt:'El cliente me va a pagar después (crédito)',answer:'👉 <b>PPD - Pago en Parcialidades o Diferido</b>. Forma de pago debe ser "99 - Por definir". Cuando cobres, tendrás que emitir un REP (complemento de pago).'},
+      {txt:'Me va a pagar el mismo día pero después',answer:'👉 Si cobras en ≤24 hrs del mismo mes, usa <b>PUE</b>. Si puede rebasar, usa <b>PPD</b> para no arriesgar.'},
+    ]
+  },
+  retenciones:{
+    q:'Las retenciones aplican cuando <b>tu cliente es Persona Moral</b> y tú prestas cierto servicio:',
+    options:[
+      {txt:'Servicios profesionales (consultoría, honorarios)',answer:'👉 Te retienen <b>10% ISR</b> y <b>10.6667% IVA</b>. Tu factura debe reflejarlo. En SkyBrand ve a "Retenciones ISR/IVA" en el form y actívalas.'},
+      {txt:'Arrendamiento de inmueble',answer:'👉 Te retienen <b>10% ISR</b> y <b>10.6667% IVA</b>. Mismo caso que honorarios.'},
+      {txt:'Soy RESICO (régimen 626)',answer:'👉 <b>No te pueden retener</b>. RESICO tiene reglas especiales. Emite sin retenciones y, si te retienen, el SAT te lo acreditará.'},
+      {txt:'Vendo productos (no servicios)',answer:'👉 <b>No hay retenciones</b> en venta de productos. Solo IVA 16%.'},
+    ]
+  },
+  rep:{
+    q:'Los REP (Recibos Electrónicos de Pago) son obligatorios solo en ciertos casos:',
+    options:[
+      {txt:'¿Cuándo debo emitirlos?',answer:'👉 Siempre que cobres una factura <b>PPD</b>. Máximo a los 5 días del mes siguiente al del pago. Ejemplo: si cobraste el 15 de marzo, debes emitir el REP antes del 5 de abril.'},
+      {txt:'¿Si fue pago parcial?',answer:'👉 Emites un REP <b>por cada pago</b> que recibas, hasta completar el monto. Cada uno se relaciona a la factura PPD original.'},
+      {txt:'¿Y si el cliente me pagó todo en una sola vez?',answer:'👉 Emites un solo REP por el total. Pero si inicialmente era PUE, no necesitas REP.'},
+    ]
+  },
+  error:{
+    q:'Elige qué tipo de error:',
+    options:[
+      {txt:'Le puse mal el RFC / razón social / régimen',answer:'👉 Cancélala con motivo <b>01 - Errores con relación</b>, emite la factura corregida, y usa el UUID nuevo como sustitución. En SkyBrand → Acciones → Cancelar.'},
+      {txt:'Le puse mal el monto o concepto',answer:'👉 Misma mecánica: cancelar con motivo <b>01</b> y emitir la corregida. O emitir <b>nota de crédito</b> si es ajuste parcial.'},
+      {txt:'La factura la emití por error, no se hizo la venta',answer:'👉 Motivo de cancelación <b>03 - No se llevó a cabo la operación</b>. No requiere sustitución.'},
+      {txt:'Ya pasaron más de 72 horas',answer:'👉 Ya necesitas aceptación del receptor. Avísale para que apruebe la cancelación en su buzón tributario. Si no contesta en 72 hrs adicionales, se considera aceptada.'},
+    ]
+  },
+  diot:{
+    q:'La DIOT (Declaración Informativa de Operaciones con Terceros) es un reporte mensual al SAT:',
+    options:[
+      {txt:'¿Quién la presenta?',answer:'👉 Todos los contribuyentes que lleven actividades empresariales y profesionales. RESICO no está obligado salvo excepciones.'},
+      {txt:'¿Cuándo se presenta?',answer:'👉 <b>Mensualmente</b>, a más tardar el último día del mes siguiente. Ejemplo: DIOT de marzo se presenta antes del 30 de abril.'},
+      {txt:'¿Qué incluye?',answer:'👉 Operaciones con tus <b>proveedores</b> gravadas o exentas de IVA. No incluye nómina ni operaciones con público en general.'},
+      {txt:'¿Qué pasa si no la presento?',answer:'👉 Multa del SAT de ~$10,000 MXN. Además, tus deducciones pueden ser rechazadas.'},
+    ]
+  }
+};
+let facSkybotHistory=[];
+function facOpenSkybot(){
+  facSkybotHistory=[];
+  facSkybotRender('root');
+  facOpenModal('skybot');
+}
+function facSkybotReset(){facSkybotHistory=[];facSkybotRender('root');}
+function facSkybotRender(key){
+  const body=document.getElementById('fac-skybot-body');
+  const node=SKYBOT_TREE[key];
+  if(!node)return;
+  const botMsg=document.createElement('div');botMsg.className='fac-sb-msg bot';botMsg.innerHTML=node.q;
+  body.appendChild(botMsg);
+  // Options
+  const opts=document.createElement('div');opts.style.cssText='display:flex;flex-direction:column;gap:6px;align-self:flex-start;max-width:95%;';
+  node.options.forEach(opt=>{
+    const b=document.createElement('button');b.className='fac-sb-option';b.textContent=opt.txt;
+    b.onclick=()=>{
+      const userMsg=document.createElement('div');userMsg.className='fac-sb-msg user';userMsg.textContent=opt.txt;body.appendChild(userMsg);
+      opts.remove();
+      if(opt.answer){
+        const ans=document.createElement('div');ans.className='fac-sb-msg bot';ans.innerHTML=opt.answer;body.appendChild(ans);
+        // Follow-up
+        const followUp=document.createElement('div');followUp.style.cssText='display:flex;flex-direction:column;gap:6px;align-self:flex-start;';
+        const back=document.createElement('button');back.className='fac-sb-option';back.textContent='↺ Otra pregunta';back.onclick=()=>{followUp.remove();facSkybotRender('root');};
+        followUp.appendChild(back);body.appendChild(followUp);
+      } else if(opt.next){
+        facSkybotRender(opt.next);
+      }
+      setTimeout(()=>{body.scrollTop=body.scrollHeight;},50);
+    };
+    opts.appendChild(b);
+  });
+  body.appendChild(opts);
+  setTimeout(()=>{body.scrollTop=body.scrollHeight;},50);
+}
+
 // ═══════ INIT ═══════
 document.addEventListener('DOMContentLoaded',()=>{
   ['invoices','create','credits','clients','calendar','analytics'].forEach(t=>{if(localStorage.getItem('fac_help_'+t+'_dismissed')){const el=document.getElementById('fac-help-'+t);if(el)el.style.display='none';}});
   renderFacRecs();renderFacStats();renderInvoices();renderConcepts();renderCredits();renderFiscalClients();renderFacAnalytics();renderFacAutopilot();
   renderFacHealthScore();renderFacInsights();renderCfdiPreview();
+  facRenderTemplatesDropdown();
 });
 </script>
