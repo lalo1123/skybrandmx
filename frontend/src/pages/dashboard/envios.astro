@@ -4,6 +4,256 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
 ---
 
 <DashboardLayout title="Envíos">
+  <!-- ════════ MODO FÁCIL / EXPERTO TOGGLE ════════ -->
+  <div class="env-mode-switcher" style="display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px;padding:14px 18px;border-radius:14px;background:linear-gradient(135deg,rgba(111,207,245,0.08),rgba(139,92,246,0.08));border:1px solid rgba(111,207,245,0.2);flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span style="font-size:24px;">👋</span>
+      <div>
+        <p id="env-mode-greeting" style="font-size:13px;font-weight:800;color:var(--text-primary);">Hola, ¿qué quieres hacer hoy?</p>
+        <p id="env-mode-sub" style="font-size:11px;color:var(--text-muted);">Cambia a modo experto cuando te sientas cómodo</p>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <button id="env-onboard-btn" onclick="envStartTour()" style="padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">🎓 Tour guiado</button>
+      <div style="display:flex;background:rgba(0,0,0,0.25);border-radius:10px;padding:3px;gap:2px;">
+        <button id="env-mode-easy" onclick="envSetMode('easy')" class="env-mode-btn active">😊 Fácil</button>
+        <button id="env-mode-pro" onclick="envSetMode('pro')" class="env-mode-btn">🔧 Experto</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ MODO FÁCIL (Wizard de 4 pasos) ════════ -->
+  <div id="env-easy-mode" style="display:block;">
+    <!-- Hero de bienvenida / acciones principales -->
+    <div id="env-easy-home" style="display:block;">
+      <div class="env-easy-hero" style="padding:40px 32px;border-radius:18px;background:linear-gradient(135deg,#084d6e 0%,#2dd4bf 100%);color:#fff;margin-bottom:20px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-30px;right:-30px;font-size:180px;opacity:0.15;">📦</div>
+        <h2 style="font-size:24px;font-weight:900;margin-bottom:8px;">¡Bienvenido! Enviar un paquete es fácil 🚀</h2>
+        <p style="font-size:14px;opacity:0.9;margin-bottom:20px;max-width:560px;">Te guiamos paso a paso. En 4 preguntas simples tu paquete está listo. No te preocupes por términos técnicos, te los explicamos al momento.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button onclick="envWizStart(false)" class="env-easy-cta-primary">✨ Crear mi primer envío</button>
+          <button onclick="envWizStart(true)" class="env-easy-cta-secondary">👀 Probar con datos de ejemplo</button>
+        </div>
+      </div>
+
+      <!-- Cards de acciones comunes -->
+      <p style="font-size:13px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">¿Qué necesitas hacer?</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:24px;">
+        <button onclick="envWizStart(false)" class="env-easy-card">
+          <span class="env-easy-card-emoji">📦</span>
+          <p class="env-easy-card-title">Enviar un paquete</p>
+          <p class="env-easy-card-desc">Cotizar y generar una guía en 4 pasos simples</p>
+        </button>
+        <button onclick="envSetMode('pro');setTimeout(()=>{switchEnvTab('tracking');},200);" class="env-easy-card">
+          <span class="env-easy-card-emoji">🔍</span>
+          <p class="env-easy-card-title">Rastrear un paquete</p>
+          <p class="env-easy-card-desc">Ver dónde está un paquete que ya enviaste</p>
+        </button>
+        <button onclick="envSetMode('pro');setTimeout(()=>{switchEnvTab('shipments');},200);" class="env-easy-card">
+          <span class="env-easy-card-emoji">📋</span>
+          <p class="env-easy-card-title">Ver mis envíos</p>
+          <p class="env-easy-card-desc">Todos los paquetes que ya generaste</p>
+        </button>
+        <button onclick="envSetMode('pro');setTimeout(()=>{switchEnvTab('compare');},200);" class="env-easy-card">
+          <span class="env-easy-card-emoji">⚖️</span>
+          <p class="env-easy-card-title">Comparar paqueterías</p>
+          <p class="env-easy-card-desc">¿DHL, FedEx, Estafeta? Te decimos cuál te conviene</p>
+        </button>
+      </div>
+
+      <!-- Estado simple (sin Health Score técnico) -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
+        <div class="stat-card" style="padding:18px;text-align:center;">
+          <p style="font-size:32px;font-weight:900;color:#22c55e;" id="env-easy-delivered">0</p>
+          <p style="font-size:12px;color:var(--text-muted);font-weight:700;margin-top:4px;">📬 Paquetes entregados</p>
+        </div>
+        <div class="stat-card" style="padding:18px;text-align:center;">
+          <p style="font-size:32px;font-weight:900;color:#6fcff5;" id="env-easy-transit">0</p>
+          <p style="font-size:12px;color:var(--text-muted);font-weight:700;margin-top:4px;">🚚 En camino</p>
+        </div>
+        <div class="stat-card" style="padding:18px;text-align:center;">
+          <p style="font-size:32px;font-weight:900;color:#f97316;" id="env-easy-pending">0</p>
+          <p style="font-size:12px;color:var(--text-muted);font-weight:700;margin-top:4px;">⏰ Esperando recolección</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wizard (oculto por default, se abre al hacer click en "Crear envío") -->
+    <div id="env-wizard" style="display:none;">
+      <!-- Header del wizard -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button onclick="envWizBack()" id="env-wiz-back" style="width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-size:18px;">←</button>
+          <div>
+            <p style="font-size:18px;font-weight:900;color:var(--text-primary);" id="env-wiz-title">Crear envío</p>
+            <p style="font-size:12px;color:var(--text-muted);" id="env-wiz-subtitle">Paso 1 de 4</p>
+          </div>
+        </div>
+        <button onclick="envWizCancel()" style="padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;">✕ Cancelar</button>
+      </div>
+
+      <!-- Progress bar -->
+      <div style="display:flex;gap:6px;margin-bottom:28px;">
+        <div class="env-wiz-step-bar active" data-step="1"></div>
+        <div class="env-wiz-step-bar" data-step="2"></div>
+        <div class="env-wiz-step-bar" data-step="3"></div>
+        <div class="env-wiz-step-bar" data-step="4"></div>
+      </div>
+
+      <!-- PASO 1: ¿De dónde sale? -->
+      <div id="env-wiz-step-1" class="env-wiz-step">
+        <div class="stat-card" style="padding:32px;max-width:640px;margin:0 auto;">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+            <div class="env-wiz-step-num">1</div>
+            <div>
+              <h3 style="font-size:20px;font-weight:900;color:var(--text-primary);">¿De dónde sale el paquete?</h3>
+              <p style="font-size:13px;color:var(--text-muted);">La dirección donde vas a entregar el paquete al mensajero o desde donde él lo va a recoger</p>
+            </div>
+          </div>
+          <button onclick="envWizUseMyAddress()" class="env-wiz-hint-btn">🏠 Usar mi dirección guardada</button>
+          <div style="margin-top:20px;display:flex;flex-direction:column;gap:16px;">
+            <div>
+              <label class="env-wiz-label">¿Cuál es el código postal? <span class="env-wiz-help">(los 5 números de tu zona)</span></label>
+              <input id="env-wiz-origin-cp" type="text" maxlength="5" class="env-wiz-input" placeholder="Ej: 03100" oninput="envLookupCP('origin',this.value);document.getElementById('env-q-origin').value=this.value;envWizValidate(1);"/>
+              <p id="env-wiz-origin-cp-err" class="env-wiz-err"></p>
+            </div>
+            <div>
+              <label class="env-wiz-label">¿Tu nombre o el de tu negocio?</label>
+              <input id="env-wiz-origin-name" type="text" class="env-wiz-input" placeholder="Ej: Tienda de María" oninput="document.getElementById('env-q-origin-name').value=this.value;envWizValidate(1);"/>
+            </div>
+            <div>
+              <label class="env-wiz-label">¿Tu teléfono? <span class="env-wiz-help">(por si el mensajero necesita hablarte)</span></label>
+              <input id="env-wiz-origin-phone" type="tel" class="env-wiz-input" placeholder="Ej: 55 1234 5678" oninput="document.getElementById('env-q-origin-phone').value=this.value;envWizValidate(1);"/>
+            </div>
+          </div>
+          <button onclick="envWizNext()" id="env-wiz-next-1" class="env-wiz-next" disabled>Siguiente →</button>
+        </div>
+      </div>
+
+      <!-- PASO 2: ¿A dónde va? -->
+      <div id="env-wiz-step-2" class="env-wiz-step" style="display:none;">
+        <div class="stat-card" style="padding:32px;max-width:640px;margin:0 auto;">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+            <div class="env-wiz-step-num" style="background:#f97316;">2</div>
+            <div>
+              <h3 style="font-size:20px;font-weight:900;color:var(--text-primary);">¿A dónde va el paquete?</h3>
+              <p style="font-size:13px;color:var(--text-muted);">La dirección de tu cliente. La que te pasó para recibir su pedido</p>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <div>
+              <label class="env-wiz-label">Código postal del cliente</label>
+              <input id="env-wiz-dest-cp" type="text" maxlength="5" class="env-wiz-input" placeholder="Ej: 44100" oninput="envLookupCP('dest',this.value);document.getElementById('env-q-dest').value=this.value;envWizValidate(2);"/>
+              <p id="env-wiz-dest-cp-err" class="env-wiz-err"></p>
+              <p id="env-wiz-dest-cp-ok" style="font-size:11px;color:#22c55e;margin-top:4px;display:none;">✓ <span id="env-wiz-dest-cp-city"></span></p>
+            </div>
+            <div>
+              <label class="env-wiz-label">Nombre de quien recibe</label>
+              <input id="env-wiz-dest-name" type="text" class="env-wiz-input" placeholder="Ej: Juan Pérez" oninput="document.getElementById('env-q-dest-name').value=this.value;envWizValidate(2);"/>
+            </div>
+            <div>
+              <label class="env-wiz-label">Teléfono del cliente <span class="env-wiz-help">(para avisarle cuando llegue)</span></label>
+              <input id="env-wiz-dest-phone" type="tel" class="env-wiz-input" placeholder="Ej: 33 9876 5432" oninput="document.getElementById('env-q-dest-phone').value=this.value;envWizValidate(2);"/>
+            </div>
+            <div>
+              <label class="env-wiz-label">Calle y número <span class="env-wiz-help">(dirección exacta)</span></label>
+              <input id="env-wiz-dest-street" type="text" class="env-wiz-input" placeholder="Ej: Av. Juárez 123, Col. Centro" oninput="document.getElementById('env-q-dest-street').value=this.value;envWizValidate(2);"/>
+            </div>
+          </div>
+          <button onclick="envWizNext()" id="env-wiz-next-2" class="env-wiz-next" disabled>Siguiente →</button>
+        </div>
+      </div>
+
+      <!-- PASO 3: ¿Qué envías? -->
+      <div id="env-wiz-step-3" class="env-wiz-step" style="display:none;">
+        <div class="stat-card" style="padding:32px;max-width:720px;margin:0 auto;">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+            <div class="env-wiz-step-num" style="background:#8b5cf6;">3</div>
+            <div>
+              <h3 style="font-size:20px;font-weight:900;color:var(--text-primary);">¿Qué vas a enviar?</h3>
+              <p style="font-size:13px;color:var(--text-muted);">Escoge el tamaño de caja más parecido. Si te equivocas no pasa nada, puedes cambiarlo</p>
+            </div>
+          </div>
+          <div>
+            <label class="env-wiz-label">¿Qué tamaño tiene la caja?</label>
+            <div id="env-wiz-size-picker" class="env-wiz-size-grid"></div>
+          </div>
+          <div style="margin-top:20px;">
+            <label class="env-wiz-label">¿Cuánto pesa aproximadamente? <span class="env-wiz-help">(en kilos, no pasa nada si no sabes exacto)</span></label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button type="button" onclick="envWizPickWeight(0.5)" class="env-wiz-chip">0.5 kg <span class="env-wiz-chip-sub">Sobre/chicos</span></button>
+              <button type="button" onclick="envWizPickWeight(1)" class="env-wiz-chip">1 kg <span class="env-wiz-chip-sub">Libro, taza</span></button>
+              <button type="button" onclick="envWizPickWeight(2)" class="env-wiz-chip">2 kg <span class="env-wiz-chip-sub">Ropa, zapatos</span></button>
+              <button type="button" onclick="envWizPickWeight(5)" class="env-wiz-chip">5 kg <span class="env-wiz-chip-sub">Varios libros</span></button>
+              <button type="button" onclick="envWizPickWeight(10)" class="env-wiz-chip">10 kg <span class="env-wiz-chip-sub">Caja grande</span></button>
+              <div style="display:flex;align-items:center;gap:6px;background:var(--input-bg);padding:0 12px;border-radius:10px;border:1px solid var(--border);">
+                <span style="font-size:11px;color:var(--text-faint);">o escríbelo:</span>
+                <input id="env-wiz-weight-input" type="number" step="0.1" min="0.1" class="env-wiz-input" style="width:70px;border:none;background:transparent;padding:10px 0;" oninput="document.getElementById('env-q-peso').value=this.value;envCalcVolumetric();envWizValidate(3);"/>
+                <span style="font-size:11px;color:var(--text-faint);">kg</span>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:20px;">
+            <label class="env-wiz-label">¿Qué hay adentro? <span class="env-wiz-help">(descripción corta, ej: "Ropa" o "Libros")</span></label>
+            <input id="env-wiz-content" type="text" class="env-wiz-input" placeholder="Ej: Ropa artesanal" oninput="document.getElementById('env-q-contenido').value=this.value;envCheckRestrictions(this.value);envWizValidate(3);"/>
+            <div id="env-wiz-restrict-warn" style="display:none;margin-top:8px;padding:10px 12px;border-radius:10px;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.25);font-size:11px;color:#f97316;"></div>
+          </div>
+          <div style="margin-top:20px;">
+            <label class="env-wiz-label">¿Cuánto vale lo que envías? <span class="env-wiz-help">(en pesos, por si se pierde te devuelven esa cantidad)</span></label>
+            <input id="env-wiz-value" type="number" min="0" step="100" class="env-wiz-input" placeholder="Ej: 500" oninput="document.getElementById('env-q-valor').value=this.value;envWizValidate(3);"/>
+            <label style="display:flex;align-items:center;gap:8px;margin-top:10px;padding:12px;border-radius:10px;border:1px solid var(--border);cursor:pointer;">
+              <input type="checkbox" id="env-wiz-insurance" style="accent-color:#22c55e;"/>
+              <div>
+                <p style="font-size:13px;font-weight:700;color:var(--text-primary);">🛡️ Agregar protección contra pérdida/robo</p>
+                <p id="env-wiz-insurance-cost" style="font-size:11px;color:var(--text-muted);margin-top:2px;">Por un pequeño extra, te regresamos el valor si algo pasa</p>
+              </div>
+            </label>
+          </div>
+          <button onclick="envWizNext()" id="env-wiz-next-3" class="env-wiz-next" disabled>Siguiente →</button>
+        </div>
+      </div>
+
+      <!-- PASO 4: Cotización + selección -->
+      <div id="env-wiz-step-4" class="env-wiz-step" style="display:none;">
+        <div style="max-width:900px;margin:0 auto;">
+          <div style="text-align:center;margin-bottom:24px;">
+            <div class="env-wiz-step-num" style="background:#22c55e;margin:0 auto;">4</div>
+            <h3 style="font-size:20px;font-weight:900;color:var(--text-primary);margin-top:14px;">Escoge cómo quieres enviarlo</h3>
+            <p style="font-size:13px;color:var(--text-muted);margin-top:4px;">Comparamos precios de todas las paqueterías para que elijas la mejor</p>
+          </div>
+          <div id="env-wiz-quotes" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;"></div>
+          <div style="margin-top:24px;padding:20px;border-radius:14px;background:var(--input-bg);border:1px solid var(--border);display:flex;gap:18px;align-items:center;flex-wrap:wrap;">
+            <span style="font-size:32px;">💡</span>
+            <div style="flex:1;min-width:200px;">
+              <p style="font-size:13px;font-weight:700;color:var(--text-primary);">¿No sabes cuál elegir?</p>
+              <p style="font-size:12px;color:var(--text-muted);margin-top:3px;">Te recomendamos la opción <b style="color:#22c55e;">"Mejor balance"</b> — buen precio y llega a tiempo.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PASO 5: Confirmación -->
+      <div id="env-wiz-step-done" class="env-wiz-step" style="display:none;">
+        <div class="stat-card" style="padding:48px 32px;max-width:560px;margin:0 auto;text-align:center;">
+          <div style="font-size:80px;margin-bottom:16px;">🎉</div>
+          <h3 style="font-size:24px;font-weight:900;color:#22c55e;">¡Listo! Tu envío está programado</h3>
+          <p style="font-size:14px;color:var(--text-muted);margin-top:10px;max-width:400px;margin-left:auto;margin-right:auto;" id="env-wiz-done-msg">Te mandamos un correo con los detalles. El mensajero pasa mañana por el paquete.</p>
+          <div style="margin-top:24px;padding:18px;border-radius:12px;background:var(--input-bg);border:1px solid var(--border);text-align:left;">
+            <p style="font-size:11px;font-weight:800;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Número de guía</p>
+            <p id="env-wiz-done-guide" style="font-size:18px;font-weight:900;color:var(--accent);font-family:monospace;margin-top:4px;">--</p>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:24px;justify-content:center;flex-wrap:wrap;">
+            <button onclick="envWizPrintLabel()" class="env-wiz-next" style="flex:1;min-width:180px;margin:0;">🖨️ Imprimir guía</button>
+            <button onclick="envWizDone()" class="env-wiz-next" style="flex:1;min-width:180px;margin:0;background:#22c55e;">✅ Crear otro envío</button>
+          </div>
+          <p style="font-size:11px;color:var(--text-faint);margin-top:16px;">¿Necesitas hacer otra cosa? <a href="#" onclick="envWizDone();return false;" style="color:var(--accent);">Volver al inicio</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ MODO EXPERTO (todo lo anterior) ════════ -->
+  <div id="env-pro-mode" style="display:none;">
   <!-- Smart Recommendations -->
   <div id="env-smart-recs" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;"></div>
 
@@ -536,6 +786,25 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
     </div>
   </div>
 
+  </div><!-- /env-pro-mode -->
+
+  <!-- ════════ ONBOARDING TOUR ════════ -->
+  <div id="env-tour" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px;">
+    <div style="max-width:520px;background:var(--bg-sidebar,#0F172A);border-radius:20px;padding:36px;text-align:center;border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,0.5);position:relative;animation:envModalIn 0.3s ease-out;">
+      <button onclick="envTourSkip()" style="position:absolute;top:14px;right:14px;width:32px;height:32px;border:none;background:transparent;color:var(--text-muted);font-size:20px;cursor:pointer;">✕</button>
+      <div id="env-tour-emoji" style="font-size:72px;margin-bottom:14px;">👋</div>
+      <h3 id="env-tour-title" style="font-size:22px;font-weight:900;color:var(--text-primary);margin-bottom:8px;">¡Bienvenido!</h3>
+      <p id="env-tour-desc" style="font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:24px;max-width:420px;margin-left:auto;margin-right:auto;">Te vamos a explicar en 30 segundos cómo usar envíos de SkyBrand.</p>
+      <div style="display:flex;gap:6px;justify-content:center;margin-bottom:20px;">
+        <span class="env-tour-dot active"></span><span class="env-tour-dot"></span><span class="env-tour-dot"></span><span class="env-tour-dot"></span>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button onclick="envTourSkip()" class="env-btn-secondary" style="padding:10px 20px;">Saltar</button>
+        <button onclick="envTourNext()" id="env-tour-next-btn" class="env-wiz-next" style="margin:0;min-width:160px;">Siguiente →</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ══════════ MODALS NUEVOS ══════════ -->
 
   <!-- Modal: Mi empresa (emisor de envíos) -->
@@ -988,6 +1257,66 @@ Carlos López,64060,2.2,1340,Accesorios,81 5678 9012</pre>
   .env-margin-good { background:rgba(34,197,94,0.08) !important;border:1px solid rgba(34,197,94,0.2);color:#22c55e !important; }
   .env-margin-warn { background:rgba(249,115,22,0.08) !important;border:1px solid rgba(249,115,22,0.2);color:#f97316 !important; }
   .env-margin-bad { background:rgba(239,68,68,0.08) !important;border:1px solid rgba(239,68,68,0.2);color:#ef4444 !important; }
+
+  /* ════════ MODO FÁCIL / EXPERTO ════════ */
+  .env-mode-btn { padding:7px 14px;border:none;background:transparent;color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;border-radius:8px;transition:all 0.2s;display:flex;align-items:center;gap:4px; }
+  .env-mode-btn.active { background:var(--accent);color:#0a1520;box-shadow:0 2px 8px rgba(111,207,245,0.3); }
+
+  /* ════ Easy mode hero ════ */
+  .env-easy-cta-primary { padding:14px 28px;border-radius:12px;border:none;background:#fff;color:#084d6e;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.2);transition:transform 0.15s; }
+  .env-easy-cta-primary:hover { transform:translateY(-2px); }
+  .env-easy-cta-secondary { padding:14px 24px;border-radius:12px;border:2px solid rgba(255,255,255,0.3);background:transparent;color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s; }
+  .env-easy-cta-secondary:hover { background:rgba(255,255,255,0.1); }
+  .env-easy-card { padding:24px 20px;border-radius:14px;border:1px solid var(--border);background:var(--card-bg,var(--input-bg));cursor:pointer;transition:all 0.2s;text-align:left;display:flex;flex-direction:column;gap:4px; }
+  .env-easy-card:hover { border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,0.15); }
+  .env-easy-card-emoji { font-size:32px;margin-bottom:8px; }
+  .env-easy-card-title { font-size:14px;font-weight:900;color:var(--text-primary); }
+  .env-easy-card-desc { font-size:12px;color:var(--text-muted);line-height:1.4; }
+
+  /* ════ Wizard ════ */
+  .env-wiz-step-bar { flex:1;height:6px;border-radius:4px;background:var(--border);transition:background 0.3s; }
+  .env-wiz-step-bar.active { background:linear-gradient(90deg,var(--accent),#FF6B00); }
+  .env-wiz-step-bar.done { background:#22c55e; }
+  .env-wiz-step-num { width:44px;height:44px;border-radius:12px;background:var(--accent);color:#0a1520;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;flex-shrink:0; }
+  .env-wiz-label { font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:8px;display:block; }
+  .env-wiz-help { font-size:11px;color:var(--text-muted);font-weight:400;margin-left:4px; }
+  .env-wiz-input { width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:15px;outline:none;transition:border-color 0.2s; }
+  .env-wiz-input:focus { border-color:var(--accent);box-shadow:0 0 0 3px rgba(111,207,245,0.1); }
+  .env-wiz-err { font-size:11px;color:#ef4444;margin-top:4px;min-height:14px; }
+  .env-wiz-next { margin-top:24px;padding:16px 28px;border-radius:12px;border:none;background:var(--accent);color:#0a1520;font-size:15px;font-weight:900;cursor:pointer;width:100%;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:6px; }
+  .env-wiz-next:hover:not(:disabled) { transform:translateY(-1px);box-shadow:0 6px 16px rgba(111,207,245,0.3); }
+  .env-wiz-next:disabled { opacity:0.4;cursor:not-allowed; }
+  .env-wiz-hint-btn { padding:10px 16px;border-radius:10px;border:1px dashed var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s; }
+  .env-wiz-hint-btn:hover { border-color:var(--accent);color:var(--accent);border-style:solid; }
+  .env-wiz-size-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:10px; }
+  .env-wiz-size-card { padding:16px 12px;border-radius:12px;border:2px solid var(--border);background:var(--input-bg);cursor:pointer;text-align:center;transition:all 0.15s; }
+  .env-wiz-size-card:hover { border-color:var(--accent);transform:translateY(-2px); }
+  .env-wiz-size-card.selected { border-color:#FF6B00;background:rgba(255,107,0,0.08);box-shadow:0 0 0 3px rgba(255,107,0,0.15); }
+  .env-wiz-size-emoji { font-size:32px; }
+  .env-wiz-size-name { font-size:14px;font-weight:900;color:var(--text-primary);margin-top:6px; }
+  .env-wiz-size-hint { font-size:10px;color:var(--text-muted);margin-top:2px; }
+  .env-wiz-size-dims { font-size:9px;color:var(--text-faint);font-family:monospace;margin-top:2px; }
+  .env-wiz-chip { padding:12px 16px;border-radius:10px;border:2px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;transition:all 0.15s;min-width:90px; }
+  .env-wiz-chip:hover { border-color:var(--accent); }
+  .env-wiz-chip.selected { border-color:#FF6B00;background:rgba(255,107,0,0.08); }
+  .env-wiz-chip-sub { font-size:9px;color:var(--text-faint);font-weight:500;margin-top:2px; }
+
+  /* ════ Quote cards (Step 4) ════ */
+  .env-wiz-quote { padding:20px;border-radius:14px;border:2px solid var(--border);background:var(--card-bg,var(--input-bg));cursor:pointer;transition:all 0.2s;position:relative; }
+  .env-wiz-quote:hover { border-color:var(--accent);transform:translateY(-2px); }
+  .env-wiz-quote.recommended { border-color:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,0.15); }
+  .env-wiz-quote-badge { position:absolute;top:-10px;right:14px;padding:4px 10px;border-radius:8px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px; }
+  .env-wiz-quote-carrier { display:flex;align-items:center;gap:10px;margin-bottom:12px; }
+  .env-wiz-quote-price { font-size:28px;font-weight:900;color:var(--text-primary);line-height:1; }
+  .env-wiz-quote-time { font-size:12px;color:var(--text-muted);margin-top:4px; }
+  .env-wiz-quote-features { display:flex;flex-direction:column;gap:4px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--border); }
+  .env-wiz-quote-feat { font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:6px; }
+
+  /* ════ Tour dots ════ */
+  .env-tour-dot { width:8px;height:8px;border-radius:50%;background:var(--border);transition:all 0.3s; }
+  .env-tour-dot.active { background:var(--accent);width:24px;border-radius:4px; }
+
+  @media(max-width:600px){ .env-mode-switcher { flex-direction:column;align-items:flex-start !important; } }
 </style>
 
 <script is:inline>
@@ -1599,6 +1928,305 @@ function renderTariffMap(){
 }
 
 // ═══════ INIT ═══════
+// ═══════ MODO FÁCIL / EXPERTO ═══════
+function envSetMode(mode){
+  localStorage.setItem('env_mode',mode);
+  const easy=document.getElementById('env-easy-mode');
+  const pro=document.getElementById('env-pro-mode');
+  const btnEasy=document.getElementById('env-mode-easy');
+  const btnPro=document.getElementById('env-mode-pro');
+  const greeting=document.getElementById('env-mode-greeting');
+  const sub=document.getElementById('env-mode-sub');
+  if(mode==='easy'){
+    easy.style.display='block';pro.style.display='none';
+    btnEasy.classList.add('active');btnPro.classList.remove('active');
+    greeting.textContent='Hola, ¿qué quieres hacer hoy?';
+    sub.textContent='Cambia a modo experto cuando te sientas cómodo';
+    // Reset to home inside easy
+    document.getElementById('env-easy-home').style.display='block';
+    document.getElementById('env-wizard').style.display='none';
+    envUpdateEasyStats();
+  } else {
+    easy.style.display='none';pro.style.display='block';
+    btnPro.classList.add('active');btnEasy.classList.remove('active');
+    greeting.textContent='Modo experto · Todas las herramientas a tu alcance';
+    sub.textContent='¿Prefieres algo más simple? Cambia a modo fácil';
+  }
+}
+function envUpdateEasyStats(){
+  const delivered=demoShipments.filter(s=>s.status==='delivered').length;
+  const transit=demoShipments.filter(s=>s.status==='in_transit'||s.status==='out_for_delivery'||s.status==='picked_up').length;
+  const pending=demoShipments.filter(s=>s.status==='created').length;
+  const d=document.getElementById('env-easy-delivered');if(d)d.textContent=delivered;
+  const t=document.getElementById('env-easy-transit');if(t)t.textContent=transit;
+  const p=document.getElementById('env-easy-pending');if(p)p.textContent=pending;
+}
+
+// ═══════ WIZARD ═══════
+let envWizCurrentStep=1;
+let envWizSelectedSize='m';
+let envWizSelectedWeight=2;
+let envWizSelectedCarrier=null;
+let envWizSelectedPrice=0;
+
+function envWizStart(useExample){
+  document.getElementById('env-easy-home').style.display='none';
+  document.getElementById('env-wizard').style.display='block';
+  envWizGoTo(1);
+  if(useExample){
+    // Prefill all with example
+    document.getElementById('env-wiz-origin-cp').value='03100';
+    document.getElementById('env-wiz-origin-name').value='Tienda de ejemplo';
+    document.getElementById('env-wiz-origin-phone').value='55 1234 5678';
+    document.getElementById('env-q-origin').value='03100';
+    document.getElementById('env-q-origin-name').value='Tienda de ejemplo';
+    document.getElementById('env-q-origin-phone').value='55 1234 5678';
+    envLookupCP('origin','03100');
+    document.getElementById('env-wiz-dest-cp').value='44100';
+    document.getElementById('env-wiz-dest-name').value='María García';
+    document.getElementById('env-wiz-dest-phone').value='33 9876 5432';
+    document.getElementById('env-wiz-dest-street').value='Av. Juárez 123, Col. Centro';
+    document.getElementById('env-q-dest').value='44100';
+    document.getElementById('env-q-dest-name').value='María García';
+    document.getElementById('env-q-dest-phone').value='33 9876 5432';
+    document.getElementById('env-q-dest-street').value='Av. Juárez 123, Col. Centro';
+    envLookupCP('dest','44100');
+    envWizValidate(1);envWizValidate(2);
+    showToast('✨ Datos de ejemplo cargados. Continúa paso a paso para ver cómo funciona.');
+  }
+  envWizRenderSizes();
+}
+
+function envWizCancel(){
+  if(confirm('¿Seguro que quieres cancelar el envío? Se perderán los datos.')){
+    envWizDone();
+  }
+}
+
+function envWizDone(){
+  document.getElementById('env-wizard').style.display='none';
+  document.getElementById('env-easy-home').style.display='block';
+  envWizGoTo(1);
+  envWizCurrentStep=1;envWizSelectedCarrier=null;
+  envUpdateEasyStats();
+}
+
+function envWizGoTo(step){
+  envWizCurrentStep=step;
+  ['1','2','3','4','done'].forEach(s=>{
+    const el=document.getElementById('env-wiz-step-'+s);
+    if(el)el.style.display=(step===s||(s==='1'&&step===1)||(s==='2'&&step===2)||(s==='3'&&step===3)||(s==='4'&&step===4))?'block':'none';
+    if(el&&String(step)!==String(s)&&s!=='done')el.style.display='none';
+  });
+  // Hide all explicitly, show target
+  document.getElementById('env-wiz-step-1').style.display=step===1?'block':'none';
+  document.getElementById('env-wiz-step-2').style.display=step===2?'block':'none';
+  document.getElementById('env-wiz-step-3').style.display=step===3?'block':'none';
+  document.getElementById('env-wiz-step-4').style.display=step===4?'block':'none';
+  document.getElementById('env-wiz-step-done').style.display=step==='done'?'block':'none';
+  // Update progress bars
+  document.querySelectorAll('.env-wiz-step-bar').forEach((b,i)=>{
+    b.classList.remove('active','done');
+    const n=i+1;
+    if(n<step)b.classList.add('done');
+    else if(n===step)b.classList.add('active');
+  });
+  // Update title
+  const titles={1:'¿De dónde sale?',2:'¿A dónde va?',3:'¿Qué vas a enviar?',4:'Escoge paquetería',done:'¡Listo!'};
+  const t=document.getElementById('env-wiz-title');
+  const sub=document.getElementById('env-wiz-subtitle');
+  if(t)t.textContent='Crear envío · '+(titles[step]||'');
+  if(sub)sub.textContent=step==='done'?'Completado':`Paso ${step} de 4`;
+  // Back button
+  const back=document.getElementById('env-wiz-back');
+  if(back)back.style.visibility=(step===1||step==='done')?'hidden':'visible';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function envWizNext(){
+  if(envWizCurrentStep===3){
+    envWizGoTo(4);
+    envWizGenerateQuotes();
+  } else if(envWizCurrentStep<4){
+    envWizGoTo(envWizCurrentStep+1);
+  }
+}
+
+function envWizBack(){
+  if(envWizCurrentStep>1)envWizGoTo(envWizCurrentStep-1);
+}
+
+function envWizValidate(step){
+  let valid=false;
+  if(step===1){
+    const cp=document.getElementById('env-wiz-origin-cp').value.trim();
+    const name=document.getElementById('env-wiz-origin-name').value.trim();
+    const phone=document.getElementById('env-wiz-origin-phone').value.trim();
+    const errEl=document.getElementById('env-wiz-origin-cp-err');
+    if(cp.length>0 && cp.length<5){errEl.textContent='Faltan números. Los códigos postales tienen 5 dígitos.';}
+    else{errEl.textContent='';}
+    valid=cp.length===5 && name.length>=2 && phone.length>=8;
+  } else if(step===2){
+    const cp=document.getElementById('env-wiz-dest-cp').value.trim();
+    const name=document.getElementById('env-wiz-dest-name').value.trim();
+    const phone=document.getElementById('env-wiz-dest-phone').value.trim();
+    const street=document.getElementById('env-wiz-dest-street').value.trim();
+    const errEl=document.getElementById('env-wiz-dest-cp-err');
+    const okEl=document.getElementById('env-wiz-dest-cp-ok');
+    if(cp.length>0 && cp.length<5){errEl.textContent='Faltan números. Los códigos postales tienen 5 dígitos.';okEl.style.display='none';}
+    else{errEl.textContent='';}
+    if(cp.length===5){
+      const city=document.getElementById('env-q-dest-city')?.value||'';
+      if(city){document.getElementById('env-wiz-dest-cp-city').textContent=city;okEl.style.display='block';}
+    } else { okEl.style.display='none'; }
+    valid=cp.length===5 && name.length>=2 && phone.length>=8 && street.length>=5;
+  } else if(step===3){
+    const weight=parseFloat(document.getElementById('env-wiz-weight-input').value || document.getElementById('env-q-peso').value || 0);
+    const content=document.getElementById('env-wiz-content').value.trim();
+    valid=weight>0 && content.length>=2;
+  }
+  const btn=document.getElementById('env-wiz-next-'+step);
+  if(btn)btn.disabled=!valid;
+  return valid;
+}
+
+function envWizUseMyAddress(){
+  const cfg=envLoadConfig();
+  if(!cfg.name||!cfg.cp){showToast('Primero configura tu dirección en "Mi empresa"');envOpenEmisor();return;}
+  document.getElementById('env-wiz-origin-cp').value=cfg.cp;
+  document.getElementById('env-wiz-origin-name').value=cfg.name;
+  document.getElementById('env-wiz-origin-phone').value=cfg.phone||'';
+  document.getElementById('env-q-origin').value=cfg.cp;
+  document.getElementById('env-q-origin-name').value=cfg.name;
+  document.getElementById('env-q-origin-phone').value=cfg.phone||'';
+  envLookupCP('origin',cfg.cp);
+  envWizValidate(1);
+  showToast('✓ Dirección cargada');
+}
+
+function envWizRenderSizes(){
+  const el=document.getElementById('env-wiz-size-picker');if(!el)return;
+  const sizes=[
+    {id:'xs',emoji:'✉️',name:'Chiquito',hint:'Sobre, joyería',dims:[15,10,5]},
+    {id:'s',emoji:'📦',name:'Chico',hint:'Libro, taza',dims:[25,20,10]},
+    {id:'m',emoji:'📦',name:'Mediano',hint:'Ropa, zapatos',dims:[30,25,20]},
+    {id:'l',emoji:'📦',name:'Grande',hint:'Caja zapatos grande',dims:[40,30,25]},
+    {id:'xl',emoji:'📦',name:'Muy grande',hint:'Microondas',dims:[50,40,30]},
+    {id:'xxl',emoji:'📦',name:'Enorme',hint:'Mueble chico',dims:[60,50,40]},
+  ];
+  el.innerHTML=sizes.map(s=>`<div class="env-wiz-size-card${s.id===envWizSelectedSize?' selected':''}" onclick="envWizPickSize('${s.id}')">
+    <div class="env-wiz-size-emoji">${s.emoji}</div>
+    <div class="env-wiz-size-name">${s.name}</div>
+    <div class="env-wiz-size-hint">${s.hint}</div>
+    <div class="env-wiz-size-dims">${s.dims.join('×')} cm</div>
+  </div>`).join('');
+}
+
+function envWizPickSize(id){
+  envWizSelectedSize=id;
+  const map={xs:[15,10,5],s:[25,20,10],m:[30,25,20],l:[40,30,25],xl:[50,40,30],xxl:[60,50,40]};
+  const [L,W,H]=map[id];
+  document.getElementById('env-q-largo').value=L;
+  document.getElementById('env-q-ancho').value=W;
+  document.getElementById('env-q-alto').value=H;
+  envCalcVolumetric();envRenderBox3D();
+  envWizRenderSizes();
+  envWizValidate(3);
+}
+
+function envWizPickWeight(kg){
+  envWizSelectedWeight=kg;
+  document.getElementById('env-wiz-weight-input').value=kg;
+  document.getElementById('env-q-peso').value=kg;
+  envCalcVolumetric();
+  envWizValidate(3);
+}
+
+function envWizGenerateQuotes(){
+  const el=document.getElementById('env-wiz-quotes');if(!el)return;
+  const peso=parseFloat(document.getElementById('env-q-peso').value)||2;
+  // Generate quotes
+  const quotes=[
+    {carrier:'99 Minutos',color:'#FF6B00',icon:'⚡',price:Math.round(89+peso*10),days:'Mismo día',badge:null,features:['Súper rápido','Solo ciudades grandes','Rastreo en vivo']},
+    {carrier:'Estafeta',color:'#E30613',icon:'🚚',price:Math.round(125+peso*20),days:'2-4 días',badge:'💰 Más barato',features:['Precio económico','Toda la república','Rastreo básico']},
+    {carrier:'Redpack',color:'#EE2E24',icon:'📮',price:Math.round(155+peso*22),days:'2-4 días',badge:null,features:['Buen precio','Toda la república','Entrega firmada']},
+    {carrier:'FedEx',color:'#663399',icon:'✈️',price:Math.round(195+peso*28),days:'1-2 días',badge:'⭐ Mejor balance',features:['Rápido y confiable','Tracking detallado','Atención profesional'],recommended:true},
+    {carrier:'DHL',color:'#FFCC00',icon:'🚀',price:Math.round(210+peso*32),days:'1-2 días',badge:'🚀 Más rápido',features:['Entrega express','Seguro gratis hasta $10K','Mejor para frágiles']},
+  ];
+  el.innerHTML=quotes.map(q=>`
+    <div class="env-wiz-quote${q.recommended?' recommended':''}" onclick="envWizSelectQuote('${q.carrier}',${q.price})">
+      ${q.badge?`<div class="env-wiz-quote-badge" style="background:${q.recommended?'#22c55e':q.color};color:#fff;">${q.badge}</div>`:''}
+      <div class="env-wiz-quote-carrier">
+        <span style="font-size:28px;">${q.icon}</span>
+        <div>
+          <p style="font-size:14px;font-weight:900;color:var(--text-primary);">${q.carrier}</p>
+          <p style="font-size:11px;color:var(--text-muted);">${q.days}</p>
+        </div>
+      </div>
+      <p class="env-wiz-quote-price">$${q.price} <span style="font-size:12px;color:var(--text-faint);font-weight:600;">MXN</span></p>
+      <div class="env-wiz-quote-features">
+        ${q.features.map(f=>`<p class="env-wiz-quote-feat">✓ ${f}</p>`).join('')}
+      </div>
+      <button onclick="event.stopPropagation();envWizSelectQuote('${q.carrier}',${q.price})" class="env-wiz-next" style="margin-top:14px;background:${q.recommended?'#22c55e':'var(--accent)'};">Elegir esta →</button>
+    </div>
+  `).join('');
+}
+
+function envWizSelectQuote(carrier,price){
+  envWizSelectedCarrier=carrier;
+  envWizSelectedPrice=price;
+  // Create shipment in demoShipments
+  const destCp=document.getElementById('env-wiz-dest-cp').value;
+  const destName=document.getElementById('env-wiz-dest-name').value;
+  const destCity=document.getElementById('env-q-dest-city')?.value||'';
+  const originCp=document.getElementById('env-wiz-origin-cp').value;
+  const cShort=carrier.substring(0,3).toUpperCase().replace(' ','');
+  const tracking=cShort+Date.now().toString().slice(-9);
+  const peso=document.getElementById('env-q-peso').value||'2';
+  demoShipments.unshift({
+    id:Date.now(),tracking,carrier:carrier.replace('99 Minutos','99Min'),
+    client:destName,origin:`CDMX (${originCp})`,dest:`${destCity} (${destCp})`,
+    status:'created',cost:price,weight:peso+' kg',date:new Date().toISOString().substring(0,10),
+    events:[{date:new Date().toISOString().substring(0,16).replace('T',' '),text:'Guía creada',loc:destCity||'CDMX'}]
+  });
+  renderShipments();renderEnvStats();
+  document.getElementById('env-wiz-done-guide').textContent=tracking;
+  document.getElementById('env-wiz-done-msg').innerHTML=`Usamos <b>${carrier}</b> por <b>$${price} MXN</b>. Le avisamos a <b>${destName}</b> cuando el paquete vaya en camino. El mensajero pasa mañana por él 📅`;
+  envWizGoTo('done');
+}
+
+function envWizPrintLabel(){showToast('🖨️ Abriendo impresión de guía...');setTimeout(()=>window.print(),300);}
+
+// ═══════ ONBOARDING TOUR ═══════
+const ENV_TOUR_STEPS=[
+  {emoji:'👋',title:'¡Hola! Bienvenido a Envíos',desc:'Aquí vas a generar guías para mandar tus pedidos a tus clientes. Te vamos a explicar en 30 segundos cómo usarlo.'},
+  {emoji:'📦',title:'Crear un envío es fácil',desc:'Te hacemos 4 preguntas sencillas: de dónde sale, a dónde va, qué envías, y con quién. Nosotros hacemos lo complicado.'},
+  {emoji:'💰',title:'Comparamos precios por ti',desc:'Te mostramos precios de DHL, FedEx, Estafeta y más. Solo eliges la que más te convenga. Sin sorpresas.'},
+  {emoji:'🎯',title:'¿Listo para tu primer envío?',desc:'Puedes usar datos de ejemplo para probar, o empezar desde cero. Siempre puedes preguntarle a SkyBot si te atoras.'},
+];
+let envTourStep=0;
+function envStartTour(){
+  envTourStep=0;envRenderTour();
+  document.getElementById('env-tour').style.display='flex';
+}
+function envRenderTour(){
+  const s=ENV_TOUR_STEPS[envTourStep];
+  document.getElementById('env-tour-emoji').textContent=s.emoji;
+  document.getElementById('env-tour-title').textContent=s.title;
+  document.getElementById('env-tour-desc').textContent=s.desc;
+  document.querySelectorAll('.env-tour-dot').forEach((d,i)=>d.classList.toggle('active',i===envTourStep));
+  const btn=document.getElementById('env-tour-next-btn');
+  btn.textContent=envTourStep===ENV_TOUR_STEPS.length-1?'¡Empezar! 🚀':'Siguiente →';
+}
+function envTourNext(){
+  if(envTourStep<ENV_TOUR_STEPS.length-1){envTourStep++;envRenderTour();}
+  else{envTourSkip();envWizStart(true);}
+}
+function envTourSkip(){
+  document.getElementById('env-tour').style.display='none';
+  localStorage.setItem('env_tour_done','1');
+}
+
 // ═══════ BOX PRESETS ═══════
 const ENV_BOX_PRESETS=[
   {id:'xs',name:'XS',dims:[15,10,5],use:'Sobres, joyería',ico:'✉️'},
@@ -2378,6 +3006,12 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Auto-update label preview on any input in the quote panel
   const qPanel=document.getElementById('env-panel-quote');
   if(qPanel){qPanel.addEventListener('input',()=>{envRenderLabel();envRenderBoxPresets();});qPanel.addEventListener('change',()=>{envRenderLabel();envRenderBoxPresets();});}
+  // Set mode based on previous choice (default: easy for first-time)
+  const savedMode=localStorage.getItem('env_mode')||'easy';
+  envSetMode(savedMode);
+  envUpdateEasyStats();
+  // Show tour on first visit
+  if(!localStorage.getItem('env_tour_done')){setTimeout(()=>envStartTour(),600);}
 });
 ['env-modal-detail','env-modal-mass','env-modal-label','env-modal-notif'].forEach(id=>{document.getElementById(id)?.addEventListener('click',function(e){if(e.target===this)this.style.display='none';});});
 </script>
