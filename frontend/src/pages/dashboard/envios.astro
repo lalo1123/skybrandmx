@@ -35,13 +35,79 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
     </div>
   </div>
 
+  <!-- ══════════ Health Score + Insights IA ══════════ -->
+  <div style="display:grid;grid-template-columns:320px 1fr;gap:16px;margin-bottom:20px;" class="env-hero-grid">
+    <!-- Health Score Envíos -->
+    <div class="stat-card" style="padding:20px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;right:0;width:120px;height:120px;background:radial-gradient(circle at top right,rgba(34,197,94,0.18),transparent 70%);pointer-events:none;"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;position:relative;">
+        <p class="env-stat-label" style="margin:0;">Health score logístico <span class="env-tip" data-tip="Qué tan bien va tu operación de envíos: entregas a tiempo, devoluciones, costo vs industria, guías recolectadas.">?</span></p>
+        <span id="env-score-delta" style="font-size:11px;font-weight:800;"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:18px;position:relative;">
+        <div style="position:relative;width:120px;height:120px;flex-shrink:0;">
+          <svg width="120" height="120" viewBox="0 0 120 120" style="transform:rotate(-90deg);">
+            <circle cx="60" cy="60" r="50" fill="none" stroke="var(--border)" stroke-width="10"/>
+            <circle id="env-score-circle" cx="60" cy="60" r="50" fill="none" stroke="url(#envScoreGrad)" stroke-width="10" stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="314" style="transition:stroke-dashoffset 1.4s cubic-bezier(0.4,0,0.2,1);filter:drop-shadow(0 0 6px rgba(34,197,94,0.5));"/>
+            <defs>
+              <linearGradient id="envScoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ef4444"/>
+                <stop offset="50%" stop-color="#f97316"/>
+                <stop offset="100%" stop-color="#22c55e"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+            <p id="env-score-val" style="font-size:32px;font-weight:900;color:var(--text-primary);line-height:1;">--</p>
+            <p style="font-size:9px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">de 100</p>
+          </div>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <p id="env-score-label" style="font-size:16px;font-weight:900;color:#22c55e;line-height:1.1;">--</p>
+          <p id="env-score-desc" style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.4;"></p>
+          <div id="env-score-bars" style="display:flex;flex-direction:column;gap:4px;margin-top:10px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Insights IA de envíos -->
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#8b5cf6,#6fcff5);display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 10px rgba(139,92,246,0.4);">✨</div>
+          <p style="font-size:12px;font-weight:800;color:var(--text-primary);text-transform:uppercase;letter-spacing:0.5px;">Insights de SkyBot</p>
+          <span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(139,92,246,0.15);color:#a78bfa;text-transform:uppercase;letter-spacing:0.5px;">IA</span>
+        </div>
+        <button onclick="renderEnvInsights(true)" style="padding:4px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:10px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--text-muted)';this.style.borderColor='var(--border)'">
+          <svg style="width:10px;height:10px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Actualizar
+        </button>
+      </div>
+      <div id="env-insights" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;"></div>
+    </div>
+  </div>
+
   <!-- Tabs -->
   <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;overflow-x:auto;">
     <button id="env-tab-shipments" class="env-tab active" onclick="switchEnvTab('shipments')">Mis guías</button>
     <button id="env-tab-quote" class="env-tab" onclick="switchEnvTab('quote')">Cotizar envío</button>
     <button id="env-tab-tracking" class="env-tab" onclick="switchEnvTab('tracking')">Rastrear paquete</button>
     <button id="env-tab-returns" class="env-tab" onclick="switchEnvTab('returns')">Devoluciones</button>
+    <button id="env-tab-compare" class="env-tab" onclick="switchEnvTab('compare')">Comparador</button>
+    <button id="env-tab-rules" class="env-tab" onclick="switchEnvTab('rules')">Reglas auto</button>
+    <button id="env-tab-heatmap" class="env-tab" onclick="switchEnvTab('heatmap')">Mapa México</button>
     <button id="env-tab-analytics" class="env-tab" onclick="switchEnvTab('analytics')">Analítica</button>
+  </div>
+
+  <!-- Toolbar -->
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;">
+    <button onclick="envOpenEmisor()" class="env-toolbar-btn">🏢 Mi empresa</button>
+    <select id="env-tpl-select" onchange="if(this.value)envUseTemplate(this.value);this.value='';" class="env-toolbar-btn" style="cursor:pointer;"><option value="">📋 Plantillas</option></select>
+    <button onclick="envSaveTemplate()" class="env-toolbar-btn">💾 Guardar plantilla</button>
+    <button onclick="envOpenCSV()" class="env-toolbar-btn">📥 CSV masivo</button>
+    <button onclick="envOpenFragile()" class="env-toolbar-btn">🏷️ Etiqueta frágil</button>
+    <button onclick="envOpenPickup()" class="env-toolbar-btn">📅 Pickup</button>
+    <button onclick="envOpenSkybot()" class="env-toolbar-btn" style="background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(111,207,245,0.15));border-color:rgba(139,92,246,0.3);color:#a78bfa;">✨ SkyBot</button>
   </div>
 
   <!-- ══════════ Tab: Mis guías ══════════ -->
@@ -149,12 +215,28 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
               </div>
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-            <div><label class="env-label">Largo (cm)</label><input id="env-q-largo" type="number" value="30" class="env-input"/></div>
-            <div><label class="env-label">Ancho (cm)</label><input id="env-q-ancho" type="number" value="20" class="env-input"/></div>
-            <div><label class="env-label">Alto (cm)</label><input id="env-q-alto" type="number" value="15" class="env-input"/></div>
+          <!-- Caja 3D + inputs de dimensiones -->
+          <div style="display:grid;grid-template-columns:1fr 160px;gap:14px;align-items:stretch;">
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+                <div><label class="env-label">Largo (cm)</label><input id="env-q-largo" type="number" value="30" class="env-input" oninput="envCalcVolumetric();envRenderBox3D()"/></div>
+                <div><label class="env-label">Ancho (cm)</label><input id="env-q-ancho" type="number" value="20" class="env-input" oninput="envCalcVolumetric();envRenderBox3D()"/></div>
+                <div><label class="env-label">Alto (cm)</label><input id="env-q-alto" type="number" value="15" class="env-input" oninput="envCalcVolumetric();envRenderBox3D()"/></div>
+              </div>
+              <div><label class="env-label">Peso real (kg)</label><input id="env-q-peso" type="number" value="2" class="env-input" oninput="envCalcVolumetric()"/></div>
+            </div>
+            <div class="env-box3d-wrap" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;border:1px solid var(--border);border-radius:12px;background:linear-gradient(135deg,rgba(111,207,245,0.04),rgba(139,92,246,0.04));">
+              <div id="env-box3d" class="env-box3d">
+                <div class="env-box-face env-box-front"></div>
+                <div class="env-box-face env-box-back"></div>
+                <div class="env-box-face env-box-right"></div>
+                <div class="env-box-face env-box-left"></div>
+                <div class="env-box-face env-box-top"></div>
+                <div class="env-box-face env-box-bottom"></div>
+              </div>
+              <p id="env-box3d-size" style="font-size:9px;color:var(--text-faint);margin-top:6px;font-family:monospace;">30×20×15</p>
+            </div>
           </div>
-          <div><label class="env-label">Peso real (kg)</label><input id="env-q-peso" type="number" value="2" class="env-input" oninput="envCalcVolumetric()"/></div>
           <!-- Peso volumétrico auto-calc -->
           <div id="env-vol-weight" style="padding:10px 14px;border-radius:10px;background:rgba(234,179,8,0.06);border:1px solid rgba(234,179,8,0.15);display:flex;align-items:center;gap:10px;">
             <svg style="width:16px;height:16px;color:#eab308;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -163,7 +245,8 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
               <p style="font-size:10px;color:var(--text-faint);" id="env-vol-msg">Las paqueterías cobran el peso mayor entre real y volumétrico</p>
             </div>
           </div>
-          <div><label class="env-label">Contenido</label><input id="env-q-contenido" type="text" class="env-input" placeholder="Ej: Ropa, accesorios"/></div>
+          <div><label class="env-label">Contenido</label><input id="env-q-contenido" type="text" class="env-input" placeholder="Ej: Ropa, accesorios" oninput="envCheckRestrictions(this.value)"/></div>
+          <div id="env-restrictions-alert" style="display:none;padding:10px 14px;border-radius:10px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);"></div>
           <!-- Valor declarado + seguro -->
           <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;">
             <div><label class="env-label">Valor del paquete (MXN) <span class="env-tip" data-tip="Para calcular el costo del seguro de envío">?</span></label><input id="env-q-valor" type="number" value="0" class="env-input" placeholder="0"/></div>
@@ -235,6 +318,52 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
           </tr></thead>
           <tbody id="env-returns-tbody"></tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Comparador de paqueterías ══════════ -->
+  <div id="env-panel-compare" style="display:none;">
+    <div id="env-help-compare" class="env-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Compara lado a lado las paqueterías: precio, tiempo, cobertura, rating, servicios especiales.</p>
+      <button onclick="envDismissHelp('compare')" class="env-help-close">&times;</button>
+    </div>
+    <div class="stat-card" style="padding:0;overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;" id="env-compare-table"></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tab: Reglas automáticas ══════════ -->
+  <div id="env-panel-rules" style="display:none;">
+    <div id="env-help-rules" class="env-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Define reglas que aplican automáticamente al crear guías. Ej: si destino es CDMX y peso &lt;1kg → 99 Minutos.</p>
+      <button onclick="envDismissHelp('rules')" class="env-help-close">&times;</button>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+      <button onclick="envAddRule()" class="env-btn-primary" style="padding:10px 20px;">+ Nueva regla</button>
+    </div>
+    <div id="env-rules-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+  </div>
+
+  <!-- ══════════ Tab: Mapa México (Heatmap) ══════════ -->
+  <div id="env-panel-heatmap" style="display:none;">
+    <div id="env-help-heatmap" class="env-help-banner">
+      <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Dónde envías más. Identifica tus mejores mercados y rutas más frecuentes.</p>
+      <button onclick="envDismissHelp('heatmap')" class="env-help-close">&times;</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;" class="env-heat-grid">
+      <div class="stat-card" style="padding:0;position:relative;overflow:hidden;">
+        <div id="env-heatmap" style="height:560px;width:100%;background:#0a1520;"></div>
+      </div>
+      <div class="stat-card" style="padding:20px;">
+        <h4 style="font-size:13px;font-weight:900;color:var(--text-primary);margin-bottom:4px;">Top ciudades</h4>
+        <p style="font-size:11px;color:var(--text-faint);margin-bottom:14px;">Por cantidad de envíos</p>
+        <div id="env-heat-ranking" style="display:flex;flex-direction:column;gap:8px;max-height:480px;overflow-y:auto;"></div>
       </div>
     </div>
   </div>
@@ -352,6 +481,223 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
       <div id="env-detail-body"></div>
     </div>
   </div>
+
+  <!-- ══════════ MODALS NUEVOS ══════════ -->
+
+  <!-- Modal: Mi empresa (emisor de envíos) -->
+  <div id="env-modal-emisor" class="env-modal-new">
+    <div class="env-modal-backdrop" onclick="envCloseModal('emisor')"></div>
+    <div class="env-modal-box" style="max-width:560px;">
+      <div class="env-modal-header">
+        <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);">🏢 Mi empresa (Remitente por defecto)</h3>
+        <button onclick="envCloseModal('emisor')" class="env-modal-close-new">&times;</button>
+      </div>
+      <div style="padding:20px;">
+        <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:16px;">
+          <label style="cursor:pointer;flex-shrink:0;">
+            <input type="file" id="env-emisor-logo-input" accept="image/*" style="display:none;" onchange="envUploadLogo(event)"/>
+            <div id="env-emisor-logo-preview" style="width:84px;height:84px;border-radius:12px;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;background:var(--input-bg);overflow:hidden;">
+              <span style="font-size:10px;color:var(--text-faint);text-align:center;">+ Subir<br/>logo</span>
+            </div>
+          </label>
+          <div style="flex:1;">
+            <p style="font-size:12px;font-weight:700;color:var(--text-primary);">Logo de tu empresa</p>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.5;">Aparece en la guía impresa y en la página pública de tracking. PNG/JPG cuadrado, máx 2MB.</p>
+            <div style="display:flex;gap:6px;margin-top:8px;">
+              <button type="button" onclick="document.getElementById('env-emisor-logo-input').click()" class="env-btn-secondary" style="padding:6px 12px;font-size:11px;">Seleccionar</button>
+              <button type="button" onclick="envRemoveLogo()" class="env-btn-secondary" style="padding:6px 12px;font-size:11px;border-color:#ef4444;color:#ef4444;">Quitar</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr;gap:12px;">
+          <div><label class="env-label">Razón social / Nombre comercial *</label><input id="env-emisor-name" type="text" class="env-input" placeholder="Mi Tienda Online"/></div>
+          <div style="display:grid;grid-template-columns:120px 1fr;gap:10px;">
+            <div><label class="env-label">CP default</label><input id="env-emisor-cp" type="text" class="env-input" maxlength="5" placeholder="03100"/></div>
+            <div><label class="env-label">Calle y número</label><input id="env-emisor-street" type="text" class="env-input" placeholder="Av. Reforma 123"/></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div><label class="env-label">Ciudad</label><input id="env-emisor-city" type="text" class="env-input" placeholder="CDMX"/></div>
+            <div><label class="env-label">Estado</label><input id="env-emisor-state" type="text" class="env-input" placeholder="Ciudad de México"/></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div><label class="env-label">Teléfono</label><input id="env-emisor-phone" type="tel" class="env-input" placeholder="55 1234 5678"/></div>
+            <div><label class="env-label">Email</label><input id="env-emisor-email" type="email" class="env-input" placeholder="hola@miempresa.com"/></div>
+          </div>
+          <div><label class="env-label">Mensaje promocional (opcional)</label><input id="env-emisor-promo" type="text" class="env-input" placeholder="¡Gracias por tu compra! Cupón 10%: GRACIAS10"/><p style="font-size:10px;color:var(--text-faint);margin-top:4px;">Se imprime en la guía y aparece en la página pública de tracking.</p></div>
+        </div>
+      </div>
+      <div class="env-modal-footer">
+        <button onclick="envCloseModal('emisor')" class="env-btn-secondary" style="flex:1;">Cancelar</button>
+        <button onclick="envSaveEmisor()" class="env-btn-primary" style="flex:2;background:#22c55e;">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: CSV masivo -->
+  <div id="env-modal-csv-new" class="env-modal-new">
+    <div class="env-modal-backdrop" onclick="envCloseModal('csv-new')"></div>
+    <div class="env-modal-box" style="max-width:660px;">
+      <div class="env-modal-header">
+        <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);">📥 Generar guías desde CSV</h3>
+        <button onclick="envCloseModal('csv-new')" class="env-modal-close-new">&times;</button>
+      </div>
+      <div style="padding:20px;">
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Pega tu CSV o copia desde Shopify/WooCommerce. Formato esperado:</p>
+        <pre style="font-size:10px;background:var(--input-bg);padding:10px;border-radius:8px;color:var(--text-secondary);margin-bottom:12px;line-height:1.5;overflow-x:auto;">cliente,cp_destino,peso_kg,valor,contenido,telefono
+María García,44100,1.5,890,Blusa bordada,33 1234 5678
+Carlos López,64060,2.2,1340,Accesorios,81 5678 9012</pre>
+        <textarea id="env-csv-text" rows="8" class="env-input" style="font-family:monospace;font-size:12px;" placeholder="Pega aquí tu CSV..."></textarea>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button onclick="document.getElementById('env-csv-text').value='María García,44100,1.5,890,Blusa bordada,33 1234 5678\nCarlos López,64060,2.2,1340,Accesorios,81 5678 9012\nAna Martínez,77500,0.8,450,Libro,998 111 2233'" class="env-btn-secondary" style="padding:6px 12px;font-size:11px;">Usar ejemplo</button>
+        </div>
+      </div>
+      <div class="env-modal-footer">
+        <button onclick="envCloseModal('csv-new')" class="env-btn-secondary" style="flex:1;">Cancelar</button>
+        <button onclick="envImportCSV()" class="env-btn-primary" style="flex:2;">Generar guías</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Etiqueta frágil -->
+  <div id="env-modal-fragile" class="env-modal-new">
+    <div class="env-modal-backdrop" onclick="envCloseModal('fragile')"></div>
+    <div class="env-modal-box" style="max-width:540px;">
+      <div class="env-modal-header">
+        <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);">🏷️ Imprimir etiquetas de advertencia</h3>
+        <button onclick="envCloseModal('fragile')" class="env-modal-close-new">&times;</button>
+      </div>
+      <div style="padding:20px;">
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">Haz click en una para abrirla en ventana nueva lista para imprimir:</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <button onclick="envPrintLabel('fragil')" class="env-fragile-card">
+            <span style="font-size:40px;">🥂</span>
+            <p>FRÁGIL</p>
+          </button>
+          <button onclick="envPrintLabel('arriba')" class="env-fragile-card">
+            <span style="font-size:40px;">⬆️</span>
+            <p>ESTE LADO ARRIBA</p>
+          </button>
+          <button onclick="envPrintLabel('noapilar')" class="env-fragile-card">
+            <span style="font-size:40px;">🚫</span>
+            <p>NO APILAR</p>
+          </button>
+          <button onclick="envPrintLabel('perecedero')" class="env-fragile-card">
+            <span style="font-size:40px;">🧊</span>
+            <p>PERECEDERO</p>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Pickup scheduler -->
+  <div id="env-modal-pickup" class="env-modal-new">
+    <div class="env-modal-backdrop" onclick="envCloseModal('pickup')"></div>
+    <div class="env-modal-box" style="max-width:540px;">
+      <div class="env-modal-header">
+        <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);">📅 Programar recolección</h3>
+        <button onclick="envCloseModal('pickup')" class="env-modal-close-new">&times;</button>
+      </div>
+      <div style="padding:20px;">
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Selecciona el día para que el mensajero pase por tus paquetes:</p>
+        <div id="env-pickup-days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:16px;"></div>
+        <label class="env-label">Horario</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div><select id="env-pickup-from" class="env-input"></select></div>
+          <div><select id="env-pickup-to" class="env-input"></select></div>
+        </div>
+        <div style="margin-top:14px;">
+          <label class="env-label">Cantidad de paquetes</label>
+          <input id="env-pickup-qty" type="number" min="1" value="1" class="env-input"/>
+        </div>
+        <div style="margin-top:14px;">
+          <label class="env-label">Paquetería</label>
+          <select id="env-pickup-carrier" class="env-input">
+            <option>DHL</option><option>FedEx</option><option>Estafeta</option><option>Redpack</option><option>99 Minutos</option>
+          </select>
+        </div>
+      </div>
+      <div class="env-modal-footer">
+        <button onclick="envCloseModal('pickup')" class="env-btn-secondary" style="flex:1;">Cancelar</button>
+        <button onclick="envConfirmPickup()" class="env-btn-primary" style="flex:2;background:#22c55e;">Confirmar recolección</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: SkyBot envíos -->
+  <div id="env-modal-skybot" class="env-modal-new">
+    <div class="env-modal-backdrop" onclick="envCloseModal('skybot')"></div>
+    <div class="env-modal-box" style="max-width:560px;height:620px;display:flex;flex-direction:column;">
+      <div class="env-modal-header" style="background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(111,207,245,0.12));">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#8b5cf6,#6fcff5);display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 12px rgba(139,92,246,0.4);">✨</div>
+          <div>
+            <h3 style="font-size:15px;font-weight:900;color:var(--text-primary);">SkyBot Envíos</h3>
+            <p style="font-size:10px;color:var(--text-muted);">Asesor logístico · Siempre disponible</p>
+          </div>
+        </div>
+        <button onclick="envCloseModal('skybot')" class="env-modal-close-new">&times;</button>
+      </div>
+      <div id="env-skybot-body" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;"></div>
+      <div style="padding:14px 16px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;">
+        <button onclick="envSkybotReset()" class="env-btn-secondary" style="padding:8px 14px;font-size:11px;">↻ Reiniciar</button>
+        <p style="font-size:10px;color:var(--text-faint);">Recomendaciones basadas en tu historial de envíos</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Regla nueva -->
+  <div id="env-modal-rule" class="env-modal-new">
+    <div class="env-modal-backdrop" onclick="envCloseModal('rule')"></div>
+    <div class="env-modal-box" style="max-width:560px;">
+      <div class="env-modal-header">
+        <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);">⚡ Nueva regla automática</h3>
+        <button onclick="envCloseModal('rule')" class="env-modal-close-new">&times;</button>
+      </div>
+      <div style="padding:20px;">
+        <label class="env-label">Nombre de la regla</label>
+        <input id="env-rule-name" type="text" class="env-input" placeholder="Ej: Envíos express a CDMX"/>
+        <div style="margin-top:16px;padding:14px;border-radius:10px;background:var(--input-bg);border:1px solid var(--border);">
+          <p style="font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">SI se cumple...</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+            <select id="env-rule-field" class="env-input">
+              <option value="peso">Peso (kg)</option>
+              <option value="destino">Estado destino</option>
+              <option value="valor">Valor declarado</option>
+              <option value="contenido">Contenido</option>
+            </select>
+            <select id="env-rule-op" class="env-input">
+              <option value="<">menor que</option>
+              <option value="<=">menor o igual</option>
+              <option value=">">mayor que</option>
+              <option value=">=">mayor o igual</option>
+              <option value="=">igual a</option>
+              <option value="contains">contiene</option>
+            </select>
+            <input id="env-rule-val" type="text" class="env-input" placeholder="Valor"/>
+          </div>
+        </div>
+        <div style="margin-top:14px;padding:14px;border-radius:10px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);">
+          <p style="font-size:11px;font-weight:800;color:#22c55e;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">ENTONCES...</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <select id="env-rule-action" class="env-input">
+              <option value="carrier">Usar paquetería</option>
+              <option value="insurance">Agregar seguro</option>
+              <option value="priority">Prioridad express</option>
+              <option value="notify">Notificarme</option>
+            </select>
+            <select id="env-rule-action-val" class="env-input">
+              <option>DHL</option><option>FedEx</option><option>Estafeta</option><option>Redpack</option><option>99 Minutos</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="env-modal-footer">
+        <button onclick="envCloseModal('rule')" class="env-btn-secondary" style="flex:1;">Cancelar</button>
+        <button onclick="envSaveRule()" class="env-btn-primary" style="flex:2;">Crear regla</button>
+      </div>
+    </div>
+  </div>
 </DashboardLayout>
 
 <!-- Leaflet (mapa para tracking) -->
@@ -429,6 +775,82 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
   .leaflet-control-zoom a { background:rgba(15,27,39,0.9) !important;color:#fff !important;border:1px solid rgba(111,207,245,0.2) !important; }
   .leaflet-control-zoom a:hover { background:rgba(111,207,245,0.15) !important; }
   @keyframes envMapPulse { 0%{transform:scale(0.8);opacity:0.6;} 100%{transform:scale(2.4);opacity:0;} }
+
+  /* ════ HERO grid + Toolbar ════ */
+  .env-hero-grid { display:grid;grid-template-columns:320px 1fr;gap:16px; }
+  @media(max-width:900px){ .env-hero-grid{ grid-template-columns:1fr; } }
+  .env-toolbar-btn { padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all 0.15s; }
+  .env-toolbar-btn:hover { border-color:var(--accent);color:var(--accent); }
+  .env-score-bar { display:flex;align-items:center;gap:8px;font-size:10px;color:var(--text-muted);font-weight:600; }
+  .env-score-bar-track { flex:1;height:4px;background:var(--border);border-radius:4px;overflow:hidden; }
+  .env-score-bar-fill { height:100%;border-radius:4px;transition:width 1s ease-out; }
+
+  /* ════ Insight cards ════ */
+  .env-insight { padding:14px;border-radius:12px;border:1px solid var(--border);background:var(--card-bg,var(--input-bg));position:relative;overflow:hidden;animation:envFadeIn 0.4s ease-out; }
+  .env-insight::before { content:'';position:absolute;top:0;left:0;bottom:0;width:3px;background:var(--ins-color,#8b5cf6); }
+  .env-insight-icon { width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:8px; }
+  .env-insight-title { font-size:12px;font-weight:800;color:var(--text-primary);line-height:1.3; }
+  .env-insight-desc { font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.4; }
+  .env-insight-action { font-size:10px;font-weight:700;color:var(--ins-color,#8b5cf6);margin-top:8px;display:inline-flex;align-items:center;gap:4px;background:transparent;border:none;padding:0;cursor:pointer;text-transform:uppercase;letter-spacing:0.5px; }
+  @keyframes envFadeIn { from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:translateY(0);} }
+
+  /* ════ 3D Box ════ */
+  .env-box3d-wrap { perspective:600px; }
+  .env-box3d { position:relative;width:80px;height:60px;transform-style:preserve-3d;transform:rotateX(-20deg) rotateY(-30deg);animation:envBoxRot 12s linear infinite; }
+  @keyframes envBoxRot { 0%{transform:rotateX(-20deg) rotateY(-30deg);} 100%{transform:rotateX(-20deg) rotateY(330deg);} }
+  .env-box-face { position:absolute;border:1.5px solid #FF6B00;background:rgba(255,107,0,0.08); }
+  .env-box-front { width:var(--bx-w,80px);height:var(--bx-h,60px);transform:translateZ(calc(var(--bx-d,40px)/2)); }
+  .env-box-back { width:var(--bx-w,80px);height:var(--bx-h,60px);transform:translateZ(calc(-1*var(--bx-d,40px)/2)) rotateY(180deg); }
+  .env-box-right { width:var(--bx-d,40px);height:var(--bx-h,60px);left:var(--bx-w,80px);transform-origin:left;transform:rotateY(90deg) translateZ(calc(-1*var(--bx-d,40px)/2)); }
+  .env-box-left { width:var(--bx-d,40px);height:var(--bx-h,60px);transform-origin:right;transform:rotateY(-90deg) translateZ(calc(var(--bx-d,40px)/2)); }
+  .env-box-top { width:var(--bx-w,80px);height:var(--bx-d,40px);transform-origin:bottom;transform:rotateX(-90deg) translateZ(calc(var(--bx-h,60px) - var(--bx-d,40px)/2));background:rgba(255,107,0,0.15); }
+  .env-box-bottom { width:var(--bx-w,80px);height:var(--bx-d,40px);transform-origin:top;transform:rotateX(90deg) translateZ(calc(var(--bx-d,40px)/2));background:rgba(111,207,245,0.08); }
+
+  /* ════ Modales ════ */
+  .env-modal-new { display:none;position:fixed;inset:0;z-index:9998;align-items:center;justify-content:center; }
+  .env-modal-new.open { display:flex; }
+  .env-modal-box { position:relative;background:var(--card-bg,var(--bg-sidebar,#0F172A));border:1px solid var(--border);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.5);width:calc(100% - 40px);max-height:calc(100vh - 40px);overflow-y:auto;animation:envModalIn 0.2s ease-out; }
+  @keyframes envModalIn { from{opacity:0;transform:translateY(12px) scale(0.96);} to{opacity:1;transform:translateY(0) scale(1);} }
+  .env-modal-header { display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border); }
+  .env-modal-close-new { border:none;background:transparent;color:var(--text-muted);font-size:24px;line-height:1;cursor:pointer;padding:0 6px; }
+  .env-modal-close-new:hover { color:var(--text-primary); }
+  .env-modal-footer { display:flex;gap:10px;padding:16px 20px;border-top:1px solid var(--border); }
+
+  /* ════ SkyBot chat bubbles ════ */
+  .env-sb-msg { padding:10px 14px;border-radius:12px;font-size:12px;line-height:1.5;max-width:85%;animation:envFadeIn 0.3s ease-out; }
+  .env-sb-msg.bot { background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);color:var(--text-primary);align-self:flex-start;border-top-left-radius:4px; }
+  .env-sb-msg.user { background:var(--accent);color:#0a1520;align-self:flex-end;border-top-right-radius:4px;font-weight:600; }
+  .env-sb-option { display:block;width:100%;text-align:left;padding:10px 14px;margin-top:6px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-primary);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s; }
+  .env-sb-option:hover { border-color:#8b5cf6;background:rgba(139,92,246,0.08);transform:translateX(2px); }
+
+  /* ════ Fragile cards ════ */
+  .env-fragile-card { padding:24px;border-radius:12px;border:2px solid var(--border);background:var(--input-bg);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all 0.15s;color:var(--text-primary); }
+  .env-fragile-card:hover { border-color:#ef4444;transform:translateY(-2px); }
+  .env-fragile-card p { font-size:12px;font-weight:900;letter-spacing:0.5px;color:var(--text-primary); }
+
+  /* ════ Pickup calendar ════ */
+  .env-pickup-day { padding:10px 4px;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all 0.15s; }
+  .env-pickup-day:hover:not(.disabled) { border-color:var(--accent); }
+  .env-pickup-day.selected { border-color:#FF6B00;background:rgba(255,107,0,0.1); }
+  .env-pickup-day.disabled { opacity:0.3;cursor:not-allowed; }
+  .env-pickup-day-wd { font-size:9px;font-weight:700;color:var(--text-faint);text-transform:uppercase; }
+  .env-pickup-day-num { font-size:15px;font-weight:900;color:var(--text-primary); }
+
+  /* ════ Heatmap ════ */
+  .env-heat-grid { display:grid;grid-template-columns:1fr 320px;gap:16px; }
+  @media(max-width:900px){ .env-heat-grid{ grid-template-columns:1fr; } }
+  .env-heat-rank-item { padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);display:flex;align-items:center;gap:10px;transition:all 0.15s; }
+  .env-heat-rank-item:hover { border-color:var(--accent); }
+  .env-heat-rank-num { width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;background:var(--accent);color:#0a1520;flex-shrink:0; }
+
+  /* ════ Reglas ════ */
+  .env-rule-card { padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:var(--card-bg,var(--input-bg));display:flex;align-items:center;gap:14px; }
+  .env-rule-badge { padding:3px 8px;border-radius:5px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px; }
+
+  /* ════ Compare table ════ */
+  .env-cmp-td { padding:14px 12px;border-bottom:1px solid var(--border);vertical-align:middle; }
+  .env-cmp-th { padding:12px;text-align:left;font-size:11px;font-weight:800;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;background:var(--input-bg);border-bottom:2px solid var(--border); }
+  .env-cmp-rating { display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:800; }
 </style>
 
 <script is:inline>
@@ -469,7 +891,7 @@ const carrierColors = { DHL:'#FFCC00', FedEx:'#4D148C', Estafeta:'#ED1C24', Redp
 function envDismissHelp(t){document.getElementById('env-help-'+t).style.display='none';localStorage.setItem('env_help_'+t+'_dismissed','1');}
 function envToggleSection(id){const el=document.getElementById(id);el.style.display=el.style.display==='none'?'block':'none';}
 function showToast(msg){const ex=document.getElementById('env-toast');if(ex)ex.remove();const t=document.createElement('div');t.id='env-toast';t.textContent=msg;Object.assign(t.style,{position:'fixed',bottom:'24px',right:'24px',background:'#22c55e',color:'#fff',padding:'12px 24px',borderRadius:'10px',fontSize:'13px',fontWeight:'700',zIndex:'9999',animation:'fadeInUp 0.3s ease',boxShadow:'0 4px 20px rgba(0,0,0,0.3)'});document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(()=>t.remove(),300);},3000);}
-function switchEnvTab(tab){document.querySelectorAll('.env-tab').forEach(t=>t.classList.remove('active'));document.getElementById('env-tab-'+tab).classList.add('active');['shipments','quote','tracking','returns','analytics'].forEach(p=>document.getElementById('env-panel-'+p).style.display=p===tab?'':'none');}
+function switchEnvTab(tab){document.querySelectorAll('.env-tab').forEach(t=>t.classList.remove('active'));document.getElementById('env-tab-'+tab).classList.add('active');['shipments','quote','tracking','returns','compare','rules','heatmap','analytics'].forEach(p=>{const el=document.getElementById('env-panel-'+p);if(el)el.style.display=p===tab?'':'none';});if(tab==='compare')renderEnvCompare();if(tab==='rules')renderEnvRules();if(tab==='heatmap')setTimeout(renderEnvHeatmap,100);if(tab==='quote')setTimeout(envRenderBox3D,50);}
 
 // ═══════ STATS ═══════
 function renderEnvStats(){
@@ -1040,9 +1462,494 @@ function renderTariffMap(){
 }
 
 // ═══════ INIT ═══════
+// ═══════ HEALTH SCORE ENVÍOS ═══════
+function calcEnvHealthScore(){
+  const total=demoShipments.length||1;
+  const delivered=demoShipments.filter(s=>s.status==='delivered').length;
+  const returned=demoShipments.filter(s=>s.status==='returned').length;
+  const created=demoShipments.filter(s=>s.status==='created').length;
+  const ontime=25*(delivered/total); // max 25
+  const returnScore=Math.max(0,25-(returned/total*100)); // max 25
+  const costs=demoShipments.map(s=>s.cost);
+  const avg=costs.reduce((a,b)=>a+b,0)/costs.length;
+  const costScore=avg<200?25:avg<300?18:avg<400?12:6;
+  const pickupScore=created===0?25:created<=1?20:created<=3?12:5;
+  const score=Math.min(100,Math.round(ontime+returnScore+costScore+pickupScore));
+  return {score,parts:[
+    {label:'Entregas a tiempo',val:Math.round(ontime),max:25,color:'#22c55e'},
+    {label:'Tasa devolución',val:Math.round(returnScore),max:25,color:'#6fcff5'},
+    {label:'Costo vs industria',val:costScore,max:25,color:'#8b5cf6'},
+    {label:'Pickups pendientes',val:pickupScore,max:25,color:'#f97316'},
+  ]};
+}
+function renderEnvHealthScore(){
+  const {score,parts}=calcEnvHealthScore();
+  const circle=document.getElementById('env-score-circle');
+  const valEl=document.getElementById('env-score-val');
+  const lblEl=document.getElementById('env-score-label');
+  const descEl=document.getElementById('env-score-desc');
+  const deltaEl=document.getElementById('env-score-delta');
+  const barsEl=document.getElementById('env-score-bars');
+  if(!circle||!valEl)return;
+  const circumference=2*Math.PI*50;
+  circle.setAttribute('stroke-dasharray',circumference);
+  circle.setAttribute('stroke-dashoffset',circumference-(score/100)*circumference);
+  let cur=0;const step=Math.max(1,Math.ceil(score/40));
+  const anim=setInterval(()=>{cur+=step;if(cur>=score){cur=score;clearInterval(anim);}valEl.textContent=cur;},30);
+  const labels=score>=85?{l:'Excelente 🚀',c:'#22c55e',d:'Tu operación logística está top. Pocos otros envían tan bien.'}:score>=70?{l:'Bien ✓',c:'#6fcff5',d:'Buen rendimiento. Revisa los puntos bajos para subir.'}:score>=50?{l:'Atención',c:'#f97316',d:'Hay oportunidades claras de mejora en tu operación.'}:{l:'Urgente ⚠️',c:'#ef4444',d:'Revisa urgente las guías pendientes y devoluciones.'};
+  lblEl.textContent=labels.l;lblEl.style.color=labels.c;
+  descEl.textContent=labels.d;
+  deltaEl.innerHTML='<span style="color:#22c55e;">▲ +6</span>';
+  barsEl.innerHTML=parts.map(p=>{const pct=Math.round((p.val/p.max)*100);return `<div class="env-score-bar"><span style="width:110px;">${p.label}</span><div class="env-score-bar-track"><div class="env-score-bar-fill" style="width:${pct}%;background:${p.color};"></div></div><span style="width:28px;text-align:right;color:${p.color};font-weight:800;">${p.val}</span></div>`;}).join('');
+}
+
+// ═══════ INSIGHTS IA ENVÍOS ═══════
+function genEnvInsights(){
+  const insights=[];
+  const total=demoShipments.length;
+  const delivered=demoShipments.filter(s=>s.status==='delivered');
+  const returned=demoShipments.filter(s=>s.status==='returned');
+  const created=demoShipments.filter(s=>s.status==='created');
+  const transit=demoShipments.filter(s=>s.status==='in_transit');
+
+  // Comparativa paqueterías
+  const byCarrier={};
+  demoShipments.forEach(s=>{if(!byCarrier[s.carrier])byCarrier[s.carrier]={count:0,total:0};byCarrier[s.carrier].count++;byCarrier[s.carrier].total+=s.cost;});
+  const carriers=Object.entries(byCarrier).map(([c,v])=>({carrier:c,avg:v.total/v.count,count:v.count})).sort((a,b)=>a.avg-b.avg);
+  if(carriers.length>=2){
+    const cheap=carriers[0],expensive=carriers[carriers.length-1];
+    const pct=Math.round(((expensive.avg-cheap.avg)/cheap.avg)*100);
+    insights.push({icon:'💸',color:'#f97316',bg:'rgba(249,115,22,0.1)',title:`${expensive.carrier} cuesta ${pct}% más que ${cheap.carrier}`,desc:`Precio promedio: ${expensive.carrier} $${Math.round(expensive.avg)} vs ${cheap.carrier} $${Math.round(cheap.avg)}. Considera migrar rutas similares.`,action:'Ver comparador',fn:`switchEnvTab('compare')`});
+  }
+
+  // Guías sin recolectar
+  if(created.length>0){
+    insights.push({icon:'📦',color:'#ef4444',bg:'rgba(239,68,68,0.1)',title:`${created.length} guía${created.length>1?'s':''} sin recolectar`,desc:`Llevan días esperando al mensajero. Programa un pickup hoy para no retrasar entregas.`,action:'Programar pickup',fn:`envOpenPickup()`});
+  }
+
+  // Mejor destino
+  const byState={};
+  demoShipments.forEach(s=>{const city=(s.dest||'').split('(')[0].trim();byState[city]=(byState[city]||0)+1;});
+  const top=Object.entries(byState).sort((a,b)=>b[1]-a[1])[0];
+  if(top){
+    insights.push({icon:'📍',color:'#22c55e',bg:'rgba(34,197,94,0.1)',title:`${top[0]} es tu mercado #1`,desc:`${top[1]} envío${top[1]>1?'s':''} este periodo. Considera negociar tarifa especial con paquetería frecuente.`,action:'Ver mapa',fn:`switchEnvTab('heatmap')`});
+  }
+
+  // Rate de devolución
+  if(returned.length>=1){
+    const pct=Math.round((returned.length/total)*100);
+    insights.push({icon:'↩️',color:'#8b5cf6',bg:'rgba(139,92,246,0.1)',title:`Tasa de devolución: ${pct}%`,desc:`${returned.length} paquete${returned.length>1?'s':''} regresó. Revisa calidad de empaque, claridad en descripción o fraude.`,action:'Ver devoluciones',fn:`switchEnvTab('returns')`});
+  }
+  return insights.slice(0,4);
+}
+function renderEnvInsights(refresh){
+  const el=document.getElementById('env-insights');
+  if(!el)return;
+  if(refresh){
+    el.innerHTML='<div style="padding:20px;text-align:center;grid-column:1/-1;"><div style="display:inline-block;width:24px;height:24px;border:2px solid var(--border);border-top-color:#8b5cf6;border-radius:50%;animation:envSpin 0.7s linear infinite;"></div><p style="font-size:11px;color:var(--text-muted);margin-top:8px;">SkyBot analizando rutas...</p></div>';
+    setTimeout(()=>renderEnvInsights(false),900);return;
+  }
+  const items=genEnvInsights();
+  if(items.length===0){el.innerHTML='<div style="padding:20px;text-align:center;grid-column:1/-1;color:var(--text-muted);font-size:12px;">Todo bajo control ✨</div>';return;}
+  el.innerHTML=items.map(ins=>`<div class="env-insight" style="--ins-color:${ins.color};">
+    <div class="env-insight-icon" style="background:${ins.bg};">${ins.icon}</div>
+    <p class="env-insight-title">${ins.title}</p>
+    <p class="env-insight-desc">${ins.desc}</p>
+    <button class="env-insight-action" onclick="${ins.fn}">${ins.action} →</button>
+  </div>`).join('');
+}
+
+// ═══════ 3D BOX ═══════
+function envRenderBox3D(){
+  const box=document.getElementById('env-box3d');
+  const sizeEl=document.getElementById('env-box3d-size');
+  if(!box)return;
+  const l=parseFloat(document.getElementById('env-q-largo')?.value)||30;
+  const w=parseFloat(document.getElementById('env-q-ancho')?.value)||20;
+  const h=parseFloat(document.getElementById('env-q-alto')?.value)||15;
+  // Normalize to ~80px max
+  const max=Math.max(l,w,h);
+  const scale=80/max;
+  const bw=Math.round(l*scale);
+  const bh=Math.round(h*scale);
+  const bd=Math.round(w*scale);
+  box.style.setProperty('--bx-w',bw+'px');
+  box.style.setProperty('--bx-h',bh+'px');
+  box.style.setProperty('--bx-d',bd+'px');
+  box.style.width=bw+'px';box.style.height=bh+'px';
+  if(sizeEl)sizeEl.textContent=`${l}×${w}×${h} cm`;
+}
+
+// ═══════ RESTRICTIONS ═══════
+const ENV_RESTRICTIONS=[
+  {keyword:['bateria','batería','pila','pilas','celular','teléfono','laptop'],msg:'⚠️ Baterías de litio: Envío aéreo restringido. Usa terrestre o declara adecuadamente.'},
+  {keyword:['perfume','aerosol','spray','alcohol','desinfectante'],msg:'⚠️ Aerosoles/inflamables: No permitidos por aire. Solo envío terrestre.'},
+  {keyword:['liquido','líquido','botella','bebida','vino','cerveza'],msg:'⚠️ Líquidos: Empaque sellado y "este lado arriba". Algunas paqueterías restringen alcohol.'},
+  {keyword:['arma','municion','municiones','navaja','cuchillo'],msg:'🚫 No permitido: armas, municiones, objetos punzocortantes.'},
+  {keyword:['droga','marihuana','narcotico'],msg:'🚫 Prohibido por ley federal.'},
+  {keyword:['dinero','efectivo','billetes'],msg:'🚫 No se aceptan envíos de efectivo ni instrumentos negociables.'},
+  {keyword:['alimento','comida','fruta','verdura','carne'],msg:'⚠️ Perecederos: usa envío express y empaque térmico. Declara "Perecedero".'},
+  {keyword:['animal','mascota','perro','gato'],msg:'⚠️ Animales vivos: requieren permiso SAGARPA y transporte especial. Pocas paqueterías lo aceptan.'},
+];
+function envCheckRestrictions(text){
+  const alert=document.getElementById('env-restrictions-alert');
+  if(!alert)return;
+  const t=(text||'').toLowerCase();
+  if(!t.trim()){alert.style.display='none';return;}
+  const matches=ENV_RESTRICTIONS.filter(r=>r.keyword.some(k=>t.includes(k)));
+  if(matches.length===0){alert.style.display='none';return;}
+  alert.style.display='block';
+  alert.innerHTML=matches.map(m=>`<p style="margin:2px 0;">${m.msg}</p>`).join('');
+}
+
+// ═══════ MODAL HELPERS ═══════
+function envOpenModal(name){const el=document.getElementById('env-modal-'+name);if(el)el.classList.add('open');}
+function envCloseModal(name){const el=document.getElementById('env-modal-'+name);if(el)el.classList.remove('open');}
+
+// ═══════ EMISOR / LOGO ═══════
+function envLoadConfig(){try{return JSON.parse(localStorage.getItem('env_emisor_cfg'))||{name:'',cp:'',street:'',city:'',state:'',phone:'',email:'',promo:'',logo:''};}catch(e){return {name:'',cp:'',street:'',city:'',state:'',phone:'',email:'',promo:'',logo:''};}}
+function envSaveConfig(cfg){localStorage.setItem('env_emisor_cfg',JSON.stringify(cfg));}
+function envOpenEmisor(){
+  const cfg=envLoadConfig();
+  document.getElementById('env-emisor-name').value=cfg.name||'';
+  document.getElementById('env-emisor-cp').value=cfg.cp||'';
+  document.getElementById('env-emisor-street').value=cfg.street||'';
+  document.getElementById('env-emisor-city').value=cfg.city||'';
+  document.getElementById('env-emisor-state').value=cfg.state||'';
+  document.getElementById('env-emisor-phone').value=cfg.phone||'';
+  document.getElementById('env-emisor-email').value=cfg.email||'';
+  document.getElementById('env-emisor-promo').value=cfg.promo||'';
+  const prev=document.getElementById('env-emisor-logo-preview');
+  prev.innerHTML=cfg.logo?`<img src="${cfg.logo}" style="width:100%;height:100%;object-fit:cover;"/>`:'<span style="font-size:10px;color:var(--text-faint);text-align:center;">+ Subir<br/>logo</span>';
+  envOpenModal('emisor');
+}
+function envUploadLogo(event){
+  const file=event.target.files[0];if(!file)return;
+  if(file.size>2*1024*1024){alert('Imagen debe pesar menos de 2MB');return;}
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    const cfg=envLoadConfig();cfg.logo=e.target.result;envSaveConfig(cfg);
+    document.getElementById('env-emisor-logo-preview').innerHTML=`<img src="${cfg.logo}" style="width:100%;height:100%;object-fit:cover;"/>`;
+    showToast('Logo subido ✓');
+  };
+  reader.readAsDataURL(file);
+}
+function envRemoveLogo(){const cfg=envLoadConfig();cfg.logo='';envSaveConfig(cfg);document.getElementById('env-emisor-logo-preview').innerHTML='<span style="font-size:10px;color:var(--text-faint);text-align:center;">+ Subir<br/>logo</span>';}
+function envSaveEmisor(){
+  const cfg=envLoadConfig();
+  cfg.name=document.getElementById('env-emisor-name').value.trim();
+  cfg.cp=document.getElementById('env-emisor-cp').value.trim();
+  cfg.street=document.getElementById('env-emisor-street').value.trim();
+  cfg.city=document.getElementById('env-emisor-city').value.trim();
+  cfg.state=document.getElementById('env-emisor-state').value.trim();
+  cfg.phone=document.getElementById('env-emisor-phone').value.trim();
+  cfg.email=document.getElementById('env-emisor-email').value.trim();
+  cfg.promo=document.getElementById('env-emisor-promo').value.trim();
+  if(!cfg.name){alert('Escribe al menos el nombre');return;}
+  envSaveConfig(cfg);
+  envCloseModal('emisor');
+  showToast('Configuración guardada ✓');
+}
+
+// ═══════ PLANTILLAS ═══════
+function envGetTemplates(){try{return JSON.parse(localStorage.getItem('env_templates'))||[];}catch(e){return [];}}
+function envSaveTemplatesList(list){localStorage.setItem('env_templates',JSON.stringify(list));}
+function envSaveTemplate(){
+  const name=prompt('Nombre de la plantilla (ej: "Envío tipo hacia MTY"):');
+  if(!name)return;
+  const tpl={id:Date.now(),name,
+    origin:{cp:document.getElementById('env-q-origin')?.value,name:document.getElementById('env-q-origin-name')?.value,street:document.getElementById('env-q-origin-street')?.value,phone:document.getElementById('env-q-origin-phone')?.value},
+    dest:{cp:document.getElementById('env-q-dest')?.value,name:document.getElementById('env-q-dest-name')?.value,street:document.getElementById('env-q-dest-street')?.value,phone:document.getElementById('env-q-dest-phone')?.value,email:document.getElementById('env-q-dest-email')?.value},
+    box:{l:document.getElementById('env-q-largo')?.value,w:document.getElementById('env-q-ancho')?.value,h:document.getElementById('env-q-alto')?.value,peso:document.getElementById('env-q-peso')?.value},
+    content:document.getElementById('env-q-contenido')?.value,
+    value:document.getElementById('env-q-valor')?.value,
+  };
+  const list=envGetTemplates();list.unshift(tpl);envSaveTemplatesList(list);
+  envRenderTplDropdown();showToast('Plantilla "'+name+'" guardada ✓');
+}
+function envRenderTplDropdown(){
+  const sel=document.getElementById('env-tpl-select');if(!sel)return;
+  const list=envGetTemplates();
+  sel.innerHTML='<option value="">📋 Plantillas ('+list.length+')</option>'+list.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')+(list.length>0?'<option value="__clear">🗑️ Borrar todas</option>':'');
+}
+function envUseTemplate(id){
+  if(id==='__clear'){if(confirm('¿Borrar todas las plantillas?')){envSaveTemplatesList([]);envRenderTplDropdown();showToast('Plantillas eliminadas');}return;}
+  const tpl=envGetTemplates().find(t=>String(t.id)===String(id));
+  if(!tpl)return;
+  switchEnvTab('quote');
+  setTimeout(()=>{
+    if(tpl.origin){document.getElementById('env-q-origin').value=tpl.origin.cp||'';document.getElementById('env-q-origin').dispatchEvent(new Event('input'));if(document.getElementById('env-q-origin-name'))document.getElementById('env-q-origin-name').value=tpl.origin.name||'';if(document.getElementById('env-q-origin-street'))document.getElementById('env-q-origin-street').value=tpl.origin.street||'';if(document.getElementById('env-q-origin-phone'))document.getElementById('env-q-origin-phone').value=tpl.origin.phone||'';}
+    if(tpl.dest){document.getElementById('env-q-dest').value=tpl.dest.cp||'';document.getElementById('env-q-dest').dispatchEvent(new Event('input'));if(document.getElementById('env-q-dest-name'))document.getElementById('env-q-dest-name').value=tpl.dest.name||'';if(document.getElementById('env-q-dest-street'))document.getElementById('env-q-dest-street').value=tpl.dest.street||'';if(document.getElementById('env-q-dest-phone'))document.getElementById('env-q-dest-phone').value=tpl.dest.phone||'';if(document.getElementById('env-q-dest-email'))document.getElementById('env-q-dest-email').value=tpl.dest.email||'';}
+    if(tpl.box){document.getElementById('env-q-largo').value=tpl.box.l||30;document.getElementById('env-q-ancho').value=tpl.box.w||20;document.getElementById('env-q-alto').value=tpl.box.h||15;document.getElementById('env-q-peso').value=tpl.box.peso||1;}
+    if(tpl.content)document.getElementById('env-q-contenido').value=tpl.content;
+    if(tpl.value)document.getElementById('env-q-valor').value=tpl.value;
+    envCalcVolumetric();envRenderBox3D();
+    showToast('Plantilla "'+tpl.name+'" aplicada');
+  },200);
+}
+
+// ═══════ CSV MASIVO (nuevo) ═══════
+function envOpenCSV(){document.getElementById('env-csv-text').value='';envOpenModal('csv-new');}
+function envImportCSV(){
+  const text=document.getElementById('env-csv-text').value.trim();
+  if(!text){alert('Pega el CSV');return;}
+  const lines=text.split(/\r?\n/).filter(l=>l.trim());
+  const hasHeader=/cliente|nombre|destino/i.test(lines[0]);
+  const rows=hasHeader?lines.slice(1):lines;
+  let created=0;
+  rows.forEach(line=>{
+    const [client,cp,peso,valor,content,phone]=line.split(/[,;\t]/).map(p=>p.trim().replace(/^"|"$/g,''));
+    if(!client)return;
+    const carriers=['DHL','FedEx','Estafeta','Redpack','99Min'];
+    const carrier=carriers[Math.floor(Math.random()*carriers.length)];
+    const cost=Math.floor(150+Math.random()*200);
+    demoShipments.unshift({id:Date.now()+created,tracking:carrier.substring(0,3).toUpperCase()+Date.now().toString().slice(-9)+created,carrier,client,origin:'CDMX (03100)',dest:(cp||'')+'',status:'created',cost,weight:(peso||'1')+'kg',date:new Date().toISOString().substring(0,10),events:[{date:new Date().toISOString().substring(0,16).replace('T',' '),text:'Guía creada (import CSV)',loc:'CDMX'}]});
+    created++;
+  });
+  if(created===0){alert('No se pudo leer ninguna línea');return;}
+  envCloseModal('csv-new');
+  renderShipments();renderEnvStats();renderEnvInsights();
+  showToast(`${created} guía${created>1?'s':''} generada${created>1?'s':''} ✓`);
+}
+
+// ═══════ FRAGILE LABELS (PDF print) ═══════
+function envOpenFragile(){envOpenModal('fragile');}
+function envPrintLabel(type){
+  const labels={fragil:{emoji:'🥂',text:'FRÁGIL',sub:'MANIPULAR CON CUIDADO',color:'#ef4444'},arriba:{emoji:'⬆️',text:'ESTE LADO ARRIBA',sub:'NO VOLTEAR',color:'#f97316'},noapilar:{emoji:'🚫',text:'NO APILAR',sub:'MAX 1 NIVEL',color:'#8b5cf6'},perecedero:{emoji:'🧊',text:'PERECEDERO',sub:'MANTENER REFRIGERADO',color:'#6fcff5'}};
+  const L=labels[type];
+  const cfg=envLoadConfig();
+  const html=`<!DOCTYPE html><html><head><title>Etiqueta ${L.text}</title><style>@page{size:A5;margin:10mm}body{margin:0;font-family:Arial;}.label{border:6px solid ${L.color};padding:30px;text-align:center;page-break-after:always;min-height:90vh;display:flex;flex-direction:column;justify-content:center;}.emoji{font-size:120px;line-height:1;}.text{font-size:56px;font-weight:900;color:${L.color};margin:20px 0;letter-spacing:4px;}.sub{font-size:22px;font-weight:600;color:#333;}.brand{margin-top:40px;font-size:12px;color:#888;border-top:1px solid #ddd;padding-top:12px;}</style></head><body><div class="label"><div class="emoji">${L.emoji}</div><div class="text">${L.text}</div><div class="sub">${L.sub}</div><div class="brand">${cfg.name||'SkyBrandMX'} — Etiqueta de advertencia para transporte</div></div><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`;
+  const w=window.open('','_blank');w.document.write(html);w.document.close();
+}
+
+// ═══════ PICKUP SCHEDULER ═══════
+let envPickupSelected=null;
+function envOpenPickup(){
+  // Render next 14 days
+  const days=document.getElementById('env-pickup-days');
+  const wd=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const now=new Date();
+  let html='';
+  for(let i=0;i<14;i++){
+    const d=new Date(now);d.setDate(d.getDate()+i);
+    const isWeekend=d.getDay()===0;
+    html+=`<div class="env-pickup-day${isWeekend?' disabled':''}" ${isWeekend?'':`onclick="envPickupPick(${d.getTime()})"`} data-time="${d.getTime()}">
+      <span class="env-pickup-day-wd">${wd[d.getDay()]}</span>
+      <span class="env-pickup-day-num">${d.getDate()}</span>
+    </div>`;
+  }
+  days.innerHTML=html;
+  // Time pickers
+  const from=document.getElementById('env-pickup-from');
+  const to=document.getElementById('env-pickup-to');
+  from.innerHTML='';to.innerHTML='';
+  for(let h=9;h<=17;h++){from.innerHTML+=`<option value="${h}">${h}:00</option>`;to.innerHTML+=`<option value="${h+1}" ${h+1===18?'selected':''}>${h+1}:00</option>`;}
+  envPickupSelected=null;
+  envOpenModal('pickup');
+}
+function envPickupPick(time){
+  envPickupSelected=time;
+  document.querySelectorAll('#env-pickup-days .env-pickup-day').forEach(d=>d.classList.toggle('selected',parseInt(d.dataset.time)===time));
+}
+function envConfirmPickup(){
+  if(!envPickupSelected){alert('Selecciona un día');return;}
+  const d=new Date(envPickupSelected);
+  const from=document.getElementById('env-pickup-from').value;
+  const to=document.getElementById('env-pickup-to').value;
+  const qty=document.getElementById('env-pickup-qty').value;
+  const carrier=document.getElementById('env-pickup-carrier').value;
+  envCloseModal('pickup');
+  showToast(`Recolección ${carrier} el ${d.toLocaleDateString('es-MX',{day:'numeric',month:'short'})} ${from}:00-${to}:00 · ${qty} paquete${qty>1?'s':''}`);
+}
+
+// ═══════ SKYBOT ENVÍOS ═══════
+const ENV_SKYBOT_TREE={
+  root:{q:'¡Hola! Soy SkyBot Envíos. ¿Qué necesitas?',options:[
+    {txt:'¿Qué paquetería me conviene?',next:'carrier'},
+    {txt:'¿Cómo funciona Carta Porte?',next:'cartaporte'},
+    {txt:'¿Qué peso usan las paqueterías?',next:'peso'},
+    {txt:'Mi paquete va retrasado ¿qué hago?',next:'retraso'},
+    {txt:'¿Puedo enviar [X producto]?',next:'restriccion'},
+    {txt:'¿Cómo funciona el COD (contra entrega)?',next:'cod'},
+  ]},
+  carrier:{q:'Depende del caso:',options:[
+    {txt:'Express mismo día (CDMX)',answer:'👉 <b>99 Minutos</b> es el rey aquí. Entrega en 4-6 hrs dentro de CDMX. Iffer $89-150.'},
+    {txt:'Envío económico a toda la república',answer:'👉 <b>Estafeta terrestre</b> o <b>Redpack</b>. Tarda 3-5 días pero son 30-40% más baratas.'},
+    {txt:'Paquete frágil o de alto valor',answer:'👉 <b>DHL</b> y <b>FedEx</b>. Mejor manipulación y seguro hasta $10K sin costo extra en algunos casos.'},
+    {txt:'Envío internacional',answer:'👉 <b>DHL Express</b> o <b>FedEx International</b>. Cobertura global. Para paquetes chicos, <b>UPS</b> también funciona.'},
+    {txt:'COD (cobrar al cliente)',answer:'👉 <b>Estafeta</b> y <b>Paquete Express</b> manejan COD bien. DHL también pero con recargo.'},
+  ]},
+  cartaporte:{q:'Carta Porte 3.0 es obligatorio cuando:',options:[
+    {txt:'¿Cuándo debo usarla?',answer:'👉 Cuando transportas mercancía propia o ajena <b>por más de 30 km</b> en territorio nacional. Aplica aunque sea en tu propio camión.'},
+    {txt:'¿Qué datos necesito?',answer:'👉 Producto y cantidad, peso, CP origen, CP destino, y claves SAT del SCT para tipo de transporte. La paquetería la genera por ti si contratas con ellos.'},
+    {txt:'¿Hay multa si no la hago?',answer:'👉 De $18,000 a $90,000 MXN por cada omisión. Además pueden retener la mercancía. No te la brinques.'},
+    {txt:'¿Aplica a paquetería normal?',answer:'👉 No si es paquetería contratada (DHL, FedEx, etc.) — ellos se encargan. Aplica principalmente a flota propia.'},
+  ]},
+  peso:{q:'Las paqueterías cobran el <b>mayor</b> entre peso real y volumétrico:',options:[
+    {txt:'¿Cómo calculo el volumétrico?',answer:'👉 Fórmula: <b>(Largo × Ancho × Alto) ÷ 5000</b> = kg volumétrico. Ejemplo: caja 30×20×15 cm = 9000/5000 = 1.8 kg volumétrico.'},
+    {txt:'¿Y si mi paquete pesa menos?',answer:'👉 Te cobran el volumétrico. Por eso cajas grandes con poco peso salen caras. Usa cajas pequeñas y bien llenas.'},
+    {txt:'¿Cambia el divisor por paquetería?',answer:'👉 Sí en internacionales: algunos usan 5000, otros 6000. En México casi todas usan 5000. Verifica con tu paquetería.'},
+  ]},
+  retraso:{q:'Flujo recomendado:',options:[
+    {txt:'Aún está dentro del SLA prometido',answer:'👉 Espera. Los tiempos de paqueterías son "estimados": 1-2 días de diferencia es normal. Si pasa el SLA, contacta soporte.'},
+    {txt:'Ya pasó el tiempo prometido',answer:'👉 1) Revisa última actualización de tracking. 2) Llama a la paquetería con el número de guía. 3) Si son más de 72 hrs sin movimiento, reporta como "extravío". Casi siempre aparece.'},
+    {txt:'Dice "entregado" pero no llegó',answer:'👉 1) Pide "prueba de entrega" (foto o firma). 2) Revisa con vecinos. 3) Si no aparece en 48 hrs, abre reclamo formal. 4) Si había seguro, cobra.'},
+    {txt:'Cliente me está exigiendo',answer:'👉 Comunícate proactivamente: comparte el tracking, explica el estado, ofrece reembolso parcial del envío o crédito. La transparencia salva la reseña.'},
+  ]},
+  restriccion:{q:'Dime qué tipo de producto:',options:[
+    {txt:'Electrónicos con baterías (cel, laptop)',answer:'👉 Permitido pero <b>declara las baterías</b>. Aéreo internacional tiene restricciones más estrictas. Empaque antiestático.'},
+    {txt:'Líquidos / perfumes',answer:'👉 Permitido por tierra. Por aire algunas paqueterías restringen alcohol >70%. Sella con cinta + bolsa hermética + "este lado arriba".'},
+    {txt:'Alimentos perecederos',answer:'👉 Solo con express y empaque térmico con geles refrigerantes. No más de 24-48 hrs.'},
+    {txt:'Armas / municiones / drogas',answer:'🚫 Prohibido total. No intentes.'},
+    {txt:'Animales vivos',answer:'👉 Solo empresas especializadas. Requiere permiso SAGARPA. Costoso y complejo. Evalúa si es realmente necesario.'},
+  ]},
+  cod:{q:'COD = Cash on Delivery (contra entrega):',options:[
+    {txt:'¿Cómo funciona?',answer:'👉 La paquetería cobra al cliente al entregar y te deposita el dinero (menos comisión) en 3-7 días hábiles.'},
+    {txt:'¿Qué comisión cobran?',answer:'👉 Típicamente <b>3-5% del monto</b> + IVA. Estafeta: 3.5%. Paquete Express: 3%. DHL: 5% + $30 fijos.'},
+    {txt:'¿Es seguro?',answer:'👉 Sí pero con riesgos: (1) cliente rechaza = pagas envío de ida+vuelta; (2) paquete puede regresar. Recomendable solo para productos <$2,000 MXN.'},
+    {txt:'¿Me conviene?',answer:'👉 Si vendes productos <$1,500 y tu público es reticente a pagar por adelantado (primera compra, regiones específicas). Si ya eres marca conocida, mejor pagos electrónicos.'},
+  ]},
+};
+let envSkybotHistory=[];
+function envOpenSkybot(){envSkybotHistory=[];envSkybotRender('root');envOpenModal('skybot');}
+function envSkybotReset(){envSkybotHistory=[];document.getElementById('env-skybot-body').innerHTML='';envSkybotRender('root');}
+function envSkybotRender(key){
+  const body=document.getElementById('env-skybot-body');
+  const node=ENV_SKYBOT_TREE[key];
+  if(!node)return;
+  const botMsg=document.createElement('div');botMsg.className='env-sb-msg bot';botMsg.innerHTML=node.q;body.appendChild(botMsg);
+  const opts=document.createElement('div');opts.style.cssText='display:flex;flex-direction:column;gap:6px;align-self:flex-start;max-width:95%;';
+  node.options.forEach(opt=>{
+    const b=document.createElement('button');b.className='env-sb-option';b.textContent=opt.txt;
+    b.onclick=()=>{
+      const userMsg=document.createElement('div');userMsg.className='env-sb-msg user';userMsg.textContent=opt.txt;body.appendChild(userMsg);
+      opts.remove();
+      if(opt.answer){
+        const ans=document.createElement('div');ans.className='env-sb-msg bot';ans.innerHTML=opt.answer;body.appendChild(ans);
+        const followUp=document.createElement('div');followUp.style.cssText='display:flex;flex-direction:column;gap:6px;align-self:flex-start;';
+        const back=document.createElement('button');back.className='env-sb-option';back.textContent='↺ Otra pregunta';back.onclick=()=>{followUp.remove();envSkybotRender('root');};
+        followUp.appendChild(back);body.appendChild(followUp);
+      } else if(opt.next){envSkybotRender(opt.next);}
+      setTimeout(()=>{body.scrollTop=body.scrollHeight;},50);
+    };
+    opts.appendChild(b);
+  });
+  body.appendChild(opts);
+  setTimeout(()=>{body.scrollTop=body.scrollHeight;},50);
+}
+
+// ═══════ COMPARADOR PAQUETERÍAS ═══════
+const ENV_CARRIERS_DATA=[
+  {name:'DHL',color:'#FFCC00',avg:210,days:'1-2',coverage:'Todo México + Global',rating:4.6,cod:'Sí (5%)',pickup:'Sí',insurance:'Hasta $10K sin costo',strengths:'Express · Internacional',weaknesses:'Precio alto'},
+  {name:'FedEx',color:'#663399',avg:195,days:'1-2',coverage:'Todo México + 220 países',rating:4.5,cod:'Sí (4%)',pickup:'Sí',insurance:'$100 base + 0.75% declarado',strengths:'Tracking granular · Corporativo',weaknesses:'Caro para bulky'},
+  {name:'Estafeta',color:'#E30613',avg:145,days:'2-4',coverage:'Todo México',rating:4.2,cod:'Sí (3.5%)',pickup:'Sí',insurance:'Hasta $500 base',strengths:'Económico · Red amplia',weaknesses:'Trato paquete variable'},
+  {name:'Redpack',color:'#EE2E24',avg:155,days:'2-4',coverage:'Todo México',rating:4.0,cod:'Sí (4%)',pickup:'Sí',insurance:'Hasta $500 base',strengths:'Tarifas competitivas',weaknesses:'Cobertura rural limitada'},
+  {name:'99 Minutos',color:'#FF6B00',avg:95,days:'Same-day',coverage:'CDMX + 20 ciudades',rating:4.7,cod:'No',pickup:'Sí',insurance:'Hasta $1,500',strengths:'Same-day · App UX',weaknesses:'Solo ciudades grandes'},
+  {name:'Paquete Express',color:'#0056A0',avg:165,days:'2-3',coverage:'Todo México',rating:4.1,cod:'Sí (3%)',pickup:'Sí',insurance:'Incluido hasta $1K',strengths:'Buenas tarifas COD',weaknesses:'Red de sucursales menor'},
+];
+function renderEnvCompare(){
+  const t=document.getElementById('env-compare-table');
+  if(!t)return;
+  const ratingBadge=(r)=>{const c=r>=4.5?'#22c55e':r>=4?'#6fcff5':'#f97316';return `<span class="env-cmp-rating" style="background:${c}22;color:${c};">★ ${r}</span>`;};
+  t.innerHTML=`
+    <thead><tr>
+      <th class="env-cmp-th">Paquetería</th><th class="env-cmp-th">Precio prom.</th><th class="env-cmp-th">Días</th><th class="env-cmp-th">Cobertura</th><th class="env-cmp-th">Rating</th><th class="env-cmp-th">COD</th><th class="env-cmp-th">Seguro</th><th class="env-cmp-th">Fuerte en</th><th class="env-cmp-th">Débil en</th>
+    </tr></thead>
+    <tbody>
+      ${ENV_CARRIERS_DATA.map(c=>`<tr>
+        <td class="env-cmp-td"><div style="display:flex;align-items:center;gap:10px;"><div style="width:8px;height:32px;border-radius:2px;background:${c.color};"></div><span style="font-weight:900;color:var(--text-primary);font-size:13px;">${c.name}</span></div></td>
+        <td class="env-cmp-td" style="font-weight:800;color:var(--accent);">$${c.avg}</td>
+        <td class="env-cmp-td" style="font-size:11px;color:var(--text-muted);">${c.days}</td>
+        <td class="env-cmp-td" style="font-size:11px;color:var(--text-muted);">${c.coverage}</td>
+        <td class="env-cmp-td">${ratingBadge(c.rating)}</td>
+        <td class="env-cmp-td" style="font-size:11px;">${c.cod}</td>
+        <td class="env-cmp-td" style="font-size:11px;color:var(--text-muted);">${c.insurance}</td>
+        <td class="env-cmp-td" style="font-size:11px;color:#22c55e;">${c.strengths}</td>
+        <td class="env-cmp-td" style="font-size:11px;color:#f97316;">${c.weaknesses}</td>
+      </tr>`).join('')}
+    </tbody>`;
+}
+
+// ═══════ REGLAS AUTO ═══════
+function envGetRules(){try{return JSON.parse(localStorage.getItem('env_rules'))||[];}catch(e){return [];}}
+function envSaveRules(r){localStorage.setItem('env_rules',JSON.stringify(r));}
+function envAddRule(){document.getElementById('env-rule-name').value='';document.getElementById('env-rule-val').value='';envOpenModal('rule');}
+function envSaveRule(){
+  const name=document.getElementById('env-rule-name').value.trim();
+  if(!name){alert('Escribe un nombre');return;}
+  const rule={id:Date.now(),name,active:true,
+    field:document.getElementById('env-rule-field').value,
+    op:document.getElementById('env-rule-op').value,
+    val:document.getElementById('env-rule-val').value,
+    action:document.getElementById('env-rule-action').value,
+    actionVal:document.getElementById('env-rule-action-val').value};
+  const list=envGetRules();list.unshift(rule);envSaveRules(list);
+  envCloseModal('rule');renderEnvRules();showToast('Regla creada ✓');
+}
+function envToggleRule(id){const list=envGetRules();const r=list.find(x=>x.id===id);if(r){r.active=!r.active;envSaveRules(list);renderEnvRules();}}
+function envDeleteRule(id){if(!confirm('¿Borrar esta regla?'))return;envSaveRules(envGetRules().filter(r=>r.id!==id));renderEnvRules();showToast('Regla eliminada');}
+function renderEnvRules(){
+  const el=document.getElementById('env-rules-list');if(!el)return;
+  const rules=envGetRules();
+  if(rules.length===0){el.innerHTML='<div class="stat-card" style="padding:40px;text-align:center;"><p style="font-size:14px;color:var(--text-muted);">No hay reglas configuradas</p><p style="font-size:12px;color:var(--text-faint);margin-top:4px;">Crea reglas para automatizar la selección de paquetería, seguros, etc.</p></div>';return;}
+  el.innerHTML=rules.map(r=>`<div class="env-rule-card">
+    <div style="font-size:24px;">⚡</div>
+    <div style="flex:1;min-width:0;">
+      <p style="font-size:13px;font-weight:900;color:var(--text-primary);">${r.name}</p>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:3px;">SI <b style="color:var(--accent);">${r.field} ${r.op} ${r.val}</b> → ENTONCES <b style="color:#22c55e;">${r.action} = ${r.actionVal}</b></p>
+    </div>
+    <span class="env-rule-badge" style="background:${r.active?'rgba(34,197,94,0.15)':'rgba(100,116,139,0.15)'};color:${r.active?'#22c55e':'#64748b'};">${r.active?'Activa':'Inactiva'}</span>
+    <button onclick="envToggleRule(${r.id})" class="env-tbl-btn fac-tbl-btn" style="padding:5px 9px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;">${r.active?'Pausar':'Activar'}</button>
+    <button onclick="envDeleteRule(${r.id})" style="padding:5px 9px;border-radius:6px;border:1px solid var(--border);background:transparent;color:#ef4444;font-size:11px;cursor:pointer;">✕</button>
+  </div>`).join('');
+}
+
+// ═══════ HEATMAP MÉXICO ═══════
+let envHeatMap=null;
+function renderEnvHeatmap(){
+  if(typeof L==='undefined'){setTimeout(renderEnvHeatmap,500);return;}
+  const container=document.getElementById('env-heatmap');
+  if(!container)return;
+  if(envHeatMap){envHeatMap.remove();envHeatMap=null;}
+  const map=L.map('env-heatmap',{zoomControl:true}).setView([23.5,-102],5);
+  envHeatMap=map;
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',subdomains:'abcd',maxZoom:19}).addTo(map);
+  // Count shipments by city
+  const cityCounts={};
+  demoShipments.forEach(s=>{
+    const city=(s.dest||'').replace(/\(\d+\)/,'').trim();
+    const coords=envGeocode(city);
+    if(!coords)return;
+    const key=city+'|'+coords.join(',');
+    if(!cityCounts[key])cityCounts[key]={count:0,coords,city,totalCost:0};
+    cityCounts[key].count++;
+    cityCounts[key].totalCost+=s.cost;
+  });
+  const entries=Object.values(cityCounts);
+  const maxCount=Math.max(...entries.map(e=>e.count),1);
+  entries.forEach(e=>{
+    const radius=15+((e.count/maxCount)*30);
+    const color=e.count>=3?'#ef4444':e.count>=2?'#FF6B00':'#6fcff5';
+    L.circleMarker(e.coords,{radius,color:'#fff',weight:2,fillColor:color,fillOpacity:0.65}).addTo(map).bindPopup(`<b>${e.city}</b><br>${e.count} envío${e.count>1?'s':''}<br>Costo prom: $${Math.round(e.totalCost/e.count)}`);
+  });
+  // Ranking
+  const rank=entries.sort((a,b)=>b.count-a.count);
+  const rankEl=document.getElementById('env-heat-ranking');
+  if(rankEl){
+    rankEl.innerHTML=rank.map((e,i)=>`<div class="env-heat-rank-item">
+      <div class="env-heat-rank-num">${i+1}</div>
+      <div style="flex:1;min-width:0;">
+        <p style="font-size:12px;font-weight:800;color:var(--text-primary);">${e.city}</p>
+        <p style="font-size:10px;color:var(--text-muted);margin-top:2px;">${e.count} envío${e.count>1?'s':''} · $${Math.round(e.totalCost/e.count)} prom</p>
+      </div>
+    </div>`).join('');
+  }
+}
+
 document.addEventListener('DOMContentLoaded',()=>{
   ['shipments','quote','tracking','returns','analytics'].forEach(t=>{if(localStorage.getItem('env_help_'+t+'_dismissed')){const el=document.getElementById('env-help-'+t);if(el)el.style.display='none';}});
   renderEnvRecs();renderEnvStats();renderShipments();renderReturnLabels();renderEnvAnalytics();renderEnvAutopilot();renderTariffMap();envCalcVolumetric();
+  renderEnvHealthScore();renderEnvInsights();envRenderBox3D();envRenderTplDropdown();
 });
 ['env-modal-detail','env-modal-mass','env-modal-label','env-modal-notif'].forEach(id=>{document.getElementById(id)?.addEventListener('click',function(e){if(e.target===this)this.style.display='none';});});
 </script>
