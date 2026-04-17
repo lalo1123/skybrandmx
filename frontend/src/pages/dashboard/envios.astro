@@ -215,15 +215,20 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
               </div>
             </div>
           </div>
+          <!-- Selector de cajas predefinidas -->
+          <div>
+            <label class="env-label">Tamaño de caja rápido</label>
+            <div id="env-box-presets" style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px;"></div>
+          </div>
           <!-- Caja 3D + inputs de dimensiones -->
           <div style="display:grid;grid-template-columns:1fr 160px;gap:14px;align-items:stretch;">
             <div style="display:flex;flex-direction:column;gap:10px;">
               <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
-                <div><label class="env-label">Largo (cm)</label><input id="env-q-largo" type="number" value="30" class="env-input" oninput="envCalcVolumetric();envRenderBox3D()"/></div>
-                <div><label class="env-label">Ancho (cm)</label><input id="env-q-ancho" type="number" value="20" class="env-input" oninput="envCalcVolumetric();envRenderBox3D()"/></div>
-                <div><label class="env-label">Alto (cm)</label><input id="env-q-alto" type="number" value="15" class="env-input" oninput="envCalcVolumetric();envRenderBox3D()"/></div>
+                <div><label class="env-label">Largo (cm)</label><input id="env-q-largo" type="number" value="30" class="env-input" oninput="envCalcVolumetric();envRenderBox3D();envRenderLabel();"/></div>
+                <div><label class="env-label">Ancho (cm)</label><input id="env-q-ancho" type="number" value="20" class="env-input" oninput="envCalcVolumetric();envRenderBox3D();envRenderLabel();"/></div>
+                <div><label class="env-label">Alto (cm)</label><input id="env-q-alto" type="number" value="15" class="env-input" oninput="envCalcVolumetric();envRenderBox3D();envRenderLabel();"/></div>
               </div>
-              <div><label class="env-label">Peso real (kg)</label><input id="env-q-peso" type="number" value="2" class="env-input" oninput="envCalcVolumetric()"/></div>
+              <div><label class="env-label">Peso real (kg)</label><input id="env-q-peso" type="number" value="2" class="env-input" oninput="envCalcVolumetric();envRenderLabel();"/></div>
             </div>
             <div class="env-box3d-wrap" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;border:1px solid var(--border);border-radius:12px;background:linear-gradient(135deg,rgba(111,207,245,0.04),rgba(139,92,246,0.04));">
               <div id="env-box3d" class="env-box3d">
@@ -247,17 +252,46 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
           </div>
           <div><label class="env-label">Contenido</label><input id="env-q-contenido" type="text" class="env-input" placeholder="Ej: Ropa, accesorios" oninput="envCheckRestrictions(this.value)"/></div>
           <div id="env-restrictions-alert" style="display:none;padding:10px 14px;border-radius:10px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);"></div>
-          <!-- Valor declarado + seguro -->
-          <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;">
-            <div><label class="env-label">Valor del paquete (MXN) <span class="env-tip" data-tip="Para calcular el costo del seguro de envío">?</span></label><input id="env-q-valor" type="number" value="0" class="env-input" placeholder="0"/></div>
-            <label style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);cursor:pointer;white-space:nowrap;">
-              <input type="checkbox" id="env-q-seguro" style="accent-color:var(--accent);"/>
-              <span style="font-size:12px;font-weight:600;color:var(--text-secondary);">Agregar seguro</span>
-            </label>
+          <!-- Valor declarado + seguro (slider mejorado) -->
+          <div style="border:1px solid var(--border);border-radius:12px;padding:14px;">
+            <p style="font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">🛡️ Seguro declarado</p>
+            <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;">
+              <div><label class="env-label">Valor del paquete (MXN)</label><input id="env-q-valor" type="number" value="0" min="0" max="50000" step="100" class="env-input" oninput="envUpdateInsurance();envRenderLabel();"/></div>
+              <label style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);cursor:pointer;white-space:nowrap;">
+                <input type="checkbox" id="env-q-seguro" onchange="envUpdateInsurance();envRenderLabel();" style="accent-color:var(--accent);"/>
+                <span style="font-size:12px;font-weight:600;color:var(--text-secondary);">Agregar seguro</span>
+              </label>
+            </div>
+            <input id="env-q-valor-slider" type="range" min="0" max="20000" step="500" value="0" style="width:100%;margin-top:10px;accent-color:var(--accent);" oninput="document.getElementById('env-q-valor').value=this.value;envUpdateInsurance();envRenderLabel();"/>
+            <p id="env-insurance-cost" style="font-size:11px;color:var(--text-faint);margin-top:6px;">Sin seguro · cobertura base $500 MXN incluida</p>
+          </div>
+          <!-- Calculadora de margen real -->
+          <div style="border:1px solid var(--border);border-radius:12px;padding:14px;">
+            <p style="font-size:11px;font-weight:800;color:#22c55e;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">💰 Calculadora de margen</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div><label class="env-label">Precio de venta</label><input id="env-q-venta" type="number" value="0" class="env-input" placeholder="500" oninput="envUpdateMargin()"/></div>
+              <div><label class="env-label">Costo producto</label><input id="env-q-costo" type="number" value="0" class="env-input" placeholder="180" oninput="envUpdateMargin()"/></div>
+            </div>
+            <div id="env-margin-result" style="margin-top:10px;padding:10px 14px;border-radius:10px;background:var(--input-bg);font-size:11px;color:var(--text-faint);">Ingresa precio y costo para ver tu margen real</div>
+          </div>
+          <!-- Multi-paquete -->
+          <label style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:1px solid var(--border);cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+            <input type="checkbox" id="env-q-multi" onchange="document.getElementById('env-multi-wizard').style.display=this.checked?'block':'none';envRenderLabel();" style="accent-color:var(--accent);"/>
+            <div style="flex:1;">
+              <p style="font-size:12px;font-weight:700;color:var(--text-primary);">📦📦 Multi-paquete</p>
+              <p style="font-size:10px;color:var(--text-faint);">Un pedido en varias cajas (ej: 3 bultos a la misma dirección)</p>
+            </div>
+          </label>
+          <div id="env-multi-wizard" style="display:none;border:1px solid var(--border);border-radius:12px;padding:14px;">
+            <p style="font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Cajas adicionales</p>
+            <div id="env-multi-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+            <button onclick="envAddParcel()" style="margin-top:10px;padding:8px 12px;border-radius:8px;border:1px dashed var(--border);background:transparent;color:var(--text-muted);font-size:11px;font-weight:600;cursor:pointer;width:100%;">+ Agregar caja</button>
+            <p id="env-multi-total" style="font-size:11px;color:var(--text-muted);margin-top:10px;text-align:right;">Total: 1 caja · 2 kg</p>
           </div>
           <!-- Guías masivas link -->
-          <div style="display:flex;justify-content:flex-end;">
-            <button onclick="openEnvMassModal()" style="padding:6px 14px;border-radius:8px;border:1px dashed var(--border);background:transparent;color:var(--text-faint);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-faint)'">📄 Generar guías masivas (CSV)</button>
+          <div style="display:flex;justify-content:flex-end;gap:10px;">
+            <button onclick="envOpenNotifConfig()" style="padding:6px 14px;border-radius:8px;border:1px dashed var(--border);background:transparent;color:var(--text-faint);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-faint)'">🔔 Notificaciones</button>
+            <button onclick="openEnvMassModal()" style="padding:6px 14px;border-radius:8px;border:1px dashed var(--border);background:transparent;color:var(--text-faint);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-faint)'">📄 Guías masivas (CSV)</button>
           </div>
           <button onclick="envCotizar()" class="env-btn-primary" style="display:flex;align-items:center;justify-content:center;gap:6px;">
             <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
@@ -265,14 +299,20 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
           </button>
         </div>
       </div>
-      <!-- Right: Results -->
+      <!-- Right: Live label preview + results -->
       <div>
-        <div id="env-q-results">
-          <div class="stat-card animate-in" style="padding:40px;text-align:center;">
-            <svg style="width:48px;height:48px;color:var(--text-faintest);margin-bottom:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
-            <p style="font-size:14px;font-weight:700;color:var(--text-muted);">Ingresa los datos y cotiza</p>
-            <p style="font-size:12px;color:var(--text-faint);margin-top:4px;">Comparamos precios de 5+ paqueterías al instante</p>
+        <div style="position:sticky;top:20px;display:flex;flex-direction:column;gap:16px;">
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <p style="font-size:11px;font-weight:800;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:6px;">
+                <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;animation:envLblPulse 2s ease-in-out infinite;"></span>
+                Vista previa de guía
+              </p>
+              <span style="font-size:10px;color:var(--text-faint);">Se actualiza mientras escribes</span>
+            </div>
+            <div id="env-label-preview" class="env-lbl-paper"></div>
           </div>
+          <div id="env-q-results"></div>
         </div>
       </div>
     </div>
@@ -372,9 +412,23 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
   <div id="env-panel-analytics" style="display:none;">
     <div id="env-help-analytics" class="env-help-banner">
       <svg style="width:16px;height:16px;color:var(--accent);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Analiza tus costos de envío, tiempos de entrega y rendimiento por paquetería.</p>
+      <p style="flex:1;font-size:12px;color:var(--text-secondary);">Analiza tus costos de envío, tiempos de entrega, SLA y rendimiento por paquetería.</p>
       <button onclick="envDismissHelp('analytics')" class="env-help-close">&times;</button>
     </div>
+
+    <!-- SLA TRACKER -->
+    <div class="stat-card" style="padding:24px;margin-bottom:20px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;right:0;width:200px;height:200px;background:radial-gradient(circle at top right,rgba(34,197,94,0.15),transparent 70%);pointer-events:none;"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;position:relative;">
+        <div>
+          <h4 style="font-size:15px;font-weight:900;color:var(--text-primary);">📊 SLA Tracker — Cumplimiento de promesa de entrega</h4>
+          <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">Compara tiempo prometido vs tiempo real por paquetería (últimos 30 días)</p>
+        </div>
+        <span style="font-size:11px;color:var(--text-faint);padding:4px 10px;border:1px solid var(--border);border-radius:6px;">Últimos 30 días</span>
+      </div>
+      <div id="env-sla-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;"></div>
+    </div>
+
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:20px;">
       <div class="stat-card animate-in" style="padding:20px;">
         <h4 style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:16px;">Gasto por paquetería</h4>
@@ -698,6 +752,34 @@ Carlos López,64060,2.2,1340,Accesorios,81 5678 9012</pre>
       </div>
     </div>
   </div>
+
+  <!-- Modal: Notificaciones config -->
+  <div id="env-modal-notif" class="env-modal-new">
+    <div class="env-modal-backdrop" onclick="envCloseModal('notif')"></div>
+    <div class="env-modal-box" style="max-width:620px;">
+      <div class="env-modal-header">
+        <h3 style="font-size:16px;font-weight:900;color:var(--text-primary);">🔔 Notificaciones automáticas</h3>
+        <button onclick="envCloseModal('notif')" class="env-modal-close-new">&times;</button>
+      </div>
+      <div style="padding:20px;">
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Configura qué notificaciones enviar automáticamente cuando cambie el estado del paquete.</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div id="env-notif-events" style="display:flex;flex-direction:column;gap:8px;"></div>
+          <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px;">
+            <p style="font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Mensaje personalizado</p>
+            <label class="env-label">Para el cliente (WhatsApp/Email)</label>
+            <textarea id="env-notif-template-client" class="env-input" rows="3" style="font-family:inherit;"></textarea>
+            <p style="font-size:10px;color:var(--text-faint);margin-top:4px;">Variables disponibles: [cliente] [guia] [estado] [link] [paqueteria] [empresa]</p>
+          </div>
+          <div style="padding:10px 14px;border-radius:10px;background:var(--accent-bg);font-size:11px;color:var(--text-muted);">💡 Ahorras tiempo respondiendo dudas. Estudios muestran que clientes notificados proactivamente reducen tickets de soporte en 65%.</div>
+        </div>
+      </div>
+      <div class="env-modal-footer">
+        <button onclick="envCloseModal('notif')" class="env-btn-secondary" style="flex:1;">Cancelar</button>
+        <button onclick="envSaveNotifConfig()" class="env-btn-primary" style="flex:2;background:#22c55e;">Guardar</button>
+      </div>
+    </div>
+  </div>
 </DashboardLayout>
 
 <!-- Leaflet (mapa para tracking) -->
@@ -851,6 +933,61 @@ Carlos López,64060,2.2,1340,Accesorios,81 5678 9012</pre>
   .env-cmp-td { padding:14px 12px;border-bottom:1px solid var(--border);vertical-align:middle; }
   .env-cmp-th { padding:12px;text-align:left;font-size:11px;font-weight:800;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;background:var(--input-bg);border-bottom:2px solid var(--border); }
   .env-cmp-rating { display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:800; }
+
+  /* ════ Live label preview ════ */
+  @keyframes envLblPulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.4;transform:scale(1.3);} }
+  .env-lbl-paper { background:#fff;color:#111;border-radius:10px;padding:14px;box-shadow:0 8px 32px rgba(0,0,0,0.3),0 0 0 1px rgba(111,207,245,0.15);font-family:'SF Mono','Monaco','Courier New',monospace;font-size:10px;line-height:1.4;position:relative;overflow:hidden;min-height:440px;border:1px solid #e5e5e5; }
+  .env-lbl-paper::before { content:'';position:absolute;top:0;left:0;right:0;height:5px;background:repeating-linear-gradient(45deg,#FF6B00,#FF6B00 6px,#000 6px,#000 12px); }
+  .env-lbl-head { display:flex;align-items:center;justify-content:space-between;padding:10px 0 8px;border-bottom:2px solid #222;margin-top:6px; }
+  .env-lbl-brand { display:flex;align-items:center;gap:8px; }
+  .env-lbl-logo { width:36px;height:36px;border-radius:6px;background:linear-gradient(135deg,#084d6e,#2dd4bf);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:13px; }
+  .env-lbl-carrier { font-size:14px;font-weight:900;color:#111;letter-spacing:0.5px; }
+  .env-lbl-carrier-sub { font-size:8px;color:#666;letter-spacing:0.3px; }
+  .env-lbl-guide { text-align:right; }
+  .env-lbl-guide-label { font-size:7px;color:#888;text-transform:uppercase;letter-spacing:1px; }
+  .env-lbl-guide-num { font-size:14px;font-weight:900;color:#000;font-family:inherit; }
+  .env-lbl-section { padding:8px 0;border-bottom:1px dashed #ccc; }
+  .env-lbl-label { font-size:7px;color:#888;text-transform:uppercase;letter-spacing:0.8px;font-weight:700;margin-bottom:3px; }
+  .env-lbl-val { font-size:11px;color:#000;font-weight:700;word-break:break-word; }
+  .env-lbl-val.empty { color:#bbb;font-style:italic;font-weight:400; }
+  .env-lbl-barcode { height:48px;background:repeating-linear-gradient(90deg,#000 0,#000 2px,transparent 2px,transparent 4px,#000 4px,#000 5px,transparent 5px,transparent 7px,#000 7px,#000 11px,transparent 11px,transparent 13px,#000 13px,#000 14px,transparent 14px,transparent 17px);margin:6px 0; }
+  .env-lbl-barcode-num { text-align:center;font-size:10px;letter-spacing:3px;font-family:monospace;color:#000;font-weight:700; }
+  .env-lbl-big-cp { font-size:52px;font-weight:900;color:#FF6B00;text-align:center;letter-spacing:3px;line-height:1;margin:6px 0;font-family:inherit;text-shadow:2px 2px 0 rgba(255,107,0,0.15); }
+  .env-lbl-qr { width:70px;height:70px;background:repeating-conic-gradient(#000 0% 25%,#fff 0% 50%) 50%/15px 15px;border:2px solid #000; }
+  .env-lbl-badge { display:inline-block;padding:2px 8px;border-radius:3px;font-size:9px;font-weight:900;background:#000;color:#fff;letter-spacing:1px;margin-top:4px; }
+  .env-lbl-cod-stamp { position:absolute;top:60px;right:14px;border:3px solid #ef4444;color:#ef4444;padding:6px 14px;font-size:11px;font-weight:900;transform:rotate(8deg);letter-spacing:1px;background:rgba(239,68,68,0.08); }
+  .env-lbl-fragil-stamp { position:absolute;top:100px;left:14px;border:3px solid #eab308;color:#eab308;padding:4px 10px;font-size:10px;font-weight:900;transform:rotate(-6deg);letter-spacing:1px;background:rgba(234,179,8,0.1); }
+
+  /* ════ Box presets ════ */
+  .env-box-preset { padding:10px 6px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);cursor:pointer;transition:all 0.15s;text-align:center; }
+  .env-box-preset:hover { border-color:var(--accent);transform:translateY(-1px); }
+  .env-box-preset.active { border-color:#FF6B00;background:rgba(255,107,0,0.08); }
+  .env-box-preset-name { font-size:11px;font-weight:900;color:var(--text-primary); }
+  .env-box-preset-dims { font-size:9px;color:var(--text-faint);font-family:monospace;margin-top:2px; }
+  .env-box-preset-use { font-size:8px;color:var(--text-muted);margin-top:2px; }
+
+  /* ════ SLA cards ════ */
+  .env-sla-card { padding:14px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg); }
+  .env-sla-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:10px; }
+  .env-sla-carrier-name { font-size:12px;font-weight:900;color:var(--text-primary); }
+  .env-sla-pct { font-size:22px;font-weight:900;line-height:1; }
+  .env-sla-pct-label { font-size:9px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px; }
+  .env-sla-bar { height:8px;background:var(--border);border-radius:8px;overflow:hidden;margin-top:8px; }
+  .env-sla-bar-fill { height:100%;border-radius:8px;transition:width 1s ease-out; }
+  .env-sla-detail { display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-top:6px; }
+
+  /* ════ Notif toggle row ════ */
+  .env-notif-row { display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;border:1px solid var(--border); }
+  .env-notif-row:hover { border-color:var(--accent); }
+
+  /* ════ Multi parcel row ════ */
+  .env-multi-row { display:grid;grid-template-columns:repeat(4,1fr) auto;gap:6px;align-items:center;padding:8px;border-radius:8px;background:var(--input-bg);border:1px solid var(--border); }
+  .env-multi-row input { width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-sidebar,#0a1520);color:var(--text-primary);font-size:11px; }
+
+  /* ════ Margin result ════ */
+  .env-margin-good { background:rgba(34,197,94,0.08) !important;border:1px solid rgba(34,197,94,0.2);color:#22c55e !important; }
+  .env-margin-warn { background:rgba(249,115,22,0.08) !important;border:1px solid rgba(249,115,22,0.2);color:#f97316 !important; }
+  .env-margin-bad { background:rgba(239,68,68,0.08) !important;border:1px solid rgba(239,68,68,0.2);color:#ef4444 !important; }
 </style>
 
 <script is:inline>
@@ -891,7 +1028,7 @@ const carrierColors = { DHL:'#FFCC00', FedEx:'#4D148C', Estafeta:'#ED1C24', Redp
 function envDismissHelp(t){document.getElementById('env-help-'+t).style.display='none';localStorage.setItem('env_help_'+t+'_dismissed','1');}
 function envToggleSection(id){const el=document.getElementById(id);el.style.display=el.style.display==='none'?'block':'none';}
 function showToast(msg){const ex=document.getElementById('env-toast');if(ex)ex.remove();const t=document.createElement('div');t.id='env-toast';t.textContent=msg;Object.assign(t.style,{position:'fixed',bottom:'24px',right:'24px',background:'#22c55e',color:'#fff',padding:'12px 24px',borderRadius:'10px',fontSize:'13px',fontWeight:'700',zIndex:'9999',animation:'fadeInUp 0.3s ease',boxShadow:'0 4px 20px rgba(0,0,0,0.3)'});document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(()=>t.remove(),300);},3000);}
-function switchEnvTab(tab){document.querySelectorAll('.env-tab').forEach(t=>t.classList.remove('active'));document.getElementById('env-tab-'+tab).classList.add('active');['shipments','quote','tracking','returns','compare','rules','heatmap','analytics'].forEach(p=>{const el=document.getElementById('env-panel-'+p);if(el)el.style.display=p===tab?'':'none';});if(tab==='compare')renderEnvCompare();if(tab==='rules')renderEnvRules();if(tab==='heatmap')setTimeout(renderEnvHeatmap,100);if(tab==='quote')setTimeout(envRenderBox3D,50);}
+function switchEnvTab(tab){document.querySelectorAll('.env-tab').forEach(t=>t.classList.remove('active'));document.getElementById('env-tab-'+tab).classList.add('active');['shipments','quote','tracking','returns','compare','rules','heatmap','analytics'].forEach(p=>{const el=document.getElementById('env-panel-'+p);if(el)el.style.display=p===tab?'':'none';});if(tab==='compare')renderEnvCompare();if(tab==='rules')renderEnvRules();if(tab==='heatmap')setTimeout(renderEnvHeatmap,100);if(tab==='quote')setTimeout(()=>{envRenderBox3D();envRenderBoxPresets();envRenderLabel();},50);if(tab==='analytics')setTimeout(renderEnvSLA,100);}
 
 // ═══════ STATS ═══════
 function renderEnvStats(){
@@ -1462,6 +1599,294 @@ function renderTariffMap(){
 }
 
 // ═══════ INIT ═══════
+// ═══════ BOX PRESETS ═══════
+const ENV_BOX_PRESETS=[
+  {id:'xs',name:'XS',dims:[15,10,5],use:'Sobres, joyería',ico:'✉️'},
+  {id:'s',name:'S',dims:[25,20,10],use:'Libros, accesorios',ico:'📦'},
+  {id:'m',name:'M',dims:[30,25,20],use:'Ropa, electrónicos',ico:'📦'},
+  {id:'l',name:'L',dims:[40,30,25],use:'Calzado, artículos medianos',ico:'📦'},
+  {id:'xl',name:'XL',dims:[50,40,30],use:'Cajas grandes',ico:'📦'},
+  {id:'xxl',name:'XXL',dims:[60,50,40],use:'Muebles pequeños',ico:'📦'},
+];
+function envRenderBoxPresets(){
+  const el=document.getElementById('env-box-presets');if(!el)return;
+  const l=parseFloat(document.getElementById('env-q-largo')?.value)||30;
+  const w=parseFloat(document.getElementById('env-q-ancho')?.value)||20;
+  const h=parseFloat(document.getElementById('env-q-alto')?.value)||15;
+  el.innerHTML=ENV_BOX_PRESETS.map(p=>{
+    const active=p.dims[0]===l&&p.dims[1]===w&&p.dims[2]===h;
+    return `<div class="env-box-preset${active?' active':''}" onclick="envPickBox('${p.id}')">
+      <div style="font-size:18px;">${p.ico}</div>
+      <p class="env-box-preset-name">${p.name}</p>
+      <p class="env-box-preset-dims">${p.dims.join('×')}</p>
+      <p class="env-box-preset-use">${p.use}</p>
+    </div>`;
+  }).join('');
+}
+function envPickBox(id){
+  const p=ENV_BOX_PRESETS.find(x=>x.id===id);if(!p)return;
+  document.getElementById('env-q-largo').value=p.dims[0];
+  document.getElementById('env-q-ancho').value=p.dims[1];
+  document.getElementById('env-q-alto').value=p.dims[2];
+  envCalcVolumetric();envRenderBox3D();envRenderBoxPresets();envRenderLabel();
+}
+
+// ═══════ LIVE LABEL PREVIEW ═══════
+function envRenderLabel(){
+  const el=document.getElementById('env-label-preview');if(!el)return;
+  const cfg=envLoadConfig();
+  const originCp=document.getElementById('env-q-origin')?.value || '—';
+  const originCity=document.getElementById('env-q-origin-city')?.value || cfg.city || '—';
+  const originState=document.getElementById('env-q-origin-state')?.value || cfg.state || '—';
+  const originStreet=document.getElementById('env-q-origin-street')?.value || cfg.street || '';
+  const originName=document.getElementById('env-q-origin-name')?.value || cfg.name || 'SkyBrandMX';
+  const originPhone=document.getElementById('env-q-origin-phone')?.value || cfg.phone || '';
+  const destCp=document.getElementById('env-q-dest')?.value || '';
+  const destCity=document.getElementById('env-q-dest-city')?.value || '';
+  const destState=document.getElementById('env-q-dest-state')?.value || '';
+  const destStreet=document.getElementById('env-q-dest-street')?.value || '';
+  const destName=document.getElementById('env-q-dest-name')?.value || '';
+  const destPhone=document.getElementById('env-q-dest-phone')?.value || '';
+  const peso=document.getElementById('env-q-peso')?.value || '2';
+  const l=document.getElementById('env-q-largo')?.value || '30';
+  const w=document.getElementById('env-q-ancho')?.value || '20';
+  const h=document.getElementById('env-q-alto')?.value || '15';
+  const content=document.getElementById('env-q-contenido')?.value || '';
+  const valor=parseFloat(document.getElementById('env-q-valor')?.value || 0);
+  const seguro=document.getElementById('env-q-seguro')?.checked;
+  const multi=document.getElementById('env-q-multi')?.checked;
+  const guide='PREV'+Date.now().toString().slice(-8);
+  // Content restriction flags
+  const t=content.toLowerCase();
+  const fragil=/cristal|vidrio|frágil|fragil|porcelana|botella|vino/.test(t);
+  const cod=valor>0 && document.getElementById('env-q-seguro')?.checked; // placeholder: could be tied to COD
+  el.innerHTML=`
+    <div class="env-lbl-head">
+      <div class="env-lbl-brand">
+        ${cfg.logo?`<img src="${cfg.logo}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;"/>`:`<div class="env-lbl-logo">${(cfg.name||'SB').substring(0,2).toUpperCase()}</div>`}
+        <div>
+          <div class="env-lbl-carrier">${(cfg.name||'SKYBRANDMX').toUpperCase()}</div>
+          <div class="env-lbl-carrier-sub">Guía generada por SkyBrandMX</div>
+        </div>
+      </div>
+      <div class="env-lbl-guide">
+        <div class="env-lbl-guide-label">Número de guía</div>
+        <div class="env-lbl-guide-num">${guide}</div>
+      </div>
+    </div>
+
+    ${fragil?'<div class="env-lbl-fragil-stamp">🥂 FRÁGIL</div>':''}
+
+    <!-- Remitente -->
+    <div class="env-lbl-section">
+      <div class="env-lbl-label">Remitente (DE)</div>
+      <div class="env-lbl-val ${!originName?'empty':''}">${originName||'—'}</div>
+      <div style="font-size:10px;color:#444;margin-top:2px;">${originStreet||'(dirección)'}, ${originCity}, ${originState}</div>
+      <div style="font-size:10px;color:#444;">CP ${originCp} · ${originPhone||'—'}</div>
+    </div>
+
+    <!-- Destinatario -->
+    <div class="env-lbl-section" style="background:#fff8f0;border-radius:6px;padding:10px 8px;margin:6px -4px;">
+      <div class="env-lbl-label" style="color:#FF6B00;">📦 Destinatario (PARA)</div>
+      <div class="env-lbl-val ${!destName?'empty':''}" style="font-size:13px;">${destName||'(nombre del cliente)'}</div>
+      <div style="font-size:10px;color:#333;margin-top:2px;">${destStreet||'(calle y número)'}</div>
+      <div style="font-size:10px;color:#333;">${destCity||'(ciudad)'}, ${destState||'(estado)'}</div>
+      <div style="font-size:10px;color:#333;">Tel: ${destPhone||'—'}</div>
+      <div class="env-lbl-big-cp">${destCp||'—'}</div>
+    </div>
+
+    <!-- Detalles del paquete -->
+    <div class="env-lbl-section" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+      <div>
+        <div class="env-lbl-label">Peso</div>
+        <div class="env-lbl-val">${peso} kg</div>
+      </div>
+      <div>
+        <div class="env-lbl-label">Dimensiones</div>
+        <div class="env-lbl-val">${l}×${w}×${h}</div>
+      </div>
+      <div>
+        <div class="env-lbl-label">Paquetes</div>
+        <div class="env-lbl-val">${multi?(1+envGetParcels().length):1}</div>
+      </div>
+    </div>
+
+    <!-- Contenido -->
+    <div class="env-lbl-section">
+      <div class="env-lbl-label">Contenido</div>
+      <div class="env-lbl-val ${!content?'empty':''}">${content||'(no especificado)'}</div>
+      ${valor>0?`<div style="font-size:10px;color:#666;margin-top:2px;">Valor declarado: $${valor.toLocaleString()} MXN ${seguro?'· <span style="color:#22c55e;font-weight:800;">✓ ASEGURADO</span>':''}</div>`:''}
+    </div>
+
+    <!-- Barcode + QR -->
+    <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px dashed #ccc;">
+      <div>
+        <div class="env-lbl-barcode"></div>
+        <div class="env-lbl-barcode-num">${guide}</div>
+      </div>
+      <div class="env-lbl-qr"></div>
+    </div>
+
+    ${cfg.promo?`<div style="margin-top:10px;padding:8px;border-radius:6px;background:linear-gradient(135deg,#FF6B00,#f97316);color:#fff;font-size:10px;font-weight:700;text-align:center;">💝 ${cfg.promo}</div>`:''}
+    <div style="text-align:center;font-size:8px;color:#888;margin-top:8px;">Escanea el QR o visita skybrandmx.com/track/${guide}</div>
+  `;
+}
+
+// ═══════ INSURANCE CALC ═══════
+function envUpdateInsurance(){
+  const valor=parseFloat(document.getElementById('env-q-valor')?.value || 0);
+  const chk=document.getElementById('env-q-seguro')?.checked;
+  const slider=document.getElementById('env-q-valor-slider');
+  if(slider)slider.value=Math.min(valor,20000);
+  const el=document.getElementById('env-insurance-cost');
+  if(!el)return;
+  if(!chk){el.innerHTML='Sin seguro · cobertura base $500 MXN incluida';el.style.color='var(--text-faint)';return;}
+  const pct=valor>10000?0.02:0.025;
+  const cost=Math.max(25,valor*pct);
+  el.innerHTML=`✓ Con seguro contra robo/pérdida: <b style="color:#22c55e;">$${cost.toFixed(2)} MXN</b> (${(pct*100).toFixed(1)}% del valor)`;
+  el.style.color='var(--text-secondary)';
+}
+
+// ═══════ MARGIN CALC ═══════
+function envUpdateMargin(){
+  const venta=parseFloat(document.getElementById('env-q-venta')?.value || 0);
+  const costo=parseFloat(document.getElementById('env-q-costo')?.value || 0);
+  const el=document.getElementById('env-margin-result');
+  if(!el)return;
+  if(venta<=0||costo<=0){el.className='';el.innerHTML='Ingresa precio y costo para ver tu margen real';el.style.background='var(--input-bg)';return;}
+  // Estimate shipping (use avg if no quote)
+  const shipEst=180;
+  const bruto=venta-costo;
+  const neto=bruto-shipEst;
+  const pct=venta>0?(neto/venta*100):0;
+  const cls=pct>=30?'env-margin-good':pct>=15?'env-margin-warn':'env-margin-bad';
+  el.className=cls;
+  el.innerHTML=`
+    <div style="display:flex;justify-content:space-between;font-weight:600;">
+      <span>Utilidad bruta (sin envío)</span>
+      <span>$${bruto.toLocaleString()}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:10px;color:var(--text-faint);">
+      <span>− Envío estimado</span>
+      <span>-$${shipEst}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08);font-weight:900;font-size:13px;">
+      <span>Margen real</span>
+      <span>$${neto.toLocaleString()} · ${pct.toFixed(1)}%</span>
+    </div>
+  `;
+}
+
+// ═══════ MULTI PARCEL ═══════
+let envParcels=[];
+function envGetParcels(){return envParcels;}
+function envAddParcel(){envParcels.push({l:30,w:20,h:15,peso:1});envRenderParcels();envRenderLabel();}
+function envRemoveParcel(i){envParcels.splice(i,1);envRenderParcels();envRenderLabel();}
+function envUpdateParcel(i,field,val){if(envParcels[i]){envParcels[i][field]=parseFloat(val)||0;envRenderLabel();updateMultiTotal();}}
+function envRenderParcels(){
+  const el=document.getElementById('env-multi-list');if(!el)return;
+  el.innerHTML=envParcels.map((p,i)=>`<div class="env-multi-row">
+    <input type="number" value="${p.l}" placeholder="Largo" oninput="envUpdateParcel(${i},'l',this.value)"/>
+    <input type="number" value="${p.w}" placeholder="Ancho" oninput="envUpdateParcel(${i},'w',this.value)"/>
+    <input type="number" value="${p.h}" placeholder="Alto" oninput="envUpdateParcel(${i},'h',this.value)"/>
+    <input type="number" value="${p.peso}" placeholder="kg" step="0.1" oninput="envUpdateParcel(${i},'peso',this.value)"/>
+    <button onclick="envRemoveParcel(${i})" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:#ef4444;cursor:pointer;font-size:11px;">✕</button>
+  </div>`).join('');
+  updateMultiTotal();
+}
+function updateMultiTotal(){
+  const mainPeso=parseFloat(document.getElementById('env-q-peso')?.value || 0);
+  const totalPeso=mainPeso+envParcels.reduce((s,p)=>s+(p.peso||0),0);
+  const totalBoxes=1+envParcels.length;
+  const el=document.getElementById('env-multi-total');
+  if(el)el.innerHTML=`Total: <b>${totalBoxes} caja${totalBoxes>1?'s':''}</b> · <b>${totalPeso.toFixed(1)} kg</b>`;
+}
+
+// ═══════ SLA TRACKER ═══════
+function renderEnvSLA(){
+  const el=document.getElementById('env-sla-grid');if(!el)return;
+  // Calculate SLA per carrier from demo shipments
+  const byCarrier={};
+  demoShipments.forEach(s=>{
+    if(!byCarrier[s.carrier])byCarrier[s.carrier]={total:0,onTime:0,avgReal:0,avgPromised:0,count:0};
+    byCarrier[s.carrier].total++;
+    // Simulate: 80-95% on time
+    const onTime=Math.random()>0.15;
+    if(s.status==='delivered' && onTime)byCarrier[s.carrier].onTime++;
+  });
+  const carrierInfo={'DHL':{color:'#FFCC00',promised:2,real:2.1,pct:94},'FedEx':{color:'#663399',promised:2,real:2.3,pct:91},'Estafeta':{color:'#E30613',promised:3,real:3.8,pct:82},'Redpack':{color:'#EE2E24',promised:3,real:3.4,pct:85},'99Min':{color:'#FF6B00',promised:0.3,real:0.4,pct:97},'99 Minutos':{color:'#FF6B00',promised:0.3,real:0.4,pct:97}};
+  const cards=[];
+  Object.entries(byCarrier).forEach(([carrier,data])=>{
+    const info=carrierInfo[carrier]||{color:'#6fcff5',promised:3,real:3.5,pct:80};
+    const barColor=info.pct>=90?'#22c55e':info.pct>=80?'#f97316':'#ef4444';
+    cards.push(`<div class="env-sla-card">
+      <div class="env-sla-header">
+        <div style="display:flex;align-items:center;gap:8px;"><div style="width:4px;height:28px;border-radius:2px;background:${info.color};"></div><p class="env-sla-carrier-name">${carrier}</p></div>
+        <div style="text-align:right;">
+          <p class="env-sla-pct" style="color:${barColor};">${info.pct}%</p>
+          <p class="env-sla-pct-label">a tiempo</p>
+        </div>
+      </div>
+      <div class="env-sla-bar"><div class="env-sla-bar-fill" style="width:${info.pct}%;background:${barColor};"></div></div>
+      <div class="env-sla-detail">
+        <span>Prometido: <b style="color:var(--text-primary);">${info.promised} días</b></span>
+        <span>Real: <b style="color:${info.real>info.promised?'#ef4444':'#22c55e'};">${info.real} días</b></span>
+      </div>
+      <div style="font-size:10px;color:var(--text-faint);margin-top:6px;">${data.total} envío${data.total>1?'s':''} últimos 30 días</div>
+    </div>`);
+  });
+  el.innerHTML=cards.join('')||'<p style="grid-column:1/-1;text-align:center;color:var(--text-muted);font-size:12px;">Sin datos aún</p>';
+}
+
+// ═══════ NOTIFICATIONS CONFIG ═══════
+const ENV_NOTIF_EVENTS=[
+  {id:'created',name:'Guía creada',desc:'Al generar una nueva guía',icon:'📦',defClient:true,defAdmin:false},
+  {id:'picked_up',name:'Recolectada',desc:'Cuando la paquetería recoge',icon:'🚚',defClient:true,defAdmin:false},
+  {id:'in_transit',name:'En tránsito',desc:'Cuando sale del centro de distribución',icon:'✈️',defClient:false,defAdmin:false},
+  {id:'out_for_delivery',name:'En reparto',desc:'Sale a entregar al cliente',icon:'🛵',defClient:true,defAdmin:false},
+  {id:'delivered',name:'Entregado',desc:'Confirmación de entrega',icon:'✅',defClient:true,defAdmin:true},
+  {id:'returned',name:'Devuelto',desc:'Paquete regresa al remitente',icon:'↩️',defClient:false,defAdmin:true},
+  {id:'delayed',name:'Retrasado',desc:'Pasa el tiempo prometido sin entrega',icon:'⚠️',defClient:true,defAdmin:true},
+];
+function envLoadNotifCfg(){try{return JSON.parse(localStorage.getItem('env_notif_cfg'))||{};}catch(e){return {};}}
+function envOpenNotifConfig(){
+  const cfg=envLoadNotifCfg();
+  const el=document.getElementById('env-notif-events');
+  el.innerHTML=ENV_NOTIF_EVENTS.map(e=>{
+    const saved=cfg[e.id]||{client:e.defClient,admin:e.defAdmin,whatsapp:true,email:false};
+    return `<div class="env-notif-row" data-ev="${e.id}">
+      <div style="font-size:22px;">${e.icon}</div>
+      <div style="flex:1;">
+        <p style="font-size:12px;font-weight:800;color:var(--text-primary);">${e.name}</p>
+        <p style="font-size:10px;color:var(--text-faint);">${e.desc}</p>
+      </div>
+      <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-muted);cursor:pointer;"><input type="checkbox" class="env-notif-client" ${saved.client?'checked':''} style="accent-color:#22c55e;"/>Cliente</label>
+      <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-muted);cursor:pointer;"><input type="checkbox" class="env-notif-admin" ${saved.admin?'checked':''} style="accent-color:var(--accent);"/>Yo</label>
+      <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-muted);cursor:pointer;"><input type="checkbox" class="env-notif-whatsapp" ${saved.whatsapp?'checked':''} style="accent-color:#22c55e;"/>WhatsApp</label>
+      <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-muted);cursor:pointer;"><input type="checkbox" class="env-notif-email" ${saved.email?'checked':''} style="accent-color:#6fcff5;"/>Email</label>
+    </div>`;
+  }).join('');
+  const tpl=localStorage.getItem('env_notif_template')||'Hola [cliente], tu paquete [guia] está [estado]. Rastrea aquí: [link]';
+  document.getElementById('env-notif-template-client').value=tpl;
+  envOpenModal('notif');
+}
+function envSaveNotifConfig(){
+  const cfg={};
+  document.querySelectorAll('#env-notif-events .env-notif-row').forEach(row=>{
+    const ev=row.dataset.ev;
+    cfg[ev]={
+      client:row.querySelector('.env-notif-client').checked,
+      admin:row.querySelector('.env-notif-admin').checked,
+      whatsapp:row.querySelector('.env-notif-whatsapp').checked,
+      email:row.querySelector('.env-notif-email').checked,
+    };
+  });
+  localStorage.setItem('env_notif_cfg',JSON.stringify(cfg));
+  localStorage.setItem('env_notif_template',document.getElementById('env-notif-template-client').value);
+  envCloseModal('notif');
+  showToast('Notificaciones configuradas ✓');
+}
+
 // ═══════ HEALTH SCORE ENVÍOS ═══════
 function calcEnvHealthScore(){
   const total=demoShipments.length||1;
@@ -1949,7 +2374,10 @@ function renderEnvHeatmap(){
 document.addEventListener('DOMContentLoaded',()=>{
   ['shipments','quote','tracking','returns','analytics'].forEach(t=>{if(localStorage.getItem('env_help_'+t+'_dismissed')){const el=document.getElementById('env-help-'+t);if(el)el.style.display='none';}});
   renderEnvRecs();renderEnvStats();renderShipments();renderReturnLabels();renderEnvAnalytics();renderEnvAutopilot();renderTariffMap();envCalcVolumetric();
-  renderEnvHealthScore();renderEnvInsights();envRenderBox3D();envRenderTplDropdown();
+  renderEnvHealthScore();renderEnvInsights();envRenderBox3D();envRenderTplDropdown();envRenderBoxPresets();envRenderLabel();envUpdateInsurance();envUpdateMargin();renderEnvSLA();
+  // Auto-update label preview on any input in the quote panel
+  const qPanel=document.getElementById('env-panel-quote');
+  if(qPanel){qPanel.addEventListener('input',()=>{envRenderLabel();envRenderBoxPresets();});qPanel.addEventListener('change',()=>{envRenderLabel();envRenderBoxPresets();});}
 });
 ['env-modal-detail','env-modal-mass','env-modal-label','env-modal-notif'].forEach(id=>{document.getElementById(id)?.addEventListener('click',function(e){if(e.target===this)this.style.display='none';});});
 </script>

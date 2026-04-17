@@ -1,0 +1,377 @@
+---
+// Public tracking page - no auth required
+---
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Rastrea tu paquete — SkyBrandMX</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <style>
+    :root {
+      --bg-main: #0a1520;
+      --bg-card: #0f1b27;
+      --border: rgba(255,255,255,0.08);
+      --text-primary: #fff;
+      --text-muted: rgba(255,255,255,0.65);
+      --text-faint: rgba(255,255,255,0.45);
+      --accent: #6fcff5;
+      --brand-orange: #FF6B00;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:var(--bg-main);color:var(--text-primary);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;min-height:100vh;}
+
+    /* Header with custom branding */
+    .t-header{background:var(--bg-card);border-bottom:1px solid var(--border);padding:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+    .t-brand{display:flex;align-items:center;gap:12px;}
+    .t-logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#084d6e,#2dd4bf);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:16px;}
+    .t-brand-name{font-size:17px;font-weight:900;color:var(--text-primary);}
+    .t-brand-sub{font-size:11px;color:var(--text-faint);}
+    .t-contact{display:flex;gap:10px;font-size:12px;color:var(--text-muted);}
+    .t-contact a{color:var(--accent);text-decoration:none;}
+
+    /* Main */
+    .t-container{max-width:1080px;margin:0 auto;padding:28px 20px;}
+    .t-search{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:0 4px 20px rgba(0,0,0,0.15);}
+    .t-search h1{font-size:22px;font-weight:900;margin-bottom:6px;background:linear-gradient(135deg,#6fcff5,#FF6B00);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+    .t-search p{font-size:13px;color:var(--text-muted);margin-bottom:16px;}
+    .t-search-row{display:flex;gap:10px;flex-wrap:wrap;}
+    .t-input{flex:1;min-width:220px;padding:14px 18px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.03);color:var(--text-primary);font-size:14px;outline:none;font-family:monospace;letter-spacing:1px;}
+    .t-input:focus{border-color:var(--accent);}
+    .t-btn{padding:14px 28px;border-radius:12px;border:none;background:linear-gradient(135deg,#FF6B00,#f97316);color:#fff;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,0,0.3);transition:transform 0.15s;}
+    .t-btn:hover{transform:translateY(-1px);}
+
+    .t-result{display:none;animation:fadeIn 0.4s ease-out;}
+    .t-result.show{display:block;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+    .t-status-banner{background:var(--bg-card);border:1px solid var(--border);border-left:5px solid var(--st-color,#22c55e);border-radius:16px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+    .t-status-emoji{font-size:40px;}
+    .t-status-text p.label{font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;}
+    .t-status-text p.status{font-size:22px;font-weight:900;color:var(--st-color,#22c55e);line-height:1.2;}
+    .t-status-text p.info{font-size:12px;color:var(--text-muted);margin-top:2px;}
+    .t-status-eta{margin-left:auto;text-align:right;}
+    .t-status-eta p.label{font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;}
+    .t-status-eta p.value{font-size:18px;font-weight:900;color:var(--text-primary);}
+
+    .t-main-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;}
+    @media(max-width:900px){.t-main-grid{grid-template-columns:1fr;}}
+
+    .t-map-wrap{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:4px;position:relative;overflow:hidden;}
+    .t-map{width:100%;height:480px;border-radius:12px;overflow:hidden;}
+    .t-map-overlay{position:absolute;top:16px;left:16px;right:16px;z-index:500;pointer-events:none;}
+    .t-map-card{background:rgba(15,27,39,0.92);backdrop-filter:blur(10px);border:1px solid rgba(111,207,245,0.2);border-radius:12px;padding:14px 18px;pointer-events:auto;}
+    .t-progress-bar{height:6px;background:rgba(255,255,255,0.08);border-radius:10px;overflow:hidden;margin-top:10px;}
+    .t-progress-fill{height:100%;background:linear-gradient(90deg,#6fcff5,#FF6B00,#22c55e);border-radius:10px;box-shadow:0 0 12px rgba(255,107,0,0.6);}
+
+    .t-timeline-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:22px;}
+    .t-timeline-card h3{font-size:14px;font-weight:900;margin-bottom:16px;}
+    .t-event{display:flex;gap:14px;padding-bottom:16px;position:relative;}
+    .t-event::before{content:'';position:absolute;left:6px;top:16px;bottom:0;width:2px;background:var(--border);}
+    .t-event:last-child::before{display:none;}
+    .t-event-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;margin-top:2px;z-index:1;position:relative;}
+    .t-event-latest .t-event-dot{animation:pulse 2s infinite;}
+    @keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--dot-c,#22c55e);}50%{box-shadow:0 0 0 8px transparent;}}
+    .t-event-txt{font-size:13px;font-weight:700;color:var(--text-primary);}
+    .t-event-latest .t-event-txt{color:var(--dot-c,#22c55e);}
+    .t-event-meta{font-size:11px;color:var(--text-muted);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap;}
+
+    .t-footer{max-width:1080px;margin:40px auto 20px;padding:20px;border-top:1px solid var(--border);text-align:center;}
+    .t-footer p{font-size:11px;color:var(--text-faint);}
+    .t-footer a{color:var(--accent);text-decoration:none;}
+    .t-powered{display:inline-flex;align-items:center;gap:6px;font-size:10px;color:var(--text-faint);margin-top:10px;}
+
+    .t-promo{background:linear-gradient(135deg,#FF6B00,#f97316);padding:14px 18px;border-radius:12px;color:#fff;font-weight:700;font-size:13px;text-align:center;margin-bottom:20px;box-shadow:0 4px 20px rgba(255,107,0,0.25);}
+
+    .t-error{background:var(--bg-card);border:1px solid rgba(239,68,68,0.3);border-radius:16px;padding:40px;text-align:center;}
+    .t-error h2{font-size:18px;font-weight:900;color:#ef4444;}
+    .t-error p{font-size:13px;color:var(--text-muted);margin-top:8px;}
+
+    /* Empty state with illustration */
+    .t-empty{text-align:center;padding:60px 20px;}
+    .t-empty-emoji{font-size:80px;margin-bottom:14px;opacity:0.8;}
+    .t-empty h2{font-size:20px;font-weight:900;margin-bottom:8px;}
+    .t-empty p{font-size:14px;color:var(--text-muted);max-width:440px;margin:0 auto;line-height:1.6;}
+
+    /* Custom leaflet (dark) */
+    .leaflet-popup-content-wrapper{background:#0f1b27 !important;color:#fff !important;border-radius:8px !important;}
+    .leaflet-popup-tip{background:#0f1b27 !important;}
+    .leaflet-popup-content{margin:10px 14px !important;font-size:12px !important;}
+    .leaflet-control-attribution{background:rgba(10,21,32,0.8) !important;color:rgba(255,255,255,0.4) !important;font-size:9px !important;}
+    .leaflet-control-zoom a{background:rgba(15,27,39,0.9) !important;color:#fff !important;border:1px solid rgba(111,207,245,0.2) !important;}
+
+    .pin-origin{width:22px;height:22px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;background:#6fcff5;box-shadow:0 2px 8px rgba(0,0,0,0.4);}
+    .pin-dest{width:22px;height:22px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;background:#22c55e;box-shadow:0 2px 8px rgba(0,0,0,0.4);}
+    .pin-current{width:28px;height:28px;display:flex;align-items:center;justify-content:center;position:relative;}
+    .pin-current::before{content:'';position:absolute;inset:0;border-radius:50%;background:#FF6B00;opacity:0.35;animation:pulseMap 1.8s ease-out infinite;}
+    .pin-current-dot{width:14px;height:14px;border-radius:50%;background:#FF6B00;border:3px solid #fff;z-index:2;box-shadow:0 0 12px rgba(255,107,0,0.9);}
+    @keyframes pulseMap{0%{transform:scale(0.8);opacity:0.6;}100%{transform:scale(2.4);opacity:0;}}
+
+    .t-actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+    .t-action-btn{flex:1;min-width:160px;padding:12px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-primary);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;}
+    .t-action-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+    .t-route-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px;}
+    .t-route-stat{text-align:center;}
+    .t-route-stat-val{font-size:14px;font-weight:900;color:#fff;line-height:1.1;}
+    .t-route-stat-lbl{font-size:9px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;}
+
+    .t-help-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-top:20px;}
+    .t-help-card h3{font-size:14px;font-weight:900;margin-bottom:12px;}
+    .t-help-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-muted);}
+    .t-help-item:last-child{border-bottom:none;}
+    .t-help-item strong{color:var(--text-primary);}
+  </style>
+</head>
+<body>
+  <header class="t-header">
+    <div class="t-brand">
+      <div id="t-logo" class="t-logo">SB</div>
+      <div>
+        <p class="t-brand-name" id="t-brand-name">SkyBrandMX</p>
+        <p class="t-brand-sub">Rastreo de paquetes</p>
+      </div>
+    </div>
+    <div class="t-contact" id="t-contact">
+      <a href="https://wa.me/525512345678">💬 WhatsApp</a>
+      <a href="mailto:hola@skybrandmx.com">✉️ Email</a>
+    </div>
+  </header>
+
+  <main class="t-container">
+    <div id="t-promo-banner" class="t-promo" style="display:none;"></div>
+
+    <section class="t-search">
+      <h1>Rastrea tu paquete</h1>
+      <p>Ingresa tu número de guía para ver dónde va tu pedido en tiempo real.</p>
+      <div class="t-search-row">
+        <input id="t-guide-input" class="t-input" type="text" placeholder="Ej: FDX123456789" autocomplete="off"/>
+        <button class="t-btn" onclick="doTrack()">🔍 Rastrear</button>
+      </div>
+    </section>
+
+    <div id="t-empty" class="t-empty">
+      <div class="t-empty-emoji">📦</div>
+      <h2>Ingresa tu número de guía arriba</h2>
+      <p>Lo encuentras en el correo o WhatsApp que recibiste al hacer tu pedido. Comienza con letras (FDX, DHL, EST...) seguido de números.</p>
+    </div>
+
+    <div id="t-error" class="t-error" style="display:none;">
+      <h2>📭 No se encontró la guía</h2>
+      <p>Verifica el número e intenta de nuevo. Si tu paquete se envió hace menos de 30 min, espera un momento.</p>
+    </div>
+
+    <div id="t-result" class="t-result">
+      <div id="t-status-banner" class="t-status-banner">
+        <div class="t-status-emoji" id="t-status-emoji">📦</div>
+        <div class="t-status-text">
+          <p class="label">Estado actual</p>
+          <p class="status" id="t-status-label">--</p>
+          <p class="info" id="t-status-info">--</p>
+        </div>
+        <div class="t-status-eta">
+          <p class="label">ETA</p>
+          <p class="value" id="t-status-eta">--</p>
+        </div>
+      </div>
+
+      <div class="t-main-grid">
+        <div>
+          <div class="t-map-wrap">
+            <div id="t-map" class="t-map"></div>
+            <div class="t-map-overlay">
+              <div class="t-map-card">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <div>
+                    <p style="font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;">Ubicación actual</p>
+                    <p id="t-map-loc" style="font-size:14px;font-weight:900;">📍 --</p>
+                  </div>
+                  <div style="text-align:right;">
+                    <p id="t-map-pct" style="font-size:20px;font-weight:900;color:#FF6B00;">--%</p>
+                    <p style="font-size:9px;color:rgba(255,255,255,0.5);">completado</p>
+                  </div>
+                </div>
+                <div class="t-progress-bar"><div class="t-progress-fill" id="t-map-progress" style="width:0%;"></div></div>
+                <div class="t-route-stats">
+                  <div class="t-route-stat"><p class="t-route-stat-val" id="t-km-done">-- km</p><p class="t-route-stat-lbl">Recorridos</p></div>
+                  <div class="t-route-stat"><p class="t-route-stat-val" id="t-km-left">-- km</p><p class="t-route-stat-lbl">Restantes</p></div>
+                  <div class="t-route-stat"><p class="t-route-stat-val" id="t-km-total">-- km</p><p class="t-route-stat-lbl">Total</p></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="t-actions">
+            <button class="t-action-btn" onclick="copyGuide()">📋 Copiar número</button>
+            <a class="t-action-btn" id="t-share-btn" href="#" onclick="shareTrack(event)">🔗 Compartir</a>
+            <a class="t-action-btn" href="https://wa.me/525512345678?text=Hola,%20necesito%20ayuda%20con%20mi%20paquete">💬 Soporte</a>
+          </div>
+        </div>
+
+        <div>
+          <div class="t-timeline-card">
+            <h3>Historial del paquete</h3>
+            <div id="t-timeline"></div>
+          </div>
+          <div class="t-help-card">
+            <h3>❓ Preguntas frecuentes</h3>
+            <div class="t-help-item"><strong>⏰ ¿Cuándo llega?</strong></div>
+            <div class="t-help-item">Los tiempos son estimados. 1-2 días de diferencia es normal según paquetería.</div>
+            <div class="t-help-item"><strong>📍 ¿Por qué no se actualiza?</strong></div>
+            <div class="t-help-item">El estado se actualiza cuando la paquetería escanea el paquete en cada punto. Puede haber horas sin cambios mientras está en tránsito.</div>
+            <div class="t-help-item"><strong>🤝 ¿Nadie estaba para recibirlo?</strong></div>
+            <div class="t-help-item">La paquetería intenta entrega hasta 3 veces. Después lo dejan en sucursal cercana o lo regresan al remitente.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="t-footer">
+    <p>© <span id="t-year"></span> <span id="t-footer-brand">SkyBrandMX</span> · Todos los derechos reservados</p>
+    <p class="t-powered">⚡ Rastreo potenciado por <a href="https://skybrandmx.com" style="color:var(--accent);">SkyBrandMX</a></p>
+  </footer>
+
+  <script is:inline>
+    // Demo shipments (same data as dashboard)
+    const T_SHIPMENTS=[
+      { tracking:'FDX123456789', carrier:'FedEx', client:'María García López', origin:'CDMX (03100)', dest:'Guadalajara (44100)', status:'delivered', weight:'1.2 kg', deliveredDate:'2026-03-28', events:[{date:'2026-03-28 14:30',text:'Entregado',loc:'Guadalajara'},{date:'2026-03-27 09:15',text:'En reparto',loc:'Guadalajara'},{date:'2026-03-26 06:00',text:'En tránsito',loc:'Centro de distribución GDL'},{date:'2026-03-25 18:00',text:'Recolectado',loc:'CDMX'}] },
+      { tracking:'DHL987654321', carrier:'DHL', client:'Carlos Hernández Ruiz', origin:'CDMX (03100)', dest:'Monterrey (64060)', status:'in_transit', weight:'2.5 kg', events:[{date:'2026-03-30 12:00',text:'En tránsito',loc:'Centro de distribución MTY'},{date:'2026-03-29 16:00',text:'Recolectado',loc:'CDMX'}] },
+      { tracking:'EST112233445', carrier:'Estafeta', client:'José Miguel Ríos', origin:'CDMX (03100)', dest:'Querétaro (76000)', status:'in_transit', weight:'3.8 kg', events:[{date:'2026-03-30 08:00',text:'En tránsito',loc:'Querétaro'},{date:'2026-03-29 14:00',text:'Recolectado',loc:'CDMX'}] },
+      { tracking:'DHL554433221', carrier:'DHL', client:'Lucía Ramírez Torres', origin:'CDMX (03910)', dest:'Puebla (72000)', status:'out_for_delivery', weight:'1.5 kg', events:[{date:'2026-03-31 08:30',text:'En reparto',loc:'Puebla'},{date:'2026-03-31 06:00',text:'En centro de distribución',loc:'Puebla'},{date:'2026-03-30 14:00',text:'Recolectado',loc:'CDMX'}] },
+      { tracking:'RDK667788990', carrier:'Redpack', client:'Fernando López Castro', origin:'CDMX (03100)', dest:'Cancún (77500)', status:'delivered', weight:'4.2 kg', deliveredDate:'2026-03-28', events:[{date:'2026-03-28 16:00',text:'Entregado',loc:'Cancún'},{date:'2026-03-27 10:00',text:'En reparto',loc:'Cancún'},{date:'2026-03-26 08:00',text:'En tránsito',loc:'Centro Mérida'},{date:'2026-03-24 12:00',text:'Recolectado',loc:'CDMX'}] },
+    ];
+
+    const STATUS={created:{l:'Guía creada',c:'#6fcff5',e:'📦'},picked_up:{l:'Recolectado',c:'#eab308',e:'🚚'},in_transit:{l:'En tránsito',c:'#8b5cf6',e:'✈️'},out_for_delivery:{l:'En reparto',c:'#FF6B00',e:'🛵'},delivered:{l:'Entregado',c:'#22c55e',e:'✅'},returned:{l:'Devuelto',c:'#ef4444',e:'↩️'}};
+
+    const MX_CITIES={'cdmx':[19.4326,-99.1332],'guadalajara':[20.6597,-103.3496],'gdl':[20.6597,-103.3496],'monterrey':[25.6866,-100.3161],'mty':[25.6866,-100.3161],'puebla':[19.0414,-98.2063],'queretaro':[20.5888,-100.3899],'querétaro':[20.5888,-100.3899],'cancun':[21.1619,-86.8515],'cancún':[21.1619,-86.8515],'merida':[20.9674,-89.5926],'mérida':[20.9674,-89.5926]};
+    function geocode(p){if(!p)return null;const t=p.toLowerCase().replace(/[()]/g,'');for(const k in MX_CITIES){if(t.includes(k))return MX_CITIES[k];}return null;}
+    function distance(a,b){if(!a||!b)return 0;const R=6371,r=d=>d*Math.PI/180;const dL=r(b[0]-a[0]),dN=r(b[1]-a[1]);const x=Math.sin(dL/2)**2+Math.cos(r(a[0]))*Math.cos(r(b[0]))*Math.sin(dN/2)**2;return Math.round(R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));}
+
+    let tMap=null;
+    let currentGuide='';
+
+    // Load custom branding if host site has it
+    function loadBranding(){
+      try{
+        const cfg=JSON.parse(localStorage.getItem('env_emisor_cfg'));
+        if(cfg){
+          if(cfg.name){document.getElementById('t-brand-name').textContent=cfg.name;document.getElementById('t-footer-brand').textContent=cfg.name;document.title='Rastrea tu paquete — '+cfg.name;}
+          if(cfg.logo){document.getElementById('t-logo').innerHTML=`<img src="${cfg.logo}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;"/>`;}
+          else if(cfg.name){document.getElementById('t-logo').textContent=cfg.name.substring(0,2).toUpperCase();}
+          if(cfg.phone||cfg.email){
+            const c=document.getElementById('t-contact');c.innerHTML='';
+            if(cfg.phone){const a=document.createElement('a');a.href='https://wa.me/52'+cfg.phone.replace(/\D/g,'');a.textContent='💬 '+cfg.phone;c.appendChild(a);}
+            if(cfg.email){const a=document.createElement('a');a.href='mailto:'+cfg.email;a.textContent='✉️ '+cfg.email;c.appendChild(a);}
+          }
+          if(cfg.promo){const b=document.getElementById('t-promo-banner');b.textContent='💝 '+cfg.promo;b.style.display='block';}
+        }
+      }catch(e){}
+    }
+
+    function doTrack(){
+      const input=document.getElementById('t-guide-input');
+      const g=input.value.trim().toUpperCase();
+      if(!g){input.focus();return;}
+      currentGuide=g;
+      // Hide empty state
+      document.getElementById('t-empty').style.display='none';
+      const found=T_SHIPMENTS.find(s=>s.tracking.toUpperCase()===g);
+      if(!found){
+        document.getElementById('t-error').style.display='block';
+        document.getElementById('t-result').classList.remove('show');
+        return;
+      }
+      document.getElementById('t-error').style.display='none';
+      renderShipment(found);
+      document.getElementById('t-result').classList.add('show');
+      // Update URL for sharing
+      history.replaceState(null,'','?guide='+g);
+    }
+
+    function renderShipment(s){
+      const st=STATUS[s.status];
+      const banner=document.getElementById('t-status-banner');
+      banner.style.setProperty('--st-color',st.c);
+      document.getElementById('t-status-emoji').textContent=st.e;
+      document.getElementById('t-status-label').textContent=st.l;
+      document.getElementById('t-status-label').style.color=st.c;
+      document.getElementById('t-status-info').textContent=`${s.carrier} · ${s.tracking} · ${s.client}`;
+
+      const isDelivered=s.status==='delivered';
+      let eta='Hoy mismo';
+      if(isDelivered && s.deliveredDate)eta='Entregado '+s.deliveredDate;
+      else if(s.status==='returned')eta='Devuelto';
+      else eta='En 1-2 días';
+      document.getElementById('t-status-eta').textContent=eta;
+
+      // Map
+      const originC=geocode(s.origin);
+      const destC=geocode(s.dest);
+      const lastEvent=s.events[0];
+      const currentC=geocode(lastEvent.loc)||originC;
+      const totalKm=distance(originC,destC);
+      const coveredKm=isDelivered?totalKm:distance(originC,currentC);
+      const pct=totalKm>0?Math.min(100,Math.round((coveredKm/totalKm)*100)):0;
+
+      document.getElementById('t-map-loc').textContent='📍 '+lastEvent.loc;
+      document.getElementById('t-map-pct').textContent=pct+'%';
+      document.getElementById('t-map-progress').style.width=pct+'%';
+      document.getElementById('t-km-done').textContent=coveredKm+' km';
+      document.getElementById('t-km-left').textContent=(totalKm-coveredKm)+' km';
+      document.getElementById('t-km-total').textContent=totalKm+' km';
+
+      // Leaflet
+      setTimeout(()=>{
+        if(tMap){tMap.remove();tMap=null;}
+        if(!originC||!destC){document.getElementById('t-map').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.4);">Ubicación no disponible</div>';return;}
+        const map=L.map('t-map',{zoomControl:true}).setView([23.5,-102],5);
+        tMap=map;
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',subdomains:'abcd',maxZoom:19}).addTo(map);
+        L.marker(originC,{icon:L.divIcon({className:'',html:'<div class="pin-origin"></div>',iconSize:[22,22],iconAnchor:[11,22]})}).addTo(map).bindPopup('📤 Origen<br><b>'+s.origin+'</b>');
+        L.marker(destC,{icon:L.divIcon({className:'',html:'<div class="pin-dest"></div>',iconSize:[22,22],iconAnchor:[11,22]})}).addTo(map).bindPopup('🎯 Destino<br><b>'+s.dest+'</b>');
+        if(!isDelivered&&currentC&&(currentC[0]!==originC[0]||currentC[1]!==originC[1])){
+          L.marker(currentC,{icon:L.divIcon({className:'',html:'<div class="pin-current"><div class="pin-current-dot"></div></div>',iconSize:[28,28],iconAnchor:[14,14]}),zIndexOffset:1000}).addTo(map).bindPopup('🚚 <b>Aquí ahora</b><br>'+lastEvent.loc).openPopup();
+        }
+        if(!isDelivered && currentC){
+          L.polyline([originC,currentC],{color:'#FF6B00',weight:4,opacity:0.85}).addTo(map);
+          L.polyline([currentC,destC],{color:'#6fcff5',weight:3,opacity:0.5,dashArray:'8,8'}).addTo(map);
+        } else {
+          L.polyline([originC,destC],{color:isDelivered?'#22c55e':'#FF6B00',weight:4,opacity:0.85}).addTo(map);
+        }
+        map.fitBounds(L.latLngBounds([originC,destC,currentC].filter(Boolean)),{paddingTopLeft:[40,200],paddingBottomRight:[40,50],maxZoom:8});
+      },50);
+
+      // Timeline
+      const tl=document.getElementById('t-timeline');
+      tl.innerHTML=s.events.map((e,i)=>{
+        const isLatest=i===0;
+        const dotColor=isLatest?st.c:'rgba(255,255,255,0.2)';
+        return `<div class="t-event${isLatest?' t-event-latest':''}" style="--dot-c:${st.c};">
+          <div class="t-event-dot" style="background:${dotColor};"></div>
+          <div style="flex:1;">
+            <p class="t-event-txt">${e.text}</p>
+            <p class="t-event-meta"><span>🕐 ${e.date}</span><span>📍 ${e.loc}</span></p>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function copyGuide(){navigator.clipboard.writeText(currentGuide);alert('Número copiado: '+currentGuide);}
+    function shareTrack(event){event.preventDefault();const url=window.location.href;if(navigator.share){navigator.share({title:'Rastreo de paquete',text:'Sigue mi paquete '+currentGuide,url});}else{navigator.clipboard.writeText(url);alert('Link copiado al portapapeles');}}
+
+    // Auto-track from URL param
+    document.addEventListener('DOMContentLoaded',()=>{
+      document.getElementById('t-year').textContent=new Date().getFullYear();
+      loadBranding();
+      const p=new URLSearchParams(window.location.search);
+      const g=p.get('guide');
+      if(g){document.getElementById('t-guide-input').value=g;doTrack();}
+      document.getElementById('t-guide-input').addEventListener('keypress',(e)=>{if(e.key==='Enter')doTrack();});
+    });
+  </script>
+</body>
+</html>
