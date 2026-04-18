@@ -4,6 +4,249 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
 ---
 
 <DashboardLayout title="Pedidos">
+  <!-- ════════ MODO FÁCIL / EXPERTO TOGGLE ════════ -->
+  <div class="ped-mode-switcher" style="display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px;padding:14px 18px;border-radius:14px;background:linear-gradient(135deg,rgba(111,207,245,0.08),rgba(139,92,246,0.08));border:1px solid rgba(111,207,245,0.2);flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span style="font-size:24px;">📦</span>
+      <div>
+        <p id="ped-mode-greeting" style="font-size:13px;font-weight:800;color:var(--text-primary);">Hola, ¿qué quieres hacer hoy?</p>
+        <p id="ped-mode-sub" style="font-size:11px;color:var(--text-muted);">Registrar una venta nueva, ver tus pedidos o marcar uno como enviado</p>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <button onclick="pedStartTour()" style="padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">🎓 Tour guiado</button>
+      <div style="display:flex;background:rgba(0,0,0,0.25);border-radius:10px;padding:3px;gap:2px;">
+        <button id="ped-mode-easy" onclick="pedSetMode('easy')" class="ped-mode-btn active">😊 Fácil</button>
+        <button id="ped-mode-pro" onclick="pedSetMode('pro')" class="ped-mode-btn">🔧 Experto</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ MODO FÁCIL ════════ -->
+  <div id="ped-easy-mode" style="display:block;">
+    <!-- Pantalla de inicio -->
+    <div id="ped-easy-home" style="display:block;">
+      <div class="ped-easy-hero" style="padding:40px 32px;border-radius:18px;background:linear-gradient(135deg,#084d6e 0%,#f97316 100%);color:#fff;margin-bottom:20px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-30px;right:-30px;font-size:180px;opacity:0.15;">📦</div>
+        <h2 style="font-size:24px;font-weight:900;margin-bottom:8px;">¿Alguien te compró? ¡Vamos a registrarlo! 🛒</h2>
+        <p style="font-size:14px;opacity:0.9;margin-bottom:20px;max-width:600px;">En 5 pasos simples capturas un pedido nuevo: quién te compró, qué te pidió, cómo te pagó y cómo lo vas a mandar. Nosotros llevamos el conteo por ti.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button onclick="pedWizStart(false)" class="ped-easy-cta-primary">✨ Registrar un pedido</button>
+          <button onclick="pedWizStart(true)" class="ped-easy-cta-secondary">👀 Probar con datos de ejemplo</button>
+        </div>
+      </div>
+
+      <p style="font-size:13px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">¿Qué necesitas hacer?</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:24px;">
+        <button onclick="pedWizStart(false)" class="ped-easy-card">
+          <span class="ped-easy-card-emoji">🛒</span>
+          <p class="ped-easy-card-title">Registrar un pedido</p>
+          <p class="ped-easy-card-desc">Alguien te compró — captura los datos</p>
+        </button>
+        <button onclick="pedSetMode('pro');setTimeout(()=>{switchPedTab('ship');},200);" class="ped-easy-card">
+          <span class="ped-easy-card-emoji">📤</span>
+          <p class="ped-easy-card-title">Enviar pedidos pendientes</p>
+          <p class="ped-easy-card-desc" id="ped-easy-ship-count">Los que ya te pagaron y faltan mandar</p>
+        </button>
+        <button onclick="pedSetMode('pro');setTimeout(()=>{switchPedTab('all');},200);" class="ped-easy-card">
+          <span class="ped-easy-card-emoji">📋</span>
+          <p class="ped-easy-card-title">Ver todos los pedidos</p>
+          <p class="ped-easy-card-desc">Historial completo de tus ventas</p>
+        </button>
+        <button onclick="pedSetMode('pro');setTimeout(()=>{switchPedTab('returns');},200);" class="ped-easy-card">
+          <span class="ped-easy-card-emoji">↩️</span>
+          <p class="ped-easy-card-title">Devoluciones</p>
+          <p class="ped-easy-card-desc">Gestiona si un cliente quiere regresar algo</p>
+        </button>
+        <button onclick="pedSetMode('pro');setTimeout(()=>{switchPedTab('analytics');},200);" class="ped-easy-card">
+          <span class="ped-easy-card-emoji">📊</span>
+          <p class="ped-easy-card-title">¿Cómo va mi negocio?</p>
+          <p class="ped-easy-card-desc">Ventas del mes, productos top, tendencias</p>
+        </button>
+        <button onclick="alert('Próximamente: conecta Shopify, WooCommerce, MercadoLibre')" class="ped-easy-card">
+          <span class="ped-easy-card-emoji">🔌</span>
+          <p class="ped-easy-card-title">Conectar mi tienda</p>
+          <p class="ped-easy-card-desc">Shopify, MercadoLibre, WooCommerce</p>
+        </button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
+        <div class="stat-card" style="padding:18px;text-align:center;">
+          <p style="font-size:32px;font-weight:900;color:#22c55e;" id="ped-easy-today">0</p>
+          <p style="font-size:12px;color:var(--text-muted);font-weight:700;margin-top:4px;">🎯 Pedidos de hoy</p>
+        </div>
+        <div class="stat-card" style="padding:18px;text-align:center;">
+          <p style="font-size:32px;font-weight:900;color:#f97316;" id="ped-easy-ship">0</p>
+          <p style="font-size:12px;color:var(--text-muted);font-weight:700;margin-top:4px;">📦 Por enviar</p>
+        </div>
+        <div class="stat-card" style="padding:18px;text-align:center;">
+          <p style="font-size:32px;font-weight:900;color:#6fcff5;" id="ped-easy-revenue">$0</p>
+          <p style="font-size:12px;color:var(--text-muted);font-weight:700;margin-top:4px;">💰 Vendido este mes</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wizard -->
+    <div id="ped-wizard" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button onclick="pedEzBack()" id="ped-wiz-back" style="width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-size:18px;">←</button>
+          <div>
+            <p style="font-size:18px;font-weight:900;color:var(--text-primary);" id="ped-wiz-title">Registrar pedido</p>
+            <p style="font-size:12px;color:var(--text-muted);" id="ped-wiz-subtitle">Paso 1 de 5</p>
+          </div>
+        </div>
+        <button onclick="pedWizCancel()" style="padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;">✕ Cancelar</button>
+      </div>
+
+      <div style="display:flex;gap:6px;margin-bottom:28px;">
+        <div class="ped-wiz-step-bar active"></div>
+        <div class="ped-wiz-step-bar"></div>
+        <div class="ped-wiz-step-bar"></div>
+        <div class="ped-wiz-step-bar"></div>
+        <div class="ped-wiz-step-bar"></div>
+      </div>
+
+      <!-- PASO 1: ¿Quién te compró? -->
+      <div id="ped-wiz-step-1" class="ped-wiz-step">
+        <div class="stat-card" style="padding:32px;max-width:680px;margin:0 auto;">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+            <div class="ped-wiz-step-num">1</div>
+            <div>
+              <h3 style="font-size:20px;font-weight:900;color:var(--text-primary);">¿Quién te compró?</h3>
+              <p style="font-size:13px;color:var(--text-muted);">Anota los datos de tu cliente para poder mandarle su paquete y contactarlo si hace falta</p>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <div>
+              <label class="ped-wiz-label">Nombre completo del cliente</label>
+              <input id="ped-wiz-name" type="text" class="ped-wiz-input" placeholder="Ej: María García López" oninput="pedEzValidate(1);"/>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label class="ped-wiz-label">Email <span class="ped-wiz-help">(para mandarle confirmación)</span></label>
+                <input id="ped-wiz-email" type="email" class="ped-wiz-input" placeholder="Ej: maria@gmail.com" oninput="pedEzValidate(1);"/>
+              </div>
+              <div>
+                <label class="ped-wiz-label">Teléfono / WhatsApp</label>
+                <input id="ped-wiz-phone" type="tel" class="ped-wiz-input" placeholder="Ej: 55 1234 5678" oninput="pedEzValidate(1);"/>
+              </div>
+            </div>
+            <div>
+              <label class="ped-wiz-label">Dirección completa <span class="ped-wiz-help">(a dónde le vas a mandar el paquete)</span></label>
+              <textarea id="ped-wiz-address" rows="2" class="ped-wiz-input" placeholder="Ej: Av. Insurgentes 123, Col. Del Valle, CDMX, CP 03100" oninput="pedEzValidate(1);"></textarea>
+            </div>
+          </div>
+          <button onclick="pedEzNext()" id="ped-wiz-next-1" class="ped-wiz-next" disabled>Siguiente →</button>
+        </div>
+      </div>
+
+      <!-- PASO 2: ¿Qué te pidió? -->
+      <div id="ped-wiz-step-2" class="ped-wiz-step" style="display:none;">
+        <div class="stat-card" style="padding:32px;max-width:780px;margin:0 auto;">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+            <div class="ped-wiz-step-num" style="background:#f97316;">2</div>
+            <div>
+              <h3 style="font-size:20px;font-weight:900;color:var(--text-primary);">¿Qué te pidió?</h3>
+              <p style="font-size:13px;color:var(--text-muted);">Lista los productos que compró y a cuánto. Si pidió varios, agrégalos todos</p>
+            </div>
+          </div>
+          <div id="ped-wiz-items" style="display:flex;flex-direction:column;gap:10px;"></div>
+          <button onclick="pedWizAddItem()" style="margin-top:10px;padding:10px;border-radius:10px;border:1px dashed var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;width:100%;">+ Agregar otro producto</button>
+          <div style="margin-top:20px;padding:16px;border-radius:12px;background:var(--input-bg);border:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:900;"><span>Total del pedido</span><span id="ped-wiz-total" style="color:var(--accent);">$0.00</span></div>
+            <p style="font-size:10px;color:var(--text-faint);margin-top:4px;">Sin envío — el envío lo elegimos en el paso 4</p>
+          </div>
+          <button onclick="pedEzNext()" id="ped-wiz-next-2" class="ped-wiz-next" disabled>Siguiente →</button>
+        </div>
+      </div>
+
+      <!-- PASO 3: ¿Cómo te pagó? -->
+      <div id="ped-wiz-step-3" class="ped-wiz-step" style="display:none;">
+        <div class="stat-card" style="padding:32px;max-width:720px;margin:0 auto;">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+            <div class="ped-wiz-step-num" style="background:#22c55e;">3</div>
+            <div>
+              <h3 style="font-size:20px;font-weight:900;color:var(--text-primary);">¿Cómo te pagó?</h3>
+              <p style="font-size:13px;color:var(--text-muted);">O si aún no te paga, marca la opción "Pendiente"</p>
+            </div>
+          </div>
+          <div id="ped-wiz-payment-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;"></div>
+          <button onclick="pedEzNext()" class="ped-wiz-next">Siguiente →</button>
+        </div>
+      </div>
+
+      <!-- PASO 4: ¿Cómo se lo vas a mandar? -->
+      <div id="ped-wiz-step-4" class="ped-wiz-step" style="display:none;">
+        <div class="stat-card" style="padding:32px;max-width:720px;margin:0 auto;">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+            <div class="ped-wiz-step-num" style="background:#8b5cf6;">4</div>
+            <div>
+              <h3 style="font-size:20px;font-weight:900;color:var(--text-primary);">¿Cómo se lo vas a mandar?</h3>
+              <p style="font-size:13px;color:var(--text-muted);">Puedes generar la guía ahora o después desde el módulo de Envíos</p>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;">
+            <div onclick="pedWizPickShip('later')" id="ped-wiz-ship-later" class="ped-wiz-ship-card selected">
+              <div style="font-size:36px;">⏰</div>
+              <p style="font-size:14px;font-weight:900;color:var(--text-primary);margin-top:8px;">Lo mando después</p>
+              <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">Guardo el pedido. Genero la guía cuando pueda desde Envíos</p>
+            </div>
+            <div onclick="pedWizPickShip('now')" id="ped-wiz-ship-now" class="ped-wiz-ship-card">
+              <div style="font-size:36px;">🚀</div>
+              <p style="font-size:14px;font-weight:900;color:var(--text-primary);margin-top:8px;">Generar guía ahora</p>
+              <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">Voy al módulo de envíos con los datos pre-llenados</p>
+            </div>
+            <div onclick="pedWizPickShip('pickup')" id="ped-wiz-ship-pickup" class="ped-wiz-ship-card">
+              <div style="font-size:36px;">🏪</div>
+              <p style="font-size:14px;font-weight:900;color:var(--text-primary);margin-top:8px;">Va a pasar por él</p>
+              <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">El cliente recoge en tienda, no necesito envío</p>
+            </div>
+          </div>
+          <div style="margin-top:20px;">
+            <label class="ped-wiz-label">¿Algo que deba recordar? <span class="ped-wiz-help">(ej: envolver para regalo, dejar en recepción)</span></label>
+            <textarea id="ped-wiz-notes" rows="2" class="ped-wiz-input" placeholder="(opcional)"></textarea>
+          </div>
+          <button onclick="pedEzNext()" class="ped-wiz-next">Siguiente →</button>
+        </div>
+      </div>
+
+      <!-- PASO 5: Revisar -->
+      <div id="ped-wiz-step-5" class="ped-wiz-step" style="display:none;">
+        <div class="stat-card" style="padding:32px;max-width:680px;margin:0 auto;">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+            <div class="ped-wiz-step-num" style="background:#22c55e;">5</div>
+            <div>
+              <h3 style="font-size:20px;font-weight:900;color:var(--text-primary);">Revisa el pedido</h3>
+              <p style="font-size:13px;color:var(--text-muted);">¿Todo se ve bien?</p>
+            </div>
+          </div>
+          <div id="ped-wiz-summary" style="display:flex;flex-direction:column;gap:10px;"></div>
+          <button onclick="pedWizConfirm()" class="ped-wiz-next" style="background:#22c55e;font-size:16px;">✅ Guardar pedido</button>
+        </div>
+      </div>
+
+      <!-- DONE -->
+      <div id="ped-wiz-step-done" class="ped-wiz-step" style="display:none;">
+        <div class="stat-card" style="padding:48px 32px;max-width:560px;margin:0 auto;text-align:center;">
+          <div style="font-size:80px;margin-bottom:16px;">🎉</div>
+          <h3 style="font-size:24px;font-weight:900;color:#22c55e;">¡Pedido registrado!</h3>
+          <p id="ped-wiz-done-msg" style="font-size:14px;color:var(--text-muted);margin-top:10px;">Ya está guardado en tu lista de pedidos.</p>
+          <div style="margin-top:24px;padding:18px;border-radius:12px;background:var(--input-bg);border:1px solid var(--border);text-align:left;">
+            <p style="font-size:11px;font-weight:800;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Número de pedido</p>
+            <p id="ped-wiz-done-num" style="font-size:18px;font-weight:900;color:var(--accent);font-family:monospace;margin-top:4px;">--</p>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:24px;justify-content:center;flex-wrap:wrap;">
+            <button onclick="pedWizDone()" class="ped-wiz-next" style="flex:1;min-width:180px;margin:0;background:#22c55e;">✅ Registrar otro pedido</button>
+          </div>
+          <p style="font-size:11px;color:var(--text-faint);margin-top:16px;">¿Otra cosa? <a href="#" onclick="pedWizDone();return false;" style="color:var(--accent);">Volver al inicio</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ MODO EXPERTO (todo lo anterior) ════════ -->
+  <div id="ped-pro-mode" style="display:none;">
   <!-- Smart Recommendations -->
   <div id="ped-smart-recs" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;"></div>
 
@@ -261,6 +504,25 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
       </div>
     </div>
   </div>
+
+  </div><!-- /ped-pro-mode -->
+
+  <!-- ════════ TOUR ONBOARDING ════════ -->
+  <div id="ped-tour" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px;">
+    <div style="max-width:520px;background:var(--bg-sidebar,#0F172A);border-radius:20px;padding:36px;text-align:center;border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,0.5);position:relative;">
+      <button onclick="pedTourSkip()" style="position:absolute;top:14px;right:14px;width:32px;height:32px;border:none;background:transparent;color:var(--text-muted);font-size:20px;cursor:pointer;">✕</button>
+      <div id="ped-tour-emoji" style="font-size:72px;margin-bottom:14px;">📦</div>
+      <h3 id="ped-tour-title" style="font-size:22px;font-weight:900;color:var(--text-primary);margin-bottom:8px;">¡Bienvenido!</h3>
+      <p id="ped-tour-desc" style="font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:24px;max-width:420px;margin-left:auto;margin-right:auto;"></p>
+      <div style="display:flex;gap:6px;justify-content:center;margin-bottom:20px;">
+        <span class="ped-tour-dot active"></span><span class="ped-tour-dot"></span><span class="ped-tour-dot"></span><span class="ped-tour-dot"></span>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button onclick="pedTourSkip()" style="padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-primary);font-size:13px;font-weight:700;cursor:pointer;">Saltar</button>
+        <button onclick="pedTourNext()" id="ped-tour-next-btn" class="ped-wiz-next" style="margin:0;min-width:160px;">Siguiente →</button>
+      </div>
+    </div>
+  </div>
 </DashboardLayout>
 
 <style>
@@ -315,6 +577,49 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
   .ped-timeline-dot { width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;z-index:1; }
   .ped-timeline-line { position:absolute;top:14px;left:50%;width:100%;height:2px;z-index:0; }
   .ped-timeline-label { font-size:10px;margin-top:6px;font-weight:600;text-align:center; }
+
+  /* ════════ MODO FÁCIL / EXPERTO ════════ */
+  .ped-mode-btn { padding:7px 14px;border:none;background:transparent;color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;border-radius:8px;transition:all 0.2s;display:flex;align-items:center;gap:4px; }
+  .ped-mode-btn.active { background:var(--accent);color:#0a1520;box-shadow:0 2px 8px rgba(111,207,245,0.3); }
+  .ped-easy-cta-primary { padding:14px 28px;border-radius:12px;border:none;background:#fff;color:#084d6e;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.2);transition:transform 0.15s; }
+  .ped-easy-cta-primary:hover { transform:translateY(-2px); }
+  .ped-easy-cta-secondary { padding:14px 24px;border-radius:12px;border:2px solid rgba(255,255,255,0.3);background:transparent;color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s; }
+  .ped-easy-cta-secondary:hover { background:rgba(255,255,255,0.1); }
+  .ped-easy-card { padding:24px 20px;border-radius:14px;border:1px solid var(--border);background:var(--card-bg,var(--input-bg));cursor:pointer;transition:all 0.2s;text-align:left;display:flex;flex-direction:column;gap:4px; }
+  .ped-easy-card:hover { border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,0.15); }
+  .ped-easy-card-emoji { font-size:32px;margin-bottom:8px; }
+  .ped-easy-card-title { font-size:14px;font-weight:900;color:var(--text-primary); }
+  .ped-easy-card-desc { font-size:12px;color:var(--text-muted);line-height:1.4; }
+  /* Wizard */
+  .ped-wiz-step-bar { flex:1;height:6px;border-radius:4px;background:var(--border);transition:background 0.3s; }
+  .ped-wiz-step-bar.active { background:linear-gradient(90deg,var(--accent),#FF6B00); }
+  .ped-wiz-step-bar.done { background:#22c55e; }
+  .ped-wiz-step-num { width:44px;height:44px;border-radius:12px;background:var(--accent);color:#0a1520;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;flex-shrink:0; }
+  .ped-wiz-label { font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:8px;display:block; }
+  .ped-wiz-help { font-size:11px;color:var(--text-muted);font-weight:400;margin-left:4px; }
+  .ped-wiz-input { width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-primary);font-size:15px;outline:none;transition:border-color 0.2s;font-family:inherit; }
+  .ped-wiz-input:focus { border-color:var(--accent);box-shadow:0 0 0 3px rgba(111,207,245,0.1); }
+  .ped-wiz-next { margin-top:24px;padding:16px 28px;border-radius:12px;border:none;background:var(--accent);color:#0a1520;font-size:15px;font-weight:900;cursor:pointer;width:100%;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:6px; }
+  .ped-wiz-next:hover:not(:disabled) { transform:translateY(-1px);box-shadow:0 6px 16px rgba(111,207,245,0.3); }
+  .ped-wiz-next:disabled { opacity:0.4;cursor:not-allowed; }
+  .ped-wiz-item-row { display:grid;grid-template-columns:2fr 70px 100px 100px auto;gap:8px;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);align-items:end; }
+  .ped-wiz-item-row input { padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-sidebar,#0a1520);color:var(--text-primary);font-size:12px;width:100%; }
+  .ped-wiz-item-row label { font-size:10px;color:var(--text-muted);font-weight:700;display:block;margin-bottom:3px; }
+  .ped-wiz-pay-card { padding:18px 12px;border-radius:12px;border:2px solid var(--border);background:var(--input-bg);cursor:pointer;text-align:center;transition:all 0.15s;display:flex;flex-direction:column;align-items:center;gap:6px; }
+  .ped-wiz-pay-card:hover { border-color:var(--accent);transform:translateY(-2px); }
+  .ped-wiz-pay-card.selected { border-color:#22c55e;background:rgba(34,197,94,0.08);box-shadow:0 0 0 3px rgba(34,197,94,0.15); }
+  .ped-wiz-pay-emoji { font-size:30px; }
+  .ped-wiz-pay-name { font-size:12px;font-weight:800;color:var(--text-primary); }
+  .ped-wiz-pay-desc { font-size:10px;color:var(--text-muted); }
+  .ped-wiz-ship-card { padding:20px 16px;border-radius:12px;border:2px solid var(--border);background:var(--input-bg);cursor:pointer;text-align:center;transition:all 0.15s; }
+  .ped-wiz-ship-card:hover { border-color:var(--accent);transform:translateY(-2px); }
+  .ped-wiz-ship-card.selected { border-color:#8b5cf6;background:rgba(139,92,246,0.08);box-shadow:0 0 0 3px rgba(139,92,246,0.15); }
+  .ped-wiz-sum-row { display:flex;justify-content:space-between;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg); }
+  .ped-wiz-sum-row span:first-child { font-size:12px;color:var(--text-muted); }
+  .ped-wiz-sum-row span:last-child { font-size:13px;font-weight:700;color:var(--text-primary);text-align:right; }
+  .ped-tour-dot { width:8px;height:8px;border-radius:50%;background:var(--border);transition:all 0.3s; }
+  .ped-tour-dot.active { background:var(--accent);width:24px;border-radius:4px; }
+  @media(max-width:600px){ .ped-mode-switcher { flex-direction:column;align-items:flex-start !important; } .ped-wiz-item-row { grid-template-columns:1fr; } }
 </style>
 
 <script is:inline>
@@ -483,9 +788,225 @@ function renderWizSummary(){const c=document.getElementById('ped-wiz-client').va
 function pedWizCreate(){const c=document.getElementById('ped-wiz-client').value.trim();if(!c){alert('Falta el nombre');return;}const t=pedWizProducts.reduce((s,p)=>s+(p.price*p.qty),0);demoOrders.unshift({id:Date.now(),num:'SKY-'+String(demoOrders.length+1).padStart(3,'0'),client:c,email:document.getElementById('ped-wiz-email').value,phone:document.getElementById('ped-wiz-phone').value,address:document.getElementById('ped-wiz-address').value,products:pedWizProducts.filter(p=>p.name).map(p=>({name:p.name,qty:p.qty,price:p.price})),total:t,status:'new',payment:document.getElementById('ped-wiz-payment').value,date:'2026-04-01',notes:document.getElementById('ped-wiz-notes').value});closePedWizard();renderOrders();renderPedStats();renderPedRecs();showToast('Pedido creado: $'+t.toLocaleString()+' MXN');}
 
 // ═══════ INIT ═══════
+// ═══════ MODO FÁCIL / EXPERTO ═══════
+function pedSetMode(mode){
+  localStorage.setItem('ped_mode',mode);
+  const easy=document.getElementById('ped-easy-mode');
+  const pro=document.getElementById('ped-pro-mode');
+  const btnEasy=document.getElementById('ped-mode-easy');
+  const btnPro=document.getElementById('ped-mode-pro');
+  const greeting=document.getElementById('ped-mode-greeting');
+  const sub=document.getElementById('ped-mode-sub');
+  if(mode==='easy'){
+    easy.style.display='block';pro.style.display='none';
+    btnEasy.classList.add('active');btnPro.classList.remove('active');
+    greeting.textContent='Hola, ¿qué quieres hacer hoy?';
+    sub.textContent='Registrar una venta nueva, ver tus pedidos o marcar uno como enviado';
+    document.getElementById('ped-easy-home').style.display='block';
+    document.getElementById('ped-wizard').style.display='none';
+    pedUpdateEasyStats();
+  } else {
+    easy.style.display='none';pro.style.display='block';
+    btnPro.classList.add('active');btnEasy.classList.remove('active');
+    greeting.textContent='Modo experto · Todos los controles a tu alcance';
+    sub.textContent='¿Prefieres algo más simple? Cambia a modo fácil';
+  }
+}
+function pedUpdateEasyStats(){
+  const today=new Date().toISOString().substring(0,10);
+  const todayCount=demoOrders.filter(o=>o.date===today||o.date==='2026-04-01').length;
+  const ship=demoOrders.filter(o=>o.status==='paid'||o.status==='preparing').length;
+  const mes=demoOrders.filter(o=>o.status!=='cancelled').reduce((s,o)=>s+o.total,0);
+  const t=document.getElementById('ped-easy-today');if(t)t.textContent=todayCount;
+  const s=document.getElementById('ped-easy-ship');if(s)s.textContent=ship;
+  const r=document.getElementById('ped-easy-revenue');if(r)r.textContent='$'+Math.round(mes).toLocaleString();
+  const sc=document.getElementById('ped-easy-ship-count');
+  if(sc)sc.textContent=ship>0?`${ship} pedido${ship>1?'s':''} esperando envío`:'Los que ya te pagaron y faltan mandar';
+}
+
+// ═══════ EASY WIZARD (modo fácil) ═══════
+let pedEzStep=1;
+let pedEzItems=[{name:'',qty:1,price:0}];
+let pedEzPayment='card';
+let pedEzShipOption='later';
+function pedWizStart(useExample){
+  document.getElementById('ped-easy-home').style.display='none';
+  document.getElementById('ped-wizard').style.display='block';
+  pedEzGoTo(1);
+  pedEzItems=[{name:'',qty:1,price:0}];
+  pedEzPayment='card';
+  pedEzShipOption='later';
+  pedEzRenderItems();
+  pedEzRenderPayments();
+  if(useExample){
+    document.getElementById('ped-wiz-name').value='María García López';
+    document.getElementById('ped-wiz-email').value='maria@ejemplo.com';
+    document.getElementById('ped-wiz-phone').value='55 1234 5678';
+    document.getElementById('ped-wiz-address').value='Av. Insurgentes Sur 1234, Col. Del Valle, CDMX, CP 03100';
+    pedEzItems=[{name:'Blusa bordada Oaxaca',qty:1,price:450},{name:'Aretes de plata',qty:1,price:280}];
+    pedEzRenderItems();
+    pedEzValidate(1);
+    showToast('✨ Datos de ejemplo cargados. Continúa paso a paso.');
+  }
+}
+function pedWizCancel(){if(confirm('¿Seguro? Se perderán los datos.'))pedWizDone();}
+function pedWizDone(){
+  document.getElementById('ped-wizard').style.display='none';
+  document.getElementById('ped-easy-home').style.display='block';
+  pedEzGoTo(1);
+  pedUpdateEasyStats();
+}
+function pedEzGoTo(step){
+  pedEzStep=step;
+  for(let i=1;i<=5;i++){const el=document.getElementById('ped-wiz-step-'+i);if(el)el.style.display=(step===i)?'block':'none';}
+  document.getElementById('ped-wiz-step-done').style.display=step==='done'?'block':'none';
+  document.querySelectorAll('.ped-wiz-step-bar').forEach((b,i)=>{
+    b.classList.remove('active','done');
+    const n=i+1;
+    if(typeof step==='number'){if(n<step)b.classList.add('done');else if(n===step)b.classList.add('active');}
+    else if(step==='done'){b.classList.add('done');}
+  });
+  const titles={1:'¿Quién te compró?',2:'¿Qué te pidió?',3:'¿Cómo te pagó?',4:'¿Cómo lo mandas?',5:'Revisa',done:'¡Listo!'};
+  document.getElementById('ped-wiz-title').textContent='Registrar pedido · '+(titles[step]||'');
+  document.getElementById('ped-wiz-subtitle').textContent=step==='done'?'Completado':`Paso ${step} de 5`;
+  const back=document.getElementById('ped-wiz-back');
+  if(back)back.style.visibility=(step===1||step==='done')?'hidden':'visible';
+  if(step===5)pedWizRenderSummary();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function pedEzNext(){if(typeof pedEzStep==='number' && pedEzStep<5)pedEzGoTo(pedEzStep+1);}
+function pedEzBack(){if(typeof pedEzStep==='number' && pedEzStep>1)pedEzGoTo(pedEzStep-1);}
+function pedEzValidate(step){
+  let valid=false;
+  if(step===1){
+    const name=document.getElementById('ped-wiz-name').value.trim();
+    const phone=document.getElementById('ped-wiz-phone').value.trim();
+    const addr=document.getElementById('ped-wiz-address').value.trim();
+    valid=name.length>=3 && phone.length>=8 && addr.length>=10;
+  } else if(step===2){
+    const total=pedWizItems.reduce((s,i)=>s+(i.qty*i.price),0);
+    valid=total>0 && pedWizItems.every(i=>i.name.trim().length>0);
+  }
+  const btn=document.getElementById('ped-wiz-next-'+step);
+  if(btn)btn.disabled=!valid;
+  return valid;
+}
+function pedWizAddItem(){pedWizItems.push({name:'',qty:1,price:0});pedWizRenderItems();}
+function pedWizRemoveItem(i){if(pedWizItems.length>1){pedWizItems.splice(i,1);pedWizRenderItems();}}
+function pedWizUpdateItem(i,f,v){pedWizItems[i][f]=f==='name'?v:(parseFloat(v)||0);pedWizRenderTotals();pedEzValidate(2);}
+function pedWizRenderItems(){
+  const el=document.getElementById('ped-wiz-items');if(!el)return;
+  el.innerHTML=pedWizItems.map((it,i)=>`<div class="ped-wiz-item-row">
+    <div><label>¿Qué le vendiste?</label><input type="text" placeholder="Ej: Blusa bordada" value="${it.name.replace(/"/g,'&quot;')}" oninput="pedWizUpdateItem(${i},'name',this.value)"/></div>
+    <div><label>Cantidad</label><input type="number" min="1" value="${it.qty}" oninput="pedWizUpdateItem(${i},'qty',this.value)"/></div>
+    <div><label>Precio unit.</label><input type="number" min="0" step="0.01" value="${it.price}" oninput="pedWizUpdateItem(${i},'price',this.value)"/></div>
+    <div><label>Importe</label><input type="text" readonly value="$${(it.qty*it.price).toFixed(2)}" style="opacity:0.7;"/></div>
+    ${pedWizItems.length>1?`<button onclick="pedWizRemoveItem(${i})" style="width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:transparent;color:#ef4444;cursor:pointer;">✕</button>`:'<div></div>'}
+  </div>`).join('');
+  pedWizRenderTotals();
+}
+function pedWizRenderTotals(){
+  const total=pedWizItems.reduce((s,i)=>s+(i.qty*i.price),0);
+  document.getElementById('ped-wiz-total').textContent='$'+total.toLocaleString(undefined,{minimumFractionDigits:2});
+}
+const PED_PAYMENTS=[
+  {code:'card',emoji:'💳',name:'Tarjeta',desc:'Crédito o débito'},
+  {code:'transfer',emoji:'🏦',name:'Transferencia',desc:'SPEI / bancaria'},
+  {code:'cash',emoji:'💵',name:'Efectivo',desc:'Pago en mano'},
+  {code:'oxxo',emoji:'🏪',name:'OXXO',desc:'Pagó en tienda'},
+  {code:'pending',emoji:'⏰',name:'Aún no me paga',desc:'Pendiente de pago'},
+];
+function pedWizRenderPayments(){
+  const el=document.getElementById('ped-wiz-payment-grid');if(!el)return;
+  el.innerHTML=PED_PAYMENTS.map(p=>`<div class="ped-wiz-pay-card${p.code===pedWizPayment?' selected':''}" onclick="pedWizPickPay('${p.code}')">
+    <span class="ped-wiz-pay-emoji">${p.emoji}</span>
+    <span class="ped-wiz-pay-name">${p.name}</span>
+    <span class="ped-wiz-pay-desc">${p.desc}</span>
+  </div>`).join('');
+}
+function pedWizPickPay(code){pedWizPayment=code;pedWizRenderPayments();}
+function pedWizPickShip(opt){
+  pedWizShipOption=opt;
+  document.getElementById('ped-wiz-ship-later').classList.toggle('selected',opt==='later');
+  document.getElementById('ped-wiz-ship-now').classList.toggle('selected',opt==='now');
+  document.getElementById('ped-wiz-ship-pickup').classList.toggle('selected',opt==='pickup');
+}
+function pedWizRenderSummary(){
+  const el=document.getElementById('ped-wiz-summary');if(!el)return;
+  const name=document.getElementById('ped-wiz-name').value;
+  const total=pedWizItems.reduce((s,i)=>s+(i.qty*i.price),0);
+  const payment=PED_PAYMENTS.find(p=>p.code===pedWizPayment);
+  const shipTxt={later:'Lo mando después',now:'Generar guía ahora',pickup:'Cliente recoge'}[pedWizShipOption];
+  const itemsTxt=pedWizItems.map(i=>`${i.qty}× ${i.name}`).join(', ');
+  el.innerHTML=`
+    <div class="ped-wiz-sum-row"><span>Cliente</span><span>${name||'—'}</span></div>
+    <div class="ped-wiz-sum-row"><span>Productos</span><span style="max-width:60%;">${itemsTxt||'—'}</span></div>
+    <div class="ped-wiz-sum-row"><span>Pago</span><span>${payment.emoji} ${payment.name}</span></div>
+    <div class="ped-wiz-sum-row"><span>Envío</span><span>${shipTxt}</span></div>
+    <div class="ped-wiz-sum-row" style="background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.3);"><span style="color:var(--text-primary);font-weight:800;">Total del pedido</span><span style="color:#22c55e;font-size:18px;font-weight:900;">$${total.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>
+  `;
+}
+function pedWizConfirm(){
+  const num='SKY-'+String(demoOrders.length+1).padStart(3,'0');
+  const total=pedWizItems.reduce((s,i)=>s+(i.qty*i.price),0);
+  const statusMap={card:'paid',transfer:'paid',cash:'paid',oxxo:'paid',pending:'new'};
+  const newOrder={
+    id:Date.now(),num,
+    client:document.getElementById('ped-wiz-name').value,
+    email:document.getElementById('ped-wiz-email').value,
+    phone:document.getElementById('ped-wiz-phone').value,
+    address:document.getElementById('ped-wiz-address').value,
+    products:pedWizItems.map(i=>({name:i.name,qty:i.qty,price:i.price})),
+    total,
+    status:statusMap[pedWizPayment]||'new',
+    payment:pedWizPayment,
+    date:new Date().toISOString().substring(0,10),
+    notes:document.getElementById('ped-wiz-notes').value,
+  };
+  demoOrders.unshift(newOrder);
+  renderOrders();renderShipList();renderPedStats();renderPedRecs();
+  document.getElementById('ped-wiz-done-num').textContent=num;
+  let msg=`Pedido de <b>${newOrder.client}</b> guardado. Total: <b>$${total.toLocaleString()}</b>.`;
+  if(pedWizShipOption==='now')msg+=' Te llevamos al módulo de Envíos para generar la guía 📦';
+  else if(pedWizShipOption==='pickup')msg+=' El cliente va a recoger en tienda 🏪';
+  else msg+=' Puedes generar la guía más tarde desde Envíos.';
+  document.getElementById('ped-wiz-done-msg').innerHTML=msg;
+  pedWizGoTo('done');
+}
+
+// ═══════ TOUR ═══════
+const PED_TOUR_STEPS=[
+  {emoji:'📦',title:'¡Hola! Bienvenido a Pedidos',desc:'Aquí registras cada venta que haces. Vamos a explicarte cómo funciona en 30 segundos.'},
+  {emoji:'🛒',title:'Captura en 5 pasos sencillos',desc:'Quién te compró, qué te pidió, cómo te pagó, cómo lo mandas y ya. Sin terminología rara.'},
+  {emoji:'🔌',title:'O conecta tu tienda',desc:'Si ya vendes en Shopify, MercadoLibre o WooCommerce, los pedidos se sincronizan solos. No tienes que capturar nada.'},
+  {emoji:'🎯',title:'¿Probamos?',desc:'Puedes registrar un pedido real o usar datos de ejemplo para ver cómo se ve.'},
+];
+let pedTourStep=0;
+function pedStartTour(){pedTourStep=0;pedRenderTour();document.getElementById('ped-tour').style.display='flex';}
+function pedRenderTour(){
+  const s=PED_TOUR_STEPS[pedTourStep];
+  document.getElementById('ped-tour-emoji').textContent=s.emoji;
+  document.getElementById('ped-tour-title').textContent=s.title;
+  document.getElementById('ped-tour-desc').textContent=s.desc;
+  document.querySelectorAll('.ped-tour-dot').forEach((d,i)=>d.classList.toggle('active',i===pedTourStep));
+  document.getElementById('ped-tour-next-btn').textContent=pedTourStep===PED_TOUR_STEPS.length-1?'¡Empezar! 🚀':'Siguiente →';
+}
+function pedTourNext(){
+  if(pedTourStep<PED_TOUR_STEPS.length-1){pedTourStep++;pedRenderTour();}
+  else{pedTourSkip();pedWizStart(true);}
+}
+function pedTourSkip(){
+  document.getElementById('ped-tour').style.display='none';
+  localStorage.setItem('ped_tour_done','1');
+}
+
 document.addEventListener('DOMContentLoaded',()=>{
   ['all','ship','returns','analytics'].forEach(t=>{if(localStorage.getItem('ped_help_'+t+'_dismissed')){const el=document.getElementById('ped-help-'+t);if(el)el.style.display='none';}});
   renderPedRecs();renderPedStats();renderOrders();renderShipList();renderReturns();renderPedAnalytics();renderAutopilot();
+  const savedMode=localStorage.getItem('ped_mode')||'easy';
+  pedSetMode(savedMode);
+  pedUpdateEasyStats();
+  if(!localStorage.getItem('ped_tour_done')){setTimeout(()=>pedStartTour(),600);}
 });
 ['ped-modal-detail','ped-modal-wizard'].forEach(id=>{document.getElementById(id)?.addEventListener('click',function(e){if(e.target===this)this.style.display='none';});});
 </script>
