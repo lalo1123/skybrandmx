@@ -1916,17 +1916,40 @@ function facWizBack(){
   if(typeof facWizStep==='number' && facWizStep>1)facWizGoTo(facWizStep-1);
 }
 
+function facShowMissing(step,missing){
+  let box=document.getElementById('fac-wiz-missing-'+step);
+  if(!box){
+    const btn=document.getElementById('fac-wiz-next-'+step);
+    if(!btn)return;
+    box=document.createElement('div');
+    box.id='fac-wiz-missing-'+step;
+    box.style.cssText='display:none;margin-top:14px;padding:12px 16px;border-radius:10px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.25);font-size:12px;color:#f97316;align-items:flex-start;gap:8px;';
+    btn.parentNode.insertBefore(box,btn.nextSibling);
+  }
+  if(missing.length===0){box.style.display='none';return;}
+  box.style.display='flex';
+  box.innerHTML=`<span style="font-size:16px;flex-shrink:0;">⚠️</span><div><strong style="color:var(--text-primary);">Para continuar te falta:</strong><br/>${missing.map(m=>'• '+m).join('<br/>')}</div>`;
+}
 function facWizValidate(step){
-  let valid=false;
+  let valid=false;let missing=[];
   if(step===1){
     const name=document.getElementById('fac-wiz-name').value.trim();
     const rfc=document.getElementById('fac-wiz-rfc').value.trim();
     const cp=document.getElementById('fac-wiz-cp').value.trim();
+    if(name.length<3)missing.push(`<strong>Nombre o razón social</strong> del cliente`);
+    if(rfc.length!==12 && rfc.length!==13)missing.push(`<strong>RFC válido</strong> (12 caracteres si es empresa, 13 si es persona física)`);
+    if(cp.length!==5)missing.push(`<strong>Código postal</strong> del cliente (5 dígitos)`);
     valid=name.length>=3 && (rfc.length===12||rfc.length===13) && cp.length===5;
   } else if(step===3){
     const subtotal=facWizItems.reduce((s,i)=>s+(i.qty*i.price),0);
-    valid=subtotal>0 && facWizItems.every(i=>i.desc.trim().length>0);
+    const allDesc=facWizItems.every(i=>i.desc.trim().length>0);
+    const allPrice=facWizItems.every(i=>i.price>0);
+    if(!allDesc)missing.push(`Cada producto/servicio necesita una <strong>descripción</strong>`);
+    if(!allPrice)missing.push(`Cada producto/servicio necesita un <strong>precio mayor a 0</strong>`);
+    if(subtotal===0 && allDesc && allPrice)missing.push(`El total a facturar no puede ser $0`);
+    valid=subtotal>0 && allDesc && allPrice;
   }
+  facShowMissing(step,missing);
   const btn=document.getElementById('fac-wiz-next-'+step);
   if(btn)btn.disabled=!valid;
   return valid;
