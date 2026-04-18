@@ -312,48 +312,123 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
       <button onclick="openOrderWizard()" class="ped-btn-primary" style="margin-top:16px;padding:12px 28px;">Crear pedido manual</button>
     </div>
     <!-- Toolbar -->
-    <div id="ped-toolbar" class="stat-card animate-in" style="padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div id="ped-toolbar" class="stat-card animate-in" style="padding:16px 20px;margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
       <div style="flex:1;min-width:200px;position:relative;">
         <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        <input id="ped-search" type="text" placeholder="Buscar por nombre, # pedido..." oninput="pedFilter()" class="ped-input" style="padding-left:38px;"/>
+        <input id="ped-search" type="text" placeholder="Buscar por nombre, # pedido, email, teléfono..." oninput="pedFilter()" class="ped-input" style="padding-left:38px;"/>
       </div>
-      <select id="ped-filter-status" onchange="pedFilter()" class="ped-input" style="width:auto;cursor:pointer;">
-        <option value="">Todos los estados</option>
-        <option value="new">Nuevo</option>
-        <option value="paid">Pagado</option>
-        <option value="preparing">Preparando</option>
-        <option value="shipped">Enviado</option>
-        <option value="delivered">Entregado</option>
-        <option value="cancelled">Cancelado</option>
-      </select>
-      <select id="ped-filter-date" onchange="pedFilter()" class="ped-input" style="width:auto;cursor:pointer;">
-        <option value="">Todas las fechas</option>
-        <option value="today">Hoy</option>
-        <option value="week">Esta semana</option>
-        <option value="month">Este mes</option>
-      </select>
+      <button onclick="pedToggleFilters()" class="ped-btn-secondary" style="padding:10px 14px;display:flex;align-items:center;gap:4px;" title="Filtros avanzados">
+        <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+        Filtros
+        <span id="ped-filters-count" style="display:none;background:#FF6B00;color:#fff;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:800;">0</span>
+      </button>
       <button onclick="openOrderWizard()" class="ped-btn-primary" style="display:flex;align-items:center;gap:6px;padding:10px 20px;">
         <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         Crear pedido
       </button>
       <div style="position:relative;" id="ped-more-wrap">
         <button onclick="pedToggleMore()" class="ped-btn-secondary" style="padding:10px 14px;display:flex;align-items:center;gap:4px;">Más <svg style="width:12px;height:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
-        <div id="ped-more-menu" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;background:var(--bg-sidebar);border:1px solid var(--border);border-radius:10px;padding:6px;min-width:160px;z-index:50;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+        <div id="ped-more-menu" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;background:var(--bg-sidebar);border:1px solid var(--border);border-radius:10px;padding:6px;min-width:180px;z-index:50;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
           <button onclick="pedExportCSV();pedToggleMore()" class="ped-dropdown-item">📄 Exportar a Excel/CSV</button>
           <button onclick="window.print();pedToggleMore()" class="ped-dropdown-item">🖨 Imprimir lista</button>
+          <button onclick="pedOpenCoupons();pedToggleMore()" class="ped-dropdown-item">🎟️ Gestionar cupones</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Filtros avanzados (ocultos por default) -->
+    <div id="ped-advanced-filters" style="display:none;margin-bottom:12px;padding:14px 18px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
+        <div><label class="ped-filter-label">Estado</label>
+          <select id="ped-filter-status" onchange="pedFilter()" class="ped-input" style="cursor:pointer;">
+            <option value="">Todos</option>
+            <option value="new">🆕 Nuevo</option><option value="paid">💰 Pagado</option>
+            <option value="preparing">📦 Preparando</option><option value="shipped">🚚 Enviado</option>
+            <option value="delivered">✅ Entregado</option><option value="cancelled">❌ Cancelado</option>
+          </select>
+        </div>
+        <div><label class="ped-filter-label">Periodo</label>
+          <select id="ped-filter-date" onchange="pedFilter()" class="ped-input" style="cursor:pointer;">
+            <option value="">Todas las fechas</option>
+            <option value="today">Hoy</option><option value="week">Esta semana</option>
+            <option value="month">Este mes</option><option value="30d">Últimos 30 días</option>
+          </select>
+        </div>
+        <div><label class="ped-filter-label">Monto mínimo</label>
+          <input id="ped-filter-min" type="number" placeholder="$0" class="ped-input" oninput="pedFilter()"/>
+        </div>
+        <div><label class="ped-filter-label">Monto máximo</label>
+          <input id="ped-filter-max" type="number" placeholder="Sin límite" class="ped-input" oninput="pedFilter()"/>
+        </div>
+        <div><label class="ped-filter-label">Forma de pago</label>
+          <select id="ped-filter-pay" onchange="pedFilter()" class="ped-input" style="cursor:pointer;">
+            <option value="">Todos</option><option value="card">💳 Tarjeta</option>
+            <option value="transfer">🏦 Transferencia</option><option value="cash">💵 Efectivo</option>
+            <option value="oxxo">🏪 OXXO</option><option value="pending">⏰ Pendiente</option>
+          </select>
+        </div>
+        <div><label class="ped-filter-label">Etiqueta</label>
+          <select id="ped-filter-tag" onchange="pedFilter()" class="ped-input" style="cursor:pointer;">
+            <option value="">Todas</option><option value="vip">⭐ VIP</option>
+            <option value="urgente">🚨 Urgente</option><option value="regalo">🎁 Regalo</option>
+            <option value="fraude">⚠️ Fraude</option><option value="mayorista">📦 Mayorista</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:10px;justify-content:flex-end;">
+        <button onclick="pedClearFilters()" class="ped-btn-secondary" style="padding:6px 14px;font-size:11px;">Limpiar filtros</button>
+      </div>
+    </div>
+
+    <!-- Bulk actions bar (aparece al seleccionar) -->
+    <div id="ped-bulk-bar" style="display:none;margin-bottom:12px;padding:12px 18px;border-radius:12px;background:linear-gradient(135deg,rgba(111,207,245,0.15),rgba(139,92,246,0.1));border:1px solid rgba(111,207,245,0.3);align-items:center;gap:14px;flex-wrap:wrap;">
+      <p style="font-size:13px;font-weight:800;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
+        <span id="ped-bulk-count" style="width:28px;height:28px;border-radius:8px;background:var(--accent);color:#0a1520;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;">0</span>
+        <span>pedido<span id="ped-bulk-plural">s</span> seleccionado<span id="ped-bulk-plural2">s</span></span>
+      </p>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button onclick="pedBulkAction('markPaid')" class="ped-bulk-btn">💰 Marcar pagados</button>
+        <button onclick="pedBulkAction('markPrepared')" class="ped-bulk-btn">📦 Marcar preparados</button>
+        <button onclick="pedBulkAction('markShipped')" class="ped-bulk-btn">🚚 Marcar enviados</button>
+        <button onclick="pedBulkAction('tag')" class="ped-bulk-btn">🏷️ Etiquetar</button>
+        <button onclick="pedBulkAction('export')" class="ped-bulk-btn">📄 Exportar</button>
+        <button onclick="pedBulkAction('delete')" class="ped-bulk-btn" style="color:#ef4444;border-color:#ef4444;">✕ Cancelar</button>
+        <button onclick="pedBulkClear()" style="padding:6px 12px;border-radius:8px;border:none;background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;">Deseleccionar todos</button>
       </div>
     </div>
     <div class="stat-card animate-in" style="padding:0;overflow:hidden;">
       <div style="overflow-x:auto;">
         <table style="width:100%;border-collapse:collapse;font-size:13px;">
           <thead><tr style="border-bottom:1px solid var(--border);">
-            <th class="ped-th"># Pedido</th><th class="ped-th">Cliente</th><th class="ped-th">Productos</th>
-            <th class="ped-th" style="text-align:right;">Total</th><th class="ped-th">Estado</th>
-            <th class="ped-th">Pago</th><th class="ped-th">Fecha</th><th class="ped-th" style="text-align:center;">Acciones</th>
+            <th class="ped-th" style="width:36px;"><input type="checkbox" id="ped-sel-all" onclick="pedToggleSelectAll(this.checked)" style="cursor:pointer;"/></th>
+            <th class="ped-th ped-sortable" onclick="pedSort('num')">#&nbsp;Pedido <span class="ped-sort-icon" data-sort="num">⇅</span></th>
+            <th class="ped-th ped-sortable" onclick="pedSort('client')">Cliente <span class="ped-sort-icon" data-sort="client">⇅</span></th>
+            <th class="ped-th">Productos</th>
+            <th class="ped-th ped-sortable" onclick="pedSort('total')" style="text-align:right;">Total <span class="ped-sort-icon" data-sort="total">⇅</span></th>
+            <th class="ped-th">Estado</th>
+            <th class="ped-th">Pago</th>
+            <th class="ped-th">Tags</th>
+            <th class="ped-th ped-sortable" onclick="pedSort('date')">Fecha <span class="ped-sort-icon" data-sort="date">⇅</span></th>
+            <th class="ped-th" style="text-align:center;">Acciones</th>
           </tr></thead>
           <tbody id="ped-orders-tbody"></tbody>
         </table>
+      </div>
+      <!-- Paginación -->
+      <div id="ped-pagination" style="display:none;padding:14px 20px;border-top:1px solid var(--border);align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);">
+          <span>Mostrando</span>
+          <select id="ped-page-size" onchange="pedChangePageSize(this.value)" class="ped-input" style="padding:6px 10px;width:auto;cursor:pointer;">
+            <option value="25">25</option><option value="50" selected>50</option>
+            <option value="100">100</option><option value="200">200</option>
+          </select>
+          <span>de <b id="ped-total-count" style="color:var(--text-primary);">0</b> pedidos</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button onclick="pedChangePage(-1)" id="ped-prev-btn" class="ped-page-btn">←</button>
+          <span style="font-size:12px;color:var(--text-muted);">Página <b id="ped-current-page" style="color:var(--text-primary);">1</b> de <b id="ped-total-pages" style="color:var(--text-primary);">1</b></span>
+          <button onclick="pedChangePage(1)" id="ped-next-btn" class="ped-page-btn">→</button>
+        </div>
       </div>
     </div>
   </div>
@@ -569,6 +644,115 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
       <div id="ped-detail-body-new" style="padding:24px;"></div>
     </div>
   </div>
+
+  <!-- ══════════ Refund Modal ══════════ -->
+  <div id="ped-refund-modal" class="ped-detail-modal" onclick="if(event.target===this)pedCloseRefund();">
+    <div class="ped-detail-box" style="max-width:540px;">
+      <div class="ped-detail-header">
+        <div>
+          <p style="font-size:11px;font-weight:800;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Reembolso</p>
+          <h3 style="font-size:18px;font-weight:900;color:var(--text-primary);">Devolver dinero al cliente</h3>
+        </div>
+        <button onclick="pedCloseRefund()" style="width:36px;height:36px;border:none;background:transparent;color:var(--text-muted);font-size:22px;cursor:pointer;">✕</button>
+      </div>
+      <div style="padding:24px;">
+        <div id="ped-refund-info" style="padding:12px;border-radius:10px;background:var(--input-bg);margin-bottom:16px;"></div>
+        <label class="ped-wiz-label">¿Reembolso total o parcial?</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+          <button type="button" onclick="pedRefundType('total')" id="ped-refund-total" class="ped-wiz-ship-card">
+            <div style="font-size:28px;">💯</div>
+            <p style="font-size:13px;font-weight:900;color:var(--text-primary);margin-top:6px;">Total</p>
+            <p style="font-size:11px;color:var(--text-muted);">Devolver todo el monto</p>
+          </button>
+          <button type="button" onclick="pedRefundType('partial')" id="ped-refund-partial" class="ped-wiz-ship-card">
+            <div style="font-size:28px;">✂️</div>
+            <p style="font-size:13px;font-weight:900;color:var(--text-primary);margin-top:6px;">Parcial</p>
+            <p style="font-size:11px;color:var(--text-muted);">Solo una parte</p>
+          </button>
+        </div>
+        <div id="ped-refund-amount-wrap" style="display:none;margin-bottom:14px;">
+          <label class="ped-wiz-label">Monto a reembolsar (MXN)</label>
+          <input id="ped-refund-amount" type="number" step="0.01" min="0" class="ped-wiz-input" placeholder="0.00"/>
+        </div>
+        <label class="ped-wiz-label">Motivo del reembolso</label>
+        <select id="ped-refund-reason" class="ped-wiz-input" style="cursor:pointer;">
+          <option value="">Selecciona...</option>
+          <option value="defective">Producto defectuoso / dañado</option>
+          <option value="wrong">Producto equivocado</option>
+          <option value="unsatisfied">Cliente no quedó satisfecho</option>
+          <option value="late">Llegó muy tarde</option>
+          <option value="notdelivered">Paquete no llegó</option>
+          <option value="other">Otro motivo</option>
+        </select>
+        <label class="ped-wiz-label" style="margin-top:14px;">Notas (opcional)</label>
+        <textarea id="ped-refund-notes" rows="2" class="ped-wiz-input" placeholder="Detalles del caso..."></textarea>
+        <div style="display:flex;gap:10px;margin-top:20px;">
+          <button onclick="pedCloseRefund()" class="ped-btn-secondary" style="flex:1;">Cancelar</button>
+          <button onclick="pedConfirmRefund()" class="ped-wiz-next" style="flex:2;margin:0;background:#ef4444;">Procesar reembolso</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Tag Picker Modal ══════════ -->
+  <div id="ped-tags-modal" class="ped-detail-modal" onclick="if(event.target===this)pedCloseTags();">
+    <div class="ped-detail-box" style="max-width:480px;">
+      <div class="ped-detail-header">
+        <div>
+          <p style="font-size:11px;font-weight:800;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Etiquetar pedido</p>
+          <h3 id="ped-tags-title" style="font-size:18px;font-weight:900;color:var(--text-primary);">--</h3>
+        </div>
+        <button onclick="pedCloseTags()" style="width:36px;height:36px;border:none;background:transparent;color:var(--text-muted);font-size:22px;cursor:pointer;">✕</button>
+      </div>
+      <div style="padding:24px;">
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">Marca las etiquetas que apliquen. Se pueden combinar.</p>
+        <div id="ped-tags-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
+        <div style="display:flex;gap:10px;margin-top:20px;">
+          <button onclick="pedCloseTags()" class="ped-btn-secondary" style="flex:1;">Cancelar</button>
+          <button onclick="pedSaveTags()" class="ped-wiz-next" style="flex:2;margin:0;background:#22c55e;">Guardar etiquetas</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Coupons Modal ══════════ -->
+  <div id="ped-coupons-modal" class="ped-detail-modal" onclick="if(event.target===this)pedCloseCoupons();">
+    <div class="ped-detail-box" style="max-width:600px;">
+      <div class="ped-detail-header">
+        <div>
+          <p style="font-size:11px;font-weight:800;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Gestión</p>
+          <h3 style="font-size:18px;font-weight:900;color:var(--text-primary);">🎟️ Mis cupones de descuento</h3>
+        </div>
+        <button onclick="pedCloseCoupons()" style="width:36px;height:36px;border:none;background:transparent;color:var(--text-muted);font-size:22px;cursor:pointer;">✕</button>
+      </div>
+      <div style="padding:24px;">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;margin-bottom:14px;">
+          <input id="ped-coupon-code" type="text" class="ped-wiz-input" placeholder="CÓDIGO (ej: VERANO20)" style="text-transform:uppercase;"/>
+          <select id="ped-coupon-type" class="ped-wiz-input" style="cursor:pointer;"><option value="percent">% descuento</option><option value="fixed">$ fijo</option></select>
+          <input id="ped-coupon-value" type="number" min="0" class="ped-wiz-input" placeholder="Valor"/>
+          <button onclick="pedAddCoupon()" class="ped-wiz-next" style="margin:0;padding:10px 16px;background:#22c55e;">+ Crear</button>
+        </div>
+        <div id="ped-coupons-list" style="display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Remisión Print (hidden iframe-style) ══════════ -->
+  <div id="ped-remision-modal" class="ped-detail-modal" onclick="if(event.target===this)pedCloseRemision();">
+    <div class="ped-detail-box" style="max-width:700px;">
+      <div class="ped-detail-header">
+        <div>
+          <p style="font-size:11px;font-weight:800;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Documento</p>
+          <h3 style="font-size:18px;font-weight:900;color:var(--text-primary);">📄 Nota de remisión</h3>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="pedPrintRemision()" class="ped-wiz-next" style="margin:0;padding:8px 14px;font-size:12px;">🖨 Imprimir</button>
+          <button onclick="pedCloseRemision()" style="width:36px;height:36px;border:none;background:transparent;color:var(--text-muted);font-size:22px;cursor:pointer;">✕</button>
+        </div>
+      </div>
+      <div id="ped-remision-body" style="padding:24px;"></div>
+    </div>
+  </div>
 </DashboardLayout>
 
 <style>
@@ -746,6 +930,64 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
   .ped-detail-tl-content { flex:1; }
   .ped-detail-tl-title { font-size:13px;font-weight:800;color:var(--text-primary); }
   .ped-detail-tl-meta { font-size:11px;color:var(--text-muted);margin-top:2px; }
+
+  /* ════════ Advanced filters ════════ */
+  .ped-filter-label { display:block;font-size:10px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px; }
+  #ped-advanced-filters.open { display:block; }
+
+  /* ════════ Bulk bar ════════ */
+  #ped-bulk-bar.show { display:flex; }
+  .ped-bulk-btn { padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card-bg,var(--input-bg));color:var(--text-primary);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all 0.15s; }
+  .ped-bulk-btn:hover { border-color:var(--accent);color:var(--accent); }
+
+  /* ════════ Sortable headers ════════ */
+  .ped-sortable { cursor:pointer;user-select:none;transition:color 0.15s; }
+  .ped-sortable:hover { color:var(--accent) !important; }
+  .ped-sort-icon { font-size:10px;opacity:0.5;margin-left:4px; }
+  .ped-sort-icon.active { opacity:1;color:var(--accent); }
+
+  /* ════════ Pagination ════════ */
+  #ped-pagination.show { display:flex; }
+  .ped-page-btn { width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-primary);cursor:pointer;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all 0.15s; }
+  .ped-page-btn:hover:not(:disabled) { border-color:var(--accent);color:var(--accent); }
+  .ped-page-btn:disabled { opacity:0.3;cursor:not-allowed; }
+
+  /* ════════ Order row checkbox ════════ */
+  .ped-row-check { accent-color:var(--accent);cursor:pointer; }
+  tr.ped-row-selected { background:rgba(111,207,245,0.06) !important; }
+
+  /* ════════ Tag chips ════════ */
+  .ped-tag-chip { display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:800;margin:2px 2px 0 0;white-space:nowrap; }
+  .ped-tag-chip.vip { background:linear-gradient(135deg,#fbbf24,#f97316);color:#fff; }
+  .ped-tag-chip.urgente { background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3); }
+  .ped-tag-chip.regalo { background:rgba(236,72,153,0.15);color:#ec4899;border:1px solid rgba(236,72,153,0.3); }
+  .ped-tag-chip.fraude { background:rgba(153,27,27,0.2);color:#fca5a5;border:1px solid rgba(239,68,68,0.4); }
+  .ped-tag-chip.mayorista { background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.3); }
+  .ped-tag-picker-item { display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);cursor:pointer;transition:all 0.15s; }
+  .ped-tag-picker-item:hover { border-color:var(--accent); }
+  .ped-tag-picker-item.selected { border-color:#FF6B00;background:rgba(255,107,0,0.08); }
+  .ped-tag-picker-item input { accent-color:#FF6B00;cursor:pointer; }
+
+  /* ════════ Stale order alert ════════ */
+  .ped-stale-badge { display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:5px;font-size:9px;font-weight:800;background:rgba(239,68,68,0.15);color:#ef4444;animation:pedStalePulse 2s ease-in-out infinite; }
+  @keyframes pedStalePulse { 0%,100%{opacity:1;} 50%{opacity:0.6;} }
+
+  /* ════════ Coupon items ════════ */
+  .ped-coupon-item { display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg); }
+  .ped-coupon-code-display { font-family:monospace;font-size:13px;font-weight:900;color:var(--accent);padding:4px 10px;border-radius:6px;background:rgba(111,207,245,0.1);border:1px dashed rgba(111,207,245,0.4);letter-spacing:1px; }
+
+  /* ════════ Next step hint ════════ */
+  .ped-nextstep { padding:12px 16px;border-radius:10px;background:linear-gradient(135deg,rgba(34,197,94,0.08),rgba(111,207,245,0.08));border:1px solid rgba(34,197,94,0.2);display:flex;align-items:center;gap:10px;margin-top:14px; }
+  .ped-nextstep-icon { font-size:22px;flex-shrink:0; }
+  .ped-nextstep-text { flex:1;font-size:12px;color:var(--text-primary); }
+  .ped-nextstep-btn { padding:6px 12px;border-radius:8px;border:none;background:#22c55e;color:#fff;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap; }
+
+  /* Mobile responsive */
+  @media(max-width:768px){
+    .ped-kanban-board { grid-template-columns:1fr !important; }
+    #ped-toolbar { flex-direction:column;align-items:stretch !important; }
+    .ped-bulk-btn { font-size:10px;padding:6px 8px; }
+  }
 </style>
 
 <script is:inline>
@@ -819,21 +1061,198 @@ function renderPedRecs(){
   el.innerHTML=recs.map(r=>`<div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;background:${r.color}08;border:1px solid ${r.color}20;"><span style="font-size:24px;flex-shrink:0;">${r.icon}</span><div style="flex:1;"><p style="font-size:13px;font-weight:700;color:var(--text-primary);">${r.title}</p><p style="font-size:11px;color:var(--text-muted);margin-top:2px;">${r.desc}</p></div><button onclick="${r.action}" style="padding:8px 16px;border-radius:8px;border:none;background:${r.color};color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">${r.btn}</button><button onclick="this.closest('div[style]').remove()" style="border:none;background:transparent;color:var(--text-faint);cursor:pointer;font-size:14px;padding:0 4px;">✕</button></div>`).join('');
 }
 
-// ═══════ ORDERS TABLE ═══════
-function renderOrders(){
-  const tbody=document.getElementById('ped-orders-tbody');let data=[...demoOrders];
-  const search=document.getElementById('ped-search').value.toLowerCase();
-  const sf=document.getElementById('ped-filter-status').value;
-  const df=document.getElementById('ped-filter-date').value;
-  if(search)data=data.filter(o=>o.client.toLowerCase().includes(search)||o.num.toLowerCase().includes(search)||o.products.some(p=>p.name.toLowerCase().includes(search)));
-  if(sf)data=data.filter(o=>o.status===sf);
-  if(df==='today')data=data.filter(o=>o.date==='2026-04-01');
-  else if(df==='week')data=data.filter(o=>o.date>='2026-03-26');
-  else if(df==='month')data=data.filter(o=>o.date>='2026-03-01');
-  if(!data.length){tbody.innerHTML='<tr><td colspan="8" style="padding:40px;text-align:center;color:var(--text-faint);font-size:13px;">No se encontraron pedidos</td></tr>';return;}
-  tbody.innerHTML=data.map(o=>{const st=statusMap[o.status]||statusMap.new;const prods=o.products.map(p=>p.name).join(', ');const ps=prods.length>35?prods.substring(0,35)+'...':prods;return`<tr style="border-bottom:1px solid var(--border);transition:background 0.15s;cursor:pointer;" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background='transparent'" onclick="pedShowDetail(${o.id})"><td style="padding:14px 16px;font-weight:700;color:var(--accent);font-size:12px;">${o.num}</td><td style="padding:14px 16px;"><p style="font-weight:700;color:var(--text-primary);">${o.client}</p><p style="font-size:11px;color:var(--text-faint);">${o.email}</p></td><td style="padding:14px 16px;font-size:12px;color:var(--text-secondary);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${prods}">${ps}</td><td style="padding:14px 16px;text-align:right;font-weight:800;color:var(--text-primary);">$${o.total.toLocaleString()}</td><td style="padding:14px 16px;"><span style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;color:${st.c};background:${st.b};">${st.l}</span></td><td style="padding:14px 16px;font-size:12px;color:var(--text-muted);">${payMap[o.payment]||o.payment}</td><td style="padding:14px 16px;font-size:12px;color:var(--text-muted);">${o.date}</td><td style="padding:14px 16px;text-align:center;" onclick="event.stopPropagation()"><div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;"><button onclick="pedShowDetail(${o.id})" class="ped-tbl-btn">Ver</button>${o.status==='paid'||o.status==='preparing'?`<button onclick="changeStatus(${o.id},'shipped')" class="ped-tbl-btn" style="border-color:#8b5cf6;color:#8b5cf6;">Enviar</button>`:''}${o.status!=='cancelled'&&o.status!=='delivered'?`<button onclick="changeStatus(${o.id},'cancelled')" class="ped-tbl-btn" style="border-color:#ef4444;color:#ef4444;">Cancelar</button>`:''}</div></td></tr>`;}).join('');
+// ═══════ ORDERS TABLE + FILTERS + SORT + PAGINATION + BULK ═══════
+let pedSortField='date', pedSortDir='desc';
+let pedCurrentPage=1, pedPageSize=50;
+let pedSelected=new Set();
+
+function pedDaysSince(dateStr){
+  if(!dateStr)return 0;
+  const d=new Date(dateStr);
+  return Math.floor((Date.now()-d.getTime())/(1000*60*60*24));
 }
-function pedFilter(){renderOrders();}
+function pedIsStale(o){
+  // Pedidos 'paid' o 'preparing' que llevan más de 3 días sin moverse
+  if(o.status!=='paid' && o.status!=='preparing')return false;
+  return pedDaysSince(o.date)>=3;
+}
+
+function pedApplyFilters(){
+  let data=[...demoOrders];
+  const search=(document.getElementById('ped-search')?.value||'').toLowerCase().trim();
+  const sf=document.getElementById('ped-filter-status')?.value||'';
+  const df=document.getElementById('ped-filter-date')?.value||'';
+  const min=parseFloat(document.getElementById('ped-filter-min')?.value||'')||null;
+  const max=parseFloat(document.getElementById('ped-filter-max')?.value||'')||null;
+  const pf=document.getElementById('ped-filter-pay')?.value||'';
+  const tf=document.getElementById('ped-filter-tag')?.value||'';
+  if(search)data=data.filter(o=>o.client.toLowerCase().includes(search)||o.num.toLowerCase().includes(search)||(o.email||'').toLowerCase().includes(search)||(o.phone||'').includes(search)||(o.products||[]).some(p=>p.name.toLowerCase().includes(search)));
+  if(sf)data=data.filter(o=>o.status===sf);
+  const today=new Date().toISOString().substring(0,10);
+  if(df==='today')data=data.filter(o=>o.date===today||o.date==='2026-04-01');
+  else if(df==='week'){const w=new Date();w.setDate(w.getDate()-7);const ws=w.toISOString().substring(0,10);data=data.filter(o=>o.date>=ws);}
+  else if(df==='month'){const m=new Date();m.setDate(1);const ms=m.toISOString().substring(0,10);data=data.filter(o=>o.date>=ms);}
+  else if(df==='30d'){const d=new Date();d.setDate(d.getDate()-30);const ds=d.toISOString().substring(0,10);data=data.filter(o=>o.date>=ds);}
+  if(min!=null)data=data.filter(o=>(o.total||0)>=min);
+  if(max!=null)data=data.filter(o=>(o.total||0)<=max);
+  if(pf)data=data.filter(o=>o.payment===pf);
+  if(tf)data=data.filter(o=>(o.tags||[]).includes(tf));
+  // Sort
+  data.sort((a,b)=>{
+    let va=a[pedSortField], vb=b[pedSortField];
+    if(pedSortField==='total'){va=va||0;vb=vb||0;}
+    else{va=(va||'').toString();vb=(vb||'').toString();}
+    if(va<vb)return pedSortDir==='asc'?-1:1;
+    if(va>vb)return pedSortDir==='asc'?1:-1;
+    return 0;
+  });
+  return data;
+}
+
+function renderOrders(){
+  const tbody=document.getElementById('ped-orders-tbody');if(!tbody)return;
+  const all=pedApplyFilters();
+  // Update filter count
+  const count=[document.getElementById('ped-filter-status')?.value,document.getElementById('ped-filter-date')?.value,document.getElementById('ped-filter-min')?.value,document.getElementById('ped-filter-max')?.value,document.getElementById('ped-filter-pay')?.value,document.getElementById('ped-filter-tag')?.value].filter(Boolean).length;
+  const fc=document.getElementById('ped-filters-count');
+  if(fc){if(count>0){fc.style.display='inline';fc.textContent=count;}else{fc.style.display='none';}}
+  // Pagination
+  const total=all.length;
+  const totalPages=Math.max(1,Math.ceil(total/pedPageSize));
+  if(pedCurrentPage>totalPages)pedCurrentPage=totalPages;
+  const start=(pedCurrentPage-1)*pedPageSize;
+  const data=all.slice(start,start+pedPageSize);
+  const pag=document.getElementById('ped-pagination');
+  if(pag){if(total>pedPageSize){pag.classList.add('show');}else{pag.classList.remove('show');}}
+  const tc=document.getElementById('ped-total-count');if(tc)tc.textContent=total;
+  const cp=document.getElementById('ped-current-page');if(cp)cp.textContent=pedCurrentPage;
+  const tp=document.getElementById('ped-total-pages');if(tp)tp.textContent=totalPages;
+  const pb=document.getElementById('ped-prev-btn');if(pb)pb.disabled=pedCurrentPage<=1;
+  const nb=document.getElementById('ped-next-btn');if(nb)nb.disabled=pedCurrentPage>=totalPages;
+  // Sort icons
+  document.querySelectorAll('.ped-sort-icon').forEach(el=>{
+    el.classList.remove('active');
+    el.textContent='⇅';
+    if(el.dataset.sort===pedSortField){el.classList.add('active');el.textContent=pedSortDir==='asc'?'↑':'↓';}
+  });
+  if(!data.length){tbody.innerHTML='<tr><td colspan="10" style="padding:40px;text-align:center;color:var(--text-faint);font-size:13px;">📭 No se encontraron pedidos con esos filtros</td></tr>';pedUpdateBulkBar();return;}
+  tbody.innerHTML=data.map(o=>{
+    const st=statusMap[o.status]||statusMap.new;
+    const prods=o.products.map(p=>p.name).join(', ');
+    const ps=prods.length>35?prods.substring(0,35)+'...':prods;
+    const stale=pedIsStale(o);
+    const daysStale=pedDaysSince(o.date);
+    const tags=(o.tags||[]).map(t=>`<span class="ped-tag-chip ${t}">${t==='vip'?'⭐ VIP':t==='urgente'?'🚨 Urgente':t==='regalo'?'🎁 Regalo':t==='fraude'?'⚠️ Fraude':t==='mayorista'?'📦 Mayorista':t}</span>`).join('');
+    const isSel=pedSelected.has(o.id);
+    return `<tr class="${isSel?'ped-row-selected':''}" style="border-bottom:1px solid var(--border);transition:background 0.15s;cursor:pointer;" onclick="pedShowDetail(${o.id})">
+      <td style="padding:14px 10px;" onclick="event.stopPropagation()"><input type="checkbox" class="ped-row-check" onchange="pedToggleRow(${o.id},this.checked)" ${isSel?'checked':''}/></td>
+      <td style="padding:14px 12px;font-weight:700;color:var(--accent);font-size:12px;font-family:monospace;">${o.num}${stale?`<br/><span class="ped-stale-badge" title="Lleva ${daysStale} días sin moverse">⚠ ${daysStale}d sin mover</span>`:''}</td>
+      <td style="padding:14px 12px;"><p style="font-weight:700;color:var(--text-primary);">${o.client}</p><p style="font-size:11px;color:var(--text-faint);">${o.email||'—'}</p></td>
+      <td style="padding:14px 12px;font-size:12px;color:var(--text-secondary);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${prods.replace(/"/g,'&quot;')}">${ps}</td>
+      <td style="padding:14px 12px;text-align:right;font-weight:800;color:var(--text-primary);">$${o.total.toLocaleString()}${o.coupon?`<br/><span style="font-size:9px;color:#22c55e;">🎟️ ${o.coupon}</span>`:''}${o.refundAmount?`<br/><span style="font-size:9px;color:#ef4444;">↩ -$${o.refundAmount.toLocaleString()}</span>`:''}</td>
+      <td style="padding:14px 12px;"><span style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;color:${st.c};background:${st.b};" title="${pedStatusTooltip(o.status)}">${st.l}</span></td>
+      <td style="padding:14px 12px;font-size:12px;color:var(--text-muted);">${payMap[o.payment]||o.payment}</td>
+      <td style="padding:14px 12px;">${tags||'<span style="font-size:10px;color:var(--text-faint);">—</span>'}</td>
+      <td style="padding:14px 12px;font-size:12px;color:var(--text-muted);white-space:nowrap;">${o.date}</td>
+      <td style="padding:14px 12px;text-align:center;" onclick="event.stopPropagation()"><div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
+        <button onclick="pedShowDetail(${o.id})" class="ped-tbl-btn">Ver</button>
+        ${(o.status==='paid'||o.status==='preparing')?`<button onclick="pedSendToShipping(${o.id})" class="ped-tbl-btn" style="border-color:#8b5cf6;color:#8b5cf6;" title="Generar guía de envío">🚚</button>`:''}
+        ${o.status!=='cancelled'&&o.status!=='delivered'?`<button onclick="pedOpenTags(${o.id})" class="ped-tbl-btn" title="Etiquetar">🏷️</button>`:''}
+      </div></td>
+    </tr>`;
+  }).join('');
+  pedUpdateBulkBar();
+}
+function pedFilter(){pedCurrentPage=1;renderOrders();}
+function pedClearFilters(){
+  ['ped-filter-status','ped-filter-date','ped-filter-min','ped-filter-max','ped-filter-pay','ped-filter-tag'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('ped-search').value='';
+  pedFilter();
+}
+function pedToggleFilters(){const el=document.getElementById('ped-advanced-filters');el.style.display=el.style.display==='none'||!el.style.display?'block':'none';}
+function pedSort(field){
+  if(pedSortField===field){pedSortDir=pedSortDir==='asc'?'desc':'asc';}
+  else{pedSortField=field;pedSortDir='asc';}
+  renderOrders();
+}
+function pedChangePage(delta){pedCurrentPage+=delta;renderOrders();window.scrollTo({top:0,behavior:'smooth'});}
+function pedChangePageSize(s){pedPageSize=parseInt(s)||50;pedCurrentPage=1;renderOrders();}
+
+// ═══════ BULK ACTIONS ═══════
+function pedToggleSelectAll(checked){
+  if(checked){pedApplyFilters().forEach(o=>pedSelected.add(o.id));}
+  else{pedSelected.clear();}
+  renderOrders();
+}
+function pedToggleRow(id,checked){
+  if(checked)pedSelected.add(id);
+  else pedSelected.delete(id);
+  const tr=document.querySelector(`tr.ped-row-selected`);
+  pedUpdateBulkBar();
+  // Just re-render to update row highlighting
+  renderOrders();
+}
+function pedUpdateBulkBar(){
+  const bar=document.getElementById('ped-bulk-bar');if(!bar)return;
+  const n=pedSelected.size;
+  if(n===0){bar.classList.remove('show');bar.style.display='none';return;}
+  bar.classList.add('show');bar.style.display='flex';
+  document.getElementById('ped-bulk-count').textContent=n;
+  document.getElementById('ped-bulk-plural').textContent=n===1?'':'s';
+  document.getElementById('ped-bulk-plural2').textContent=n===1?'':'s';
+  const selAll=document.getElementById('ped-sel-all');
+  if(selAll){const totalVisible=pedApplyFilters().length;selAll.checked=n===totalVisible&&n>0;selAll.indeterminate=n>0&&n<totalVisible;}
+}
+function pedBulkClear(){pedSelected.clear();renderOrders();}
+function pedBulkAction(action){
+  if(pedSelected.size===0)return;
+  const ids=Array.from(pedSelected);
+  const orders=demoOrders.filter(o=>ids.includes(o.id));
+  if(action==='delete'){
+    if(!confirm(`¿Cancelar ${ids.length} pedido${ids.length>1?'s':''}? Se marcarán como cancelados.`))return;
+    orders.forEach(o=>{o.status='cancelled';if(!o.history)o.history=[];o.history.push({date:new Date().toISOString(),event:'Cancelado (bulk)',actor:'Tú'});});
+    showToast(`✓ ${ids.length} pedido${ids.length>1?'s':''} cancelado${ids.length>1?'s':''}`);
+  } else if(action==='markPaid'){
+    orders.forEach(o=>{if(o.status==='new'){o.status='paid';if(!o.history)o.history=[];o.history.push({date:new Date().toISOString(),event:'Marcado pagado (bulk)',actor:'Tú'});}});
+    showToast(`✓ Marcados como pagados`);
+  } else if(action==='markPrepared'){
+    orders.forEach(o=>{if(o.status==='paid'){o.status='preparing';if(!o.history)o.history=[];o.history.push({date:new Date().toISOString(),event:'Marcado preparando (bulk)',actor:'Tú'});}});
+    showToast(`✓ Marcados como preparando`);
+  } else if(action==='markShipped'){
+    orders.forEach(o=>{if(o.status==='preparing'||o.status==='paid'){o.status='shipped';if(!o.history)o.history=[];o.history.push({date:new Date().toISOString(),event:'Marcado enviado (bulk)',actor:'Tú'});}});
+    showToast(`✓ Marcados como enviados`);
+  } else if(action==='tag'){
+    const t=prompt('Etiqueta a agregar (vip, urgente, regalo, fraude, mayorista):');
+    if(!t)return;
+    orders.forEach(o=>{if(!o.tags)o.tags=[];if(!o.tags.includes(t))o.tags.push(t);});
+    showToast(`✓ Etiqueta "${t}" agregada a ${ids.length} pedidos`);
+  } else if(action==='export'){
+    const origLen=demoOrders.length;
+    // Temporarily filter for CSV
+    const backup=[...demoOrders];
+    demoOrders.length=0;
+    orders.forEach(o=>demoOrders.push(o));
+    pedExportCSV();
+    demoOrders.length=0;
+    backup.forEach(o=>demoOrders.push(o));
+    return;
+  }
+  pedSelected.clear();
+  renderOrders();renderShipList();renderPedStats();renderPedRecs();if(typeof renderKanban==='function')renderKanban();
+}
+
+// ═══════ STATUS TOOLTIPS ═══════
+function pedStatusTooltip(status){
+  const tips={
+    new:'Pedido recién creado. Aún no se ha recibido pago.',
+    paid:'El cliente ya pagó. Prepara el pedido para enviarlo.',
+    preparing:'Ya lo estás alistando. El siguiente paso es enviarlo.',
+    shipped:'Paquete ya salió con la paquetería. Rastrea el número de guía.',
+    delivered:'El cliente lo recibió. ¡Listo!',
+    cancelled:'Este pedido se canceló. No procede.',
+  };
+  return tips[status]||'';
+}
 
 // ═══════ ORDER DETAIL ═══════
 function openOrderDetail(id){
@@ -851,7 +1270,20 @@ function openOrderDetail(id){
   document.getElementById('ped-modal-detail').style.display='flex';
 }
 function closeOrderDetail(){document.getElementById('ped-modal-detail').style.display='none';}
-function changeStatus(id,ns){const o=demoOrders.find(x=>x.id===id);if(!o)return;o.status=ns;if(ns==='shipped'&&!o.tracking)o.tracking='SKY'+Date.now().toString().slice(-9);renderOrders();renderPedStats();renderPedRecs();renderShipList();showToast(`${o.num} → ${statusMap[ns].l}`);}
+function changeStatus(id,ns){const o=demoOrders.find(x=>x.id===id);if(!o)return;const old=o.status;o.status=ns;if(ns==='shipped'&&!o.tracking)o.tracking='SKY'+Date.now().toString().slice(-9);if(!o.history)o.history=[];o.history.push({date:new Date().toISOString(),event:`${statusMap[old]?.l||old} → ${statusMap[ns]?.l||ns}`,actor:'Tú'});if(ns!==old&&ns!=='new')pedAutoNotify(o,ns);renderOrders();renderPedStats();renderPedRecs();renderShipList();if(typeof renderKanban==='function')renderKanban();showToast(`${o.num} → ${statusMap[ns]?.l||ns}`);}
+function pedSaveInternalNote(id){const o=demoOrders.find(x=>x.id===id);if(!o)return;const ta=document.getElementById('ped-int-note-'+id);if(!ta)return;o.internalNote=ta.value;showToast('✓ Nota interna guardada');}
+function pedNextStepHint(o){
+  const hints={
+    new:{icon:'💰',text:'<b>Cliente aún no paga.</b> Mándale un recordatorio por WhatsApp o espera su pago.',action:'Enviar recordatorio',fn:`showToast('Recordatorio enviado')`},
+    paid:{icon:'📦',text:'<b>¡Ya te pagó!</b> Es hora de preparar el paquete y generar la guía de envío.',action:'Generar guía',fn:`pedSendToShipping(${o.id})`},
+    preparing:{icon:'🚚',text:'<b>Cuando esté listo el paquete,</b> genera la guía y cámbialo a "Enviado".',action:'Marcar enviado',fn:`changeStatus(${o.id},'shipped')`},
+    shipped:{icon:'📧',text:'<b>Paquete en camino.</b> Cuando el cliente lo reciba, márcalo como entregado y considera facturarlo.',action:'Marcar entregado',fn:`changeStatus(${o.id},'delivered')`},
+    delivered:{icon:'🎉',text:'<b>¡Entregado!</b> ¿Ya le facturaste? Es buen momento para pedirle que te deje reseña.',action:'Facturar',fn:`pedFacturarOrder(${o.id})`},
+    cancelled:{icon:'↩️',text:'<b>Pedido cancelado.</b> Si ya le cobraste, no olvides hacer el reembolso.',action:'Procesar reembolso',fn:`pedOpenRefund(${o.id})`},
+  };
+  const h=hints[o.status];if(!h)return '';
+  return `<div class="ped-nextstep"><span class="ped-nextstep-icon">${h.icon}</span><div class="ped-nextstep-text"><p style="font-size:11px;font-weight:800;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">¿Qué sigue?</p><p>${h.text}</p></div><button onclick="${h.fn}" class="ped-nextstep-btn">${h.action}</button></div>`;
+}
 
 // ═══════ SHIP TAB ═══════
 function renderShipList(){
@@ -1416,6 +1848,262 @@ function pedGetCustomerStats(email){
   return {orders:c.total_orders||0,spent:c.total_spent||0};
 }
 
+// ═══════ REFUNDS ═══════
+let pedRefundingId=null, pedRefundTypeVal='total';
+function pedOpenRefund(orderId){
+  const o=demoOrders.find(x=>x.id===orderId);if(!o)return;
+  pedRefundingId=orderId;
+  pedRefundTypeVal='total';
+  document.getElementById('ped-refund-info').innerHTML=`<p style="font-size:12px;color:var(--text-muted);"><b style="color:var(--text-primary);">${o.num}</b> · ${o.client}</p><p style="font-size:16px;font-weight:900;color:var(--text-primary);margin-top:4px;">Pago original: $${o.total.toLocaleString()}</p>`;
+  pedRefundType('total');
+  document.getElementById('ped-refund-amount').value=o.total;
+  document.getElementById('ped-refund-reason').value='';
+  document.getElementById('ped-refund-notes').value='';
+  document.getElementById('ped-refund-modal').classList.add('open');
+}
+function pedRefundType(type){
+  pedRefundTypeVal=type;
+  document.getElementById('ped-refund-total').classList.toggle('selected',type==='total');
+  document.getElementById('ped-refund-partial').classList.toggle('selected',type==='partial');
+  document.getElementById('ped-refund-amount-wrap').style.display=type==='partial'?'block':'none';
+  if(type==='total'){
+    const o=demoOrders.find(x=>x.id===pedRefundingId);
+    if(o)document.getElementById('ped-refund-amount').value=o.total;
+  }
+}
+function pedCloseRefund(){document.getElementById('ped-refund-modal').classList.remove('open');}
+function pedConfirmRefund(){
+  const o=demoOrders.find(x=>x.id===pedRefundingId);if(!o)return;
+  const reason=document.getElementById('ped-refund-reason').value;
+  if(!reason){alert('Selecciona un motivo');return;}
+  const amount=pedRefundTypeVal==='total'?o.total:parseFloat(document.getElementById('ped-refund-amount').value);
+  if(!amount||amount<=0){alert('Ingresa un monto válido');return;}
+  if(amount>o.total){alert('El reembolso no puede ser mayor al pago original');return;}
+  const notes=document.getElementById('ped-refund-notes').value;
+  o.refundAmount=(o.refundAmount||0)+amount;
+  o.refundReason=reason;
+  o.refundNotes=notes;
+  if(amount>=o.total)o.status='refunded';
+  if(!o.history)o.history=[];
+  o.history.push({date:new Date().toISOString(),event:`Reembolso ${pedRefundTypeVal==='total'?'total':'parcial'} de $${amount.toLocaleString()} (${reason})`,actor:'Tú'});
+  pedCloseRefund();
+  pedCloseDetail();
+  renderOrders();renderPedStats();renderPedRecs();if(typeof renderKanban==='function')renderKanban();
+  showToast(`✓ Reembolso de $${amount.toLocaleString()} procesado`);
+}
+
+// ═══════ TAGS ═══════
+let pedTaggingId=null, pedBulkTagging=false;
+const PED_TAG_DEFS=[
+  {id:'vip',label:'⭐ VIP',desc:'Cliente importante / recurrente'},
+  {id:'urgente',label:'🚨 Urgente',desc:'Mandar hoy mismo'},
+  {id:'regalo',label:'🎁 Regalo',desc:'Envolver bonito'},
+  {id:'fraude',label:'⚠️ Fraude',desc:'Revisar antes de enviar'},
+  {id:'mayorista',label:'📦 Mayorista',desc:'Pedido grande B2B'},
+];
+function pedOpenTags(orderId){
+  const o=demoOrders.find(x=>x.id===orderId);if(!o)return;
+  pedTaggingId=orderId;pedBulkTagging=false;
+  document.getElementById('ped-tags-title').textContent=`${o.num} · ${o.client}`;
+  const current=o.tags||[];
+  document.getElementById('ped-tags-grid').innerHTML=PED_TAG_DEFS.map(t=>`<label class="ped-tag-picker-item${current.includes(t.id)?' selected':''}" data-tag="${t.id}"><input type="checkbox" ${current.includes(t.id)?'checked':''}/><div style="flex:1;"><p style="font-size:12px;font-weight:800;color:var(--text-primary);">${t.label}</p><p style="font-size:10px;color:var(--text-muted);">${t.desc}</p></div></label>`).join('');
+  // Attach change handlers to toggle .selected class
+  document.querySelectorAll('.ped-tag-picker-item input').forEach(i=>{
+    i.addEventListener('change',()=>{i.closest('.ped-tag-picker-item').classList.toggle('selected',i.checked);});
+  });
+  document.getElementById('ped-tags-modal').classList.add('open');
+}
+function pedCloseTags(){document.getElementById('ped-tags-modal').classList.remove('open');}
+function pedSaveTags(){
+  const o=demoOrders.find(x=>x.id===pedTaggingId);if(!o)return;
+  const newTags=[];
+  document.querySelectorAll('#ped-tags-grid .ped-tag-picker-item').forEach(el=>{
+    if(el.querySelector('input').checked)newTags.push(el.dataset.tag);
+  });
+  o.tags=newTags;
+  pedCloseTags();
+  renderOrders();if(typeof renderKanban==='function')renderKanban();
+  showToast(`✓ Etiquetas actualizadas (${newTags.length})`);
+}
+
+// ═══════ COUPONS ═══════
+function pedGetCoupons(){try{return JSON.parse(localStorage.getItem('ped_coupons'))||[];}catch(e){return [];}}
+function pedSaveCoupons(l){localStorage.setItem('ped_coupons',JSON.stringify(l));}
+function pedOpenCoupons(){pedRenderCoupons();document.getElementById('ped-coupons-modal').classList.add('open');}
+function pedCloseCoupons(){document.getElementById('ped-coupons-modal').classList.remove('open');}
+function pedAddCoupon(){
+  const code=document.getElementById('ped-coupon-code').value.trim().toUpperCase();
+  const type=document.getElementById('ped-coupon-type').value;
+  const value=parseFloat(document.getElementById('ped-coupon-value').value);
+  if(!code||!value||value<=0){alert('Llena código y valor');return;}
+  const coupons=pedGetCoupons();
+  if(coupons.find(c=>c.code===code)){alert('Ese código ya existe');return;}
+  coupons.push({code,type,value,used:0,created:new Date().toISOString().substring(0,10)});
+  pedSaveCoupons(coupons);
+  document.getElementById('ped-coupon-code').value='';document.getElementById('ped-coupon-value').value='';
+  pedRenderCoupons();
+  showToast(`✓ Cupón ${code} creado`);
+}
+function pedDeleteCoupon(code){
+  if(!confirm(`¿Borrar cupón ${code}?`))return;
+  pedSaveCoupons(pedGetCoupons().filter(c=>c.code!==code));
+  pedRenderCoupons();
+}
+function pedRenderCoupons(){
+  const el=document.getElementById('ped-coupons-list');
+  const coupons=pedGetCoupons();
+  if(coupons.length===0){el.innerHTML='<p style="text-align:center;color:var(--text-faint);font-size:12px;padding:20px;">Aún no has creado cupones. Crea uno arriba ↑</p>';return;}
+  el.innerHTML=coupons.map(c=>`<div class="ped-coupon-item">
+    <span class="ped-coupon-code-display">${c.code}</span>
+    <div style="flex:1;">
+      <p style="font-size:13px;font-weight:800;color:var(--text-primary);">${c.type==='percent'?c.value+'% descuento':'$'+c.value+' fijo'}</p>
+      <p style="font-size:10px;color:var(--text-muted);">Creado ${c.created} · Usado ${c.used||0} veces</p>
+    </div>
+    <button onclick="pedDeleteCoupon('${c.code}')" style="padding:6px 10px;border-radius:6px;border:1px solid rgba(239,68,68,0.3);background:transparent;color:#ef4444;cursor:pointer;font-size:11px;">✕</button>
+  </div>`).join('');
+}
+
+// ═══════ REMISIÓN PRINT ═══════
+let pedRemisionId=null;
+function pedOpenRemision(orderId){
+  const o=demoOrders.find(x=>x.id===orderId);if(!o)return;
+  pedRemisionId=orderId;
+  const cfg=(()=>{try{return JSON.parse(localStorage.getItem('env_emisor_cfg'))||{};}catch(e){return {};}})();
+  const itemsHtml=(o.products||[]).map(p=>`<tr><td style="padding:6px 8px;border-bottom:1px solid #e5e5e5;">${p.qty}</td><td style="padding:6px 8px;border-bottom:1px solid #e5e5e5;">${p.name}</td><td style="padding:6px 8px;border-bottom:1px solid #e5e5e5;text-align:right;">$${p.price.toFixed(2)}</td><td style="padding:6px 8px;border-bottom:1px solid #e5e5e5;text-align:right;">$${(p.qty*p.price).toFixed(2)}</td></tr>`).join('');
+  document.getElementById('ped-remision-body').innerHTML=`
+    <div id="ped-remision-printable" style="background:#fff;color:#1a1a1a;padding:36px;border-radius:8px;font-family:Arial,sans-serif;">
+      <div style="display:flex;justify-content:space-between;border-bottom:3px solid #084d6e;padding-bottom:14px;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          ${cfg.logo?`<img src="${cfg.logo}" style="width:56px;height:56px;border-radius:8px;"/>`:`<div style="width:56px;height:56px;border-radius:8px;background:linear-gradient(135deg,#084d6e,#2dd4bf);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:18px;">${(cfg.name||'SB').substring(0,2).toUpperCase()}</div>`}
+          <div>
+            <h2 style="font-size:20px;font-weight:900;color:#084d6e;margin:0;">${(cfg.name||'SKYBRANDMX').toUpperCase()}</h2>
+            <p style="font-size:11px;color:#666;">${cfg.street||''} ${cfg.city||''} ${cfg.state||''} ${cfg.cp?'CP '+cfg.cp:''}</p>
+            <p style="font-size:11px;color:#666;">${cfg.phone||''} ${cfg.email?'· '+cfg.email:''}</p>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <p style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:1px;">Nota de remisión</p>
+          <p style="font-size:24px;font-weight:900;color:#084d6e;">${o.num}</p>
+          <p style="font-size:11px;color:#666;">Fecha: ${o.date}</p>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+        <div>
+          <p style="font-size:10px;font-weight:900;color:#888;text-transform:uppercase;letter-spacing:1px;">CLIENTE</p>
+          <p style="font-size:14px;font-weight:700;color:#000;margin-top:4px;">${o.client}</p>
+          <p style="font-size:11px;color:#444;">${o.email||''}</p>
+          <p style="font-size:11px;color:#444;">${o.phone||''}</p>
+        </div>
+        <div>
+          <p style="font-size:10px;font-weight:900;color:#888;text-transform:uppercase;letter-spacing:1px;">ENTREGAR A</p>
+          <p style="font-size:12px;color:#000;margin-top:4px;">${o.address||''}</p>
+        </div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+        <thead><tr style="background:#f3f4f6;">
+          <th style="padding:8px;text-align:left;font-size:11px;border:1px solid #e5e5e5;">CANT</th>
+          <th style="padding:8px;text-align:left;font-size:11px;border:1px solid #e5e5e5;">DESCRIPCIÓN</th>
+          <th style="padding:8px;text-align:right;font-size:11px;border:1px solid #e5e5e5;">P. UNIT</th>
+          <th style="padding:8px;text-align:right;font-size:11px;border:1px solid #e5e5e5;">IMPORTE</th>
+        </tr></thead>
+        <tbody>${itemsHtml}</tbody>
+      </table>
+      <div style="display:flex;justify-content:flex-end;">
+        <div style="background:#f8f9fb;padding:14px 20px;border-radius:8px;min-width:260px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;"><span>Subtotal</span><span>$${o.total.toFixed(2)}</span></div>
+          <div style="display:flex;justify-content:space-between;padding-top:8px;margin-top:8px;border-top:2px solid #084d6e;font-size:16px;font-weight:900;color:#084d6e;"><span>TOTAL</span><span>$${o.total.toFixed(2)}</span></div>
+        </div>
+      </div>
+      <div style="margin-top:40px;padding-top:14px;border-top:1px dashed #ccc;text-align:center;font-size:10px;color:#888;">
+        Este documento NO es un CFDI. Es una nota de remisión sin validez fiscal.<br/>
+        Para factura electrónica, solicítela con el folio ${o.num} al emisor.
+      </div>
+    </div>
+  `;
+  document.getElementById('ped-remision-modal').classList.add('open');
+}
+function pedCloseRemision(){document.getElementById('ped-remision-modal').classList.remove('open');}
+function pedPrintRemision(){
+  const printable=document.getElementById('ped-remision-printable');if(!printable)return;
+  const w=window.open('','_blank','width=800,height=1000');
+  w.document.write(`<html><head><title>Nota de remisión</title><style>body{margin:0;padding:20px;font-family:Arial;background:#fff;}@media print{body{padding:0;}}</style></head><body>${printable.outerHTML}<script>window.onload=()=>setTimeout(()=>window.print(),200);<\/script></body></html>`);
+  w.document.close();
+}
+
+// ═══════ AUTO-NOTIFICATIONS (status changes trigger auto-emails/WhatsApp) ═══════
+const PED_STATUS_MSGS={
+  paid:{title:'¡Recibimos tu pago!',body:'Hola {cliente}, confirmamos tu pago del pedido {num}. Ya estamos preparando tu paquete para enviarlo pronto. ¡Gracias!'},
+  preparing:{title:'Preparando tu pedido',body:'Hola {cliente}, tu pedido {num} ya está en preparación. Te avisaremos cuando salga del almacén.'},
+  shipped:{title:'¡Tu paquete va en camino!',body:'Hola {cliente}, tu pedido {num} ya fue enviado. Rastrea tu paquete con el número de guía: {tracking}'},
+  delivered:{title:'¡Entregado!',body:'Hola {cliente}, tu pedido {num} ya fue entregado. ¡Esperamos que lo disfrutes! Cuéntanos qué te pareció.'},
+  cancelled:{title:'Pedido cancelado',body:'Hola {cliente}, tu pedido {num} fue cancelado. Si tienes dudas, contáctanos.'},
+};
+function pedAutoNotify(o,newStatus){
+  const template=PED_STATUS_MSGS[newStatus];if(!template)return;
+  const msg=template.body.replace(/{cliente}/g,o.client.split(' ')[0]).replace(/{num}/g,o.num).replace(/{tracking}/g,o.tracking||'pendiente');
+  // Silent "send" simulation — stored in history
+  if(!o.notifLog)o.notifLog=[];
+  o.notifLog.push({date:new Date().toISOString(),channel:o.email?'email+whatsapp':'whatsapp',status:newStatus,title:template.title,body:msg});
+  // Non-intrusive UI toast
+  showToast(`📲 ${template.title} enviado a ${o.client.split(' ')[0]}`);
+}
+
+// Hook changeStatus to auto-notify
+function pedChangeStatusWithNotify(orderId, newStatus){
+  const o=demoOrders.find(x=>x.id===orderId);if(!o)return;
+  const oldStatus=o.status;
+  o.status=newStatus;
+  if(!o.history)o.history=[];
+  const labels={new:'Nuevo',paid:'Pagado',preparing:'Preparando',shipped:'Enviado',delivered:'Entregado',cancelled:'Cancelado',refunded:'Reembolsado'};
+  o.history.push({date:new Date().toISOString(),event:`${labels[oldStatus]||oldStatus} → ${labels[newStatus]||newStatus}`,actor:'Tú'});
+  if(newStatus!==oldStatus && newStatus!=='new')pedAutoNotify(o, newStatus);
+  renderOrders();renderPedStats();renderPedRecs();renderShipList();if(typeof renderKanban==='function')renderKanban();
+}
+
+// ═══════ PRODUCT SOLD COUNTER ═══════
+function pedUpdateProductSold(order){
+  let products=[];
+  try{products=JSON.parse(localStorage.getItem('prod_sold_counter'))||{};}catch(e){products={};}
+  if(typeof products!=='object'||Array.isArray(products))products={};
+  (order.products||[]).forEach(p=>{
+    const k=(p.name||'').trim();
+    if(!k)return;
+    products[k]=(products[k]||0)+(p.qty||0);
+  });
+  localStorage.setItem('prod_sold_counter',JSON.stringify(products));
+}
+
+// ═══════ PARTIAL SHIPMENT ═══════
+function pedPartialShip(orderId){
+  const o=demoOrders.find(x=>x.id===orderId);if(!o)return;
+  const items=(o.products||[]).map(p=>p.name+' (x'+p.qty+')').join('\n');
+  const sent=prompt('¿Cuáles productos MANDAS ahora? (el resto queda pendiente)\n\n'+items+'\n\nEscribe cuántos de cada uno separados por coma (ej: "2,1,3"):');
+  if(!sent)return;
+  const qtys=sent.split(',').map(n=>parseInt(n)||0);
+  if(qtys.length!==o.products.length){alert('Debes indicar cantidad para cada producto');return;}
+  const sentProducts=o.products.map((p,i)=>({...p,qty:Math.min(qtys[i],p.qty)})).filter(p=>p.qty>0);
+  if(sentProducts.length===0){alert('Selecciona al menos un producto');return;}
+  const remainingProducts=o.products.map((p,i)=>({...p,qty:p.qty-qtys[i]})).filter(p=>p.qty>0);
+  // Update original to just have remaining
+  if(remainingProducts.length>0){
+    o.products=remainingProducts;
+    o.total=remainingProducts.reduce((s,p)=>s+p.qty*p.price,0);
+    o.status='preparing';
+    if(!o.history)o.history=[];
+    o.history.push({date:new Date().toISOString(),event:`Envío parcial — ${sentProducts.length} productos enviados, ${remainingProducts.length} pendientes`,actor:'Tú'});
+    // Create a child order for the sent products
+    const childNum=o.num+'-A';
+    demoOrders.unshift({id:Date.now(),num:childNum,parent:o.num,client:o.client,email:o.email,phone:o.phone,address:o.address,products:sentProducts,total:sentProducts.reduce((s,p)=>s+p.qty*p.price,0),status:'shipped',payment:o.payment,date:new Date().toISOString().substring(0,10),notes:'Envío parcial de '+o.num,history:[{date:new Date().toISOString(),event:'Creado como envío parcial',actor:'Tú'}]});
+    showToast(`✓ ${childNum} creado con ${sentProducts.length} productos · ${remainingProducts.length} pendientes en ${o.num}`);
+  } else {
+    // All sent, just change status
+    o.status='shipped';
+    showToast('✓ Todo el pedido enviado');
+  }
+  renderOrders();renderPedStats();renderShipList();renderPedRecs();if(typeof renderKanban==='function')renderKanban();
+  pedCloseDetail();
+}
+
 // ═══════ KANBAN BOARD ═══════
 const PED_KANBAN_COLS=[
   {id:'new',title:'Nuevos',emoji:'🆕',color:'#6fcff5'},
@@ -1586,13 +2274,25 @@ function pedShowDetail(id){
         ${timeline.map((t,i)=>`<div class="ped-detail-tl-item"><div class="ped-detail-tl-dot ${t.done?'done':''}"></div><div class="ped-detail-tl-content"><p class="ped-detail-tl-title">${t.title}</p><p class="ped-detail-tl-meta">${t.meta}</p></div></div>`).join('')}
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;">
-      <button onclick="pedCloseDetail();pedEditOrder(${o.id})" class="ped-wiz-next" style="margin:0;background:var(--accent);color:#0a1520;font-size:12px;padding:12px;">✏️ Editar</button>
-      <button onclick="pedCloseDetail();pedDuplicateOrder(${o.id})" class="ped-wiz-next" style="margin:0;background:#6fcff5;color:#0a1520;font-size:12px;padding:12px;">📋 Duplicar</button>
-      <button onclick="pedFacturarOrder(${o.id})" class="ped-wiz-next" style="margin:0;background:#8b5cf6;font-size:12px;padding:12px;">🧾 Facturar</button>
-      <button onclick="pedSendToShipping(${o.id})" class="ped-wiz-next" style="margin:0;background:#FF6B00;font-size:12px;padding:12px;">📦 Generar guía</button>
-      <button onclick="showToast('Recordatorio enviado por WhatsApp')" class="ped-wiz-next" style="margin:0;background:#22c55e;font-size:12px;padding:12px;">💬 WhatsApp</button>
-      <button onclick="pedCloseDetail()" style="padding:12px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:800;cursor:pointer;">Cerrar</button>
+    ${pedNextStepHint(o)}
+    ${(o.tags&&o.tags.length>0)?`<div style="padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);margin-bottom:20px;"><p style="font-size:10px;font-weight:800;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">🏷️ Etiquetas</p><div>${o.tags.map(t=>`<span class="ped-tag-chip ${t}">${t==='vip'?'⭐ VIP':t==='urgente'?'🚨 Urgente':t==='regalo'?'🎁 Regalo':t==='fraude'?'⚠️ Fraude':t==='mayorista'?'📦 Mayorista':t}</span>`).join('')}</div></div>`:''}
+    <div style="padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);margin-bottom:20px;">
+      <p style="font-size:10px;font-weight:800;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">🔒 Nota interna <span style="font-weight:400;text-transform:none;color:var(--text-muted);">(solo tú la ves, no el cliente)</span></p>
+      <textarea id="ped-int-note-${o.id}" rows="2" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-sidebar,#0a1520);color:var(--text-primary);font-size:12px;font-family:inherit;" placeholder="Ej: revisar antes de enviar, cliente difícil...">${(o.internalNote||'').replace(/"/g,'&quot;')}</textarea>
+      <button onclick="pedSaveInternalNote(${o.id})" style="margin-top:6px;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:10px;font-weight:700;cursor:pointer;">Guardar nota</button>
+    </div>
+    ${(o.notifLog&&o.notifLog.length>0)?`<div style="padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);margin-bottom:20px;"><p style="font-size:10px;font-weight:800;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">📲 Notificaciones enviadas al cliente</p>${o.notifLog.slice().reverse().map(n=>`<div style="padding:8px 0;border-bottom:1px dashed var(--border);"><p style="font-size:11px;font-weight:700;color:var(--text-primary);">${n.title}</p><p style="font-size:10px;color:var(--text-muted);margin-top:2px;">${new Date(n.date).toLocaleString('es-MX')} · ${n.channel}</p><p style="font-size:10px;color:var(--text-faint);margin-top:3px;font-style:italic;">"${n.body}"</p></div>`).join('')}</div>`:''}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;">
+      <button onclick="pedCloseDetail();pedEditOrder(${o.id})" class="ped-wiz-next" style="margin:0;background:var(--accent);color:#0a1520;font-size:11px;padding:10px;">✏️ Editar</button>
+      <button onclick="pedCloseDetail();pedDuplicateOrder(${o.id})" class="ped-wiz-next" style="margin:0;background:#6fcff5;color:#0a1520;font-size:11px;padding:10px;">📋 Duplicar</button>
+      <button onclick="pedFacturarOrder(${o.id})" class="ped-wiz-next" style="margin:0;background:#8b5cf6;font-size:11px;padding:10px;">🧾 Facturar</button>
+      <button onclick="pedSendToShipping(${o.id})" class="ped-wiz-next" style="margin:0;background:#FF6B00;font-size:11px;padding:10px;">📦 Guía</button>
+      ${(o.status==='preparing'||o.status==='paid')?`<button onclick="pedPartialShip(${o.id})" class="ped-wiz-next" style="margin:0;background:#eab308;color:#0a1520;font-size:11px;padding:10px;">✂️ Parcial</button>`:''}
+      <button onclick="pedOpenRemision(${o.id})" class="ped-wiz-next" style="margin:0;background:#0ea5e9;font-size:11px;padding:10px;">📄 Remisión</button>
+      <button onclick="pedOpenTags(${o.id})" class="ped-wiz-next" style="margin:0;background:rgba(255,107,0,0.15);color:#FF6B00;font-size:11px;padding:10px;border:1px solid rgba(255,107,0,0.3);">🏷️ Etiquetar</button>
+      ${(o.status==='paid'||o.status==='delivered'||o.status==='shipped')?`<button onclick="pedOpenRefund(${o.id})" class="ped-wiz-next" style="margin:0;background:rgba(239,68,68,0.15);color:#ef4444;font-size:11px;padding:10px;border:1px solid rgba(239,68,68,0.3);">↩ Reembolso</button>`:''}
+      <button onclick="showToast('💬 WhatsApp enviado a '+'${o.phone||'cliente'}')" class="ped-wiz-next" style="margin:0;background:#22c55e;font-size:11px;padding:10px;">💬 WhatsApp</button>
+      <button onclick="pedCloseDetail()" style="padding:10px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;font-weight:800;cursor:pointer;">Cerrar</button>
     </div>
   `;
   document.getElementById('ped-detail-view').classList.add('open');
