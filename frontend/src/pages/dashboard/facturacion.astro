@@ -1852,7 +1852,15 @@ let facWizSelectedPayMode='PUE';
 let facWizSelectedPayForm='03';
 let facWizItems=[{desc:'',qty:1,price:0}];
 
-function facWizStart(useExample){
+function facReadHandover(){
+  try{
+    const raw=localStorage.getItem('fac_pending_handover');
+    if(!raw)return null;
+    localStorage.removeItem('fac_pending_handover');
+    return JSON.parse(raw);
+  }catch(e){return null;}
+}
+function facWizStart(useExample, handoverData){
   document.getElementById('fac-easy-home').style.display='none';
   document.getElementById('fac-wizard').style.display='block';
   facWizGoTo(1);
@@ -1863,6 +1871,20 @@ function facWizStart(useExample){
   facWizRenderRegimes();
   facWizRenderPayforms();
   facWizRenderItems();
+  if(handoverData){
+    document.getElementById('fac-wiz-name').value=handoverData.client||'';
+    document.getElementById('fac-wiz-email').value=handoverData.email||'';
+    document.getElementById('fac-c-name').value=handoverData.client||'';
+    document.getElementById('fac-c-email').value=handoverData.email||'';
+    // Items from the order
+    if(handoverData.items && handoverData.items.length>0){
+      facWizItems=handoverData.items.map(i=>({desc:i.desc||i.name||'',qty:i.qty||1,price:i.price||0}));
+      facWizRenderItems();
+    }
+    facWizValidate(1);
+    showToast(`✓ Datos del pedido ${handoverData.orderNum||''} cargados · Agrega el RFC del cliente para timbrar`);
+    return;
+  }
   if(useExample){
     document.getElementById('fac-wiz-name').value='María García López';
     document.getElementById('fac-wiz-rfc').value='GALM850101AB1';
@@ -2438,5 +2460,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   facUpdateEasyStats();
   // Tour on first visit
   if(!localStorage.getItem('fac_tour_done')){setTimeout(()=>facStartTour(),600);}
+  // Auto-open wizard if there's a handover from Pedidos
+  const handover = facReadHandover();
+  if (handover){
+    setTimeout(()=>{ facSetMode('easy'); setTimeout(()=>facWizStart(false, handover), 200); }, 400);
+  }
 });
 </script>

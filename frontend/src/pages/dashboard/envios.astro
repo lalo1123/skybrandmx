@@ -1969,10 +1969,49 @@ let envWizSelectedWeight=2;
 let envWizSelectedCarrier=null;
 let envWizSelectedPrice=0;
 
-function envWizStart(useExample){
+// Check for handover from Pedidos module
+function envReadHandover(){
+  try {
+    const raw = localStorage.getItem('env_pending_handover');
+    if (!raw) return null;
+    localStorage.removeItem('env_pending_handover'); // one-time use
+    return JSON.parse(raw);
+  } catch(e){ return null; }
+}
+function envWizStart(useExample, handoverData){
   document.getElementById('env-easy-home').style.display='none';
   document.getElementById('env-wizard').style.display='block';
   envWizGoTo(1);
+  if(handoverData){
+    // Origin = user's saved address (or defaults)
+    const cfg = envLoadConfig();
+    document.getElementById('env-wiz-origin-cp').value=cfg.cp||'03100';
+    document.getElementById('env-wiz-origin-name').value=cfg.name||'Mi tienda';
+    document.getElementById('env-wiz-origin-phone').value=cfg.phone||'';
+    document.getElementById('env-q-origin').value=cfg.cp||'03100';
+    document.getElementById('env-q-origin-name').value=cfg.name||'Mi tienda';
+    document.getElementById('env-q-origin-phone').value=cfg.phone||'';
+    envLookupCP('origin',cfg.cp||'03100');
+    // Destination = from handover
+    const dest = handoverData.address || '';
+    // Try to extract CP from address (5 digits at end)
+    const cpMatch = dest.match(/\b\d{5}\b/);
+    const destCp = cpMatch ? cpMatch[0] : '';
+    document.getElementById('env-wiz-dest-cp').value=destCp;
+    document.getElementById('env-wiz-dest-name').value=handoverData.client||'';
+    document.getElementById('env-wiz-dest-phone').value=handoverData.phone||'';
+    document.getElementById('env-wiz-dest-street').value=dest.replace(/CP\s*\d{5}.*$/i,'').trim();
+    document.getElementById('env-q-dest').value=destCp;
+    document.getElementById('env-q-dest-name').value=handoverData.client||'';
+    document.getElementById('env-q-dest-phone').value=handoverData.phone||'';
+    document.getElementById('env-q-dest-street').value=dest.replace(/CP\s*\d{5}.*$/i,'').trim();
+    if(handoverData.email)document.getElementById('env-q-dest-email').value=handoverData.email;
+    if(destCp)envLookupCP('dest',destCp);
+    envWizValidate(1);envWizValidate(2);
+    showToast(`✓ Datos del pedido ${handoverData.orderNum||''} cargados · Continúa para elegir paquetería`);
+    envWizRenderSizes();
+    return;
+  }
   if(useExample){
     // Prefill all with example
     document.getElementById('env-wiz-origin-cp').value='03100';
@@ -3037,6 +3076,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   envUpdateEasyStats();
   // Show tour on first visit
   if(!localStorage.getItem('env_tour_done')){setTimeout(()=>envStartTour(),600);}
+  // Auto-open wizard if there's a handover from Pedidos/Facturación
+  const handover = envReadHandover();
+  if (handover){
+    setTimeout(()=>{ envSetMode('easy'); setTimeout(()=>envWizStart(false, handover), 200); }, 400);
+  }
 });
 ['env-modal-detail','env-modal-mass','env-modal-label','env-modal-notif'].forEach(id=>{document.getElementById(id)?.addEventListener('click',function(e){if(e.target===this)this.style.display='none';});});
 </script>

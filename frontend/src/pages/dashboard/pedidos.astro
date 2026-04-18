@@ -118,9 +118,10 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:16px;">
-            <div>
-              <label class="ped-wiz-label">Nombre completo del cliente</label>
-              <input id="ped-wiz-name" type="text" class="ped-wiz-input" placeholder="Ej: María García López" oninput="pedEzValidate(1);" onblur="this.dataset.touched='1';pedEzValidate(1);"/>
+            <div style="position:relative;">
+              <label class="ped-wiz-label">Nombre completo del cliente <span class="ped-wiz-help">(empieza a escribir — te sugerimos si ya compró antes)</span></label>
+              <input id="ped-wiz-name" type="text" class="ped-wiz-input" placeholder="Ej: María García López" autocomplete="off" oninput="pedEzValidate(1);pedCrmAutocomplete(this.value);" onblur="this.dataset.touched='1';pedEzValidate(1);setTimeout(()=>document.getElementById('ped-crm-sugg').style.display='none',200);" onfocus="pedCrmAutocomplete(this.value);"/>
+              <div id="ped-crm-sugg" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg-sidebar,#0F172A);border:1px solid var(--accent);border-radius:10px;max-height:240px;overflow-y:auto;z-index:100;margin-top:2px;box-shadow:0 8px 20px rgba(0,0,0,0.3);"></div>
               <p id="ped-wiz-name-err" class="ped-wiz-err"></p>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
@@ -156,8 +157,13 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
               <p style="font-size:13px;color:var(--text-muted);">Lista los productos que compró y a cuánto. Si pidió varios, agrégalos todos</p>
             </div>
           </div>
+          <div id="ped-wiz-catalog-picker" style="margin-bottom:14px;padding:14px;border-radius:10px;background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.2);">
+            <p style="font-size:11px;font-weight:800;color:#a78bfa;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">📚 De tu catálogo <span style="font-weight:500;color:var(--text-faint);text-transform:none;letter-spacing:0;">(click para agregar al pedido)</span></p>
+            <div id="ped-wiz-catalog-chips" style="display:flex;flex-wrap:wrap;gap:6px;max-height:120px;overflow-y:auto;"></div>
+            <p id="ped-wiz-catalog-empty" style="display:none;font-size:11px;color:var(--text-muted);text-align:center;padding:12px;">Aún no tienes productos en tu catálogo. <a href="/dashboard/productos" style="color:var(--accent);">Agrégalos aquí →</a></p>
+          </div>
           <div id="ped-wiz-items" style="display:flex;flex-direction:column;gap:10px;"></div>
-          <button onclick="pedWizAddItem()" style="margin-top:10px;padding:10px;border-radius:10px;border:1px dashed var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;width:100%;">+ Agregar otro producto</button>
+          <button onclick="pedWizAddItem()" style="margin-top:10px;padding:10px;border-radius:10px;border:1px dashed var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;width:100%;">+ Agregar item manual</button>
           <div style="margin-top:20px;padding:16px;border-radius:12px;background:var(--input-bg);border:1px solid var(--border);">
             <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:900;"><span>Total del pedido</span><span id="ped-wiz-total" style="color:var(--accent);">$0.00</span></div>
             <p style="font-size:10px;color:var(--text-faint);margin-top:4px;">Sin envío — el envío lo elegimos en el paso 4</p>
@@ -333,8 +339,8 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
       <div style="position:relative;" id="ped-more-wrap">
         <button onclick="pedToggleMore()" class="ped-btn-secondary" style="padding:10px 14px;display:flex;align-items:center;gap:4px;">Más <svg style="width:12px;height:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
         <div id="ped-more-menu" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;background:var(--bg-sidebar);border:1px solid var(--border);border-radius:10px;padding:6px;min-width:160px;z-index:50;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
-          <button onclick="showToast('CSV exportado');pedToggleMore()" class="ped-dropdown-item">📄 Exportar CSV</button>
-          <button onclick="showToast('Lista impresa');pedToggleMore()" class="ped-dropdown-item">🖨 Imprimir lista</button>
+          <button onclick="pedExportCSV();pedToggleMore()" class="ped-dropdown-item">📄 Exportar a Excel/CSV</button>
+          <button onclick="window.print();pedToggleMore()" class="ped-dropdown-item">🖨 Imprimir lista</button>
         </div>
       </div>
     </div>
@@ -959,11 +965,12 @@ function pedWizStart(useExample){
     showToast('✨ Datos de ejemplo cargados. Continúa paso a paso.');
   }
 }
-function pedWizCancel(){if(confirm('¿Seguro? Se perderán los datos.'))pedWizDone();}
+function pedWizCancel(){if(confirm('¿Seguro? Se perderán los datos.')){pedEditingId=null;pedWizDone();}}
 function pedWizDone(){
   document.getElementById('ped-wizard').style.display='none';
   document.getElementById('ped-easy-home').style.display='block';
   pedEzGoTo(1);
+  pedEditingId=null;
   pedUpdateEasyStats();
 }
 function pedEzGoTo(step){
@@ -977,7 +984,9 @@ function pedEzGoTo(step){
     else if(step==='done'){b.classList.add('done');}
   });
   const titles={1:'¿Quién te compró?',2:'¿Qué te pidió?',3:'¿Cómo te pagó?',4:'¿Cómo lo mandas?',5:'Revisa',done:'¡Listo!'};
-  document.getElementById('ped-wiz-title').textContent='Registrar pedido · '+(titles[step]||'');
+  document.getElementById('ped-wiz-title').textContent=(pedEditingId?'Editar pedido · ':'Registrar pedido · ')+(titles[step]||'');
+  // When entering step 2, render catalog picker
+  if(step===2){setTimeout(()=>{if(typeof pedRenderCatalogPicker==='function')pedRenderCatalogPicker();},30);}
   document.getElementById('ped-wiz-subtitle').textContent=step==='done'?'Completado':`Paso ${step} de 5`;
   const back=document.getElementById('ped-wiz-back');
   if(back)back.style.visibility=(step===1||step==='done')?'hidden':'visible';
@@ -1095,14 +1104,190 @@ function pedWizRenderSummary(){
     <div class="ped-wiz-sum-row" style="background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.3);"><span style="color:var(--text-primary);font-weight:800;">Total del pedido</span><span style="color:#22c55e;font-size:18px;font-weight:900;">$${total.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>
   `;
 }
+// ═══════ CRM AUTOCOMPLETE (busca clientes existentes al escribir nombre) ═══════
+function pedCrmAutocomplete(query){
+  const box=document.getElementById('ped-crm-sugg');
+  if(!box)return;
+  const q=(query||'').trim().toLowerCase();
+  let contacts=[];
+  try{contacts=JSON.parse(localStorage.getItem('crm_contacts'))||[];}catch(e){}
+  if(q.length<2){box.style.display='none';return;}
+  const matches=contacts.filter(c=>{
+    const full=((c.first_name||'')+' '+(c.last_name||'')).toLowerCase();
+    return full.includes(q) || (c.email||'').toLowerCase().includes(q) || (c.phone||'').includes(q);
+  }).slice(0,6);
+  if(matches.length===0){box.style.display='none';return;}
+  box.innerHTML=matches.map(c=>{
+    const full=`${c.first_name||''} ${c.last_name||''}`.trim();
+    const orders=c.total_orders||0;
+    const badge=orders>=5?'⭐ VIP':orders>=2?`🔁 ${orders}× pedidos`:'Nuevo';
+    const badgeColor=orders>=5?'#f97316':orders>=2?'#8b5cf6':'#6fcff5';
+    return `<div style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px;" onmousedown="pedCrmPick('${(c.email||'').replace(/'/g,"\\'")}')" onmouseover="this.style.background='rgba(111,207,245,0.1)'" onmouseout="this.style.background='transparent'">
+      <div style="flex:1;min-width:0;">
+        <p style="font-size:13px;font-weight:800;color:var(--text-primary);">${full}</p>
+        <p style="font-size:11px;color:var(--text-muted);">${c.email||'sin email'} · ${c.phone||'sin teléfono'}</p>
+      </div>
+      <span style="font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;background:${badgeColor}22;color:${badgeColor};white-space:nowrap;">${badge}</span>
+    </div>`;
+  }).join('');
+  box.style.display='block';
+}
+function pedCrmPick(email){
+  let contacts=[];
+  try{contacts=JSON.parse(localStorage.getItem('crm_contacts'))||[];}catch(e){}
+  const c=contacts.find(x=>x.email===email);
+  if(!c)return;
+  const full=`${c.first_name||''} ${c.last_name||''}`.trim();
+  document.getElementById('ped-wiz-name').value=full;
+  document.getElementById('ped-wiz-email').value=c.email||'';
+  document.getElementById('ped-wiz-phone').value=c.phone||'';
+  document.getElementById('ped-wiz-address').value=c.address||'';
+  // Mark all as touched and validate
+  ['name','email','phone','address'].forEach(f=>{
+    const el=document.getElementById('ped-wiz-'+f);
+    if(el)el.dataset.touched='1';
+  });
+  pedEzValidate(1);
+  document.getElementById('ped-crm-sugg').style.display='none';
+  showToast(`✓ Cliente cargado · Ya te compró ${c.total_orders||0} vez${(c.total_orders||0)!==1?'es':''}`);
+}
+
+// ═══════ CATALOG PRODUCTS PICKER ═══════
+function pedRenderCatalogPicker(){
+  const chips=document.getElementById('ped-wiz-catalog-chips');
+  const empty=document.getElementById('ped-wiz-catalog-empty');
+  if(!chips)return;
+  // Load catalog from demo products module (if available) or demo fallback
+  const catalog=(typeof demoProducts!=='undefined'&&Array.isArray(demoProducts))?demoProducts:pedGetDemoCatalog();
+  if(!catalog||catalog.length===0){chips.style.display='none';if(empty)empty.style.display='block';return;}
+  chips.style.display='flex';if(empty)empty.style.display='none';
+  chips.innerHTML=catalog.slice(0,12).map(p=>`<button type="button" onclick="pedAddFromCatalog('${(p.name||'').replace(/'/g,"\\'")}',${p.price||0})" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,92,246,0.3);background:rgba(139,92,246,0.05);color:var(--text-primary);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;" onmouseover="this.style.background='rgba(139,92,246,0.15)'" onmouseout="this.style.background='rgba(139,92,246,0.05)'">
+    <span>${p.name}</span>
+    <span style="color:#22c55e;font-weight:800;">$${(p.price||0).toLocaleString()}</span>
+  </button>`).join('');
+}
+function pedGetDemoCatalog(){
+  // Fallback catalog (synced with typical Productos demo)
+  try{
+    const fromStorage=JSON.parse(localStorage.getItem('prod_catalog'));
+    if(Array.isArray(fromStorage)&&fromStorage.length>0)return fromStorage;
+  }catch(e){}
+  return [
+    {name:'Blusa bordada Oaxaca',price:450},{name:'Aretes de plata',price:280},
+    {name:'Huaraches artesanales',price:890},{name:'Rebozo de seda',price:1500},
+    {name:'Alebrije mediano',price:320},{name:'Bolsa tejida',price:680},
+    {name:'Collar ámbar Chiapas',price:750},{name:'Sombrero de palma',price:250},
+  ];
+}
+function pedAddFromCatalog(name,price){
+  // If first item is empty, replace it; otherwise add new
+  const first=pedWizItems[0];
+  if(first && !first.name && !first.price){
+    pedWizItems[0]={name,qty:1,price};
+  } else {
+    pedWizItems.push({name,qty:1,price});
+  }
+  pedWizRenderItems();
+  pedEzValidate(2);
+  showToast(`✓ ${name} agregado · $${price.toLocaleString()}`);
+}
+
+// ═══════ EDIT ORDER ═══════
+let pedEditingId=null;
+function pedEditOrder(id){
+  const o=demoOrders.find(x=>x.id===id);if(!o)return;
+  pedSetMode('easy');
+  setTimeout(()=>{
+    pedWizStart(false);
+    pedEditingId=id;
+    document.getElementById('ped-wiz-name').value=o.client||'';
+    document.getElementById('ped-wiz-email').value=o.email||'';
+    document.getElementById('ped-wiz-phone').value=o.phone||'';
+    document.getElementById('ped-wiz-address').value=o.address||'';
+    pedWizItems=(o.products||[]).map(p=>({name:p.name,qty:p.qty,price:p.price}));
+    if(pedWizItems.length===0)pedWizItems=[{name:'',qty:1,price:0}];
+    pedWizRenderItems();
+    pedWizPayment=o.payment||'card';
+    pedWizRenderPayments();
+    ['name','email','phone','address'].forEach(f=>{const el=document.getElementById('ped-wiz-'+f);if(el)el.dataset.touched='1';});
+    pedEzValidate(1);
+    document.getElementById('ped-wiz-title').textContent=`Editar pedido · ${o.num}`;
+    showToast(`Editando ${o.num}. Cambia lo que necesites y guarda.`);
+  },200);
+}
+function pedDuplicateOrder(id){
+  const o=demoOrders.find(x=>x.id===id);if(!o)return;
+  pedSetMode('easy');
+  setTimeout(()=>{
+    pedWizStart(false);
+    document.getElementById('ped-wiz-name').value=o.client||'';
+    document.getElementById('ped-wiz-email').value=o.email||'';
+    document.getElementById('ped-wiz-phone').value=o.phone||'';
+    document.getElementById('ped-wiz-address').value=o.address||'';
+    pedWizItems=(o.products||[]).map(p=>({name:p.name,qty:p.qty,price:p.price}));
+    if(pedWizItems.length===0)pedWizItems=[{name:'',qty:1,price:0}];
+    pedWizRenderItems();
+    ['name','email','phone','address'].forEach(f=>{const el=document.getElementById('ped-wiz-'+f);if(el)el.dataset.touched='1';});
+    pedEzValidate(1);
+    showToast(`✓ Pedido duplicado. Guárdalo como uno nuevo.`);
+  },200);
+}
+
+// ═══════ EXPORT CSV ═══════
+function pedExportCSV(){
+  const headers=['Num','Cliente','Email','Telefono','Direccion','Productos','Total','Estado','Pago','Fecha','Tracking','Notas'];
+  const rows=demoOrders.map(o=>[
+    o.num||'',
+    (o.client||'').replace(/"/g,'""'),
+    o.email||'',
+    o.phone||'',
+    (o.address||'').replace(/"/g,'""'),
+    (o.products||[]).map(p=>`${p.qty}x ${p.name}`).join('; ').replace(/"/g,'""'),
+    o.total||0,
+    o.status||'',
+    o.payment||'',
+    o.date||'',
+    o.tracking||'',
+    (o.notes||'').replace(/"/g,'""'),
+  ]);
+  const csv=[headers,...rows].map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}); // BOM for Excel
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`pedidos-${new Date().toISOString().substring(0,10)}.csv`;
+  document.body.appendChild(a);a.click();a.remove();
+  URL.revokeObjectURL(url);
+  showToast(`✓ ${demoOrders.length} pedidos exportados a Excel`);
+}
+
 function pedWizConfirm(){
-  const num='SKY-'+String(demoOrders.length+1).padStart(3,'0');
-  const total=pedWizItems.reduce((s,i)=>s+(i.qty*i.price),0);
-  const statusMap={card:'paid',transfer:'paid',cash:'paid',oxxo:'paid',pending:'new'};
   const clientName=document.getElementById('ped-wiz-name').value;
   const clientEmail=document.getElementById('ped-wiz-email').value;
   const clientPhone=document.getElementById('ped-wiz-phone').value;
   const clientAddress=document.getElementById('ped-wiz-address').value;
+  const total=pedWizItems.reduce((s,i)=>s+(i.qty*i.price),0);
+  const statusMap={card:'paid',transfer:'paid',cash:'paid',oxxo:'paid',pending:'new'};
+  // EDIT MODE: update existing order
+  if(pedEditingId){
+    const existing=demoOrders.find(x=>x.id===pedEditingId);
+    if(existing){
+      existing.client=clientName;existing.email=clientEmail;existing.phone=clientPhone;existing.address=clientAddress;
+      existing.products=pedWizItems.map(i=>({name:i.name,qty:i.qty,price:i.price}));
+      existing.total=total;existing.payment=pedWizPayment;existing.notes=document.getElementById('ped-wiz-notes').value;
+      if(!existing.history)existing.history=[];
+      existing.history.push({date:new Date().toISOString(),event:'Pedido editado',actor:'Tú'});
+      renderOrders();renderShipList();renderPedStats();renderPedRecs();if(typeof renderKanban==='function')renderKanban();
+      document.getElementById('ped-wiz-done-num').textContent=existing.num;
+      document.getElementById('ped-wiz-done-msg').innerHTML=`Pedido <b>${existing.num}</b> actualizado. Los cambios se aplicaron a <b>${clientName}</b>.`;
+      const actionsEl=document.getElementById('ped-wiz-done-actions');
+      if(actionsEl)actionsEl.innerHTML=`<button onclick="pedWizDone()" class="ped-wiz-next" style="flex:1;min-width:180px;margin:0;background:#22c55e;">✅ Listo</button>`;
+      pedWizGoTo('done');
+      pedEditingId=null;
+      return;
+    }
+  }
+  // CREATE new order
+  const num='SKY-'+String(demoOrders.length+1).padStart(3,'0');
   const newOrder={
     id:Date.now(),num,
     client:clientName,email:clientEmail,phone:clientPhone,address:clientAddress,
@@ -1391,7 +1576,9 @@ function pedShowDetail(id){
         ${timeline.map((t,i)=>`<div class="ped-detail-tl-item"><div class="ped-detail-tl-dot ${t.done?'done':''}"></div><div class="ped-detail-tl-content"><p class="ped-detail-tl-title">${t.title}</p><p class="ped-detail-tl-meta">${t.meta}</p></div></div>`).join('')}
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;">
+      <button onclick="pedCloseDetail();pedEditOrder(${o.id})" class="ped-wiz-next" style="margin:0;background:var(--accent);color:#0a1520;font-size:12px;padding:12px;">✏️ Editar</button>
+      <button onclick="pedCloseDetail();pedDuplicateOrder(${o.id})" class="ped-wiz-next" style="margin:0;background:#6fcff5;color:#0a1520;font-size:12px;padding:12px;">📋 Duplicar</button>
       <button onclick="pedFacturarOrder(${o.id})" class="ped-wiz-next" style="margin:0;background:#8b5cf6;font-size:12px;padding:12px;">🧾 Facturar</button>
       <button onclick="pedSendToShipping(${o.id})" class="ped-wiz-next" style="margin:0;background:#FF6B00;font-size:12px;padding:12px;">📦 Generar guía</button>
       <button onclick="showToast('Recordatorio enviado por WhatsApp')" class="ped-wiz-next" style="margin:0;background:#22c55e;font-size:12px;padding:12px;">💬 WhatsApp</button>
