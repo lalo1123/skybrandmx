@@ -121,7 +121,7 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
             <div style="position:relative;">
               <label class="ped-wiz-label">Nombre completo del cliente <span class="ped-wiz-help">(empieza a escribir — te sugerimos si ya compró antes)</span></label>
               <input id="ped-wiz-name" type="text" class="ped-wiz-input" placeholder="Ej: María García López" autocomplete="off" oninput="pedEzValidate(1);pedCrmAutocomplete(this.value);" onblur="this.dataset.touched='1';pedEzValidate(1);setTimeout(()=>document.getElementById('ped-crm-sugg').style.display='none',200);" onfocus="pedCrmAutocomplete(this.value);"/>
-              <div id="ped-crm-sugg" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg-sidebar,#0F172A);border:1px solid var(--accent);border-radius:10px;max-height:240px;overflow-y:auto;z-index:100;margin-top:2px;box-shadow:0 8px 20px rgba(0,0,0,0.3);"></div>
+              <div id="ped-crm-sugg" style="display:none;position:absolute;top:100%;left:0;right:0;background:#0a1520;border:1px solid var(--accent);border-radius:10px;max-height:240px;overflow-y:auto;z-index:100;margin-top:4px;box-shadow:0 12px 32px rgba(0,0,0,0.6);"></div>
               <p id="ped-wiz-name-err" class="ped-wiz-err"></p>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
@@ -566,7 +566,7 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
         </div>
         <button onclick="pedCloseDetail()" style="width:36px;height:36px;border:none;background:transparent;color:var(--text-muted);font-size:22px;cursor:pointer;">✕</button>
       </div>
-      <div id="ped-detail-body" style="padding:24px;"></div>
+      <div id="ped-detail-body-new" style="padding:24px;"></div>
     </div>
   </div>
 </DashboardLayout>
@@ -655,9 +655,7 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
   .ped-wiz-next { margin-top:24px;padding:16px 28px;border-radius:12px;border:none;background:var(--accent);color:#0a1520;font-size:15px;font-weight:900;cursor:pointer;width:100%;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:6px; }
   .ped-wiz-next:hover:not(:disabled) { transform:translateY(-1px);box-shadow:0 6px 16px rgba(111,207,245,0.3); }
   .ped-wiz-next:disabled { opacity:0.4;cursor:not-allowed; }
-  .ped-wiz-item-row { display:grid;grid-template-columns:2fr 70px 100px 100px auto;gap:8px;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);align-items:end; }
-  .ped-wiz-item-row input { padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-sidebar,#0a1520);color:var(--text-primary);font-size:12px;width:100%; }
-  .ped-wiz-item-row label { font-size:10px;color:var(--text-muted);font-weight:700;display:block;margin-bottom:3px; }
+  /* .ped-wiz-item-row styles moved to is:global block below because the rows are injected via innerHTML */
   .ped-wiz-pay-card { padding:18px 12px;border-radius:12px;border:2px solid var(--border);background:var(--input-bg);cursor:pointer;text-align:center;transition:all 0.15s;display:flex;flex-direction:column;align-items:center;gap:6px; }
   .ped-wiz-pay-card:hover { border-color:var(--accent);transform:translateY(-2px); }
   .ped-wiz-pay-card.selected { border-color:#22c55e;background:rgba(34,197,94,0.08);box-shadow:0 0 0 3px rgba(34,197,94,0.15); }
@@ -677,6 +675,18 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
   /* ════════ KANBAN BOARD (need to be after wizard, before /style for inline injection) ════════ */
 </style>
 <style is:global>
+  /* Wizard item row (dynamically injected → must be global) */
+  .ped-wiz-item-row { display:grid;grid-template-columns:2fr 70px 100px 100px auto;gap:8px;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);align-items:end; }
+  /* Summary rows (dynamically injected) */
+  .ped-wiz-sum-row { display:flex;justify-content:space-between;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);align-items:center;gap:14px; }
+  .ped-wiz-sum-row > span:first-child { font-size:12px;color:var(--text-muted);font-weight:600;flex-shrink:0; }
+  .ped-wiz-sum-row > span:last-child { font-size:13px;font-weight:700;color:var(--text-primary);text-align:right; }
+  .ped-wiz-item-row > div { min-width:0; }
+  .ped-wiz-item-row input { padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-sidebar,#0a1520);color:var(--text-primary);font-size:12px;width:100%;outline:none;box-sizing:border-box; }
+  .ped-wiz-item-row input:focus { border-color:var(--accent); }
+  .ped-wiz-item-row label { font-size:10px;color:var(--text-muted);font-weight:700;display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.3px; }
+  @media(max-width:700px){ .ped-wiz-item-row { grid-template-columns:1fr; } }
+  /* Kanban (keep) */
   .ped-kanban-board { display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;overflow-x:auto;min-height:560px;padding-bottom:20px; }
   .ped-kanban-col { background:var(--input-bg);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;min-height:440px; }
   .ped-kanban-col.drag-over { border-color:var(--accent);background:rgba(111,207,245,0.06); }
@@ -725,7 +735,7 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
   /* Order detail modal */
   .ped-detail-modal { display:none;position:fixed;inset:0;z-index:9998;align-items:center;justify-content:center;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);padding:20px; }
   .ped-detail-modal.open { display:flex; }
-  .ped-detail-box { background:var(--bg-sidebar,#0F172A);border:1px solid var(--border);border-radius:16px;width:100%;max-width:760px;max-height:calc(100vh - 40px);overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5); }
+  .ped-detail-box { background:var(--card-bg,#fff);border:1px solid var(--border);border-radius:16px;width:100%;max-width:760px;max-height:calc(100vh - 40px);overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5);color:var(--text-primary); }
   .ped-detail-header { padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between; }
   .ped-detail-tl { display:flex;flex-direction:column;gap:0;position:relative;padding-left:8px; }
   .ped-detail-tl-item { display:flex;gap:14px;padding-bottom:18px;position:relative; }
@@ -1281,7 +1291,7 @@ function pedWizConfirm(){
       document.getElementById('ped-wiz-done-msg').innerHTML=`Pedido <b>${existing.num}</b> actualizado. Los cambios se aplicaron a <b>${clientName}</b>.`;
       const actionsEl=document.getElementById('ped-wiz-done-actions');
       if(actionsEl)actionsEl.innerHTML=`<button onclick="pedWizDone()" class="ped-wiz-next" style="flex:1;min-width:180px;margin:0;background:#22c55e;">✅ Listo</button>`;
-      pedWizGoTo('done');
+      pedEzGoTo('done');
       pedEditingId=null;
       return;
     }
@@ -1331,7 +1341,7 @@ function pedWizConfirm(){
       <button onclick="pedWizDone()" class="ped-wiz-next" style="flex:1;min-width:160px;margin:0;background:#22c55e;">✅ Otro pedido</button>
     `;
   }
-  pedWizGoTo('done');
+  pedEzGoTo('done');
 }
 
 // ═══════ CROSS-MODULE WIRING ═══════
@@ -1545,7 +1555,7 @@ function pedShowDetail(id){
     if(o.status==='delivered')timeline.push({title:'Entregado al cliente',meta:o.date,done:true});
   }
   document.getElementById('ped-detail-num').textContent=o.num;
-  document.getElementById('ped-detail-body').innerHTML=`
+  document.getElementById('ped-detail-body-new').innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
       <div style="padding:14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);">
         <p style="font-size:10px;font-weight:800;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Cliente</p>

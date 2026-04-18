@@ -1994,17 +1994,26 @@ function envWizStart(useExample, handoverData){
     envLookupCP('origin',cfg.cp||'03100');
     // Destination = from handover
     const dest = handoverData.address || '';
-    // Try to extract CP from address (5 digits at end)
-    const cpMatch = dest.match(/\b\d{5}\b/);
-    const destCp = cpMatch ? cpMatch[0] : '';
+    // Try to extract CP: prefer "CP XXXXX" pattern, fallback to last 5-digit sequence
+    let destCp = '';
+    const cpExplicit = dest.match(/(?:C\.?P\.?|C\.?\s*P\.?)\s*:?\s*(\d{5})/i);
+    if (cpExplicit) {
+      destCp = cpExplicit[1];
+    } else {
+      // Use last 5-digit match (usually the CP is at the end)
+      const allMatches = dest.match(/\b\d{5}\b/g);
+      if (allMatches) destCp = allMatches[allMatches.length - 1];
+    }
     document.getElementById('env-wiz-dest-cp').value=destCp;
     document.getElementById('env-wiz-dest-name').value=handoverData.client||'';
     document.getElementById('env-wiz-dest-phone').value=handoverData.phone||'';
-    document.getElementById('env-wiz-dest-street').value=dest.replace(/CP\s*\d{5}.*$/i,'').trim();
+    // Clean street: remove "CP XXXXX" suffix and trailing comma
+    const cleanStreet = dest.replace(/,?\s*(?:C\.?P\.?|C\.?\s*P\.?)\s*:?\s*\d{5}\s*$/i,'').replace(/,\s*$/,'').trim();
+    document.getElementById('env-wiz-dest-street').value=cleanStreet;
     document.getElementById('env-q-dest').value=destCp;
     document.getElementById('env-q-dest-name').value=handoverData.client||'';
     document.getElementById('env-q-dest-phone').value=handoverData.phone||'';
-    document.getElementById('env-q-dest-street').value=dest.replace(/CP\s*\d{5}.*$/i,'').trim();
+    document.getElementById('env-q-dest-street').value=cleanStreet;
     if(handoverData.email)document.getElementById('env-q-dest-email').value=handoverData.email;
     if(destCp)envLookupCP('dest',destCp);
     envWizValidate(1);envWizValidate(2);
