@@ -668,6 +668,291 @@ const adsExtraPath = 'M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z';
     const _ddObs = new MutationObserver(() => { clearTimeout(_ddTimer); _ddTimer = setTimeout(initCustomDropdowns, 300); });
     _ddObs.observe(document.body, { childList: true, subtree: true });
   </script>
+
+  <!-- ═══════ SkyValidator — Sistema global de validación con feedback humano ═══════ -->
+  <style is:global>
+    .sv-invalid { border-color: #ef4444 !important; background: rgba(239,68,68,0.04); }
+    .sv-invalid:focus { box-shadow: 0 0 0 3px rgba(239,68,68,0.12) !important; }
+    .sv-err { font-size: 11px; color: #ef4444; margin-top: 6px; min-height: 14px; font-weight: 600; display: flex; align-items: center; gap: 4px; animation: svFadeIn 0.2s ease-out; }
+    .sv-err:empty { display: none; }
+    .sv-missing { margin-top: 14px; padding: 12px 16px; border-radius: 10px; background: rgba(249,115,22,0.08); border: 1px solid rgba(249,115,22,0.25); font-size: 12px; color: #f97316; display: none; align-items: flex-start; gap: 8px; animation: svFadeIn 0.2s ease-out; }
+    .sv-missing.show { display: flex; }
+    .sv-missing strong { color: var(--text-primary); font-weight: 800; }
+    .sv-ok { font-size: 11px; color: #22c55e; margin-top: 6px; min-height: 14px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+    .sv-ok:empty { display: none; }
+    @keyframes svFadeIn { from {opacity:0;transform:translateY(-4px);} to {opacity:1;transform:translateY(0);} }
+  </style>
+
+  <script is:inline>
+    // ═══════════════════════════════════════════════════════════════
+    // SkyValidator — Validación reutilizable con mensajes humanos
+    // ═══════════════════════════════════════════════════════════════
+    // Uso:
+    //   const v = SkyValidator.create('form-id', {
+    //     'input-id': { rules: ['required','min:3'], label: 'Nombre' },
+    //     'input-email': { rules: ['email'], label: 'Email', optional: true },
+    //     'input-phone': { rules: ['required','phone_mx'], label: 'Teléfono' },
+    //   }, { submitBtnId: 'submit-btn', missingBoxId: 'missing-box' });
+    //   v.validate(); // true/false
+    //   v.getMissing(); // array of human messages
+    //
+    // Reglas disponibles:
+    //   required                  — campo obligatorio (no vacío)
+    //   min:N                     — mínimo N caracteres
+    //   max:N                     — máximo N caracteres
+    //   email                     — formato email válido
+    //   phone_mx                  — teléfono México (10 dígitos)
+    //   rfc_mx                    — RFC válido (12 o 13 chars)
+    //   cp_mx                     — código postal México (5 dígitos)
+    //   number_positive           — número mayor a 0
+    //   number_min:N              — número mínimo N
+    //   url                       — URL válida
+    //   match:otherId             — debe coincidir con otro input
+    //
+    // Mensajes automáticos en español humano. Se pueden sobreescribir
+    // con { messages: { rule: 'custom msg' } } por campo.
+
+    window.SkyValidator = (function(){
+      const RULES = {
+        required: {
+          test: (v) => v !== null && v !== undefined && String(v).trim().length > 0,
+          msg: (label) => `${label} es obligatorio`,
+          missing: (label) => `Escribe el <strong>${label.toLowerCase()}</strong>`,
+        },
+        min: {
+          test: (v, n) => String(v).trim().length >= parseInt(n),
+          msg: (label, n) => `${label} debe tener al menos ${n} caracteres`,
+          missing: (label, n) => `El <strong>${label.toLowerCase()}</strong> se ve muy corto (mínimo ${n} letras)`,
+        },
+        max: {
+          test: (v, n) => String(v).trim().length <= parseInt(n),
+          msg: (label, n) => `${label} no puede tener más de ${n} caracteres`,
+          missing: (label, n) => `El <strong>${label.toLowerCase()}</strong> es muy largo (máximo ${n} caracteres)`,
+        },
+        email: {
+          test: (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).trim()),
+          msg: () => 'Verifica el correo, falta el @ o el dominio (ej: nombre@gmail.com)',
+          missing: (label) => `El <strong>${label.toLowerCase()}</strong> no parece válido`,
+        },
+        phone_mx: {
+          test: (v) => {
+            const digits = String(v).replace(/\D/g,'');
+            return digits.length >= 10 && digits.length <= 13;
+          },
+          msg: () => 'Faltan números, los teléfonos en México tienen 10 dígitos',
+          missing: (label) => `Escribe el <strong>${label.toLowerCase()}</strong> (10 dígitos)`,
+        },
+        rfc_mx: {
+          test: (v) => {
+            const rfc = String(v).trim().toUpperCase();
+            if (!rfc) return false;
+            return /^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/.test(rfc);
+          },
+          msg: () => 'El RFC no parece válido. Tiene 12 caracteres si es empresa, 13 si es persona física',
+          missing: () => `Escribe un <strong>RFC válido</strong> (12 o 13 caracteres)`,
+        },
+        cp_mx: {
+          test: (v) => /^\d{5}$/.test(String(v).trim()),
+          msg: () => 'El código postal tiene 5 números (ej: 03100)',
+          missing: (label) => `Escribe el <strong>${label.toLowerCase()}</strong> (5 dígitos)`,
+        },
+        number_positive: {
+          test: (v) => !isNaN(parseFloat(v)) && parseFloat(v) > 0,
+          msg: () => 'Debe ser un número mayor a 0',
+          missing: (label) => `El <strong>${label.toLowerCase()}</strong> debe ser mayor a 0`,
+        },
+        number_min: {
+          test: (v, n) => !isNaN(parseFloat(v)) && parseFloat(v) >= parseFloat(n),
+          msg: (label, n) => `Debe ser mayor o igual a ${n}`,
+          missing: (label, n) => `El <strong>${label.toLowerCase()}</strong> debe ser al menos ${n}`,
+        },
+        url: {
+          test: (v) => !v || /^https?:\/\/.+\..+/.test(String(v).trim()),
+          msg: () => 'La URL debe empezar con http:// o https://',
+          missing: (label) => `La <strong>${label.toLowerCase()}</strong> no parece válida`,
+        },
+        match: {
+          test: (v, otherId) => {
+            const other = document.getElementById(otherId);
+            return other && String(v) === String(other.value);
+          },
+          msg: () => 'Los valores no coinciden',
+          missing: (label) => `El <strong>${label.toLowerCase()}</strong> no coincide`,
+        },
+      };
+
+      function parseRule(ruleStr){
+        const [name, ...args] = ruleStr.split(':');
+        return { name, args };
+      }
+
+      function getOrCreateErrEl(input){
+        let err = document.getElementById(input.id + '-sv-err');
+        if (!err){
+          err = document.createElement('p');
+          err.id = input.id + '-sv-err';
+          err.className = 'sv-err';
+          input.parentNode.insertBefore(err, input.nextSibling);
+        }
+        return err;
+      }
+
+      function validateField(fieldId, config, opts){
+        const input = document.getElementById(fieldId);
+        if (!input) return { valid: true, missing: [] };
+        const value = input.value;
+        const label = config.label || fieldId;
+        const touched = input.dataset.svTouched === '1' || (value && value.length > 0);
+        const errEl = getOrCreateErrEl(input);
+        const missing = [];
+        let fieldValid = true;
+        let firstErrorMsg = '';
+
+        // "optional" means: skip if empty
+        if (config.optional && (!value || String(value).trim().length === 0)){
+          input.classList.remove('sv-invalid');
+          errEl.innerHTML = '';
+          return { valid: true, missing: [] };
+        }
+
+        for (const ruleStr of (config.rules || [])){
+          const { name, args } = parseRule(ruleStr);
+          const rule = RULES[name];
+          if (!rule) continue;
+          const ok = rule.test(value, ...args);
+          if (!ok){
+            fieldValid = false;
+            const customMsg = config.messages && config.messages[name];
+            firstErrorMsg = customMsg || rule.msg(label, ...args);
+            missing.push(rule.missing(label, ...args));
+            break; // show only first error per field
+          }
+        }
+
+        // Update field visual state — only after touch
+        if (!fieldValid && touched){
+          input.classList.add('sv-invalid');
+          errEl.innerHTML = '⚠️ ' + firstErrorMsg;
+        } else {
+          input.classList.remove('sv-invalid');
+          errEl.innerHTML = '';
+        }
+
+        return { valid: fieldValid, missing };
+      }
+
+      function attachTouchHandler(input){
+        if (input.dataset.svAttached) return;
+        input.dataset.svAttached = '1';
+        input.addEventListener('blur', () => { input.dataset.svTouched = '1'; });
+      }
+
+      function create(formId, fields, opts){
+        opts = opts || {};
+        const instance = { fields, opts, formId };
+
+        // Find or create missing box
+        let missingBox = opts.missingBoxId ? document.getElementById(opts.missingBoxId) : null;
+        if (!missingBox && opts.submitBtnId){
+          const btn = document.getElementById(opts.submitBtnId);
+          if (btn){
+            missingBox = document.createElement('div');
+            missingBox.className = 'sv-missing';
+            missingBox.id = (opts.submitBtnId) + '-sv-missing';
+            btn.parentNode.insertBefore(missingBox, btn.nextSibling);
+          }
+        }
+
+        // Attach blur/input handlers to all fields
+        Object.keys(fields).forEach(fieldId => {
+          const input = document.getElementById(fieldId);
+          if (!input) return;
+          attachTouchHandler(input);
+          input.addEventListener('input', () => instance.validate());
+          input.addEventListener('change', () => instance.validate());
+        });
+
+        instance.validate = function(){
+          const allMissing = [];
+          let allValid = true;
+          Object.keys(fields).forEach(fieldId => {
+            const r = validateField(fieldId, fields[fieldId], opts);
+            if (!r.valid){ allValid = false; allMissing.push(...r.missing); }
+          });
+          // Update submit button
+          if (opts.submitBtnId){
+            const btn = document.getElementById(opts.submitBtnId);
+            if (btn) btn.disabled = !allValid;
+          }
+          // Update missing box
+          if (missingBox){
+            if (allMissing.length === 0){
+              missingBox.classList.remove('show');
+            } else {
+              missingBox.classList.add('show');
+              missingBox.innerHTML = `<span style="font-size:16px;flex-shrink:0;">⚠️</span><div><strong>Para continuar te falta:</strong><br/>${allMissing.map(m=>'• '+m).join('<br/>')}</div>`;
+            }
+          }
+          return allValid;
+        };
+
+        instance.getMissing = function(){
+          const allMissing = [];
+          Object.keys(fields).forEach(fieldId => {
+            const r = validateField(fieldId, fields[fieldId], opts);
+            if (!r.valid) allMissing.push(...r.missing);
+          });
+          return allMissing;
+        };
+
+        // Mark all fields as touched (useful when user hits submit)
+        instance.touchAll = function(){
+          Object.keys(fields).forEach(fieldId => {
+            const input = document.getElementById(fieldId);
+            if (input) input.dataset.svTouched = '1';
+          });
+          instance.validate();
+        };
+
+        // Reset — clear all touched state and errors
+        instance.reset = function(){
+          Object.keys(fields).forEach(fieldId => {
+            const input = document.getElementById(fieldId);
+            if (input){
+              input.dataset.svTouched = '0';
+              input.classList.remove('sv-invalid');
+              const err = document.getElementById(fieldId + '-sv-err');
+              if (err) err.innerHTML = '';
+            }
+          });
+          if (missingBox) missingBox.classList.remove('show');
+          if (opts.submitBtnId){
+            const btn = document.getElementById(opts.submitBtnId);
+            if (btn) btn.disabled = false;
+          }
+        };
+
+        // Initial validation (silent — no UI update until touch)
+        instance.validate();
+        return instance;
+      }
+
+      // Helper for custom/non-input validation (like arrays of items)
+      function showMissing(missingBoxId, missingArr){
+        const box = document.getElementById(missingBoxId);
+        if (!box) return;
+        if (missingArr.length === 0){
+          box.classList.remove('show');
+        } else {
+          box.classList.add('show');
+          box.innerHTML = `<span style="font-size:16px;flex-shrink:0;">⚠️</span><div><strong>Para continuar te falta:</strong><br/>${missingArr.map(m=>'• '+m).join('<br/>')}</div>`;
+        }
+      }
+
+      return { create, showMissing, rules: RULES };
+    })();
+  </script>
+
   <HelpCenter />
 </body>
 </html>

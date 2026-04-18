@@ -1324,7 +1324,25 @@ function updateWizUI(){
   document.getElementById('em-wiz-send-test').style.display=wizStep===4?'':'none';
   if(wizStep===4)renderWizSummary();
 }
-function wizNext(){if(wizStep===1&&!document.getElementById('em-wiz-name').value.trim()){alert('Ingresa un nombre para tu campaña');return;}if(wizStep<4){wizStep++;updateWizUI();}}
+let _emWizValidator=null;
+function _emInitWizValidator(){
+  if(_emWizValidator||typeof SkyValidator==='undefined')return;
+  _emWizValidator=SkyValidator.create('em-wiz-form',{
+    'em-wiz-name':{rules:['required','min:3'],label:'Nombre de la campaña'},
+    'em-wiz-subject':{rules:['required','min:5'],label:'Asunto del correo'},
+    'em-wiz-from-email':{rules:['email'],label:'Email de remitente',optional:true},
+  },{submitBtnId:'em-wiz-next'});
+}
+function wizNext(){
+  _emInitWizValidator();
+  if(wizStep===1 && _emWizValidator){
+    _emWizValidator.touchAll();
+    if(!_emWizValidator.validate())return;
+  } else if(wizStep===1 && !document.getElementById('em-wiz-name').value.trim()){
+    return;
+  }
+  if(wizStep<4){wizStep++;updateWizUI();}
+}
 function wizBack(){if(wizStep>1){wizStep--;updateWizUI();}}
 
 function renderWizSummary(){

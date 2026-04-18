@@ -193,7 +193,7 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
             <div><label class="prod-label">Meta descripcion</label><textarea id="prod-add-metadesc" rows="3" placeholder="Hermosa blusa bordada a mano por artesanas oaxaquenas..." class="prod-input" style="resize:vertical;" maxlength="160" oninput="prodUpdateSeoCount('desc')"></textarea><p id="prod-seo-desc-count" style="font-size:10px;color:var(--text-faint);text-align:right;margin-top:2px;">0/160</p></div>
           </div>
         </div>
-        <button onclick="prodSaveProduct()" class="prod-btn-primary" style="padding:14px;font-size:14px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <button id="prod-save-btn" onclick="prodSaveProduct()" class="prod-btn-primary" style="padding:14px;font-size:14px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;">
           <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
           Guardar producto
         </button>
@@ -470,6 +470,7 @@ window.switchProdTab = function(tab) {
   });
   if (tab === 'catalog') prodRenderCatalog();
   if (tab === 'categories') prodRenderCategories();
+  if (tab === 'add') setTimeout(function(){if(typeof prodInitValidator==='function')prodInitValidator();},50);
   if (tab === 'inventory') prodRenderInventory();
   if (tab === 'analytics') prodRenderAnalytics();
 };
@@ -609,15 +610,28 @@ window.prodUpdateSeoCount = function(type) {
   }
 };
 
+let _prodValidator = null;
+function prodInitValidator(){
+  if (_prodValidator || typeof SkyValidator === 'undefined') return;
+  _prodValidator = SkyValidator.create('prod-add-form', {
+    'prod-add-name': { rules:['required','min:3'], label:'Nombre del producto' },
+    'prod-add-price': { rules:['required','number_positive'], label:'Precio de venta' },
+    'prod-add-cat': { rules:['required'], label:'Categoría' },
+    'prod-add-stock': { rules:['required','number_min:0'], label:'Stock' },
+  }, { submitBtnId: 'prod-save-btn' });
+}
 window.prodSaveProduct = function() {
+  prodInitValidator();
+  if (_prodValidator){
+    _prodValidator.touchAll();
+    if (!_prodValidator.validate()) return;
+  }
   var name = document.getElementById('prod-add-name').value.trim();
   var price = parseFloat(document.getElementById('prod-add-price').value);
   var cat = document.getElementById('prod-add-cat').value;
   var stock = parseInt(document.getElementById('prod-add-stock').value);
-  if (!name) { showToast('Escribe el nombre del producto'); return; }
-  if (!price || price <= 0) { showToast('El precio debe ser mayor a 0'); return; }
-  if (!cat) { showToast('Selecciona una categoria'); return; }
-  if (isNaN(stock) || stock < 0) { showToast('Indica el stock disponible'); return; }
+  // Fallback validations (in case SkyValidator not loaded)
+  if (!name || !price || price <= 0 || !cat || isNaN(stock) || stock < 0) return;
 
   var newProd = {
     id: demoProducts.length + 1,

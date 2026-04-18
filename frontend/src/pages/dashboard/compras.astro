@@ -242,7 +242,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       </div>
       <div style="display:flex;gap:10px;margin-top:20px;">
         <button onclick="closeComSupplierModal()" class="com-btn-secondary" style="flex:1;">Cancelar</button>
-        <button onclick="saveComSupplier()" class="com-btn-primary" style="flex:1;">Guardar</button>
+        <button id="com-sup-save-btn" onclick="saveComSupplier()" class="com-btn-primary" style="flex:1;">Guardar</button>
       </div>
     </div>
   </div>
@@ -456,11 +456,22 @@ function renderComSuppliers(){
     </div>
   </div>`).join('');
 }
-function openComSupplierModal(){comEditingSupplier=null;document.getElementById('com-sup-modal-title').textContent='Nuevo proveedor';['name','rfc','contact','email','phone'].forEach(f=>document.getElementById('com-sup-'+f).value='');document.getElementById('com-sup-terms').value='15 días';document.getElementById('com-sup-modal').style.display='flex';}
+let _comSupValidator=null;
+function _comInitSupValidator(){
+  if(_comSupValidator||typeof SkyValidator==='undefined')return;
+  _comSupValidator=SkyValidator.create('com-sup-form',{
+    'com-sup-name':{rules:['required','min:3'],label:'Nombre del proveedor'},
+    'com-sup-rfc':{rules:['rfc_mx'],label:'RFC',optional:true},
+    'com-sup-email':{rules:['email'],label:'Email',optional:true},
+    'com-sup-phone':{rules:['phone_mx'],label:'Teléfono',optional:true},
+  },{submitBtnId:'com-sup-save-btn'});
+}
+function openComSupplierModal(){comEditingSupplier=null;document.getElementById('com-sup-modal-title').textContent='Nuevo proveedor';['name','rfc','contact','email','phone'].forEach(f=>document.getElementById('com-sup-'+f).value='');document.getElementById('com-sup-terms').value='15 días';document.getElementById('com-sup-modal').style.display='flex';setTimeout(()=>{_comInitSupValidator();if(_comSupValidator)_comSupValidator.reset();},50);}
 function editComSupplier(id){const s=demoSuppliers.find(x=>x.id===id);if(!s)return;comEditingSupplier=id;document.getElementById('com-sup-modal-title').textContent='Editar proveedor';document.getElementById('com-sup-name').value=s.name;document.getElementById('com-sup-rfc').value=s.rfc;document.getElementById('com-sup-contact').value=s.contact;document.getElementById('com-sup-email').value=s.email;document.getElementById('com-sup-phone').value=s.phone;document.getElementById('com-sup-terms').value=s.terms;document.getElementById('com-sup-modal').style.display='flex';}
 function closeComSupplierModal(){document.getElementById('com-sup-modal').style.display='none';}
 function saveComSupplier(){
-  const name=document.getElementById('com-sup-name').value.trim();if(!name){alert('Falta el nombre');return;}
+  if(_comSupValidator){_comSupValidator.touchAll();if(!_comSupValidator.validate())return;}
+  const name=document.getElementById('com-sup-name').value.trim();if(!name)return;
   const data={name,rfc:document.getElementById('com-sup-rfc').value.trim(),contact:document.getElementById('com-sup-contact').value.trim(),email:document.getElementById('com-sup-email').value.trim(),phone:document.getElementById('com-sup-phone').value.trim(),terms:document.getElementById('com-sup-terms').value};
   if(comEditingSupplier){const s=demoSuppliers.find(x=>x.id===comEditingSupplier);Object.assign(s,data);showToast('Proveedor actualizado');}
   else{demoSuppliers.push({id:Date.now(),...data,yearTotal:0});showToast('Proveedor agregado');}

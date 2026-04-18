@@ -541,6 +541,7 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
 
     let _crmContactCache = {};
 
+    let _crmValidator = null;
     async function openContactModal(contactId) {
       document.getElementById('crm-edit-id').value = contactId || '';
       document.getElementById('crm-f-first').value = '';
@@ -551,6 +552,17 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
       document.getElementById('crm-f-state').value = '';
       document.getElementById('crm-f-tags').value = '';
       document.getElementById('crm-f-pipeline').value = '';
+
+      // Attach SkyValidator (only once)
+      if (!_crmValidator && typeof SkyValidator !== 'undefined'){
+        _crmValidator = SkyValidator.create('crm-contact-form', {
+          'crm-f-first': { rules:['required','min:2'], label:'Nombre' },
+          'crm-f-email': { rules:['required','email'], label:'Email' },
+          'crm-f-phone': { rules:['phone_mx'], label:'Teléfono', optional:true },
+        }, { submitBtnId: 'crm-save-btn' });
+      } else if (_crmValidator){
+        _crmValidator.reset();
+      }
       document.getElementById('crm-modal-title').textContent = contactId ? 'Editar contacto' : 'Agregar contacto';
       document.getElementById('crm-save-btn').textContent = 'Guardar';
       document.getElementById('crm-save-btn').disabled = false;
@@ -583,9 +595,14 @@ const API_URL = import.meta.env.PUBLIC_API_URL || '';
     async function saveContact() {
       const btn = document.getElementById('crm-save-btn');
       const editId = document.getElementById('crm-edit-id').value;
+      // Use SkyValidator if available
+      if (_crmValidator) {
+        _crmValidator.touchAll();
+        if (!_crmValidator.validate()) { return; }
+      }
       const first = document.getElementById('crm-f-first').value.trim();
       const email = document.getElementById('crm-f-email').value.trim();
-      if (!first || !email) { alert('Nombre y email son requeridos.'); return; }
+      if (!first || !email) return; // fallback
 
       const tagsRaw = document.getElementById('crm-f-tags').value.trim();
       const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
